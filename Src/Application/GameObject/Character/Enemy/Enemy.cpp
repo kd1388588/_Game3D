@@ -3,7 +3,27 @@
 #include "../../../Scene/SceneManager.h"
 #include "EnemyState.h"
 
-#include"../../../../Framework/Effekseer/KdEffekseerManager.h"
+namespace
+{
+	// 敵の種類ごとのパラメータ
+	struct EnemyParam
+	{
+		int		hp;
+		float	scale;
+		float	searchRange;	// プレイヤーに気づく距離
+		float	attackRange;	// 攻撃を開始する距離
+	};
+
+	constexpr EnemyParam kBossParam		= { 150, 1.75f, 15.0f, 2.5f };	// ボス：遠くから気づき、リーチが長い
+	constexpr EnemyParam kNormalParam	= { 50,  1.25f, 8.0f,  1.2f };	// ザコ敵
+
+	constexpr int	kDamageInvincibleFrame	= 30;		// 被弾後の無敵時間
+	constexpr int	kAttackDamage			= 5;
+	constexpr int	kCriticalAttackDamage	= 10;
+	constexpr float	kPushStrength			= 0.1f;		// 敵同士の押し出しの強さ（毎フレームの割合）
+
+	const std::string kModelDir = "Asset/Models/GameObject/Enemy/Monster2/";
+}
 
 void Enemy::Init()
 {
@@ -11,58 +31,25 @@ void Enemy::Init()
 	m_pCollider = std::make_unique<KdCollider>();
 	m_pDebugWire = std::make_unique<KdDebugWireFrame>();
 
-	std::vector<AnimLoadInfo> animList;
+	// モデル・アニメーション（現在はボスもザコも同じものを使用）
+	m_model->SetModelData(kModelDir + "Base/Rampage.gltf");
+	LoadAnimations
+	({
+		{ "Idle",	kModelDir + "Animation/Idle/Idle/Idle.gltf" },
+		{ "Run",	kModelDir + "Animation/Move/Sprint_Biped_Fwd/Sprint_Biped_Fwd.gltf" },
+		{ "Attack",	kModelDir + "Animation/Attack/Attack_Melee_A/Attack_Melee_A.gltf" },
+		{ "Dead",	kModelDir + "Animation/Hit/Death/Death_A.gltf" },
+	});
 
-	if (m_isBoss)
-	{
-		// ==========================
-		// ボスの設定 (Rampage)
-		// ==========================
-		m_model->SetModelData("Asset/Models/GameObject/Enemy/Monster2/Base/Rampage.gltf");
-		animList = {
-			{ "Idle", "Asset/Models/GameObject/Enemy/Monster2/Animation/Idle/Idle/Idle.gltf" },
-			{ "Run", "Asset/Models/GameObject/Enemy/Monster2/Animation/Move/Sprint_Biped_Fwd/Sprint_Biped_Fwd.gltf" },
-			{ "Attack", "Asset/Models/GameObject/Enemy/Monster2/Animation/Attack/Attack_Melee_A/Attack_Melee_A.gltf" },
-			{ "Dead", "Asset/Models/GameObject/Enemy/Monster2/Animation/Hit/Death/Death_A.gltf" },
-		};
-		m_hp = 150;
-		m_scale = 1.75f;
-		m_searchRange = 15.0f; // 遠くから気づく
-		m_attackRange = 2.5f;  // リーチが長い
-	}
-	else
-	{
-		// ==========================
-		// ザコ敵の設定
-		// ==========================
-		m_model->SetModelData("Asset/Models/GameObject/Enemy/Monster2/Base/Rampage.gltf");
-		animList = {
-			{ "Idle", "Asset/Models/GameObject/Enemy/Monster2/Animation/Idle/Idle/Idle.gltf" },
-			{ "Run", "Asset/Models/GameObject/Enemy/Monster2/Animation/Move/Sprint_Biped_Fwd/Sprint_Biped_Fwd.gltf" },
-			{ "Attack", "Asset/Models/GameObject/Enemy/Monster2/Animation/Attack/Attack_Melee_A/Attack_Melee_A.gltf" },
-			{ "Dead", "Asset/Models/GameObject/Enemy/Monster2/Animation/Hit/Death/Death_A.gltf" },
-		};
-		m_hp = 50;             
-		m_scale = 1.25f;       
-		m_searchRange = 8.0f;  
-		m_attackRange = 1.2f;  
-	}
+	// 種類ごとのパラメータ
+	const EnemyParam& param = m_isBoss ? kBossParam : kNormalParam;
+	SetHp(param.hp);
+	m_scale = param.scale;
+	m_searchRange = param.searchRange;
+	m_attackRange = param.attackRange;
 
-	LoadAnimations(animList);
-	//// Playerを追従させるためにオブジェクトの検索
-	//for (auto& obj : SceneManager::Instance().GetObjList())
-	//{
-	//	auto player = std::dynamic_pointer_cast<Player>(obj);
-	//	if (player)
-	//	{
-	//		SetTarget(player);
-	//		break;
-	//	}
-	//}
-
-	// 3. 初期ステートをIdleに設定
-	m_state = std::make_shared<EnemyStateIdle>();
-	m_state->ChangeState(this);
+	// 初期ステートをIdleに設定
+	ChangeState(std::make_shared<EnemyStateIdle>());
 
 	m_pCollider->RegisterCollisionShape
 	(
@@ -72,12 +59,8 @@ void Enemy::Init()
 		KdCollider::Type::TypeDamage
 	);
 
-	m_pos = { 0.0f, 0.0f, 5.0f }; 
-	Math::Matrix scale = Math::Matrix::CreateScale(m_scale);
-	Math::Matrix trans = Math::Matrix::CreateTranslation(m_pos);
-	m_mWorld = scale * trans;
-
-	
+	m_pos = { 0.0f, 0.0f, 5.0f };
+	UpdateWorldMatrix();
 }
 
 void Enemy::PostUpdate()
@@ -88,74 +71,68 @@ void Enemy::PostUpdate()
 void Enemy::Update()
 {
 	BaseChara::Update();
-	if (m_invincibleTimer > 0)
-	{
-		m_invincibleTimer--;
-	}
 
-	if (m_state) {
+	UpdateInvincibleTimer();
+
+	if (m_state)
+	{
 		m_state->Update(this);
 	}
 
-	if (m_useRootMotion && m_rootMoveDelta.LengthSquared() > 0.0f)
-	{
-		Math::Vector3 fixedDelta = m_rootMoveDelta;
-		fixedDelta.z *= -1.0f; // Z軸の向き補正
+	ApplyRootMotion(m_rootScale, m_rotY);
 
-		fixedDelta *= m_rootScale; // 倍率を掛ける
+	PushAwayFromOtherEnemies();
 
-		Math::Matrix rotY = Math::Matrix::CreateRotationY(m_rotY);
-		Math::Vector3 move = Math::Vector3::TransformNormal(fixedDelta, rotY);
-
-		m_pos += move; // 実際の座標に足し込む
-	}
-
-	for (auto& obj : SceneManager::Instance().GetObjList())
-	{
-		auto otherEnemy = std::dynamic_pointer_cast<Enemy>(obj);
-		// 相手がEnemyで、かつ自分自身ではない場合
-		if (otherEnemy && otherEnemy.get() != this)
-		{
-			Math::Vector3 pushVec = m_pos - otherEnemy->GetPos();
-			pushVec.y = 0.0f;
-
-			float dist = pushVec.Length();
-			float pushRadius = (m_scale + otherEnemy->m_scale) * 1.0f;
-
-			if (dist > 0.001f && dist < pushRadius)
-			{
-				pushVec.Normalize();
-				// 毎フレームジワジワと押し出す（攻撃中も待機中も反発しあう）
-				m_pos += pushVec * (pushRadius - dist) * 0.1f;
-			}
-		}
-	}
-
-	Math::Matrix scale = Math::Matrix::CreateScale(m_scale);
-	Math::Matrix rot = Math::Matrix::CreateRotationY(m_rotY);
-	Math::Matrix trans = Math::Matrix::CreateTranslation(m_pos);
-
-	m_mWorld = scale * rot * trans;
+	UpdateWorldMatrix();
 
 	if (m_pDebugWire)
 	{
-		Math::Vector3 hitPos = m_pos + Math::Vector3(0.0f, 1.0f * m_scale, 0.0f);
-		m_pDebugWire->AddDebugSphere(hitPos, 1.0f * m_scale, { 0.0f, 1.0f, 0.0f, 1.0f });
+		Math::Vector3 hitPos = m_pos + Math::Vector3(0.0f, m_scale, 0.0f);
+		m_pDebugWire->AddDebugSphere(hitPos, m_scale, { 0.0f, 1.0f, 0.0f, 1.0f });
 	}
 }
 
 void Enemy::DrawLit()
 {
-	//BaseChara::DrawLit();
-	//KdShaderManager::Instance().ChangeDepthStencilState(KdDepthStencilState::ZDisable);
 	if (m_model)
 	{
 		KdShaderManager::Instance().m_StandardShader.DrawModel(*m_model, m_mWorld);
 	}
-
 }
 
-void Enemy::ChangeState(std::shared_ptr<EnemyState> newState)
+void Enemy::UpdateWorldMatrix()
+{
+	Math::Matrix scale = Math::Matrix::CreateScale(m_scale);
+	Math::Matrix rot = Math::Matrix::CreateRotationY(m_rotY);
+	Math::Matrix trans = Math::Matrix::CreateTranslation(m_pos);
+
+	m_mWorld = scale * rot * trans;
+}
+
+void Enemy::PushAwayFromOtherEnemies()
+{
+	for (auto& obj : SceneManager::Instance().GetObjList())
+	{
+		// 相手がEnemyで、かつ自分自身ではない場合
+		auto otherEnemy = std::dynamic_pointer_cast<Enemy>(obj);
+		if (!otherEnemy || otherEnemy.get() == this) continue;
+
+		Math::Vector3 pushVec = m_pos - otherEnemy->GetPos();
+		pushVec.y = 0.0f;
+
+		float dist = pushVec.Length();
+		float pushRadius = m_scale + otherEnemy->m_scale;
+
+		if (dist > 0.001f && dist < pushRadius)
+		{
+			pushVec.Normalize();
+			// 毎フレームジワジワと押し出す（攻撃中も待機中も反発しあう）
+			m_pos += pushVec * (pushRadius - dist) * kPushStrength;
+		}
+	}
+}
+
+void Enemy::ChangeState(const std::shared_ptr<EnemyState>& newState)
 {
 	m_state = newState;
 	if (m_state)
@@ -169,31 +146,26 @@ void Enemy::AttackHit(const Math::Matrix& hitMatrix, const Math::Vector3& extent
 	// 行列（hitMatrix）で既に位置をズラしているので、ローカルオフセットはZeroにする
 	Math::Vector3 offset = Math::Vector3::Zero;
 
-	// ① BoxInfoの作成（属性, 行列, オフセット, サイズ, OBBフラグ）
 	KdCollider::BoxInfo box(KdCollider::TypeDamage, hitMatrix, offset, extents, true);
 
 	if (m_pDebugWire)
 	{
-		// ② デバッグボックスの描画（行列, サイズ, オフセット, OBBフラグ, 色）
 		m_pDebugWire->AddDebugBox(hitMatrix, extents, offset, true, { 1.0f, 0.0f, 0.0f, 1.0f });
 	}
+
+	int damage = isCritical ? kCriticalAttackDamage : kAttackDamage;
 
 	std::list<KdCollider::CollisionResult> retList;
 	for (auto& obj : SceneManager::Instance().GetObjList())
 	{
 		// 自分自身には当てない
 		if (obj.get() == this) continue;
+		if (!obj->Intersects(box, &retList)) continue;
 
-		// 判定処理
-		if (obj->Intersects(box, &retList))
+		// プレイヤーだった場合、ダメージを与える
+		if (auto player = std::dynamic_pointer_cast<Player>(obj))
 		{
-			// プレイヤーだった場合、ダメージを与える
-			auto player = std::dynamic_pointer_cast<Player>(obj);
-			if (player)
-			{
-				int damage = isCritical ? 10 : 5;
-				player->OnDamage(damage, isCritical);
-			}
+			player->OnDamage(damage, isCritical);
 		}
 	}
 }
@@ -202,8 +174,8 @@ Math::Matrix Enemy::GetRightArmMatrix() const
 {
 	if (m_model)
 	{
-		const KdModelWork::Node* pNode = m_model->FindNode("lowerarm_l");
-		if (pNode)
+		// ※モデルの骨の向きの都合で "lowerarm_l" を使用している
+		if (const KdModelWork::Node* pNode = m_model->FindNode("lowerarm_l"))
 		{
 			return pNode->m_worldTransform * m_mWorld;
 		}
@@ -214,7 +186,6 @@ Math::Matrix Enemy::GetRightArmMatrix() const
 void Enemy::Release()
 {
 	m_model = nullptr;
-	m_swordModel = nullptr;
 }
 
 void Enemy::OnDamage(int damage, bool isCritical)
@@ -223,43 +194,35 @@ void Enemy::OnDamage(int damage, bool isCritical)
 	if (m_hp <= 0) return;
 
 	m_hp -= damage;
-	m_invincibleTimer = 30;
-	
-	// ヒットエフェクトの再生処理
-	Math::Vector3 effectPos = m_pos + Math::Vector3(0.0f, 1.0f, 0.0f);
+	m_invincibleTimer = kDamageInvincibleFrame;
 
 	if (m_hp <= 0)
 	{
 		ChangeState(std::make_shared<EnemyStateDead>());
-	}
-	else if (isCritical)
-	{
-		KdDebugGUI::Instance().AddLog("[HIT] 敵にクリティカル！ ダメージ: %d\n", damage);
-		ChangeState(std::make_shared<EnemyStateDamage>());
-	}
-	else
-	{
-		KdDebugGUI::Instance().AddLog("[HIT] 敵に通常ダメージ！ ダメージ: %d\n", damage);
-		ChangeState(std::make_shared<EnemyStateDamage>());
+		return;
 	}
 
-	
+	KdDebugGUI::Instance().AddLog
+	(
+		isCritical ? "[HIT] 敵にクリティカル！ ダメージ: %d\n" : "[HIT] 敵に通常ダメージ！ ダメージ: %d\n",
+		damage
+	);
+	ChangeState(std::make_shared<EnemyStateDamage>());
 }
 
 void Enemy::TurnToPlayer()
 {
 	auto target = m_wpTarget.lock();
-	if (target)
-	{
-		// プレイヤーへの方向ベクトルを計算
-		Math::Vector3 dir = target->GetPos() - m_pos;
-		dir.y = 0.0f; // 上下方向は無視する
+	if (!target) return;
 
-		if (dir.LengthSquared() > 0.0f)
-		{
-			dir.Normalize();
-			// プレイヤーの方向を向くように角度（m_rotY）を更新する
-			m_rotY = atan2(dir.x, dir.z) + 3.141592f;
-		}
+	// プレイヤーへの方向ベクトルを計算（上下方向は無視する）
+	Math::Vector3 dir = target->GetPos() - m_pos;
+	dir.y = 0.0f;
+
+	if (dir.LengthSquared() > 0.0f)
+	{
+		dir.Normalize();
+		// モデルが逆向きなので180度回す
+		m_rotY = atan2(dir.x, dir.z) + DirectX::XM_PI;
 	}
 }

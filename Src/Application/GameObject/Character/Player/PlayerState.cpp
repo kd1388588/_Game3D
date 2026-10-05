@@ -5,53 +5,100 @@
 #include "../../Effect/Effect.h"
 #include "../../../Scene/SceneManager.h"
 
+using InputHelper::IsKeyDown;
+
+namespace
+{
+	// 攻撃判定を出すアニメーションフレームの範囲
+	constexpr float kAttackHitStartFrame	= 10.0f;
+	constexpr float kAttackHitEndFrame		= 45.0f;
+	constexpr int	kChargeLoopFrame		= 90;		// 4-3 Loop の持続フレーム
+	constexpr int	kMaxComboStep			= 5;
+
+	// 回避・ダッシュ・被弾で移動するフレーム数
+	constexpr float kEvadeMoveFrame			= 25.0f;
+	constexpr float kDamageKnockbackFrame	= 15.0f;
+	constexpr float kDamageKnockbackSpeed	= 0.06f;
+
+	// ジャンプ
+	constexpr float kJumpPower				= 0.25f;
+	constexpr float kFallingGravity			= 0.011f;	// これを超えたら落下中とみなす
+
+	// 前方へ減速しながら移動する（回避・ダッシュ用）
+	void MoveForwardWithDecay(Player* player, float baseSpeed, float moveFrame, bool isFlat)
+	{
+		float animTime = player->GetAnimTime();
+		if (animTime >= moveFrame) return;
+
+		float speed = baseSpeed * (1.0f - (animTime / moveFrame));
+
+		Math::Vector3 forward = player->GetMatrix().Backward() * -1.0f;
+		if (isFlat)
+		{
+			forward.y = 0.0f;
+			forward.Normalize();
+		}
+
+		player->SetPos(player->GetPos() + forward * speed);
+		player->BumpHit();
+	}
+
+	// 待機・移動中に共通の入力によるステート遷移
+	// 遷移した場合は true を返す
+	bool TryCommonTransition(Player* player)
+	{
+		// Shift：武器装備中は回避、未装備ならダッシュ
+		if (IsKeyDown(VK_SHIFT))
+		{
+			if (player->GetWeaponState() == WeaponState::Equipped)
+			{
+				player->ChangeState(std::make_shared<PlayerStateEvade>());
+			}
+			else
+			{
+				player->ChangeState(std::make_shared<PlayerStateDash>());
+			}
+			return true;
+		}
+
+		// ジャンプ
+		if (player->CheckJumpInput() && player->IsOnGround())
+		{
+			player->ChangeState(std::make_shared<PlayerStateJump>());
+			return true;
+		}
+
+		// 武器の抜刀・納刀切り替え
+		if (player->CheckEquipInput())
+		{
+			bool toCombat = !player->IsCombatMode();
+			player->SetCombatMode(toCombat);
+			if (toCombat)	player->ChangeState(std::make_shared<PlayerStateEquip>());
+			else			player->ChangeState(std::make_shared<PlayerStateUnequip>());
+			return true;
+		}
+
+		// 攻撃
+		if (player->GetWeaponState() == WeaponState::Equipped && player->CheckAttackInput())
+		{
+			player->ChangeState(std::make_shared<PlayerStateComboAttack>(player->GetCurrentAttackType(), 1));
+			return true;
+		}
+
+		return false;
+	}
+}
+
 void PlayerStateIdle::ChangeState(Player* player)
 {
-	if (player->IsCombatMode()) { player->ChangeAnimation("Combat_Idle", true); }
-	else { player->ChangeAnimation("Idle", true); }
+	player->ChangeAnimation(player->IsCombatMode() ? "Combat_Idle" : "Idle", true);
 	player->SetAnimationSpeed(1.0f);
 	player->SetUseRootMotion(false);
 }
 
 void PlayerStateIdle::Update(Player* player)
 {
-	if (GetAsyncKeyState(VK_SHIFT) & 0x8000)
-	{
-		if (player->GetWeaponState() == WeaponState::Equipped)
-		{
-			player->ChangeState(std::make_shared<PlayerStateEvade>());
-		}
-		else
-		{
-			player->ChangeState(std::make_shared<PlayerStateDash>());
-		}
-		return;
-	}
-
-	if (player->CheckJumpInput() && player->GetGravity() >= 0.0f && player->GetGravity() <= 0.011f)
-	{
-		player->ChangeState(std::make_shared<PlayerStateJump>());
-		return;
-	}
-
-	if (player->CheckEquipInput())
-	{
-		if (player->IsCombatMode()) {
-			player->SetCombatMode(false);
-			player->ChangeState(std::make_shared<PlayerStateUnequip>());
-		}
-		else {
-			player->SetCombatMode(true);
-			player->ChangeState(std::make_shared<PlayerStateEquip>());
-		}
-		return;
-	}
-
-	if (player->GetWeaponState() == WeaponState::Equipped && player->CheckAttackInput())
-	{
-		int type = player->GetCurrentAttackType();
-		player->ChangeState(std::make_shared<PlayerStateComboAttack>(type, 1));
-	}
+	if (TryCommonTransition(player)) return;
 
 	if (player->CheckMoveInput())
 	{
@@ -61,59 +108,21 @@ void PlayerStateIdle::Update(Player* player)
 
 void PlayerStateRun::ChangeState(Player* player)
 {
-	if (player->IsCombatMode()) { player->ChangeAnimation("Combat_Run", true); }
-	else { player->ChangeAnimation("Run", true); }
+	player->ChangeAnimation(player->IsCombatMode() ? "Combat_Run" : "Run", true);
 	player->SetAnimationSpeed(1.0f);
 	player->SetUseRootMotion(false);
 }
 
 void PlayerStateRun::Update(Player* player)
 {
-	if (GetAsyncKeyState(VK_SHIFT) & 0x8000)
-	{
-		if (player->GetWeaponState() == WeaponState::Equipped)
-		{
-			player->ChangeState(std::make_shared<PlayerStateEvade>());
-		}
-		else
-		{
-			player->ChangeState(std::make_shared<PlayerStateDash>());
-		}
-		return;
-	}
+	if (TryCommonTransition(player)) return;
 
-	if (player->CheckJumpInput() && player->GetGravity() >= 0.0f && player->GetGravity() <= 0.011f)
-	{
-		player->ChangeState(std::make_shared<PlayerStateJump>());
-		return;
-	}
-
-	if (player->CheckEquipInput())
-	{
-		if (player->IsCombatMode()) {
-			player->SetCombatMode(false);
-			player->ChangeState(std::make_shared<PlayerStateUnequip>());
-		}
-		else {
-			player->SetCombatMode(true);
-			player->ChangeState(std::make_shared<PlayerStateEquip>());
-		}
-		return;
-	}
-
-	if (player->GetWeaponState() == WeaponState::Equipped && player->CheckAttackInput())
-	{
-		int type = player->GetCurrentAttackType();
-		player->ChangeState(std::make_shared<PlayerStateComboAttack>(type, 1));
-		return;
-	}
-
-	bool isMove = player->MoveProcess();
-	if (!isMove)
+	if (!player->MoveProcess())
 	{
 		player->ChangeState(std::make_shared<PlayerStateIdle>());
 	}
 }
+
 void PlayerStateEquip::ChangeState(Player* player)
 {
 	player->ChangeAnimation("Equip", false);
@@ -135,7 +144,6 @@ void PlayerStateUnequip::ChangeState(Player* player)
 {
 	player->ChangeAnimation("Unequip", false);
 	player->SetAnimationSpeed(1.0f);
-
 }
 
 void PlayerStateUnequip::Update(Player* player)
@@ -149,40 +157,62 @@ void PlayerStateUnequip::Update(Player* player)
 	}
 }
 
-
 float PlayerStateComboAttack::GetCancelFrame() const
 {
-	float cancel = 20.0f; // 基本は20フレーム目以降ならクリックで次へ行ける
-
-	// 02シリーズ（空中の繋がり）
-	if (m_comboType == 2 && m_comboStep == 4) cancel = 30.0f; // ★落ちる前（空中）のフレームを指定！
-	if (m_comboType == 2 && m_comboStep == 5) cancel = 999.0f; // 5段目は最後まで再生
-
-	// 03シリーズ
-	if (m_comboType == 3 && m_comboStep == 3) cancel = 30.0f;
-
-	// 04シリーズ
-	if (m_comboType == 4 && m_comboStep == 3) {
-		if (m_subStep == 1) return 999.0f; // Startはキャンセル不可
-		if (m_subStep == 2) return 0.0f;   // LoopはいつでもEndへ行ける
-		if (m_subStep == 3) return 30.0f;  // Endは落ちる前に4_4へ！
+	// 04シリーズの溜め攻撃
+	if (IsSplitAttack())
+	{
+		if (m_subStep == SubStepStart)	return 999.0f;	// Startはキャンセル不可
+		if (m_subStep == SubStepLoop)	return 0.0f;	// LoopはいつでもEndへ行ける
+		if (m_subStep == SubStepEnd)	return 30.0f;	// Endは落ちる前に4_4へ！
 	}
 
-	// 05シリーズ
-	if (m_comboType == 5 && m_comboStep == 2) cancel = 25.0f;
-	if (m_comboType == 5 && m_comboStep == 3) cancel = 30.0f;
+	// 02シリーズ（空中の繋がり）
+	if (m_comboType == 2 && m_comboStep == 4) return 30.0f;		// 落ちる前（空中）のフレームを指定
+	if (m_comboType == 2 && m_comboStep == 5) return 999.0f;	// 5段目は最後まで再生
 
-	return cancel;
+	// 03シリーズ
+	if (m_comboType == 3 && m_comboStep == 3) return 30.0f;
+
+	// 05シリーズ
+	if (m_comboType == 5 && m_comboStep == 2) return 25.0f;
+	if (m_comboType == 5 && m_comboStep == 3) return 30.0f;
+
+	// 基本は20フレーム目以降ならクリックで次へ行ける
+	return 20.0f;
 }
 
 std::string PlayerStateComboAttack::GetAnimName() const
 {
-	if (m_comboType == 4 && m_comboStep == 3) {
-		if (m_subStep == 1) return "Attack_4_3_Start";
-		if (m_subStep == 2) return "Attack_4_3_Loop";
-		if (m_subStep == 3) return "Attack_4_3_End";
+	if (IsSplitAttack())
+	{
+		if (m_subStep == SubStepStart)	return "Attack_4_3_Start";
+		if (m_subStep == SubStepLoop)	return "Attack_4_3_Loop";
+		if (m_subStep == SubStepEnd)	return "Attack_4_3_End";
 	}
 	return "Attack_" + std::to_string(m_comboType) + "_" + std::to_string(m_comboStep);
+}
+
+bool PlayerStateComboAttack::IsRootMotionLocked() const
+{
+	return (m_comboType == 2 && m_comboStep == 4) ||
+		(m_comboType == 2 && m_comboStep == 5) ||
+		IsSplitAttack() ||
+		(m_comboType == 5 && m_comboStep == 2) ||
+		(m_comboType == 5 && m_comboStep == 3);
+}
+
+void PlayerStateComboAttack::ChangeToNextAttack(Player* player) const
+{
+	if (m_comboStep < kMaxComboStep)
+	{
+		player->ChangeState(std::make_shared<PlayerStateComboAttack>(m_comboType, m_comboStep + 1));
+	}
+	else
+	{
+		// 5段目まで打ち終わった
+		player->ChangeState(std::make_shared<PlayerStateIdle>());
+	}
 }
 
 void PlayerStateComboAttack::ChangeState(Player* player)
@@ -190,29 +220,19 @@ void PlayerStateComboAttack::ChangeState(Player* player)
 	m_effect = std::make_shared<KdEffekseerObject>();
 	m_isCritical = (KdRandom::GetInt(0, 99) < player->GetCritRate());
 
-	if (m_comboType == 4 && m_comboStep == 3 && m_subStep == 0) {
-		m_subStep = 1;
+	if (IsSplitAttack() && m_subStep == SubStepNone) {
+		m_subStep = SubStepStart;
 	}
 
-	std::string animName = GetAnimName();
-	bool isLoop = (m_comboType == 4 && m_comboStep == 3 && m_subStep == 2);
-
-	player->ChangeAnimation(animName, isLoop, true, 5.0f);
+	bool isLoop = (IsSplitAttack() && m_subStep == SubStepLoop);
+	player->ChangeAnimation(GetAnimName(), isLoop, true, 5.0f);
 
 	player->SetAnimationSpeed(1.0f);
 	player->SetWeaponState(WeaponState::Equipped);
-	player->SetUseRootMotion(true);
-	// マネージャーの変数を倍率としてセット
-	player->SetRootMotionScale(PlayerParamManager::Instance().m_attackRootScale);
 
-	if ((m_comboType == 2 && m_comboStep == 4) ||
-		(m_comboType == 2 && m_comboStep == 5) ||
-		(m_comboType == 4 && m_comboStep == 3) || 
-		(m_comboType == 5 && m_comboStep == 2) ||
-		(m_comboType == 5 && m_comboStep == 3))
-	{
-		player->SetUseRootMotion(false); // XZの座標移動を完全にロック！
-	}
+	// マネージャーの変数を倍率としてセット。一部の攻撃はXZの座標移動を完全にロック
+	player->SetUseRootMotion(!IsRootMotionLocked());
+	player->SetRootMotionScale(PlayerParamManager::Instance().m_attackRootScale);
 }
 
 void PlayerStateComboAttack::Update(Player* player)
@@ -225,52 +245,43 @@ void PlayerStateComboAttack::Update(Player* player)
 		m_nextAttackReserved = true;
 	}
 	
-	// 攻撃タイプ04のLoopの攻撃時間調整
-	if (m_comboType == 4 && m_comboStep == 3 && m_subStep == 2)
+	// 攻撃タイプ04のLoopは一定時間でEndへ
+	if (IsSplitAttack() && m_subStep == SubStepLoop)
 	{
-		m_loopTimer++; // 毎フレーム時間を進める
-
-		if (m_loopTimer >= 90)
+		m_loopTimer++;
+		if (m_loopTimer >= kChargeLoopFrame)
 		{
-			player->ChangeState(std::make_shared<PlayerStateComboAttack>
-				(4, 3, 3, m_nextAttackReserved));
+			player->ChangeState(std::make_shared<PlayerStateComboAttack>(4, 3, SubStepEnd, m_nextAttackReserved));
 			return;
 		}
 	}
 
 	float animTime = player->GetAnimTime();
 
-
-	if (animTime >= 10.0f && animTime <= 45.0f)
+	// 攻撃判定と剣の軌跡
+	if (animTime >= kAttackHitStartFrame && animTime <= kAttackHitEndFrame)
 	{
+		auto trail = player->GetSwordTrail();
+
 		if (!m_isHit)
 		{
-			// 戻り値（当たったかどうか）を受け取る
 			bool hitR = player->AttackOBB(player->GetSwordMatrixR(), m_isCritical);
 			bool hitL = player->AttackOBB(player->GetSwordMatrixL(), m_isCritical);
 
-			// 右手か左手どちらかが敵に当たったら
+			// 右手か左手どちらかが敵に当たったらヒットストップ
 			if (hitR || hitL)
 			{
-				player->SetHitStopTimer(1);		// ここで1回だけストップをかける！
+				player->SetHitStopTimer(1);
 				//m_isHit = true;				// 「当てた」と記録する（もう判定しない）
 			}
 
-			if (player->GetSwordTrail())
-			{
-				// 毎フレーム、剣の行列（根本から剣先までの情報）を軌跡に渡してポイントを追加する
-				player->GetSwordTrail()->AddPoint(player->GetSwordMatrixR());
-			}
+			// 毎フレーム、剣の行列を軌跡に渡してポイントを追加する
+			if (trail) trail->AddPoint(player->GetSwordMatrixR());
 		}
 		else
 		{
-			// 攻撃時間が終わった（または振る前）なら、軌跡の線をリセットする
-			// これをやらないと、次の攻撃を振った時に空間を跨いで線が繋がってしまいます
-			if (player->GetSwordTrail())
-			{
-				// ※関数名が Clear() や DelPoints() の場合もあります
-				player->GetSwordTrail()->ClearPoints();
-			}
+			// 軌跡の線をリセットする（次の攻撃で空間を跨いで線が繋がらないように）
+			if (trail) trail->ClearPoints();
 		}
 
 		/*
@@ -292,45 +303,38 @@ void PlayerStateComboAttack::Update(Player* player)
 		*/
 	}
 
-	// 指定したフレームを超えたら、空中にいる状態から次へ滑らかに移行
-	float cancelFrame = GetCancelFrame();
-
-	if (m_nextAttackReserved && animTime >= cancelFrame && !player->IsAnimEnd())
+	// 予約があり、キャンセル可能フレームを超えたら次へ滑らかに移行
+	if (m_nextAttackReserved && animTime >= GetCancelFrame() && !player->IsAnimEnd())
 	{
-		if (m_comboType == 4 && m_comboStep == 3 && m_subStep == 2) {
-			player->ChangeState(std::make_shared<PlayerStateComboAttack>(4, 3, 3, true));
+		if (IsSplitAttack() && m_subStep == SubStepLoop)
+		{
+			player->ChangeState(std::make_shared<PlayerStateComboAttack>(4, 3, SubStepEnd, true));
 			return;
 		}
-		else if (m_comboStep < 5) {
-			player->ChangeState(std::make_shared<PlayerStateComboAttack>(m_comboType, m_comboStep + 1));
+		if (m_comboStep < kMaxComboStep)
+		{
+			ChangeToNextAttack(player);
 			return;
 		}
 	}
 
-	if (player->IsAnimEnd())
-	{
-		// 4_3_Start が最後まで終わったら、自動で Loop(subStep=2) に繋ぐ
-		if (m_comboType == 4 && m_comboStep == 3 && m_subStep == 1) {
-			player->ChangeState(std::make_shared<PlayerStateComboAttack>(4, 3, 2));
-			return;
-		}
-		// 4_3_End が終わった時、予約があれば4_4へ、なければIdleへ
-		if (m_comboType == 4 && m_comboStep == 3 && m_subStep == 3) {
-			if (m_nextAttackReserved) player->ChangeState(std::make_shared<PlayerStateComboAttack>(4, 4));
-			else player->ChangeState(std::make_shared<PlayerStateIdle>());
-			return;
-		}
+	if (!player->IsAnimEnd()) return;
 
-		// その他の攻撃で、予約があれば次の段へ
-		if (m_nextAttackReserved && m_comboStep < 5)
-		{
-			player->ChangeState(std::make_shared<PlayerStateComboAttack>(m_comboType, m_comboStep + 1));
-		}
-		else
-		{
-			// 予約がない、または5段目まで打ち終わった
-			player->ChangeState(std::make_shared<PlayerStateIdle>());
-		}
+	// 4_3_Start が最後まで終わったら、自動で Loop に繋ぐ
+	if (IsSplitAttack() && m_subStep == SubStepStart)
+	{
+		player->ChangeState(std::make_shared<PlayerStateComboAttack>(4, 3, SubStepLoop));
+		return;
+	}
+
+	// 予約があれば次の段へ、なければIdleへ（4_3_End の次は 4_4）
+	if (m_nextAttackReserved)
+	{
+		ChangeToNextAttack(player);
+	}
+	else
+	{
+		player->ChangeState(std::make_shared<PlayerStateIdle>());
 	}
 }
 
@@ -343,19 +347,7 @@ void PlayerStateEvade::ChangeState(Player* player)
 
 void PlayerStateEvade::Update(Player* player)
 {
-	float animTime = player->GetAnimTime();
-
-	if (animTime < 25.0f)
-	{
-		float speed = PlayerParamManager::Instance().m_evadeSpeed * (1.0f - (animTime / 25.0f));
-
-		Math::Vector3 pos = player->GetPos();
-		Math::Vector3 forward = player->GetMatrix().Backward() * -1.0f;
-
-		pos += forward * speed;
-		player->SetPos(pos);
-		player->BumpHit();
-	}
+	MoveForwardWithDecay(player, PlayerParamManager::Instance().m_evadeSpeed, kEvadeMoveFrame, false);
 
 	if (player->IsAnimEnd()) {
 		player->ChangeState(std::make_shared<PlayerStateIdle>());
@@ -366,27 +358,13 @@ void PlayerStateDash::ChangeState(Player* player)
 {
 	player->ChangeAnimation("Dash", false);
 	player->SetAnimationSpeed(1.0f);
-
 	player->SetUseRootMotion(false);
 }
 
 void PlayerStateDash::Update(Player* player)
 {
-	float animTime = player->GetAnimTime();
+	MoveForwardWithDecay(player, PlayerParamManager::Instance().m_dashSpeed, kEvadeMoveFrame, true);
 
-	if (animTime < 25.0f)
-	{
-		float speed = PlayerParamManager::Instance().m_dashSpeed * (1.0f - (animTime / 25.0f));
-
-		Math::Vector3 pos = player->GetPos();
-		Math::Vector3 forward = player->GetMatrix().Backward() * -1.0f;
-		forward.y = 0.0f;
-		forward.Normalize();
-
-		pos += forward * speed;
-		player->SetPos(pos);
-		player->BumpHit();
-	}
 	if (player->IsAnimEnd()) {
 		player->ChangeState(std::make_shared<PlayerStateIdle>());
 	}
@@ -394,11 +372,11 @@ void PlayerStateDash::Update(Player* player)
 
 void PlayerStateJump::ChangeState(Player* player)
 {
-	m_jumpPhase = 1;
+	m_jumpPhase = JumpPhaseAir;
 	m_jumpCount = 1;
 	m_isFalling = false;
 
-	player->ExecJump(0.25f);
+	player->ExecJump(kJumpPower);
 	player->ChangeAnimation("JumpStart", false, true);
 	player->SetAnimationSpeed(1.0f);
 	player->SetUseRootMotion(false);
@@ -406,20 +384,19 @@ void PlayerStateJump::ChangeState(Player* player)
 
 void PlayerStateJump::Update(Player* player)
 {
-	if (m_jumpPhase != 2)
+	if (m_jumpPhase != JumpPhaseLanding)
 	{
 		player->MoveProcess();
 	}
 
+	bool isFallingNow = player->GetGravity() > kFallingGravity;
+
 	// --------------------------------------------------
-	if (m_jumpPhase == 1) // 【空中】
+	if (m_jumpPhase == JumpPhaseAir) // 【空中】
 	{
-		if (player->IsAnimEnd() || player->GetGravity() > 0.011f)
+		if ((player->IsAnimEnd() || isFallingNow) && player->GetAnimTime() > 0.0f)
 		{
-			if (player->GetAnimTime() > 0.0f)
-			{
-				player->ChangeAnimation("JumpLoop", true);
-			}
+			player->ChangeAnimation("JumpLoop", true);
 		}
 
 		//// 2段ジャンプの入力検知
@@ -431,20 +408,21 @@ void PlayerStateJump::Update(Player* player)
 		//	m_isFalling = false;
 		//}
 
-		if (player->GetGravity() > 0.011f)
+		if (isFallingNow)
 		{
 			m_isFalling = true;
 		}
 
-		if (m_isFalling && player->GetGravity() <= 0.011f)
+		// 落下後に着地した
+		if (m_isFalling && !isFallingNow)
 		{
 			player->ChangeAnimation("JumpEnd", false, true);
-			m_jumpPhase = 2;
+			m_jumpPhase = JumpPhaseLanding;
 		}
 	}
 
 	// --------------------------------------------------
-	else if (m_jumpPhase == 2) // 【着地硬直】
+	else if (m_jumpPhase == JumpPhaseLanding) // 【着地硬直】
 	{
 		if (player->CheckMoveInput())
 		{
@@ -464,24 +442,18 @@ void PlayerStateDamage::ChangeState(Player* player)
 	// 仰け反るようなダメージモーションを再生
 	player->ChangeAnimation("Damage", false, true);
 	player->SetAnimationSpeed(1.0f);
-
 }
 
 void PlayerStateDamage::Update(Player* player)
 {
-
-	float animTime = player->GetAnimTime();
-	if (animTime < 15.0f)
+	// 少しの間、後ろへノックバック
+	if (player->GetAnimTime() < kDamageKnockbackFrame)
 	{
-		Math::Vector3 pos = player->GetPos();
-
 		Math::Vector3 backward = player->GetMatrix().Backward();
-
 		backward.y = 0.0f;
 		backward.Normalize();
 
-		pos += backward * 0.06f;
-		player->SetPos(pos);
+		player->SetPos(player->GetPos() + backward * kDamageKnockbackSpeed);
 	}
 
 	if (player->IsAnimEnd())
@@ -494,7 +466,6 @@ void PlayerStateDead::ChangeState(Player* player)
 {
 	player->ChangeAnimation("Death", false, true);
 	player->SetAnimationSpeed(1.0f);
-
 }
 
 void PlayerStateDead::Update(Player* player)
@@ -503,12 +474,10 @@ void PlayerStateDead::Update(Player* player)
 	//{
 	//	player->Expire();
 	//}
-	if (player->IsAnimEnd())
+	// デバッグ用：死亡モーション後にQキーで復活
+	if (player->IsAnimEnd() && IsKeyDown('Q'))
 	{
-		if (GetAsyncKeyState('Q') & 0x8000)
-		{
-			player->Revive();
-			player->ChangeState(std::make_shared<PlayerStateIdle>());
-		}
+		player->Revive();
+		player->ChangeState(std::make_shared<PlayerStateIdle>());
 	}
 }

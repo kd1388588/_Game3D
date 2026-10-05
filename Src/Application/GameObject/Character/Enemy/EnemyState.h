@@ -35,7 +35,6 @@ public:
 
 private:
 	bool  m_isCritical = false;
-	bool  m_hasAttacked = false; 
 };
 
 class EnemyStateDamage : public EnemyState
@@ -43,9 +42,6 @@ class EnemyStateDamage : public EnemyState
 public:
 	void ChangeState(Enemy* enemy) override;
 	void Update(Enemy* enemy) override;
-
-private:
-	int m_timer = 0;
 };
 
 class EnemyStateDead : public EnemyState

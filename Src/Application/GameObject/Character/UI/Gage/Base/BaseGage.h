@@ -5,7 +5,7 @@ class BaseGage : public KdGameObject
 {
 public:
 	BaseGage() {}
-	~BaseGage() {}
+	~BaseGage() override {}
 
 	void Init() override;
 	void Update() override;
@@ -18,6 +18,4 @@ protected:
 
 	KdTexture m_gageBase;
 	KdTexture m_gage;
-
-	Math::Matrix m_mWorld;
 };

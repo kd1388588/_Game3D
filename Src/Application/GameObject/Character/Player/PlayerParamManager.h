@@ -27,11 +27,9 @@ public:
 	void SaveWeaponParams(const std::string& filepath);
 
 	// 攻撃パラメータの取得
+	// （未登録の場合はデフォルト値で登録してから返す）
 	AttackParam GetAttackParam(const std::string& animName)
 	{
-		if (m_attackParams.find(animName) == m_attackParams.end()) {
-			m_attackParams[animName] = AttackParam();
-		}
 		return m_attackParams[animName];
 	}
 

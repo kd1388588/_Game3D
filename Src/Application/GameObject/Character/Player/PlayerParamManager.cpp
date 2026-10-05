@@ -42,6 +42,47 @@ void PlayerParamManager::Save(const std::string& filepath)
 	}
 }
 
+namespace
+{
+	// 武器パラメータ（JSONのキー名と、対応するPlayerの静的変数）
+	struct WeaponParamEntry
+	{
+		const char*		key;
+		Math::Vector3*	pos;
+		Math::Vector3*	rot;
+	};
+
+	const std::vector<WeaponParamEntry>& GetWeaponParamEntries()
+	{
+		static const std::vector<WeaponParamEntry> entries =
+		{
+			{ "WeaponR",	&Player::s_weaponPosR,		&Player::s_weaponRotR },
+			{ "WeaponL",	&Player::s_weaponPosL,		&Player::s_weaponRotL },
+			{ "SheathedR",	&Player::s_sheathedPosR,	&Player::s_sheathedRotR },
+			{ "SheathedL",	&Player::s_sheathedPosL,	&Player::s_sheathedRotL },
+		};
+		return entries;
+	}
+
+	// "[x, y, z]" 形式の行からベクトルを読み取る
+	bool ParseVec3(const std::string& line, Math::Vector3& out)
+	{
+		size_t start = line.find('[');
+		size_t end = line.find(']');
+		if (start == std::string::npos || end == std::string::npos) return false;
+
+		std::string vals = line.substr(start + 1, end - start - 1);
+		for (char& c : vals) { if (c == ',') c = ' '; } // カンマを空白に変換
+
+		std::istringstream iss(vals);
+		float x, y, z;
+		if (!(iss >> x >> y >> z)) return false;
+
+		out = { x, y, z };
+		return true;
+	}
+}
+
 // ====================================================================
 // 武器座標のJSON読み込み処理（標準ライブラリ版簡易JSONパーサー）
 // ====================================================================
@@ -50,53 +91,30 @@ void PlayerParamManager::LoadWeaponParams(const std::string& filepath)
 	std::ifstream file(filepath);
 	if (!file.is_open()) return;
 
+	const WeaponParamEntry* pCurrent = nullptr;
 	std::string line;
-	std::string currentKey = "";
 
 	while (std::getline(file, line))
 	{
-		if (line.find("\"WeaponR\"") != std::string::npos) currentKey = "WeaponR";
-		else if (line.find("\"WeaponL\"") != std::string::npos) currentKey = "WeaponL";
-		else if (line.find("\"SheathedR\"") != std::string::npos) currentKey = "SheathedR";
-		else if (line.find("\"SheathedL\"") != std::string::npos) currentKey = "SheathedL";
+		// どの武器のブロックかを判定
+		for (const auto& entry : GetWeaponParamEntries())
+		{
+			if (line.find("\"" + std::string(entry.key) + "\"") != std::string::npos)
+			{
+				pCurrent = &entry;
+				break;
+			}
+		}
+
+		if (!pCurrent) continue;
 
 		if (line.find("\"Pos\"") != std::string::npos)
 		{
-			size_t start = line.find('[');
-			size_t end = line.find(']');
-			if (start != std::string::npos && end != std::string::npos)
-			{
-				std::string vals = line.substr(start + 1, end - start - 1);
-				for (char& c : vals) { if (c == ',') c = ' '; } // カンマを空白に変換
-				std::istringstream iss(vals);
-				float x, y, z;
-				if (iss >> x >> y >> z)
-				{
-					if (currentKey == "WeaponR") Player::s_weaponPosR = { x, y, z };
-					else if (currentKey == "WeaponL") Player::s_weaponPosL = { x, y, z };
-					else if (currentKey == "SheathedR") Player::s_sheathedPosR = { x, y, z };
-					else if (currentKey == "SheathedL") Player::s_sheathedPosL = { x, y, z };
-				}
-			}
+			ParseVec3(line, *pCurrent->pos);
 		}
 		else if (line.find("\"Rot\"") != std::string::npos)
 		{
-			size_t start = line.find('[');
-			size_t end = line.find(']');
-			if (start != std::string::npos && end != std::string::npos)
-			{
-				std::string vals = line.substr(start + 1, end - start - 1);
-				for (char& c : vals) { if (c == ',') c = ' '; } // カンマを空白に変換
-				std::istringstream iss(vals);
-				float x, y, z;
-				if (iss >> x >> y >> z)
-				{
-					if (currentKey == "WeaponR") Player::s_weaponRotR = { x, y, z };
-					else if (currentKey == "WeaponL") Player::s_weaponRotL = { x, y, z };
-					else if (currentKey == "SheathedR") Player::s_sheathedRotR = { x, y, z };
-					else if (currentKey == "SheathedL") Player::s_sheathedRotL = { x, y, z };
-				}
-			}
+			ParseVec3(line, *pCurrent->rot);
 		}
 	}
 }
@@ -109,32 +127,23 @@ void PlayerParamManager::SaveWeaponParams(const std::string& filepath)
 	std::ofstream file(filepath);
 	if (!file.is_open()) return;
 
-	file << "{\n";
-
 	// 綺麗にフォーマットして出力するラムダ式
-	auto writeVec3 = [&file](const std::string& name, const Math::Vector3& v, bool isLast) {
+	auto writeVec3 = [&file](const std::string& name, const Math::Vector3& v, bool isLast)
+	{
 		file << "\t\t\"" << name << "\": [" << v.x << ", " << v.y << ", " << v.z << "]" << (isLast ? "\n" : ",\n");
-		};
+	};
 
-	file << "\t\"WeaponR\": {\n";
-	writeVec3("Pos", Player::s_weaponPosR, false);
-	writeVec3("Rot", Player::s_weaponRotR, true);
-	file << "\t},\n";
+	const auto& entries = GetWeaponParamEntries();
 
-	file << "\t\"WeaponL\": {\n";
-	writeVec3("Pos", Player::s_weaponPosL, false);
-	writeVec3("Rot", Player::s_weaponRotL, true);
-	file << "\t},\n";
+	file << "{\n";
+	for (size_t i = 0; i < entries.size(); ++i)
+	{
+		bool isLastEntry = (i == entries.size() - 1);
 
-	file << "\t\"SheathedR\": {\n";
-	writeVec3("Pos", Player::s_sheathedPosR, false);
-	writeVec3("Rot", Player::s_sheathedRotR, true);
-	file << "\t},\n";
-
-	file << "\t\"SheathedL\": {\n";
-	writeVec3("Pos", Player::s_sheathedPosL, false);
-	writeVec3("Rot", Player::s_sheathedRotL, true);
-	file << "\t}\n";
-
+		file << "\t\"" << entries[i].key << "\": {\n";
+		writeVec3("Pos", *entries[i].pos, false);
+		writeVec3("Rot", *entries[i].rot, true);
+		file << (isLastEntry ? "\t}\n" : "\t},\n");
+	}
 	file << "}\n";
 }
