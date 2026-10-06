@@ -27,11 +27,9 @@ public:
 	void SaveWeaponParams(const std::string& filepath);
 
 	// 攻撃パラメータの取得
+	// （未登録の場合はデフォルト値で登録してから返す）
 	AttackParam GetAttackParam(const std::string& animName)
 	{
-		if (m_attackParams.find(animName) == m_attackParams.end()) {
-			m_attackParams[animName] = AttackParam();
-		}
 		return m_attackParams[animName];
 	}
 
@@ -45,6 +43,19 @@ public:
 private:
 	PlayerParamManager() {}
 	~PlayerParamManager() {}
+
+	// 武器パラメータ（JSONのキー名と、対応するPlayerの静的変数）
+	struct WeaponParamEntry
+	{
+		const char*		key;
+		Math::Vector3*	pos;
+		Math::Vector3*	rot;
+	};
+
+	static const std::vector<WeaponParamEntry>& GetWeaponParamEntries();
+
+	// "[x, y, z]" 形式の行からベクトルを読み取る
+	static bool ParseVec3(const std::string& line, Math::Vector3& out);
 
 	std::unordered_map<std::string, AttackParam> m_attackParams;
 };

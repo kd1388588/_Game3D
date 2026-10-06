@@ -23,7 +23,7 @@ public:
 		return m_spCamera;
 	}
 
-	const Math::Matrix GetRotationMatrix()const
+	Math::Matrix GetRotationMatrix() const
 	{
 		return Math::Matrix::CreateFromYawPitchRoll(
 		       DirectX::XMConvertToRadians(m_DegAng.y),
@@ -31,7 +31,7 @@ public:
 		       DirectX::XMConvertToRadians(m_DegAng.z));
 	}
 
-	const Math::Matrix GetRotationYMatrix() const
+	Math::Matrix GetRotationYMatrix() const
 	{
 		return Math::Matrix::CreateRotationY(
 			   DirectX::XMConvertToRadians(m_DegAng.y));

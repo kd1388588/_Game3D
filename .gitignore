@@ -5,7 +5,6 @@ packages/
 Library/
 Project/
 x64/
-Asset/
 .vs/
 
 #共通無視拡張子
@@ -26,3 +25,6 @@ Asset/
 *.blend
 
 imgui.ini
+
+# Asset フォルダはGitで管理する（上の *.gltf / *.png / *.bin などの除外を Asset 内だけ解除）
+!Asset/**

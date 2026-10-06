@@ -1,26 +1,25 @@
-﻿#include "TitleScene.h"
+﻿#include "GameClearScene.h"
 #include "../SceneManager.h"
 
 #include "../../GameObject/UI/Text/UIText.h"
 
-void TitleScene::Event()
+void GameClearScene::Event()
 {
-	// Enterでゲーム開始
+	// Enterでタイトルへ
 	if (m_decideKey.Update())
 	{
-		SceneManager::Instance().SetNextScene(SceneManager::SceneType::Game);
+		SceneManager::Instance().SetNextScene(SceneManager::SceneType::Title);
 	}
 }
 
-void TitleScene::Init()
+void GameClearScene::Init()
 {
-	// タイトル（仮：あとで画像に差し替え）
 	std::shared_ptr<UIText> title = std::make_shared<UIText>();
-	title->SetText("GAME TITLE", UIText::FontSize::Large);
+	title->SetText("GAME CLEAR", UIText::FontSize::Large);
 	title->SetCenterPos({ 0.0f, 120.0f });
+	title->SetColor({ 1.0f, 0.85f, 0.2f, 1.0f });
 	m_objList.push_back(title);
 
-	// 操作案内（点滅）
 	std::shared_ptr<UIText> guide = std::make_shared<UIText>();
 	guide->SetText("PRESS ENTER", UIText::FontSize::Medium);
 	guide->SetCenterPos({ 0.0f, -150.0f });

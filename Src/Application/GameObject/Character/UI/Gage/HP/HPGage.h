@@ -5,7 +5,7 @@ class HPGage : public BaseGage
 {
 public:
 	HPGage() {}
-	~HPGage() {}
+	~HPGage() override {}
 
 	void Init() override;
 	void Update() override;
@@ -18,7 +18,5 @@ private:
 	void Release();
 
 	float m_hpRatio = 1.0f;
-
-	Math::Matrix m_mWorld = Math::Matrix::Identity;
 	int m_gageWidth = 200;
 };

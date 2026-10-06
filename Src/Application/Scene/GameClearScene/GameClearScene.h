@@ -3,12 +3,13 @@
 #include"../BaseScene/BaseScene.h"
 #include"../../Utility/InputHelper.h"
 
-class TitleScene : public BaseScene
+// ゲームクリア画面（Enterでタイトルへ）
+class GameClearScene : public BaseScene
 {
 public :
 
-	TitleScene()  { Init(); }
-	~TitleScene() {}
+	GameClearScene()  { Init(); }
+	~GameClearScene() {}
 
 private :
 
