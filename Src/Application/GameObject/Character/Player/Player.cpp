@@ -67,8 +67,15 @@ namespace
 
 	// 剣の軌跡
 	constexpr float kSwordTrailWidthRate	= 1.0f;		// 帯の幅の倍率（1.0で刃の根元から先端まで）
-	constexpr UINT	kSwordTrailLength		= 20;		// 軌跡を残すフレーム数
-	const std::string kSwordTrailTexture	= "Asset/Textures/_GameObject/_Effect/_Sword_Trail.png";
+	constexpr UINT	kSwordTrailLength		= 15;		// 軌跡を残すフレーム数
+	constexpr int	kSwordTrailSubdivision	= 6;		// 1フレームの間を何分割して補間するか（多いほどなめらか）
+
+	// 軌跡テクスチャ（横：刃の先端→根元、縦：新しい→古い）
+	constexpr int	kSwordTrailTexWidth		= 64;
+	constexpr int	kSwordTrailTexHeight	= 256;
+	const Math::Vector3 kSwordTrailColor	= { 0.25f, 0.65f, 1.0f };	// 軌跡の色
+	const Math::Vector3 kSwordTrailCoreColor = { 1.0f, 1.0f, 1.0f };	// 刃先付近の芯の色
+	constexpr float kSwordTrailBaseBrightness = 0.15f;	// 刃の根元側の明るさ（先端を1.0とした割合）
 
 	// カメラの注視点を腰の骨から下げる量
 	constexpr float kCameraTargetOffsetY	= -0.9f;
@@ -158,11 +165,8 @@ Math::Vector3 Player::GetSwordPoint(const Math::Matrix& swordMat, float localY)
 
 // 剣の軌跡ポリゴンに渡す行列を作成
 // KdTrailPolygonは行列のX軸方向に帯を作るので、X軸を刃の向き・長さに合わせる
-Math::Matrix Player::CreateTrailMatrix(const Math::Matrix& swordMat)
+Math::Matrix Player::CreateTrailMatrix(const Math::Vector3& base, const Math::Vector3& tip)
 {
-	Math::Vector3 base = GetSwordPoint(swordMat, kSwordBladeBaseY);
-	Math::Vector3 tip = GetSwordPoint(swordMat, kSwordBladeTipY);
-
 	// 帯の幅は「X軸の長さ × 0.5」になるので、刃の長さの2倍を設定する
 	Math::Matrix trailMat = Math::Matrix::Identity;
 	trailMat.Right((tip - base) * (kSwordTrailWidthRate * 2.0f));
@@ -170,13 +174,68 @@ Math::Matrix Player::CreateTrailMatrix(const Math::Matrix& swordMat)
 	return trailMat;
 }
 
+std::shared_ptr<KdTexture> Player::CreateSwordTrailTexture()
+{
+	// 0～1の範囲で滑らかに補間する
+	auto smoothStep = [](float edge0, float edge1, float x)
+	{
+		float t = std::clamp((x - edge0) / (edge1 - edge0), 0.0f, 1.0f);
+		return t * t * (3.0f - 2.0f * t);
+	};
+
+	std::vector<UINT> pixels(kSwordTrailTexWidth * kSwordTrailTexHeight);
+
+	for (int y = 0; y < kSwordTrailTexHeight; ++y)
+	{
+		// 縦（V）：0が一番新しい位置、1が一番古い位置
+		float v = (y + 0.5f) / kSwordTrailTexHeight;
+		float fadeOld = std::pow(1.0f - v, 1.5f);			// 古いほど暗く
+		float fadeNew = smoothStep(0.0f, 0.03f, v);		// 剣のすぐ後ろは少しだけぼかす
+		float fadeV = fadeOld * fadeNew;
+
+		for (int x = 0; x < kSwordTrailTexWidth; ++x)
+		{
+			// 横（U）：0が刃の先端側、1が刃の根元側
+			float u = (x + 0.5f) / kSwordTrailTexWidth;
+
+			// 先端ほど明るく、両端はふちをぼかす
+			float bright = kSwordTrailBaseBrightness + (1.0f - kSwordTrailBaseBrightness) * std::pow(1.0f - u, 1.5f);
+			float edge = smoothStep(0.0f, 0.06f, u) * smoothStep(1.0f, 0.8f, u);
+			float intensity = bright * edge * fadeV;
+
+			// 先端付近の新しい部分は白っぽい芯にする
+			float core = std::pow(1.0f - u, 6.0f) * fadeOld;
+			Math::Vector3 color = Math::Vector3::Lerp(kSwordTrailColor, kSwordTrailCoreColor, core) * intensity;
+
+			// 加算合成で描くので、透明度ではなく色の明るさで薄さを表現する
+			// （UnLitシェーダーのアルファテストで切られないよう、アルファは常に1）
+			UINT r = static_cast<UINT>(std::clamp(color.x, 0.0f, 1.0f) * 255.0f);
+			UINT g = static_cast<UINT>(std::clamp(color.y, 0.0f, 1.0f) * 255.0f);
+			UINT b = static_cast<UINT>(std::clamp(color.z, 0.0f, 1.0f) * 255.0f);
+			pixels[y * kSwordTrailTexWidth + x] = (255u << 24) | (b << 16) | (g << 8) | r;
+		}
+	}
+
+	D3D11_SUBRESOURCE_DATA initData = {};
+	initData.pSysMem = pixels.data();
+	initData.SysMemPitch = kSwordTrailTexWidth * sizeof(UINT);
+
+	auto tex = std::make_shared<KdTexture>();
+	if (!tex->Create(kSwordTrailTexWidth, kSwordTrailTexHeight, DXGI_FORMAT_R8G8B8A8_UNORM, 1, &initData))
+	{
+		OutputDebugStringA("【剣の軌跡テクスチャの作成に失敗】\n");
+		return nullptr;
+	}
+	return tex;
+}
+
 void Player::Init()
 {
 	m_model = std::make_shared<KdModelWork>();
 	m_swordModel = std::make_shared<KdModelData>();
 	m_scabbardModel = std::make_shared<KdModelData>();
-	m_swordTrailR = std::make_shared<KdTrailPolygon>();
-	m_swordTrailL = std::make_shared<KdTrailPolygon>();
+	m_swordTrailR.polygon = std::make_shared<KdTrailPolygon>();
+	m_swordTrailL.polygon = std::make_shared<KdTrailPolygon>();
 
 	// 当たり判定
 	m_pCollider = std::make_unique<KdCollider>();
@@ -215,10 +274,11 @@ void Player::Init()
 	ChangeAnimation("Idle", true);
 
 	// 剣の軌跡（左右）
-	for (const auto& trail : { m_swordTrailR, m_swordTrailL })
+	m_swordTrailTex = CreateSwordTrailTexture();
+	for (SwordTrail* pTrail : { &m_swordTrailR, &m_swordTrailL })
 	{
-		trail->SetMaterial(kSwordTrailTexture);
-		trail->SetLength(kSwordTrailLength);
+		pTrail->polygon->SetMaterial(m_swordTrailTex);
+		pTrail->polygon->SetLength(kSwordTrailLength * kSwordTrailSubdivision);
 	}
 
 	m_pos = { 0, 0.0f, 0.5f };
@@ -280,22 +340,26 @@ void Player::GenerateDepthMapFromLight()
 {
 }
 
-void Player::DrawUnLit()
+void Player::DrawEffect()
 {
 	auto& shaderManager = KdShaderManager::Instance();
 
-	// 軌跡の帯は裏からも見えるようにカリングを切る
+	// 軌跡は他のオブジェクトを描いた後に、加算合成・深度書き込みなしで描く
+	// （帯の暗い部分が後ろの物を隠さないように）
+	// 裏からも見えるようにカリングも切る
 	shaderManager.ChangeRasterizerState(KdRasterizerState::CullNone);
-	shaderManager.ChangeBlendState(KdBlendState::Alpha);
+	shaderManager.ChangeBlendState(KdBlendState::Add);
+	shaderManager.ChangeDepthStencilState(KdDepthStencilState::ZWriteDisable);
 
-	for (const auto& trail : { m_swordTrailR, m_swordTrailL })
+	for (const SwordTrail* pTrail : { &m_swordTrailR, &m_swordTrailL })
 	{
-		if (trail)
+		if (pTrail->polygon)
 		{
-			shaderManager.m_StandardShader.DrawPolygon(*trail);
+			shaderManager.m_StandardShader.DrawPolygon(*pTrail->polygon);
 		}
 	}
 
+	shaderManager.UndoDepthStencilState();
 	shaderManager.UndoBlendState();
 	shaderManager.UndoRasterizerState();
 }
@@ -381,12 +445,12 @@ void Player::AddSwordTrailPoints()
 	// 新しい振りの始まりなら、前の振りの軌跡とつながらないように消しておく
 	if (!m_isTrailActive)
 	{
-		m_swordTrailR->ClearPoints();
-		m_swordTrailL->ClearPoints();
+		ClearSwordTrail(m_swordTrailR);
+		ClearSwordTrail(m_swordTrailL);
 	}
 
-	m_swordTrailR->AddPoint(CreateTrailMatrix(m_swordWorldR));
-	m_swordTrailL->AddPoint(CreateTrailMatrix(m_swordWorldL));
+	AddSwordTrailSample(m_swordTrailR, m_swordWorldR);
+	AddSwordTrailSample(m_swordTrailL, m_swordWorldL);
 
 	m_isTrailActive = true;
 	m_isTrailAddedThisFrame = true;
@@ -398,12 +462,66 @@ void Player::UpdateSwordTrails()
 
 	// 攻撃していないフレームは、古いポイントから消して軌跡を徐々に短くする
 	m_isTrailActive = false;
-	for (const auto& trail : { m_swordTrailR, m_swordTrailL })
+	ShrinkSwordTrail(m_swordTrailR);
+	ShrinkSwordTrail(m_swordTrailL);
+}
+
+void Player::AddSwordTrailSample(SwordTrail& trail, const Math::Matrix& swordMat)
+{
+	if (!trail.polygon) return;
+
+	Math::Vector3 base = GetSwordPoint(swordMat, kSwordBladeBaseY);
+	Math::Vector3 tip = GetSwordPoint(swordMat, kSwordBladeTipY);
+
+	auto& baseHist = trail.baseHistory;
+	auto& tipHist = trail.tipHistory;
+
+	if (baseHist.empty())
 	{
-		if (trail && trail->GetNumPoints() > 0)
+		// 最初のポイントはそのまま追加
+		trail.polygon->AddPoint(CreateTrailMatrix(base, tip));
+	}
+	else
+	{
+		// 前フレームと今フレームの間を Catmull-Rom 曲線で補間して、カクつきのない弧にする
+		// p0：前々フレーム（無ければ前フレーム）、p1：前フレーム、p2：今フレーム、p3：この先の予測位置
+		Math::Vector3 base0 = (baseHist.size() >= 2) ? baseHist[1] : baseHist[0];
+		Math::Vector3 tip0 = (tipHist.size() >= 2) ? tipHist[1] : tipHist[0];
+		Math::Vector3 base1 = baseHist[0];
+		Math::Vector3 tip1 = tipHist[0];
+		Math::Vector3 base3 = base + (base - base1);
+		Math::Vector3 tip3 = tip + (tip - tip1);
+
+		for (int i = 1; i <= kSwordTrailSubdivision; ++i)
 		{
-			trail->DelPointBack();
+			float t = static_cast<float>(i) / kSwordTrailSubdivision;
+			Math::Vector3 b = Math::Vector3::CatmullRom(base0, base1, base, base3, t);
+			Math::Vector3 e = Math::Vector3::CatmullRom(tip0, tip1, tip, tip3, t);
+			trail.polygon->AddPoint(CreateTrailMatrix(b, e));
 		}
+	}
+
+	// 補間に使う直近2フレーム分だけ覚えておく
+	baseHist.push_front(base);
+	tipHist.push_front(tip);
+	while (baseHist.size() > 2) baseHist.pop_back();
+	while (tipHist.size() > 2) tipHist.pop_back();
+}
+
+void Player::ClearSwordTrail(SwordTrail& trail)
+{
+	if (trail.polygon) trail.polygon->ClearPoints();
+	trail.baseHistory.clear();
+	trail.tipHistory.clear();
+}
+
+void Player::ShrinkSwordTrail(SwordTrail& trail)
+{
+	// 補間で1フレームあたり複数ポイント追加しているので、同じ数だけ消す
+	for (int i = 0; i < kSwordTrailSubdivision; ++i)
+	{
+		if (!trail.polygon || trail.polygon->GetNumPoints() <= 0) break;
+		trail.polygon->DelPointBack();
 	}
 }
 

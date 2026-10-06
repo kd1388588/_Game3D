@@ -26,7 +26,7 @@ public:
 	void PostUpdate()	override;
 
 	void GenerateDepthMapFromLight() override;
-	void DrawUnLit()	override;
+	void DrawEffect()	override;
 	void DrawLit()		override;
 
 	void SetOwner(BaseScene* owner) { m_owner = owner; }
@@ -126,8 +126,25 @@ private:
 	void UpdateHpGage();
 	void UpdateAttackTypeSwitch();
 
+	// 剣の軌跡（1本分）
+	struct SwordTrail
+	{
+		std::shared_ptr<KdTrailPolygon>	polygon = nullptr;
+		std::deque<Math::Vector3>		baseHistory;	// 刃の根元の位置の履歴（新しい順）
+		std::deque<Math::Vector3>		tipHistory;		// 刃の先端の位置の履歴（新しい順）
+	};
+
 	// 剣の軌跡の更新（攻撃していないフレームは軌跡を徐々に消す）
 	void UpdateSwordTrails();
+
+	// 軌跡にポイントを追加する（前フレームとの間を曲線で補間して、なめらかな弧にする）
+	void AddSwordTrailSample(SwordTrail& trail, const Math::Matrix& swordMat);
+
+	// 軌跡を消す
+	void ClearSwordTrail(SwordTrail& trail);
+
+	// 軌跡を古い方から1フレーム分短くする
+	void ShrinkSwordTrail(SwordTrail& trail);
 
 	// 入力方向（ローカル座標 X:左右 Z:前後）を取得
 	Math::Vector3 GetInputDir() const;
@@ -147,8 +164,12 @@ private:
 	// 剣のローカルY軸（刃の方向）上の点をワールド座標に変換
 	static Math::Vector3 GetSwordPoint(const Math::Matrix& swordMat, float localY);
 
-	// 剣の軌跡ポリゴンに渡す行列を作成
-	static Math::Matrix CreateTrailMatrix(const Math::Matrix& swordMat);
+	// 剣の軌跡ポリゴンに渡す行列を作成（刃の根元・先端の位置から）
+	static Math::Matrix CreateTrailMatrix(const Math::Vector3& base, const Math::Vector3& tip);
+
+	// 剣の軌跡用のテクスチャを作成する
+	// （刃の先端ほど明るく、古い部分ほど暗くなるグラデーション。加算合成用）
+	static std::shared_ptr<KdTexture> CreateSwordTrailTexture();
 
 	// 現在の向き（m_angle）をラジアンで取得
 	float GetAngleRad() const { return DirectX::XMConvertToRadians(m_angle); }
@@ -158,8 +179,9 @@ private:
 	std::shared_ptr<KdModelData>	m_swordModel = nullptr;
 	std::shared_ptr<KdModelData>	m_scabbardModel = nullptr;
 	std::shared_ptr<PlayerState>	m_state = nullptr;
-	std::shared_ptr<KdTrailPolygon> m_swordTrailR = nullptr;	// 右手の剣の軌跡
-	std::shared_ptr<KdTrailPolygon> m_swordTrailL = nullptr;	// 左手の剣の軌跡
+	SwordTrail						m_swordTrailR;						// 右手の剣の軌跡
+	SwordTrail						m_swordTrailL;						// 左手の剣の軌跡
+	std::shared_ptr<KdTexture>		m_swordTrailTex = nullptr;			// 軌跡のテクスチャ
 	bool							m_isTrailActive = false;			// 軌跡を描いている途中か
 	bool							m_isTrailAddedThisFrame = false;	// このフレームに軌跡を追加したか
 
