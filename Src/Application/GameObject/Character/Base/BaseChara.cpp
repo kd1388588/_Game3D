@@ -19,31 +19,29 @@ namespace
 	constexpr float kBumpCenterHeight		= 0.7f;
 	constexpr float kBumpRadius				= 0.3f;
 	constexpr float kBumpIgnoreHitDirY		= 0.3f;		// これより上向きの衝突は床とみなして押し出さない
+}
 
-	// 自分以外の全オブジェクトと当たり判定を行い、結果をまとめて返す
-	template<class ShapeInfo>
-	std::list<KdCollider::CollisionResult> IntersectsOthers(const KdGameObject* self, const ShapeInfo& shape)
+template<class ShapeInfo>
+std::list<KdCollider::CollisionResult> BaseChara::IntersectsOthers(const ShapeInfo& shape) const
+{
+	std::list<KdCollider::CollisionResult> results;
+	for (auto& obj : SceneManager::Instance().GetObjList())
 	{
-		std::list<KdCollider::CollisionResult> results;
-		for (auto& obj : SceneManager::Instance().GetObjList())
+		if (obj.get() != this)
 		{
-			if (obj.get() != self)
-			{
-				obj->Intersects(shape, &results);
-			}
+			obj->Intersects(shape, &results);
 		}
-		return results;
 	}
+	return results;
+}
 
-	// ルートボーンを探す
-	KdModelWork::Node* FindRootNode(std::vector<KdModelWork::Node>& nodes)
+KdModelWork::Node* BaseChara::FindRootNode(std::vector<KdModelWork::Node>& nodes)
+{
+	for (auto& node : nodes)
 	{
-		for (auto& node : nodes)
-		{
-			if (node.m_name == "root") return &node;
-		}
-		return nullptr;
+		if (node.m_name == "root") return &node;
 	}
+	return nullptr;
 }
 
 void BaseChara::PostUpdate()
@@ -228,7 +226,7 @@ bool BaseChara::FindGroundBelow(float range, Math::Vector3& outHitPos) const
 	float maxOverLap = 0.0f;
 	bool isHit = false;
 
-	for (auto& ret : IntersectsOthers(this, ray))
+	for (auto& ret : IntersectsOthers(ray))
 	{
 		if (maxOverLap < ret.m_overlapDistance)
 		{
@@ -284,7 +282,7 @@ void BaseChara::BumpHit()
 
 	KdCollider::SphereInfo sphere(KdCollider::TypeBump, center, kBumpRadius);
 
-	for (auto& ret : IntersectsOthers(this, sphere))
+	for (auto& ret : IntersectsOthers(sphere))
 	{
 		// 床のような上向きの衝突は無視
 		if (ret.m_hitDir.y > kBumpIgnoreHitDirY) continue;

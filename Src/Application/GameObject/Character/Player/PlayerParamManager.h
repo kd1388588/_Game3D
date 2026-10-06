@@ -44,5 +44,18 @@ private:
 	PlayerParamManager() {}
 	~PlayerParamManager() {}
 
+	// 武器パラメータ（JSONのキー名と、対応するPlayerの静的変数）
+	struct WeaponParamEntry
+	{
+		const char*		key;
+		Math::Vector3*	pos;
+		Math::Vector3*	rot;
+	};
+
+	static const std::vector<WeaponParamEntry>& GetWeaponParamEntries();
+
+	// "[x, y, z]" 形式の行からベクトルを読み取る
+	static bool ParseVec3(const std::string& line, Math::Vector3& out);
+
 	std::unordered_map<std::string, AttackParam> m_attackParams;
 };

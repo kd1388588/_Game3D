@@ -80,4 +80,14 @@ protected:
 	int								m_hp = 100;					// 現在のHP
 	int								m_maxHp = 100;				// 最大HP
 	int								m_invincibleTimer = 0;		// 無敵時間（フレーム）
+
+private:
+
+	// 自分以外の全オブジェクトと当たり判定を行い、結果をまとめて返す
+	// ※BaseChara.cpp内でのみ使用（定義も BaseChara.cpp）
+	template<class ShapeInfo>
+	std::list<KdCollider::CollisionResult> IntersectsOthers(const ShapeInfo& shape) const;
+
+	// ルートボーンを探す
+	static KdModelWork::Node* FindRootNode(std::vector<KdModelWork::Node>& nodes);
 };

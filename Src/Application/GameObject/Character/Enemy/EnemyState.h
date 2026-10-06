@@ -10,6 +10,11 @@ public:
 	virtual ~EnemyState() {}
 	virtual void ChangeState(Enemy* enemy) = 0;
 	virtual void Update(Enemy* enemy) = 0;
+
+protected:
+
+	// ターゲットへの水平方向のベクトルを取得（ターゲットがいなければ false）
+	static bool GetFlatVecToTarget(Enemy* enemy, Math::Vector3& outVec);
 };
 
 // 派生クラス

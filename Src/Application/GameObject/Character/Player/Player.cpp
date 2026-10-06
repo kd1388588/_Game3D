@@ -59,11 +59,16 @@ namespace
 	// 接地判定に使う重力の上限（落下し始めの1フレーム分）
 	constexpr float kOnGroundGravityMax		= 0.011f;
 
-	// 剣の判定・座標（剣のローカルZ軸上の位置）
-	constexpr float kSwordTipLocalZ			= 1.0f;
-	constexpr float kSwordBaseLocalZ		= 0.2f;
-	const Math::Vector3 kSwordOBBExtents	= { 0.1f, 0.55f, 0.1f };	// Y軸方向に長い箱
-	constexpr float kSwordOBBOffsetY		= 0.6f;						// マネキン用の剣に合わせて上へずらす
+	// 剣の刃の位置（剣のローカルY軸上。攻撃判定の箱と同じ範囲）
+	constexpr float kSwordBladeBaseY		= 0.05f;	// 刃の根元
+	constexpr float kSwordBladeTipY			= 1.15f;	// 刃の先端
+	constexpr float kSwordOBBOffsetY		= (kSwordBladeBaseY + kSwordBladeTipY) * 0.5f;	// 判定の箱の中心
+	const Math::Vector3 kSwordOBBExtents	= { 0.1f, (kSwordBladeTipY - kSwordBladeBaseY) * 0.5f, 0.1f };	// Y軸方向に長い箱
+
+	// 剣の軌跡
+	constexpr float kSwordTrailWidthRate	= 1.0f;		// 帯の幅の倍率（1.0で刃の根元から先端まで）
+	constexpr UINT	kSwordTrailLength		= 20;		// 軌跡を残すフレーム数
+	const std::string kSwordTrailTexture	= "Asset/Textures/_GameObject/_Effect/_Sword_Trail.png";
 
 	// カメラの注視点を腰の骨から下げる量
 	constexpr float kCameraTargetOffsetY	= -0.9f;
@@ -76,79 +81,93 @@ namespace
 	// 着地アニメーション（両足の接地フレームを事前に計算する）
 	const std::vector<std::string> kLandingAnimNames	= { "JumpEnd", "Combat_JumpEnd" };
 	const std::vector<std::string> kFootNodeNames		= { "foot_l", "foot_r" };
+}
 
-	// 読み込むアニメーションのリストを作成
-	std::vector<AnimLoadInfo> CreateAnimList()
+// 読み込むアニメーションのリストを作成
+std::vector<AnimLoadInfo> Player::CreateAnimList()
+{
+	std::vector<AnimLoadInfo> animList =
 	{
-		std::vector<AnimLoadInfo> animList =
-		{
-			{ "Idle",				kAnimDir + "01_Idle/01_Idle/AS_Idle_Seq/AS_Idle_Seq.gltf" },
-			{ "Equip",				kAnimDir + "01_Idle/01_Idle/AS_Idle_to_Idle_Combat_Seq/AS_Idle_to_Idle_Combat_Seq.gltf" },
-			{ "Unequip",			kAnimDir + "01_Idle/02_Idle_Combat/AS_Idle_Combat_to_Idle_Seq/AS_Idle_Combat_to_Idle_Seq.gltf" },
-			{ "Combat_Idle",		kAnimDir + "01_Idle/02_Idle_Combat/AS_Idle_Combat_Seq/AS_Idle_Combat_Seq.gltf" },
-			{ "Evade",				kAnimDir + "07_Roll/02_Roll_Combat/AS_Roll_Combat_F_0_Seq/AS_Roll_Combat_F_0_Seq.gltf" },
-			{ "Dash",				kAnimDir + "06_Dodge/01_Dodge/AS_Dodge_F_0_Seq/AS_Dodge_F_0_Seq.gltf" },
-			{ "Combat_Run",			kAnimDir + "04_Run/02_Run_Combat/01_Run_Combat_F_0/AS_Run_Combat_F_0_Loop_Seq/AS_Run_Combat_F_0_Loop_Seq.gltf" },
-			{ "Run",				kAnimDir + "04_Run/01_Run/01_Run_F_0/AS_Run_F_0_Loop_Seq/AS_Run_F_0_Loop_Seq.gltf" },
-			{ "JumpStart",			kAnimDir + "05_Jump/01_Jump/01_Jump_0/AS_Jump_Start_0_Seq/AS_Jump_Start_0_Seq.gltf" },
-			{ "JumpLoop",			kAnimDir + "05_Jump/01_Jump/01_Jump_0/AS_Jump_Loop_0_Seq/AS_Jump_Loop_0_Seq.gltf" },
-			{ "JumpEnd",			kAnimDir + "05_Jump/01_Jump/01_Jump_0/AS_Jump_End_0_Seq/AS_Jump_End_0_Seq.gltf" },
-			{ "Combat_JumpStart",	kAnimDir + "05_Jump/02_Jump_Combat/01_Jump_Combat_0/AS_Jump_Combat_Start_0_Seq/AS_Jump_Combat_Start_0_Seq.gltf" },
-			{ "Combat_JumpLoop",	kAnimDir + "05_Jump/02_Jump_Combat/01_Jump_Combat_0/AS_Jump_Combat_Loop_0_Seq/AS_Jump_Combat_Loop_0_Seq.gltf" },
-			{ "Combat_JumpEnd",		kAnimDir + "05_Jump/02_Jump_Combat/01_Jump_Combat_0/AS_Jump_Combat_End_0_Seq/AS_Jump_Combat_End_0_Seq.gltf" },
-			{ "Damage",				kAnimDir + "08_Hit/01_Hit/AS_Hit_F_Seq/AS_Hit_F_Seq.gltf" },
-			{ "Death",				kAnimDir + "08_Hit/01_Hit/AS_Hit_Death_Seq/AS_Hit_Death_Seq.gltf" },
-		};
+		{ "Idle",				kAnimDir + "01_Idle/01_Idle/AS_Idle_Seq/AS_Idle_Seq.gltf" },
+		{ "Equip",				kAnimDir + "01_Idle/01_Idle/AS_Idle_to_Idle_Combat_Seq/AS_Idle_to_Idle_Combat_Seq.gltf" },
+		{ "Unequip",			kAnimDir + "01_Idle/02_Idle_Combat/AS_Idle_Combat_to_Idle_Seq/AS_Idle_Combat_to_Idle_Seq.gltf" },
+		{ "Combat_Idle",		kAnimDir + "01_Idle/02_Idle_Combat/AS_Idle_Combat_Seq/AS_Idle_Combat_Seq.gltf" },
+		{ "Evade",				kAnimDir + "07_Roll/02_Roll_Combat/AS_Roll_Combat_F_0_Seq/AS_Roll_Combat_F_0_Seq.gltf" },
+		{ "Dash",				kAnimDir + "06_Dodge/01_Dodge/AS_Dodge_F_0_Seq/AS_Dodge_F_0_Seq.gltf" },
+		{ "Combat_Run",			kAnimDir + "04_Run/02_Run_Combat/01_Run_Combat_F_0/AS_Run_Combat_F_0_Loop_Seq/AS_Run_Combat_F_0_Loop_Seq.gltf" },
+		{ "Run",				kAnimDir + "04_Run/01_Run/01_Run_F_0/AS_Run_F_0_Loop_Seq/AS_Run_F_0_Loop_Seq.gltf" },
+		{ "JumpStart",			kAnimDir + "05_Jump/01_Jump/01_Jump_0/AS_Jump_Start_0_Seq/AS_Jump_Start_0_Seq.gltf" },
+		{ "JumpLoop",			kAnimDir + "05_Jump/01_Jump/01_Jump_0/AS_Jump_Loop_0_Seq/AS_Jump_Loop_0_Seq.gltf" },
+		{ "JumpEnd",			kAnimDir + "05_Jump/01_Jump/01_Jump_0/AS_Jump_End_0_Seq/AS_Jump_End_0_Seq.gltf" },
+		{ "Combat_JumpStart",	kAnimDir + "05_Jump/02_Jump_Combat/01_Jump_Combat_0/AS_Jump_Combat_Start_0_Seq/AS_Jump_Combat_Start_0_Seq.gltf" },
+		{ "Combat_JumpLoop",	kAnimDir + "05_Jump/02_Jump_Combat/01_Jump_Combat_0/AS_Jump_Combat_Loop_0_Seq/AS_Jump_Combat_Loop_0_Seq.gltf" },
+		{ "Combat_JumpEnd",		kAnimDir + "05_Jump/02_Jump_Combat/01_Jump_Combat_0/AS_Jump_Combat_End_0_Seq/AS_Jump_Combat_End_0_Seq.gltf" },
+		{ "Damage",				kAnimDir + "08_Hit/01_Hit/AS_Hit_F_Seq/AS_Hit_F_Seq.gltf" },
+		{ "Death",				kAnimDir + "08_Hit/01_Hit/AS_Hit_Death_Seq/AS_Hit_Death_Seq.gltf" },
+	};
 
-		// 攻撃アニメーション（Attack_タイプ_段数）
-		for (int type = 1; type <= kAttackTypeNum; ++type)
+	// 攻撃アニメーション（Attack_タイプ_段数）
+	for (int type = 1; type <= kAttackTypeNum; ++type)
+	{
+		for (int step = 1; step <= 4; ++step)
 		{
-			for (int step = 1; step <= 4; ++step)
+			std::string typeStr = "0" + std::to_string(type);
+			std::string stepStr = "0" + std::to_string(step);
+
+			// 4-3 だけは Start / Loop / End の3分割
+			if (type == 4 && step == 3)
 			{
-				std::string typeStr = "0" + std::to_string(type);
-				std::string stepStr = "0" + std::to_string(step);
-
-				// 4-3 だけは Start / Loop / End の3分割
-				if (type == 4 && step == 3)
-				{
-					std::string basePath = kAnimDir + "02_Attack/04_Combo_Attack_04/AS_Combo_Attack_04_03_";
-					animList.push_back({ "Attack_4_3_Start", basePath + "Start_Seq/AS_Combo_Attack_04_03_Start_Seq.gltf" });
-					animList.push_back({ "Attack_4_3_Loop",  basePath + "Loop_Seq/AS_Combo_Attack_04_03_Loop_Seq.gltf" });
-					animList.push_back({ "Attack_4_3_End",   basePath + "End_Seq/AS_Combo_Attack_04_03_End_Seq.gltf" });
-					continue;
-				}
-
-				std::string animName = "Attack_" + std::to_string(type) + "_" + std::to_string(step);
-				std::string fileName = "AS_Combo_Attack_" + typeStr + "_" + stepStr + "_Seq";
-				std::string path = kAnimDir + "02_Attack/"
-					+ typeStr + "_Combo_Attack_" + typeStr + "/"
-					+ fileName + "/" + fileName + ".gltf";
-
-				animList.push_back({ animName, path });
+				std::string basePath = kAnimDir + "02_Attack/04_Combo_Attack_04/AS_Combo_Attack_04_03_";
+				animList.push_back({ "Attack_4_3_Start", basePath + "Start_Seq/AS_Combo_Attack_04_03_Start_Seq.gltf" });
+				animList.push_back({ "Attack_4_3_Loop",  basePath + "Loop_Seq/AS_Combo_Attack_04_03_Loop_Seq.gltf" });
+				animList.push_back({ "Attack_4_3_End",   basePath + "End_Seq/AS_Combo_Attack_04_03_End_Seq.gltf" });
+				continue;
 			}
+
+			std::string animName = "Attack_" + std::to_string(type) + "_" + std::to_string(step);
+			std::string fileName = "AS_Combo_Attack_" + typeStr + "_" + stepStr + "_Seq";
+			std::string path = kAnimDir + "02_Attack/"
+				+ typeStr + "_Combo_Attack_" + typeStr + "/"
+				+ fileName + "/" + fileName + ".gltf";
+
+			animList.push_back({ animName, path });
 		}
-
-		return animList;
 	}
 
-	// GUIで調整した回転(度)・座標から、ノードに追従する行列を作成
-	Math::Matrix CreateAttachMatrix(const Math::Vector3& rotDeg, const Math::Vector3& pos,
-		const Math::Matrix& nodeMat, const Math::Matrix& ownerMat)
-	{
-		Math::Matrix rot =
-			Math::Matrix::CreateRotationX(DirectX::XMConvertToRadians(rotDeg.x))
-			* Math::Matrix::CreateRotationY(DirectX::XMConvertToRadians(rotDeg.y))
-			* Math::Matrix::CreateRotationZ(DirectX::XMConvertToRadians(rotDeg.z));
-		Math::Matrix trans = Math::Matrix::CreateTranslation(pos);
+	return animList;
+}
 
-		return rot * trans * nodeMat * ownerMat;
-	}
+// GUIで調整した回転(度)・座標から、ノードに追従する行列を作成
+Math::Matrix Player::CreateAttachMatrix(const Math::Vector3& rotDeg, const Math::Vector3& pos,
+	const Math::Matrix& nodeMat, const Math::Matrix& ownerMat)
+{
+	Math::Matrix rot =
+		Math::Matrix::CreateRotationX(DirectX::XMConvertToRadians(rotDeg.x))
+		* Math::Matrix::CreateRotationY(DirectX::XMConvertToRadians(rotDeg.y))
+		* Math::Matrix::CreateRotationZ(DirectX::XMConvertToRadians(rotDeg.z));
+	Math::Matrix trans = Math::Matrix::CreateTranslation(pos);
 
-	// 剣のローカルZ軸上の点をワールド座標に変換
-	Math::Vector3 GetSwordPoint(const Math::Matrix& swordMat, float localZ)
-	{
-		return Math::Vector3::Transform(Math::Vector3(0.0f, 0.0f, localZ), swordMat);
-	}
+	return rot * trans * nodeMat * ownerMat;
+}
+
+// 剣のローカルY軸（刃の方向）上の点をワールド座標に変換
+Math::Vector3 Player::GetSwordPoint(const Math::Matrix& swordMat, float localY)
+{
+	return Math::Vector3::Transform(Math::Vector3(0.0f, localY, 0.0f), swordMat);
+}
+
+// 剣の軌跡ポリゴンに渡す行列を作成
+// KdTrailPolygonは行列のX軸方向に帯を作るので、X軸を刃の向き・長さに合わせる
+Math::Matrix Player::CreateTrailMatrix(const Math::Matrix& swordMat)
+{
+	Math::Vector3 base = GetSwordPoint(swordMat, kSwordBladeBaseY);
+	Math::Vector3 tip = GetSwordPoint(swordMat, kSwordBladeTipY);
+
+	// 帯の幅は「X軸の長さ × 0.5」になるので、刃の長さの2倍を設定する
+	Math::Matrix trailMat = Math::Matrix::Identity;
+	trailMat.Right((tip - base) * (kSwordTrailWidthRate * 2.0f));
+	trailMat.Translation((base + tip) * 0.5f);
+	return trailMat;
 }
 
 void Player::Init()
@@ -156,7 +175,8 @@ void Player::Init()
 	m_model = std::make_shared<KdModelWork>();
 	m_swordModel = std::make_shared<KdModelData>();
 	m_scabbardModel = std::make_shared<KdModelData>();
-	m_swordTrail = std::make_shared<KdTrailPolygon>();
+	m_swordTrailR = std::make_shared<KdTrailPolygon>();
+	m_swordTrailL = std::make_shared<KdTrailPolygon>();
 
 	// 当たり判定
 	m_pCollider = std::make_unique<KdCollider>();
@@ -194,8 +214,12 @@ void Player::Init()
 	ChangeState(std::make_shared<PlayerStateIdle>());
 	ChangeAnimation("Idle", true);
 
-	// Effect読込
-	m_swordTrail->SetMaterial("Asset/Textures/_GameObject/_Effect/_Sword_Trail.png");
+	// 剣の軌跡（左右）
+	for (const auto& trail : { m_swordTrailR, m_swordTrailL })
+	{
+		trail->SetMaterial(kSwordTrailTexture);
+		trail->SetLength(kSwordTrailLength);
+	}
 
 	m_pos = { 0, 0.0f, 0.5f };
 
@@ -229,11 +253,14 @@ void Player::Update()
 
 	UpdateInvincibleTimer();
 
+	m_isTrailAddedThisFrame = false;
+
 	if (m_state)
 	{
 		m_state->Update(this);
 	}
 
+	UpdateSwordTrails();
 	UpdateAwakening();
 	UpdateHpGage();
 	UpdateAttackTypeSwitch();
@@ -255,10 +282,22 @@ void Player::GenerateDepthMapFromLight()
 
 void Player::DrawUnLit()
 {
-	if (m_swordTrail)
+	auto& shaderManager = KdShaderManager::Instance();
+
+	// 軌跡の帯は裏からも見えるようにカリングを切る
+	shaderManager.ChangeRasterizerState(KdRasterizerState::CullNone);
+	shaderManager.ChangeBlendState(KdBlendState::Alpha);
+
+	for (const auto& trail : { m_swordTrailR, m_swordTrailL })
 	{
-		KdShaderManager::Instance().m_StandardShader.DrawPolygon(*m_swordTrail);
+		if (trail)
+		{
+			shaderManager.m_StandardShader.DrawPolygon(*trail);
+		}
 	}
+
+	shaderManager.UndoBlendState();
+	shaderManager.UndoRasterizerState();
 }
 
 void Player::DrawLit()
@@ -306,41 +345,66 @@ void Player::UpdateWeaponMatrix()
 
 	if (!m_model) return;
 
-	// 鞘の行列を計算（ホルダーの骨が見つからない場合は背骨で代用）
-	auto calcScabbard = [this](const std::string& holderName, const Math::Vector3& rot, const Math::Vector3& pos, Math::Matrix& out)
-	{
-		const KdModelWork::Node* pNode = m_model->FindNode(holderName);
-		if (!pNode) pNode = m_model->FindNode("spine_05");
-		if (pNode)
-		{
-			out = CreateAttachMatrix(rot, pos, pNode->m_worldTransform, m_mWorld);
-		}
-	};
-
-	// 剣の行列を計算（納刀時は鞘に合わせる）
-	auto calcSword = [this](const std::string& handName, const Math::Vector3& rot, const Math::Vector3& pos,
-		const Math::Matrix& scabbardMat, Math::Matrix& out)
-	{
-		if (m_weaponState != WeaponState::Equipped)
-		{
-			out = scabbardMat;
-			return;
-		}
-
-		const KdModelWork::Node* pNode = m_model->FindNode(handName);
-		if (pNode)
-		{
-			out = CreateAttachMatrix(rot, pos, pNode->m_worldTransform, m_mWorld);
-		}
-	};
-
 	// 右
-	calcScabbard("Weapon_Holder_R", s_sheathedRotR, s_sheathedPosR, m_scabbardWorldR);
-	calcSword("Weapon_R", s_weaponRotR, s_weaponPosR, m_scabbardWorldR, m_swordWorldR);
+	m_scabbardWorldR = CalcScabbardMatrix("Weapon_Holder_R", s_sheathedRotR, s_sheathedPosR);
+	m_swordWorldR = CalcSwordMatrix("Weapon_R", s_weaponRotR, s_weaponPosR, m_scabbardWorldR);
 
 	// 左
-	calcScabbard("Weapon_Holder_L", s_sheathedRotL, s_sheathedPosL, m_scabbardWorldL);
-	calcSword("Weapon_L", s_weaponRotL, s_weaponPosL, m_scabbardWorldL, m_swordWorldL);
+	m_scabbardWorldL = CalcScabbardMatrix("Weapon_Holder_L", s_sheathedRotL, s_sheathedPosL);
+	m_swordWorldL = CalcSwordMatrix("Weapon_L", s_weaponRotL, s_weaponPosL, m_scabbardWorldL);
+}
+
+Math::Matrix Player::CalcScabbardMatrix(const std::string& holderName, const Math::Vector3& rot, const Math::Vector3& pos) const
+{
+	// ホルダーの骨が見つからない場合は背骨で代用
+	const KdModelWork::Node* pNode = m_model->FindNode(holderName);
+	if (!pNode) pNode = m_model->FindNode("spine_05");
+	if (!pNode) return Math::Matrix::Identity;
+
+	return CreateAttachMatrix(rot, pos, pNode->m_worldTransform, m_mWorld);
+}
+
+Math::Matrix Player::CalcSwordMatrix(const std::string& handName, const Math::Vector3& rot, const Math::Vector3& pos,
+	const Math::Matrix& scabbardMat) const
+{
+	// 納刀時は鞘に合わせる
+	if (m_weaponState != WeaponState::Equipped) return scabbardMat;
+
+	const KdModelWork::Node* pNode = m_model->FindNode(handName);
+	if (!pNode) return Math::Matrix::Identity;
+
+	return CreateAttachMatrix(rot, pos, pNode->m_worldTransform, m_mWorld);
+}
+
+void Player::AddSwordTrailPoints()
+{
+	// 新しい振りの始まりなら、前の振りの軌跡とつながらないように消しておく
+	if (!m_isTrailActive)
+	{
+		m_swordTrailR->ClearPoints();
+		m_swordTrailL->ClearPoints();
+	}
+
+	m_swordTrailR->AddPoint(CreateTrailMatrix(m_swordWorldR));
+	m_swordTrailL->AddPoint(CreateTrailMatrix(m_swordWorldL));
+
+	m_isTrailActive = true;
+	m_isTrailAddedThisFrame = true;
+}
+
+void Player::UpdateSwordTrails()
+{
+	if (m_isTrailAddedThisFrame) return;
+
+	// 攻撃していないフレームは、古いポイントから消して軌跡を徐々に短くする
+	m_isTrailActive = false;
+	for (const auto& trail : { m_swordTrailR, m_swordTrailL })
+	{
+		if (trail && trail->GetNumPoints() > 0)
+		{
+			trail->DelPointBack();
+		}
+	}
 }
 
 void Player::UpdateAwakening()
@@ -560,22 +624,22 @@ void Player::OnDamage(int damage, bool isCritical)
 
 Math::Vector3 Player::GetSwordTipPositionR() const
 {
-	return GetSwordPoint(m_swordWorldR, kSwordTipLocalZ);
+	return GetSwordPoint(m_swordWorldR, kSwordBladeTipY);
 }
 
 Math::Vector3 Player::GetSwordTipPositionL() const
 {
-	return GetSwordPoint(m_swordWorldL, kSwordTipLocalZ);
+	return GetSwordPoint(m_swordWorldL, kSwordBladeTipY);
 }
 
 Math::Vector3 Player::GetSwordBasePositionR() const
 {
-	return GetSwordPoint(m_swordWorldR, kSwordBaseLocalZ);
+	return GetSwordPoint(m_swordWorldR, kSwordBladeBaseY);
 }
 
 Math::Vector3 Player::GetSwordBasePositionL() const
 {
-	return GetSwordPoint(m_swordWorldL, kSwordBaseLocalZ);
+	return GetSwordPoint(m_swordWorldL, kSwordBladeBaseY);
 }
 
 Math::Vector3 Player::GetCameraTargetPos() const

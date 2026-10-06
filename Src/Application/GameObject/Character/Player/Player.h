@@ -94,7 +94,8 @@ public:
 	Math::Vector3 GetSwordBasePositionR() const;
 	Math::Vector3 GetSwordBasePositionL() const;
 
-	std::shared_ptr<KdTrailPolygon> GetSwordTrail() { return m_swordTrail; }
+	// 現在の剣の位置を左右の軌跡に追加する（攻撃中に毎フレーム呼ぶ）
+	void AddSwordTrailPoints();
 
 	Math::Vector3 GetCameraTargetPos() const;
 
@@ -125,8 +126,29 @@ private:
 	void UpdateHpGage();
 	void UpdateAttackTypeSwitch();
 
+	// 剣の軌跡の更新（攻撃していないフレームは軌跡を徐々に消す）
+	void UpdateSwordTrails();
+
 	// 入力方向（ローカル座標 X:左右 Z:前後）を取得
 	Math::Vector3 GetInputDir() const;
+
+	// 鞘・剣の行列を計算
+	Math::Matrix CalcScabbardMatrix(const std::string& holderName, const Math::Vector3& rot, const Math::Vector3& pos) const;
+	Math::Matrix CalcSwordMatrix(const std::string& handName, const Math::Vector3& rot, const Math::Vector3& pos,
+		const Math::Matrix& scabbardMat) const;
+
+	// 読み込むアニメーションのリストを作成
+	static std::vector<AnimLoadInfo> CreateAnimList();
+
+	// GUIで調整した回転(度)・座標から、ノードに追従する行列を作成
+	static Math::Matrix CreateAttachMatrix(const Math::Vector3& rotDeg, const Math::Vector3& pos,
+		const Math::Matrix& nodeMat, const Math::Matrix& ownerMat);
+
+	// 剣のローカルY軸（刃の方向）上の点をワールド座標に変換
+	static Math::Vector3 GetSwordPoint(const Math::Matrix& swordMat, float localY);
+
+	// 剣の軌跡ポリゴンに渡す行列を作成
+	static Math::Matrix CreateTrailMatrix(const Math::Matrix& swordMat);
 
 	// 現在の向き（m_angle）をラジアンで取得
 	float GetAngleRad() const { return DirectX::XMConvertToRadians(m_angle); }
@@ -136,7 +158,10 @@ private:
 	std::shared_ptr<KdModelData>	m_swordModel = nullptr;
 	std::shared_ptr<KdModelData>	m_scabbardModel = nullptr;
 	std::shared_ptr<PlayerState>	m_state = nullptr;
-	std::shared_ptr<KdTrailPolygon> m_swordTrail = nullptr;
+	std::shared_ptr<KdTrailPolygon> m_swordTrailR = nullptr;	// 右手の剣の軌跡
+	std::shared_ptr<KdTrailPolygon> m_swordTrailL = nullptr;	// 左手の剣の軌跡
+	bool							m_isTrailActive = false;			// 軌跡を描いている途中か
+	bool							m_isTrailAddedThisFrame = false;	// このフレームに軌跡を追加したか
 
 	std::unordered_map<std::string, std::string> m_lazyAnimPaths;
 	std::unordered_map<std::string, float>		 m_landingFrames;	// 着地アニメ名 → 両足が接地するフレーム

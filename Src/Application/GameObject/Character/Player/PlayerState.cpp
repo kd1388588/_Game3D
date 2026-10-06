@@ -25,70 +25,70 @@ namespace
 	constexpr float kFallingGravity			= 0.011f;	// これを超えたら落下中とみなす
 	constexpr int	kMaxLandingPredictFrame	= 120;		// 着地予測を行う最大フレーム数
 	constexpr float kLandingBlendFrame		= 3.0f;		// 空中ループ→着地アニメのブレンドフレーム数
+}
 
-	// 前方へ減速しながら移動する（回避・ダッシュ用）
-	void MoveForwardWithDecay(Player* player, float baseSpeed, float moveFrame, bool isFlat)
+// 前方へ減速しながら移動する（回避・ダッシュ用）
+void PlayerState::MoveForwardWithDecay(Player* player, float baseSpeed, float moveFrame, bool isFlat)
+{
+	float animTime = player->GetAnimTime();
+	if (animTime >= moveFrame) return;
+
+	float speed = baseSpeed * (1.0f - (animTime / moveFrame));
+
+	Math::Vector3 forward = player->GetMatrix().Backward() * -1.0f;
+	if (isFlat)
 	{
-		float animTime = player->GetAnimTime();
-		if (animTime >= moveFrame) return;
-
-		float speed = baseSpeed * (1.0f - (animTime / moveFrame));
-
-		Math::Vector3 forward = player->GetMatrix().Backward() * -1.0f;
-		if (isFlat)
-		{
-			forward.y = 0.0f;
-			forward.Normalize();
-		}
-
-		player->SetPos(player->GetPos() + forward * speed);
-		player->BumpHit();
+		forward.y = 0.0f;
+		forward.Normalize();
 	}
 
-	// 待機・移動中に共通の入力によるステート遷移
-	// 遷移した場合は true を返す
-	bool TryCommonTransition(Player* player)
+	player->SetPos(player->GetPos() + forward * speed);
+	player->BumpHit();
+}
+
+// 待機・移動中に共通の入力によるステート遷移
+// 遷移した場合は true を返す
+bool PlayerState::TryCommonTransition(Player* player)
+{
+	// Shift：武器装備中は回避、未装備ならダッシュ
+	if (IsKeyDown(VK_SHIFT))
 	{
-		// Shift：武器装備中は回避、未装備ならダッシュ
-		if (IsKeyDown(VK_SHIFT))
+		if (player->GetWeaponState() == WeaponState::Equipped)
 		{
-			if (player->GetWeaponState() == WeaponState::Equipped)
-			{
-				player->ChangeState(std::make_shared<PlayerStateEvade>());
-			}
-			else
-			{
-				player->ChangeState(std::make_shared<PlayerStateDash>());
-			}
-			return true;
+			player->ChangeState(std::make_shared<PlayerStateEvade>());
 		}
-
-		// ジャンプ
-		if (player->CheckJumpInput() && player->IsOnGround())
+		else
 		{
-			player->ChangeState(std::make_shared<PlayerStateJump>());
-			return true;
+			player->ChangeState(std::make_shared<PlayerStateDash>());
 		}
-
-		// 武器の抜刀・納刀切り替え
-		if (player->CheckEquipInput())
-		{
-			bool toCombat = !player->IsCombatMode();
-			player->SetCombatMode(toCombat);
-			if (toCombat)	player->ChangeState(std::make_shared<PlayerStateEquip>());
-			else			player->ChangeState(std::make_shared<PlayerStateUnequip>());
-			return true;
-		}
-
-		// 攻撃
-		if (player->GetWeaponState() == WeaponState::Equipped && player->CheckAttackInput())
-		{
-			player->ChangeState(std::make_shared<PlayerStateComboAttack>(player->GetCurrentAttackType(), 1));
-			return true;
-		}
-
-		return false;
+		return true;
 	}
+
+	// ジャンプ
+	if (player->CheckJumpInput() && player->IsOnGround())
+	{
+		player->ChangeState(std::make_shared<PlayerStateJump>());
+		return true;
+	}
+
+	// 武器の抜刀・納刀切り替え
+	if (player->CheckEquipInput())
+	{
+		bool toCombat = !player->IsCombatMode();
+		player->SetCombatMode(toCombat);
+		if (toCombat)	player->ChangeState(std::make_shared<PlayerStateEquip>());
+		else			player->ChangeState(std::make_shared<PlayerStateUnequip>());
+		return true;
+	}
+
+	// 攻撃
+	if (player->GetWeaponState() == WeaponState::Equipped && player->CheckAttackInput())
+	{
+		player->ChangeState(std::make_shared<PlayerStateComboAttack>(player->GetCurrentAttackType(), 1));
+		return true;
+	}
+
+	return false;
 }
 
 void PlayerStateIdle::ChangeState(Player* player)
@@ -263,7 +263,8 @@ void PlayerStateComboAttack::Update(Player* player)
 	// 攻撃判定と剣の軌跡
 	if (animTime >= kAttackHitStartFrame && animTime <= kAttackHitEndFrame)
 	{
-		auto trail = player->GetSwordTrail();
+		// 左右の剣の軌跡を伸ばす（攻撃していないフレームはPlayer側で徐々に消える）
+		player->AddSwordTrailPoints();
 
 		if (!m_isHit)
 		{
@@ -276,14 +277,6 @@ void PlayerStateComboAttack::Update(Player* player)
 				player->SetHitStopTimer(1);
 				//m_isHit = true;				// 「当てた」と記録する（もう判定しない）
 			}
-
-			// 毎フレーム、剣の行列を軌跡に渡してポイントを追加する
-			if (trail) trail->AddPoint(player->GetSwordMatrixR());
-		}
-		else
-		{
-			// 軌跡の線をリセットする（次の攻撃で空間を跨いで線が繋がらないように）
-			if (trail) trail->ClearPoints();
 		}
 
 		/*

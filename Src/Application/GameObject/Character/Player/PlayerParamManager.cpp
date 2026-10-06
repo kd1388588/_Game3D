@@ -42,45 +42,33 @@ void PlayerParamManager::Save(const std::string& filepath)
 	}
 }
 
-namespace
+const std::vector<PlayerParamManager::WeaponParamEntry>& PlayerParamManager::GetWeaponParamEntries()
 {
-	// 武器パラメータ（JSONのキー名と、対応するPlayerの静的変数）
-	struct WeaponParamEntry
+	static const std::vector<WeaponParamEntry> entries =
 	{
-		const char*		key;
-		Math::Vector3*	pos;
-		Math::Vector3*	rot;
+		{ "WeaponR",	&Player::s_weaponPosR,		&Player::s_weaponRotR },
+		{ "WeaponL",	&Player::s_weaponPosL,		&Player::s_weaponRotL },
+		{ "SheathedR",	&Player::s_sheathedPosR,	&Player::s_sheathedRotR },
+		{ "SheathedL",	&Player::s_sheathedPosL,	&Player::s_sheathedRotL },
 	};
+	return entries;
+}
 
-	const std::vector<WeaponParamEntry>& GetWeaponParamEntries()
-	{
-		static const std::vector<WeaponParamEntry> entries =
-		{
-			{ "WeaponR",	&Player::s_weaponPosR,		&Player::s_weaponRotR },
-			{ "WeaponL",	&Player::s_weaponPosL,		&Player::s_weaponRotL },
-			{ "SheathedR",	&Player::s_sheathedPosR,	&Player::s_sheathedRotR },
-			{ "SheathedL",	&Player::s_sheathedPosL,	&Player::s_sheathedRotL },
-		};
-		return entries;
-	}
+bool PlayerParamManager::ParseVec3(const std::string& line, Math::Vector3& out)
+{
+	size_t start = line.find('[');
+	size_t end = line.find(']');
+	if (start == std::string::npos || end == std::string::npos) return false;
 
-	// "[x, y, z]" 形式の行からベクトルを読み取る
-	bool ParseVec3(const std::string& line, Math::Vector3& out)
-	{
-		size_t start = line.find('[');
-		size_t end = line.find(']');
-		if (start == std::string::npos || end == std::string::npos) return false;
+	std::string vals = line.substr(start + 1, end - start - 1);
+	for (char& c : vals) { if (c == ',') c = ' '; } // カンマを空白に変換
 
-		std::string vals = line.substr(start + 1, end - start - 1);
-		for (char& c : vals) { if (c == ',') c = ' '; } // カンマを空白に変換
+	std::istringstream iss(vals);
+	float x, y, z;
+	if (!(iss >> x >> y >> z)) return false;
 
-		std::istringstream iss(vals);
-		float x, y, z;
-		if (!(iss >> x >> y >> z)) return false;
-
-		out = { x, y, z };
-		return true;
-	}
+	out = { x, y, z };
+	return true;
 }
 
 // ====================================================================

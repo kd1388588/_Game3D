@@ -11,17 +11,17 @@ namespace
 	// 攻撃判定を出すアニメーションフレームの範囲
 	constexpr float kAttackHitStartFrame	= 15.0f;
 	constexpr float kAttackHitEndFrame		= 45.0f;
+}
 
-	// ターゲットへの水平方向のベクトルを取得（ターゲットがいなければ false）
-	bool GetFlatVecToTarget(Enemy* enemy, Math::Vector3& outVec)
-	{
-		auto spTarget = enemy->GetTarget().lock();
-		if (!spTarget) return false;
+// ターゲットへの水平方向のベクトルを取得（ターゲットがいなければ false）
+bool EnemyState::GetFlatVecToTarget(Enemy* enemy, Math::Vector3& outVec)
+{
+	auto spTarget = enemy->GetTarget().lock();
+	if (!spTarget) return false;
 
-		outVec = spTarget->GetPos() - enemy->GetPos();
-		outVec.y = 0.0f;
-		return true;
-	}
+	outVec = spTarget->GetPos() - enemy->GetPos();
+	outVec.y = 0.0f;
+	return true;
 }
 
 void EnemyStateIdle::ChangeState(Enemy* enemy)

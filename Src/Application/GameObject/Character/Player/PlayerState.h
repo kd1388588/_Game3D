@@ -15,6 +15,14 @@ public:
 
 	// 毎フレーム呼ばれる（入力・移動処理など）
 	virtual void Update(Player* player) = 0;
+
+protected:
+
+	// 前方へ減速しながら移動する（回避・ダッシュ用）
+	static void MoveForwardWithDecay(Player* player, float baseSpeed, float moveFrame, bool isFlat);
+
+	// 待機・移動中に共通の入力によるステート遷移（遷移した場合は true）
+	static bool TryCommonTransition(Player* player);
 };
 
 // 派生クラス
