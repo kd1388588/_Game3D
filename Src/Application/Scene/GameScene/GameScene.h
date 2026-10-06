@@ -28,4 +28,14 @@ private:
 
 	// 敵を生成して配置する
 	void SpawnEnemy(const Math::Vector3& pos, bool isBoss, const std::shared_ptr<Player>& target);
+
+	// クリア・ゲームオーバーの判定（条件を満たしてから少し待って画面を切り替える）
+	void CheckGameEnd();
+
+	// 生き残っている敵の数
+	int GetAliveEnemyCount() const;
+
+	std::weak_ptr<Player>	m_wpPlayer;
+	int						m_gameOverTimer = 0;	// プレイヤーが倒れてからの経過フレーム
+	int						m_clearTimer = 0;		// 敵が全滅してからの経過フレーム
 };

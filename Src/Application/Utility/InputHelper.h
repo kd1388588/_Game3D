@@ -13,7 +13,9 @@ namespace InputHelper
 	class KeyTrigger
 	{
 	public:
-		explicit KeyTrigger(int vKey) : m_vKey(vKey) {}
+		// 作った時点で押されているキーは「押した瞬間」とみなさない
+		// （シーン切り替え直後に、前のシーンで押したキーで反応しないように）
+		explicit KeyTrigger(int vKey) : m_vKey(vKey), m_isPrevDown(IsKeyDown(vKey)) {}
 
 		// 毎フレーム1回だけ呼ぶこと（前フレームの状態を内部で更新する）
 		bool Update()

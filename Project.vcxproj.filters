@@ -67,6 +67,15 @@
     <Filter Include="Src\Application\Utility">
       <UniqueIdentifier>{7d3c1f2a-5b6e-4c8d-9a1f-2e3b4c5d6e7f}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Src\Application\GameObject\UI\Text">
+      <UniqueIdentifier>{3ab3531c-51ed-4dd7-a5f1-2b22040c1673}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Src\Application\Scene\GameClearScene">
+      <UniqueIdentifier>{b81c5f52-6692-45e0-b8b0-b0b9e2346f54}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Src\Application\Scene\GameOverScene">
+      <UniqueIdentifier>{71855377-712b-4a8f-92d2-a62a466c6a1a}</UniqueIdentifier>
+    </Filter>
     <Filter Include="Src\Application\Scene">
       <UniqueIdentifier>{a572e10e-6690-4c7c-af7d-7dcf13d1ee2f}</UniqueIdentifier>
     </Filter>
@@ -309,6 +318,15 @@
     <ClInclude Include="Src\Application\Utility\InputHelper.h">
       <Filter>Src\Application\Utility</Filter>
     </ClInclude>
+    <ClInclude Include="Src\Application\GameObject\UI\Text\UIText.h">
+      <Filter>Src\Application\GameObject\UI\Text</Filter>
+    </ClInclude>
+    <ClInclude Include="Src\Application\Scene\GameClearScene\GameClearScene.h">
+      <Filter>Src\Application\Scene\GameClearScene</Filter>
+    </ClInclude>
+    <ClInclude Include="Src\Application\Scene\GameOverScene\GameOverScene.h">
+      <Filter>Src\Application\Scene\GameOverScene</Filter>
+    </ClInclude>
     <ClInclude Include="Src\Application\Scene\SceneManager.h">
       <Filter>Src\Application\Scene</Filter>
     </ClInclude>
@@ -511,6 +529,15 @@
     </ClCompile>
     <ClCompile Include="Src\Application\Scene\TitleScene\TitleScene.cpp">
       <Filter>Src\Application\Scene\TitleScene</Filter>
+    </ClCompile>
+    <ClCompile Include="Src\Application\GameObject\UI\Text\UIText.cpp">
+      <Filter>Src\Application\GameObject\UI\Text</Filter>
+    </ClCompile>
+    <ClCompile Include="Src\Application\Scene\GameClearScene\GameClearScene.cpp">
+      <Filter>Src\Application\Scene\GameClearScene</Filter>
+    </ClCompile>
+    <ClCompile Include="Src\Application\Scene\GameOverScene\GameOverScene.cpp">
+      <Filter>Src\Application\Scene\GameOverScene</Filter>
     </ClCompile>
     <ClCompile Include="Src\Application\Scene\GameScene\GameScene.cpp">
       <Filter>Src\Application\Scene\GameScene</Filter>

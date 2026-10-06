@@ -506,14 +506,6 @@ void PlayerStateDead::ChangeState(Player* player)
 
 void PlayerStateDead::Update(Player* player)
 {
-	//if (player->IsAnimEnd())
-	//{
-	//	player->Expire();
-	//}
-	// デバッグ用：死亡モーション後にQキーで復活
-	if (player->IsAnimEnd() && IsKeyDown('Q'))
-	{
-		player->Revive();
-		player->ChangeState(std::make_shared<PlayerStateIdle>());
-	}
+	// 死亡モーションの後はゲームオーバー画面へ（GameScene側で判定）
+	// 倒れた後に動かないよう、ここでは何もしない
 }

@@ -77,6 +77,9 @@ public:
 	// デバッグ用
 	void Revive() { m_hp = m_maxHp; }
 
+	// HPが0になったかどうか
+	bool IsDead() const { return m_hp <= 0; }
+
 	// ボックス（OBB）による攻撃判定
 	bool AttackOBB(const Math::Matrix& swordMatrix, bool isCritical);
 

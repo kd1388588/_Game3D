@@ -16,8 +16,15 @@
 // Effekseer関連
 #include "../../../Framework/Effekseer/KdEffekseerManager.h"
 
+namespace
+{
+	constexpr int kGameOverWaitFrame	= 60;	// 死亡モーション後、ゲームオーバー画面に移るまでのフレーム数
+	constexpr int kClearWaitFrame		= 90;	// 敵が全滅してから、クリア画面に移るまでのフレーム数
+}
+
 void GameScene::Event()
 {
+	// デバッグ用：Tキーでタイトルへ
 	if (GetAsyncKeyState('T') & 0x8000)
 	{
 		SceneManager::Instance().SetNextScene
@@ -25,6 +32,51 @@ void GameScene::Event()
 			SceneManager::SceneType::Title
 		);
 	}
+
+	CheckGameEnd();
+}
+
+void GameScene::CheckGameEnd()
+{
+	// ゲームオーバー：プレイヤーが倒れて、死亡モーションが終わってから少し待つ
+	auto player = m_wpPlayer.lock();
+	if (player && player->IsDead())
+	{
+		if (player->IsAnimEnd())
+		{
+			m_gameOverTimer++;
+		}
+
+		if (m_gameOverTimer >= kGameOverWaitFrame)
+		{
+			SceneManager::Instance().SetNextScene(SceneManager::SceneType::GameOver);
+		}
+		return;
+	}
+
+	// ゲームクリア：全ての敵を倒してから少し待つ
+	if (GetAliveEnemyCount() == 0)
+	{
+		m_clearTimer++;
+		if (m_clearTimer >= kClearWaitFrame)
+		{
+			SceneManager::Instance().SetNextScene(SceneManager::SceneType::GameClear);
+		}
+	}
+}
+
+int GameScene::GetAliveEnemyCount() const
+{
+	int count = 0;
+	for (const auto& obj : m_objList)
+	{
+		// 死亡モーションが終わった敵は IsExpired() が true になる
+		if (!obj->IsExpired() && std::dynamic_pointer_cast<Enemy>(obj))
+		{
+			count++;
+		}
+	}
+	return count;
 }
 
 void GameScene::Init()
@@ -39,6 +91,7 @@ void GameScene::Init()
 	player->SetOwner(this);
 	player->Init();
 	m_objList.push_back(player);
+	m_wpPlayer = player;
 
 	// 敵グループの配置
 	const std::vector<Math::Vector3> enemyPosList =
