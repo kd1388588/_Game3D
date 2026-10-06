@@ -276,8 +276,20 @@ void KdModelWork::SetModelData(const std::shared_ptr<KdModelData>& rModel)
 
 void KdModelWork::SetModelData(std::string_view fileName)
 {
+	std::shared_ptr<KdModelData> spData = KdAssets::Instance().m_modeldatas.GetData(fileName);
+
+	// ファイルが見つからない場合はクラッシュさせずにログを出して何もしない
+	if (!spData)
+	{
+		std::string msg = "【モデル読込失敗 (ファイルなし)】: " + std::string(fileName) + "\n";
+		OutputDebugStringA(msg.c_str());
+		MessageBoxA(nullptr, (msg + "\nAsset フォルダにこのファイルがあるか確認してください。").c_str(),
+			"モデル読込エラー", MB_OK | MB_ICONWARNING);
+		return;
+	}
+
 	// モデルのセット
-	SetModelData(KdAssets::Instance().m_modeldatas.GetData(fileName));
+	SetModelData(spData);
 }
 
 // ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== =====
