@@ -1,5 +1,4 @@
 ﻿// Player.cpp
-#include <filesystem>
 
 // Player
 #include "Player.h"
@@ -78,26 +77,6 @@ namespace
 	const std::vector<std::string> kLandingAnimNames	= { "JumpEnd", "Combat_JumpEnd" };
 	const std::vector<std::string> kFootNodeNames		= { "foot_l", "foot_r" };
 
-	// 候補の中から実在するファイルのパスを返す（どれも無ければ先頭を返す）
-	std::string FindExistingPath(const std::vector<std::string>& candidates)
-	{
-		for (const auto& path : candidates)
-		{
-			if (std::filesystem::exists(path)) return path;
-		}
-		return candidates.front();
-	}
-
-	// 戦闘時ジャンプのパス（フォルダ名の揺れに対応するため候補を2つ用意）
-	std::string GetCombatJumpPath(const std::string& phase)
-	{
-		return FindExistingPath
-		({
-			kAnimDir + "05_Jump/02_Jump/01_Jump_0/AS_Jump_" + phase + "_0_Seq/AS_Jump_" + phase + "_0_Seq.gltf",
-			kAnimDir + "05_Jump/02_Jump_Combat/01_Jump_Combat_0/AS_Jump_Combat_" + phase + "_0_Seq/AS_Jump_Combat_" + phase + "_0_Seq.gltf",
-		});
-	}
-
 	// 読み込むアニメーションのリストを作成
 	std::vector<AnimLoadInfo> CreateAnimList()
 	{
@@ -114,9 +93,9 @@ namespace
 			{ "JumpStart",			kAnimDir + "05_Jump/01_Jump/01_Jump_0/AS_Jump_Start_0_Seq/AS_Jump_Start_0_Seq.gltf" },
 			{ "JumpLoop",			kAnimDir + "05_Jump/01_Jump/01_Jump_0/AS_Jump_Loop_0_Seq/AS_Jump_Loop_0_Seq.gltf" },
 			{ "JumpEnd",			kAnimDir + "05_Jump/01_Jump/01_Jump_0/AS_Jump_End_0_Seq/AS_Jump_End_0_Seq.gltf" },
-			{ "Combat_JumpStart",	GetCombatJumpPath("Start") },
-			{ "Combat_JumpLoop",	GetCombatJumpPath("Loop") },
-			{ "Combat_JumpEnd",		GetCombatJumpPath("End") },
+			{ "Combat_JumpStart",	kAnimDir + "05_Jump/02_Jump_Combat/01_Jump_Combat_0/AS_Jump_Combat_Start_0_Seq/AS_Jump_Combat_Start_0_Seq.gltf" },
+			{ "Combat_JumpLoop",	kAnimDir + "05_Jump/02_Jump_Combat/01_Jump_Combat_0/AS_Jump_Combat_Loop_0_Seq/AS_Jump_Combat_Loop_0_Seq.gltf" },
+			{ "Combat_JumpEnd",		kAnimDir + "05_Jump/02_Jump_Combat/01_Jump_Combat_0/AS_Jump_Combat_End_0_Seq/AS_Jump_Combat_End_0_Seq.gltf" },
 			{ "Damage",				kAnimDir + "08_Hit/01_Hit/AS_Hit_F_Seq/AS_Hit_F_Seq.gltf" },
 			{ "Death",				kAnimDir + "08_Hit/01_Hit/AS_Hit_Death_Seq/AS_Hit_Death_Seq.gltf" },
 		};
