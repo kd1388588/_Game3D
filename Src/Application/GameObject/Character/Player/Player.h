@@ -51,6 +51,13 @@ public:
 	float GetGravity() const { return m_gravity; }
 	bool IsOnGround() const;	// 接地中（ジャンプ可能）かどうか
 
+	// 武器の装備状態に応じたアニメーション名を取得
+	// 装備中は "Combat_" 付きのものを返す（用意されていなければ通常版）
+	std::string GetWeaponAnimName(const std::string& baseName) const;
+
+	// 着地アニメーションで両足が接地しているフレーム
+	float GetLandingFrame(const std::string& animName) const;
+
 	// 攻撃アニメーション
 	void ChangeAnimationLazy(const std::string& animName, bool isLoop = true, bool forceRestart = false, float blendFrame = 0.0f);
 	void RegisterAnimPath(const std::string& name, const std::string& path) { m_lazyAnimPaths[name] = path; }
@@ -132,6 +139,7 @@ private:
 	std::shared_ptr<KdTrailPolygon> m_swordTrail = nullptr;
 
 	std::unordered_map<std::string, std::string> m_lazyAnimPaths;
+	std::unordered_map<std::string, float>		 m_landingFrames;	// 着地アニメ名 → 両足が接地するフレーム
 
 	std::weak_ptr<HPGage>			m_wpHpGage;
 	std::weak_ptr<TPSCamera>		m_camera;

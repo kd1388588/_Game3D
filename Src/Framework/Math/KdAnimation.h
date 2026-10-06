@@ -98,6 +98,16 @@ public:
 
 	float GetTime() const { return m_time; }
 
+	// 再生位置を指定する（途中のフレームから再生したい場合に使用）
+	void SetTime(float time)
+	{
+		m_time = time;
+		if (m_spAnimation && m_time > m_spAnimation->m_maxLength)
+		{
+			m_time = m_spAnimation->m_maxLength;
+		}
+	}
+
 private:
 
 	std::shared_ptr<KdAnimationData>	m_spAnimation = nullptr;	// 再生するアニメーションデータ

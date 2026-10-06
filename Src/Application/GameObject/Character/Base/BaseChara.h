@@ -28,7 +28,12 @@ public:
 	void LoadAnimations(const std::vector<AnimLoadInfo>& loadList);
 	void SetAnimationSpeed(float speed) { m_animSpeed = speed; }
 	float GetAnimTime() const { return m_animator.GetTime(); }
+	void SetAnimTime(float time) { m_animator.SetTime(time); }
 	bool IsAnimEnd() const { return m_animator.IsAnimationEnd(); }
+	bool HasAnimation(const std::string& animName) const;
+
+	// 指定した足の骨がすべて接地している最初のフレームを求める（見つからなければ0）
+	float CalcFootPlantFrame(const std::string& animName, const std::vector<std::string>& footNodeNames) const;
 
 	// ルートモーション関連
 	void SetUseRootMotion(bool use) { m_useRootMotion = use; }
@@ -39,9 +44,16 @@ public:
 
 	virtual void OnDamage(int damage, bool isCritical = false) {}
 
+	// 現在の落下速度のまま落ち続けた場合、何フレーム後に着地するかを予測する
+	// （maxFrames以内に着地しない・下に地面がない場合は -1）
+	int PredictLandingFrames(int maxFrames) const;
+
 protected:
 
 	void Release();
+
+	// 足元から下方向にレイを飛ばし、一番近い地面の座標を取得する
+	bool FindGroundBelow(float range, Math::Vector3& outHitPos) const;
 
 	// 無敵時間を1フレーム分進める
 	void UpdateInvincibleTimer();

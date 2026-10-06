@@ -23,6 +23,8 @@ namespace
 	// ジャンプ
 	constexpr float kJumpPower				= 0.25f;
 	constexpr float kFallingGravity			= 0.011f;	// これを超えたら落下中とみなす
+	constexpr int	kMaxLandingPredictFrame	= 120;		// 着地予測を行う最大フレーム数
+	constexpr float kLandingBlendFrame		= 3.0f;		// 空中ループ→着地アニメのブレンドフレーム数
 
 	// 前方へ減速しながら移動する（回避・ダッシュ用）
 	void MoveForwardWithDecay(Player* player, float baseSpeed, float moveFrame, bool isFlat)
@@ -91,7 +93,7 @@ namespace
 
 void PlayerStateIdle::ChangeState(Player* player)
 {
-	player->ChangeAnimation(player->IsCombatMode() ? "Combat_Idle" : "Idle", true);
+	player->ChangeAnimation(player->GetWeaponAnimName("Idle"), true);
 	player->SetAnimationSpeed(1.0f);
 	player->SetUseRootMotion(false);
 }
@@ -108,7 +110,7 @@ void PlayerStateIdle::Update(Player* player)
 
 void PlayerStateRun::ChangeState(Player* player)
 {
-	player->ChangeAnimation(player->IsCombatMode() ? "Combat_Run" : "Run", true);
+	player->ChangeAnimation(player->GetWeaponAnimName("Run"), true);
 	player->SetAnimationSpeed(1.0f);
 	player->SetUseRootMotion(false);
 }
@@ -375,9 +377,10 @@ void PlayerStateJump::ChangeState(Player* player)
 	m_jumpPhase = JumpPhaseAir;
 	m_jumpCount = 1;
 	m_isFalling = false;
+	m_isLandingAnimStarted = false;
 
 	player->ExecJump(kJumpPower);
-	player->ChangeAnimation("JumpStart", false, true);
+	player->ChangeAnimation(player->GetWeaponAnimName("JumpStart"), false, true);
 	player->SetAnimationSpeed(1.0f);
 	player->SetUseRootMotion(false);
 }
@@ -394,9 +397,10 @@ void PlayerStateJump::Update(Player* player)
 	// --------------------------------------------------
 	if (m_jumpPhase == JumpPhaseAir) // 【空中】
 	{
-		if ((player->IsAnimEnd() || isFallingNow) && player->GetAnimTime() > 0.0f)
+		// ジャンプ開始アニメが終わった・落下し始めたら空中ループへ
+		if (!m_isLandingAnimStarted && (player->IsAnimEnd() || isFallingNow) && player->GetAnimTime() > 0.0f)
 		{
-			player->ChangeAnimation("JumpLoop", true);
+			player->ChangeAnimation(player->GetWeaponAnimName("JumpLoop"), true);
 		}
 
 		//// 2段ジャンプの入力検知
@@ -413,11 +417,20 @@ void PlayerStateJump::Update(Player* player)
 			m_isFalling = true;
 		}
 
-		// 落下後に着地した
 		if (m_isFalling && !isFallingNow)
 		{
-			player->ChangeAnimation("JumpEnd", false, true);
+			// 落下後に着地した
+			// 予測が間に合わなかった場合（高い足場に着地した等）は、両足が接地しているフレームから再生する
+			if (!m_isLandingAnimStarted)
+			{
+				StartLandingAnim(player, 0);
+			}
 			m_jumpPhase = JumpPhaseLanding;
+		}
+		else if (m_isFalling && !m_isLandingAnimStarted)
+		{
+			// 落下中：着地の瞬間に両足が接地しているよう、着地アニメを前倒しで開始する
+			TryStartLandingAnim(player);
 		}
 	}
 
@@ -435,6 +448,36 @@ void PlayerStateJump::Update(Player* player)
 			player->ChangeState(std::make_shared<PlayerStateIdle>());
 		}
 	}
+}
+
+void PlayerStateJump::TryStartLandingAnim(Player* player)
+{
+	int framesToLand = player->PredictLandingFrames(kMaxLandingPredictFrame);
+	if (framesToLand < 0) return;
+
+	// 着地までに再生するフレーム数が、接地フレームより手前で収まるなら開始する
+	float landFrame = player->GetLandingFrame(player->GetWeaponAnimName("JumpEnd"));
+	if (static_cast<float>(std::max(framesToLand - 1, 0)) <= landFrame)
+	{
+		StartLandingAnim(player, framesToLand);
+	}
+}
+
+void PlayerStateJump::StartLandingAnim(Player* player, int framesToLand)
+{
+	std::string animName = player->GetWeaponAnimName("JumpEnd");
+	float landFrame = player->GetLandingFrame(animName);
+
+	// 次のフレームから再生されるので、着地フレームで landFrame が表示されるよう逆算する
+	float waitFrames = static_cast<float>(std::max(framesToLand - 1, 0));
+	float startTime = std::max(landFrame - waitFrames, 0.0f);
+
+	// 着地までに余裕があれば空中ループから滑らかにつなぐ（着地時にはブレンドが終わっているように）
+	float blendFrame = (waitFrames >= kLandingBlendFrame) ? kLandingBlendFrame : 0.0f;
+
+	player->ChangeAnimation(animName, false, true, blendFrame);
+	player->SetAnimTime(startTime);
+	m_isLandingAnimStarted = true;
 }
 
 void PlayerStateDamage::ChangeState(Player* player)

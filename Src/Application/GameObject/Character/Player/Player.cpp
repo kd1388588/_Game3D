@@ -1,4 +1,5 @@
 ﻿// Player.cpp
+#include <filesystem>
 
 // Player
 #include "Player.h"
@@ -70,6 +71,33 @@ namespace
 
 	const std::string kAnimDir = "Asset/Models/GameObject/Player/Kari/Sequence1/";
 
+	// 武器装備中のアニメーション名に付ける接頭辞
+	const std::string kCombatAnimPrefix = "Combat_";
+
+	// 着地アニメーション（両足の接地フレームを事前に計算する）
+	const std::vector<std::string> kLandingAnimNames	= { "JumpEnd", "Combat_JumpEnd" };
+	const std::vector<std::string> kFootNodeNames		= { "foot_l", "foot_r" };
+
+	// 候補の中から実在するファイルのパスを返す（どれも無ければ先頭を返す）
+	std::string FindExistingPath(const std::vector<std::string>& candidates)
+	{
+		for (const auto& path : candidates)
+		{
+			if (std::filesystem::exists(path)) return path;
+		}
+		return candidates.front();
+	}
+
+	// 戦闘時ジャンプのパス（フォルダ名の揺れに対応するため候補を2つ用意）
+	std::string GetCombatJumpPath(const std::string& phase)
+	{
+		return FindExistingPath
+		({
+			kAnimDir + "05_Jump/02_Jump/01_Jump_0/AS_Jump_" + phase + "_0_Seq/AS_Jump_" + phase + "_0_Seq.gltf",
+			kAnimDir + "05_Jump/02_Jump_Combat/01_Jump_Combat_0/AS_Jump_Combat_" + phase + "_0_Seq/AS_Jump_Combat_" + phase + "_0_Seq.gltf",
+		});
+	}
+
 	// 読み込むアニメーションのリストを作成
 	std::vector<AnimLoadInfo> CreateAnimList()
 	{
@@ -86,9 +114,9 @@ namespace
 			{ "JumpStart",			kAnimDir + "05_Jump/01_Jump/01_Jump_0/AS_Jump_Start_0_Seq/AS_Jump_Start_0_Seq.gltf" },
 			{ "JumpLoop",			kAnimDir + "05_Jump/01_Jump/01_Jump_0/AS_Jump_Loop_0_Seq/AS_Jump_Loop_0_Seq.gltf" },
 			{ "JumpEnd",			kAnimDir + "05_Jump/01_Jump/01_Jump_0/AS_Jump_End_0_Seq/AS_Jump_End_0_Seq.gltf" },
-			{ "Combat_JumpStart",	kAnimDir + "05_Jump/02_Jump/01_Jump_0/AS_Jump_Start_0_Seq/AS_Jump_Start_0_Seq.gltf" },
-			{ "Combat_JumpLoop",	kAnimDir + "05_Jump/02_Jump/01_Jump_0/AS_Jump_Loop_0_Seq/AS_Jump_Loop_0_Seq.gltf" },
-			{ "Combat_JumpEnd",		kAnimDir + "05_Jump/02_Jump/01_Jump_0/AS_Jump_End_0_Seq/AS_Jump_End_0_Seq.gltf" },
+			{ "Combat_JumpStart",	GetCombatJumpPath("Start") },
+			{ "Combat_JumpLoop",	GetCombatJumpPath("Loop") },
+			{ "Combat_JumpEnd",		GetCombatJumpPath("End") },
 			{ "Damage",				kAnimDir + "08_Hit/01_Hit/AS_Hit_F_Seq/AS_Hit_F_Seq.gltf" },
 			{ "Death",				kAnimDir + "08_Hit/01_Hit/AS_Hit_Death_Seq/AS_Hit_Death_Seq.gltf" },
 		};
@@ -173,6 +201,16 @@ void Player::Init()
 
 	// アニメーションの読み込み
 	LoadAnimations(CreateAnimList());
+
+	// 着地アニメーションで両足が接地するフレームを事前に計算
+	for (const auto& animName : kLandingAnimNames)
+	{
+		if (!HasAnimation(animName)) continue;
+
+		float frame = CalcFootPlantFrame(animName, kFootNodeNames);
+		m_landingFrames[animName] = frame;
+		OutputDebugStringA(("着地フレーム: " + animName + " = " + std::to_string(frame) + "\n").c_str());
+	}
 
 	ChangeState(std::make_shared<PlayerStateIdle>());
 	ChangeAnimation("Idle", true);
@@ -419,6 +457,22 @@ bool Player::CheckMoveInput() const
 bool Player::IsOnGround() const
 {
 	return m_gravity >= 0.0f && m_gravity <= kOnGroundGravityMax;
+}
+
+std::string Player::GetWeaponAnimName(const std::string& baseName) const
+{
+	if (m_weaponState == WeaponState::Equipped)
+	{
+		std::string combatName = kCombatAnimPrefix + baseName;
+		if (HasAnimation(combatName)) return combatName;
+	}
+	return baseName;
+}
+
+float Player::GetLandingFrame(const std::string& animName) const
+{
+	auto it = m_landingFrames.find(animName);
+	return (it != m_landingFrames.end()) ? it->second : 0.0f;
 }
 
 void Player::ChangeAnimationLazy(const std::string& animName, bool isLoop, bool forceRestart, float blendFrame)

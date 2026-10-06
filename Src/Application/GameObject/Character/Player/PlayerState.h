@@ -141,9 +141,17 @@ private:
 		JumpPhaseLanding	= 2,	// 着地硬直
 	};
 
+	// 着地予測を行い、間に合うなら着地アニメーションを前倒しで開始する
+	void TryStartLandingAnim(Player* player);
+
+	// 着地アニメーションを開始する
+	// framesToLand：何フレーム後に着地するか（このフレームで両足が接地している状態になるよう再生位置を合わせる）
+	void StartLandingAnim(Player* player, int framesToLand);
+
 	int  m_jumpPhase = JumpPhaseNone;
 	int  m_jumpCount = 0;
 	bool m_isFalling = false;
+	bool m_isLandingAnimStarted = false;	// 着地アニメーションを開始済みか
 };
 
 class PlayerStateDamage : public PlayerState
