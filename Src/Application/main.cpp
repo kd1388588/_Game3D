@@ -234,6 +234,17 @@ void Application::Execute()
 	KdCSVData windowData("Asset/Data/WindowSettings.csv");
 	const std::vector<std::string>& sizeData = windowData.GetLine(0);
 
+	// 設定ファイルが読めない（Assetフォルダが無い・作業ディレクトリが違う）場合は落ちる前に知らせる
+	if (sizeData.size() < 2)
+	{
+		MessageBoxA(nullptr,
+			"Asset/Data/WindowSettings.csv を読み込めませんでした。\n"
+			"プロジェクトのフォルダに Asset フォルダがあるか、\n"
+			"デバッグの作業ディレクトリが $(ProjectDir) になっているか確認してください。",
+			"起動エラー", MB_OK | MB_ICONERROR);
+		return;
+	}
+
 	//===================================================================
 	// 初期設定(ウィンドウ作成、Direct3D初期化など)
 	//===================================================================
