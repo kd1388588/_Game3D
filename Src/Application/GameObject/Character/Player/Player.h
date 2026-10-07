@@ -102,6 +102,13 @@ public:
 
 	Math::Vector3 GetCameraTargetPos() const;
 
+	// 現在の向き（Y軸回転）をラジアンで取得
+	float GetAngleRad() const { return DirectX::XMConvertToRadians(m_angle); }
+
+	// プレイヤーの向きに合わせたエフェクト用の行列を作成
+	// forwardOffset：前方へずらす距離、height：足元からの高さ、scale：大きさ
+	Math::Matrix CreateEffectMatrix(float forwardOffset, float height, float scale) const;
+
 	// デバッグ用（KdDebugGUIから編集される）
 	// 武器所持位置
 	static	Math::Vector3			s_weaponRotR;
@@ -125,6 +132,9 @@ private:
 	void UpdateWorldMatrix();
 	void UpdateWeaponMatrix();
 	void UpdateAwakening();
+
+	// 覚醒中のオーラエフェクトを更新（覚醒中は再生し続け、終わったら止める）
+	void UpdateAwakeningEffect();
 	void UpdateAwakeningInput();
 	void UpdateHpGage();
 	void UpdateAttackTypeSwitch();
@@ -174,8 +184,6 @@ private:
 	// （刃の先端ほど明るく、古い部分ほど暗くなるグラデーション。加算合成用）
 	static std::shared_ptr<KdTexture> CreateSwordTrailTexture();
 
-	// 現在の向き（m_angle）をラジアンで取得
-	float GetAngleRad() const { return DirectX::XMConvertToRadians(m_angle); }
 
 	WeaponState						m_weaponState = WeaponState::Sheathed;
 
@@ -185,6 +193,8 @@ private:
 	SwordTrail						m_swordTrailR;						// 右手の剣の軌跡
 	SwordTrail						m_swordTrailL;						// 左手の剣の軌跡
 	std::shared_ptr<KdTexture>		m_swordTrailTex = nullptr;			// 軌跡のテクスチャ
+
+	std::shared_ptr<KdEffekseerObject>	m_awakeningEffect = nullptr;	// 覚醒中のオーラエフェクト
 	bool							m_isTrailActive = false;			// 軌跡を描いている途中か
 	bool							m_isTrailAddedThisFrame = false;	// このフレームに軌跡を追加したか
 

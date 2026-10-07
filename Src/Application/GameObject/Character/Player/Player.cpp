@@ -17,6 +17,9 @@
 // Camera
 #include "../../Camera/TPSCamera/TPSCamera.h"
 
+// Effect
+#include "../../Effect/EffectPlayer.h"
+
 // Scene
 #include "../../../Scene/SceneManager.h"
 #include "../../../Scene/BaseScene/BaseScene.h"
@@ -76,6 +79,11 @@ namespace
 	const Math::Vector3 kSwordTrailColor	= { 0.25f, 0.65f, 1.0f };	// 軌跡の色
 	const Math::Vector3 kSwordTrailCoreColor = { 1.0f, 1.0f, 1.0f };	// 刃先付近の芯の色
 	constexpr float kSwordTrailBaseBrightness = 0.15f;	// 刃の根元側の明るさ（先端を1.0とした割合）
+
+	// エフェクト
+	constexpr float kHitEffectScale			= 0.5f;		// 攻撃が敵に当たった時のエフェクトの大きさ
+	constexpr float kCriticalHitEffectScale	= 1.0f;		// クリティカル時のエフェクトの大きさ
+	constexpr float kAwakeningEffectScale	= 1.0f;		// 覚醒オーラの大きさ
 
 	// カメラの注視点を腰の骨から下げる量
 	constexpr float kCameraTargetOffsetY	= -0.9f;
@@ -527,10 +535,42 @@ void Player::ShrinkSwordTrail(SwordTrail& trail)
 
 void Player::UpdateAwakening()
 {
-	if (!m_isAwakening) return;
+	if (m_isAwakening)
+	{
+		m_awakeningTimer--;
+		if (m_awakeningTimer <= 0) m_isAwakening = false;
+	}
 
-	m_awakeningTimer--;
-	if (m_awakeningTimer <= 0) m_isAwakening = false;
+	UpdateAwakeningEffect();
+}
+
+void Player::UpdateAwakeningEffect()
+{
+	if (!m_isAwakening)
+	{
+		EffectPlayer::Stop(m_awakeningEffect);
+		return;
+	}
+
+	// 再生が終わっていたら再生し直し、再生中はプレイヤーの位置に追従させる
+	if (!m_awakeningEffect || !m_awakeningEffect->IsPlaying())
+	{
+		m_awakeningEffect = EffectPlayer::Play(EffectName::AwakeningAura, m_pos, kAwakeningEffectScale);
+	}
+	else
+	{
+		m_awakeningEffect->SetPos(m_pos);
+	}
+}
+
+Math::Matrix Player::CreateEffectMatrix(float forwardOffset, float height, float scale) const
+{
+	// m_angle の向きが前方（ローカル+Z）になる
+	Math::Matrix rot = Math::Matrix::CreateRotationY(GetAngleRad());
+	Math::Vector3 forward = Math::Vector3::TransformNormal(Math::Vector3(0.0f, 0.0f, 1.0f), rot);
+	Math::Vector3 pos = m_pos + forward * forwardOffset + Math::Vector3(0.0f, height, 0.0f);
+
+	return Math::Matrix::CreateScale(scale) * rot * Math::Matrix::CreateTranslation(pos);
 }
 
 void Player::UpdateHpGage()
@@ -677,11 +717,17 @@ bool Player::AttackOBB(const Math::Matrix& swordMatrix, bool isCritical)
 		if (obj.get() == this) continue;
 		if (!obj->Intersects(obbInfo, &retList)) continue;
 
-		if (auto enemy = std::dynamic_pointer_cast<Enemy>(obj))
-		{
-			enemy->OnDamage(damage, isCritical);
-			isHit = true;
-		}
+		// 敵以外・無敵中・倒れている敵には何もしない
+		// （毎フレームヒット扱いになって、ヒットストップやエフェクトが連続しないように）
+		auto enemy = std::dynamic_pointer_cast<Enemy>(obj);
+		if (!enemy || enemy->IsInvincible() || !enemy->IsAlive()) continue;
+
+		enemy->OnDamage(damage, isCritical);
+		isHit = true;
+
+		// 当たった位置にヒットエフェクト（クリティカルは大きく）
+		Math::Vector3 hitPos = retList.empty() ? obbMatrix.Translation() : retList.back().m_hitPos;
+		EffectPlayer::Play(EffectName::HitEnemy, hitPos, isCritical ? kCriticalHitEffectScale : kHitEffectScale);
 	}
 
 	return isHit;

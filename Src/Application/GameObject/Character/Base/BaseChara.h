@@ -44,6 +44,12 @@ public:
 
 	virtual void OnDamage(int damage, bool isCritical = false) {}
 
+	// 無敵時間中か（攻撃が当たってもダメージを受けない）
+	bool IsInvincible() const { return m_invincibleTimer > 0; }
+
+	// HPが残っているか
+	bool IsAlive() const { return m_hp > 0; }
+
 	// 現在の落下速度のまま落ち続けた場合、何フレーム後に着地するかを予測する
 	// （maxFrames以内に着地しない・下に地面がない場合は -1）
 	int PredictLandingFrames(int maxFrames) const;

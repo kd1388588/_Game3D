@@ -35,6 +35,8 @@ public:
 
 	Math::Matrix GetRightArmMatrix() const;
 
+	float GetBodyScale() const { return m_scale; }	// 体の大きさ（エフェクトの大きさ・高さに使う）
+
 	float GetSearchRange() const { return m_searchRange; }
 	float GetAttackRange() const { return m_attackRange; }
 

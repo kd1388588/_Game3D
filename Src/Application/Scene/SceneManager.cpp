@@ -6,6 +6,8 @@
 #include "GameClearScene/GameClearScene.h"
 #include "GameOverScene/GameOverScene.h"
 
+#include "../GameObject/Effect/EffectPlayer.h"
+
 void SceneManager::PreUpdate()
 {
 	// シーン切替
@@ -59,6 +61,9 @@ void SceneManager::AddObject(const std::shared_ptr<KdGameObject>& _obj)
 
 void SceneManager::ChangeScene(SceneType _sceneType)
 {
+	// 前のシーンのエフェクトが残らないように全て止める
+	EffectPlayer::StopAll();
+
 	// 次のシーンを作成し、現在のシーンにする
 	switch (_sceneType)
 	{

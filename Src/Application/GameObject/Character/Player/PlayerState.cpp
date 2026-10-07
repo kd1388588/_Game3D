@@ -2,7 +2,7 @@
 #include "Player.h"
 #include "PlayerParamManager.h"
 
-#include "../../Effect/Effect.h"
+#include "../../Effect/EffectPlayer.h"
 #include "../../../Scene/SceneManager.h"
 
 using InputHelper::IsKeyDown;
@@ -25,6 +25,15 @@ namespace
 	constexpr float kFallingGravity			= 0.011f;	// これを超えたら落下中とみなす
 	constexpr int	kMaxLandingPredictFrame	= 120;		// 着地予測を行う最大フレーム数
 	constexpr float kLandingBlendFrame		= 3.0f;		// 空中ループ→着地アニメのブレンドフレーム数
+
+	// 斬撃エフェクト（プレイヤーの前方・胸の高さあたりに出す）
+	constexpr float kSlashEffectForward		= 1.0f;		// 前方へずらす距離
+	constexpr float kSlashEffectHeight		= 1.0f;		// 足元からの高さ
+	constexpr float kSlashEffectScale		= 1.0f;		// 大きさ
+
+	// 回避・着地エフェクトの大きさ
+	constexpr float kEvadeEffectScale		= 1.0f;
+	constexpr float kLandingEffectScale		= 1.0f;
 }
 
 // 前方へ減速しながら移動する（回避・ダッシュ用）
@@ -217,9 +226,53 @@ void PlayerStateComboAttack::ChangeToNextAttack(Player* player) const
 	}
 }
 
+const std::string& PlayerStateComboAttack::GetSlashEffectName() const
+{
+	// 4-3（溜め攻撃）：ループ中はドリル、それ以外はタイプ4の斬撃
+	if (IsSplitAttack())
+	{
+		return (m_subStep == SubStepLoop) ? EffectName::ChargeDrill : EffectName::ComboSlash4;
+	}
+
+	switch (m_comboType)
+	{
+	case 1:
+		// 攻撃タイプ1は段数ごとに専用のエフェクト
+		switch (m_comboStep)
+		{
+		case 1:	return EffectName::ComboSlash1_1;
+		case 2:	return EffectName::ComboSlash1_2;
+		case 3:	return EffectName::ComboSlash1_3;
+		case 4:	return EffectName::ComboSlash1_4;
+		default: break;
+		}
+		break;
+
+	case 4:
+		return EffectName::ComboSlash4;
+
+	case 5:
+		if (m_comboStep == 4) return EffectName::ComboSlash5_4;
+		break;
+
+	default:
+		break;
+	}
+
+	return EffectName::ComboSlashDefault;
+}
+
+void PlayerStateComboAttack::PlaySlashEffect(Player* player)
+{
+	if (m_isEffect) return;
+
+	m_effect = EffectPlayer::Play(GetSlashEffectName(),
+		player->CreateEffectMatrix(kSlashEffectForward, kSlashEffectHeight, kSlashEffectScale));
+	m_isEffect = true;
+}
+
 void PlayerStateComboAttack::ChangeState(Player* player)
 {
-	m_effect = std::make_shared<KdEffekseerObject>();
 	m_isCritical = (KdRandom::GetInt(0, 99) < player->GetCritRate());
 
 	if (IsSplitAttack() && m_subStep == SubStepNone) {
@@ -279,23 +332,8 @@ void PlayerStateComboAttack::Update(Player* player)
 			}
 		}
 
-		/*
-		if (!m_isEffect)
-		{
-			Math::Vector3 effectPos = player->GetPos() + Math::Vector3(0.0f, 1.0f, 1.0f);
-			std::shared_ptr<Effect> effect = std::make_shared<Effect>();
-			effect->Init();
-
-			// 今何段目の攻撃かによって、出すエフェクトファイルを変える！
-			if (m_comboStep == 1)      effect->SetEffect("_Sword1-1.efkefc", effectPos, 1.0f);
-			else if (m_comboStep == 2) effect->SetEffect("_Sword1-2.efkefc", effectPos, 1.0f);
-			else if (m_comboStep == 3) effect->SetEffect("_Sword1-3.efkefc", effectPos, 1.0f);
-			else if (m_comboStep == 4) effect->SetEffect("_Sword1-4.efkefc", effectPos, 1.0f);
-
-			SceneManager::Instance().AddObject(effect);
-			m_isEffect = true;
-		}
-		*/
+		// 攻撃の振り始めに斬撃エフェクト
+		PlaySlashEffect(player);
 	}
 
 	// 予約があり、キャンセル可能フレームを超えたら次へ滑らかに移行
@@ -336,6 +374,7 @@ void PlayerStateComboAttack::Update(Player* player)
 void PlayerStateEvade::ChangeState(Player* player)
 {
 	player->ChangeAnimation("Evade", false);
+	EffectPlayer::Play(EffectName::Evade, player->GetPos(), kEvadeEffectScale);
 	//player->SetInvincibleTimer(10);
 	player->SetAnimationSpeed(1.55f);
 }
@@ -419,6 +458,9 @@ void PlayerStateJump::Update(Player* player)
 				StartLandingAnim(player, 0);
 			}
 			m_jumpPhase = JumpPhaseLanding;
+
+			// 着地エフェクト（足元に出す）
+			EffectPlayer::Play(EffectName::Landing, player->GetPos(), kLandingEffectScale);
 		}
 		else if (m_isFalling && !m_isLandingAnimStarted)
 		{

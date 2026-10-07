@@ -2,6 +2,7 @@
 #include "../Player/Player.h"
 #include "../../../Scene/SceneManager.h"
 #include "EnemyState.h"
+#include "../../Effect/EffectPlayer.h"
 
 namespace
 {
@@ -21,6 +22,7 @@ namespace
 	constexpr int	kAttackDamage			= 5;
 	constexpr int	kCriticalAttackDamage	= 10;
 	constexpr float	kPushStrength			= 0.1f;		// 敵同士の押し出しの強さ（毎フレームの割合）
+	constexpr float	kHitEffectScale			= 1.0f;		// プレイヤーに攻撃が当たった時のエフェクトの大きさ
 
 	const std::string kModelDir = "Asset/Models/GameObject/Enemy/Monster2/";
 }
@@ -162,11 +164,15 @@ void Enemy::AttackHit(const Math::Matrix& hitMatrix, const Math::Vector3& extent
 		if (obj.get() == this) continue;
 		if (!obj->Intersects(box, &retList)) continue;
 
-		// プレイヤーだった場合、ダメージを与える
-		if (auto player = std::dynamic_pointer_cast<Player>(obj))
-		{
-			player->OnDamage(damage, isCritical);
-		}
+		// プレイヤーだった場合、ダメージを与える（無敵中・倒れている時は何もしない）
+		auto player = std::dynamic_pointer_cast<Player>(obj);
+		if (!player || player->IsInvincible() || !player->IsAlive()) continue;
+
+		player->OnDamage(damage, isCritical);
+
+		// 当たった位置にヒットエフェクト
+		Math::Vector3 hitPos = retList.empty() ? player->GetPos() : retList.back().m_hitPos;
+		EffectPlayer::Play(EffectName::HitPlayer, hitPos, kHitEffectScale);
 	}
 }
 

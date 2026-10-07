@@ -286,6 +286,7 @@
     <ClInclude Include="Src\Application\GameObject\Character\UI\Gage\Base\BaseGage.h" />
     <ClInclude Include="Src\Application\GameObject\Character\UI\Gage\HP\HPGage.h" />
     <ClInclude Include="Src\Application\GameObject\Effect\Effect.h" />
+    <ClInclude Include="Src\Application\GameObject\Effect\EffectPlayer.h" />
     <ClInclude Include="Src\Application\GameObject\Stage\Ground\Ground.h" />
     <ClInclude Include="Src\Application\GameObject\Stage\Object\Base\BaseStageObject.h" />
     <ClInclude Include="Src\Application\GameObject\Stage\Object\CathedralRuins\CathedralRuins.h" />
@@ -360,6 +361,7 @@
     <ClCompile Include="Src\Application\GameObject\Character\UI\Gage\Base\BaseGage.cpp" />
     <ClCompile Include="Src\Application\GameObject\Character\UI\Gage\HP\HPGage.cpp" />
     <ClCompile Include="Src\Application\GameObject\Effect\Effect.cpp" />
+    <ClCompile Include="Src\Application\GameObject\Effect\EffectPlayer.cpp" />
     <ClCompile Include="Src\Application\GameObject\Stage\Ground\Ground.cpp" />
     <ClCompile Include="Src\Application\GameObject\Stage\Object\Base\BaseStageObject.cpp" />
     <ClCompile Include="Src\Application\GameObject\Stage\Object\CathedralRuins\CathedralRuins.cpp" />

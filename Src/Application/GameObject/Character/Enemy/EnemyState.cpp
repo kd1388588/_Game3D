@@ -2,6 +2,7 @@
 #include "Enemy.h"
 #include "../Player/Player.h"
 #include "../../../Scene/SceneManager.h"
+#include "../../Effect/EffectPlayer.h"
 
 namespace
 {
@@ -11,6 +12,9 @@ namespace
 	// 攻撃判定を出すアニメーションフレームの範囲
 	constexpr float kAttackHitStartFrame	= 15.0f;
 	constexpr float kAttackHitEndFrame		= 45.0f;
+
+	// 撃破エフェクトの大きさ（敵の体の大きさに掛ける）
+	constexpr float kDeathEffectScaleRate	= 0.5f;
 }
 
 // ターゲットへの水平方向のベクトルを取得（ターゲットがいなければ false）
@@ -135,6 +139,11 @@ void EnemyStateDead::ChangeState(Enemy* enemy)
 	enemy->ChangeAnimation("Dead", false, true, 5.0f);
 	enemy->SetAnimationSpeed(1.0f);
 	enemy->SetUseRootMotion(false); // 死ぬ時はその場に留まる
+
+	// 撃破エフェクト（体の中心あたりに、体の大きさに合わせて出す）
+	float bodyScale = enemy->GetBodyScale();
+	Math::Vector3 effectPos = enemy->GetPos() + Math::Vector3(0.0f, bodyScale, 0.0f);
+	EffectPlayer::Play(EffectName::EnemyDeath, effectPos, bodyScale * kDeathEffectScaleRate);
 }
 
 void EnemyStateDead::Update(Enemy* enemy)

@@ -117,6 +117,12 @@ private:
 
 	// 次の段の攻撃へ移行（5段目以降はIdleへ）
 	void ChangeToNextAttack(Player* player) const;
+
+	// 今の攻撃で出す斬撃エフェクトのファイル名を取得
+	const std::string& GetSlashEffectName() const;
+
+	// 斬撃エフェクトを再生する（1回の攻撃につき1回だけ）
+	void PlaySlashEffect(Player* player);
 };
 
 // 回避
