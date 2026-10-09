@@ -15,6 +15,12 @@ namespace
 	constexpr int	kMaxSampleFrames		= 1000;		// アニメーションを調べる最大フレーム数
 	constexpr float kFootPlantTolerance		= 0.03f;	// 最も低い位置からこの高さ以内なら接地とみなす
 
+	// リターゲット
+	const std::string kRootNodeName			= "root";
+	const std::string kPelvisNodeName		= "pelvis";
+	constexpr float kMinPelvisHeight		= 0.0001f;	// これより低い腰の高さは無効とみなす
+	constexpr float kSameScaleTolerance		= 0.01f;	// 体格比がこの範囲なら同じ骨格とみなす
+
 	// 押し出し判定
 	constexpr float kBumpCenterHeight		= 0.7f;
 	constexpr float kBumpRadius				= 0.3f;
@@ -118,6 +124,11 @@ void BaseChara::LoadAnimations(const std::vector<AnimLoadInfo>& loadList)
 
 		if (auto anim = animModel.GetAnimation(0))
 		{
+			// アニメーションのファイルとモデルで骨の並びや長さが違っても動くように合わせる
+			if (m_model && m_model->GetData())
+			{
+				anim = RetargetAnimation(anim, *spModelData, *m_model->GetData(), info.name);
+			}
 			SetAnimationData(info.name, anim);
 		}
 		else
@@ -237,6 +248,91 @@ bool BaseChara::FindGroundBelow(float range, Math::Vector3& outHitPos) const
 	}
 
 	return isHit;
+}
+
+std::shared_ptr<KdAnimationData> BaseChara::RetargetAnimation(const std::shared_ptr<KdAnimationData>& srcAnim,
+	const KdModelData& srcModel, const KdModelData& dstModel, const std::string& debugName)
+{
+	const auto& srcNodes = srcModel.GetOriginalNodes();
+	const auto& dstNodes = dstModel.GetOriginalNodes();
+
+	// モデル側の骨を名前で引けるようにする
+	std::unordered_map<std::string, int> dstIndexMap;
+	for (int i = 0; i < static_cast<int>(dstNodes.size()); ++i)
+	{
+		dstIndexMap[dstNodes[i].m_name] = i;
+	}
+
+	// 体格の比率（腰の高さで比べる）
+	auto getPelvisHeight = [](const std::vector<KdModelData::Node>& nodes)
+	{
+		for (const auto& node : nodes)
+		{
+			if (node.m_name == kPelvisNodeName) return node.m_worldTransform.Translation().y;
+		}
+		return 0.0f;
+	};
+	float srcPelvisHeight = getPelvisHeight(srcNodes);
+	float dstPelvisHeight = getPelvisHeight(dstNodes);
+	float heightRatio = (srcPelvisHeight > kMinPelvisHeight && dstPelvisHeight > kMinPelvisHeight)
+		? dstPelvisHeight / srcPelvisHeight : 1.0f;
+
+	// 骨の並びと長さが元から一致していれば、そのまま使う
+	bool isSameSkeleton = (std::abs(heightRatio - 1.0f) < kSameScaleTolerance);
+	for (const auto& node : srcAnim->m_nodes)
+	{
+		if (!isSameSkeleton) break;
+
+		int offset = node.m_nodeOffset;
+		isSameSkeleton = offset >= 0 && offset < static_cast<int>(srcNodes.size()) && offset < static_cast<int>(dstNodes.size())
+			&& srcNodes[offset].m_name == dstNodes[offset].m_name;
+	}
+	if (isSameSkeleton) return srcAnim;
+
+	// 骨を名前で対応づけて作り直す
+	auto dstAnim = std::make_shared<KdAnimationData>();
+	dstAnim->m_name = srcAnim->m_name;
+	dstAnim->m_maxLength = srcAnim->m_maxLength;
+
+	int skipCount = 0;
+	for (const auto& srcNode : srcAnim->m_nodes)
+	{
+		int srcOffset = srcNode.m_nodeOffset;
+		if (srcOffset < 0 || srcOffset >= static_cast<int>(srcNodes.size())) { skipCount++; continue; }
+
+		const std::string& boneName = srcNodes[srcOffset].m_name;
+		auto it = dstIndexMap.find(boneName);
+		if (it == dstIndexMap.end()) { skipCount++; continue; }
+
+		KdAnimationData::Node dstNode = srcNode;
+		dstNode.m_nodeOffset = it->second;
+
+		if (boneName == kRootNodeName || boneName == kPelvisNodeName)
+		{
+			// 体の移動（ルートモーション・腰の上下）は体格に合わせて拡大縮小
+			for (auto& key : dstNode.m_translations)
+			{
+				key.m_vec *= heightRatio;
+			}
+		}
+		else
+		{
+			// それ以外の骨は、骨の長さ（位置）をモデル側のものに固定する
+			dstNode.m_translations.clear();
+			dstNode.m_translations.push_back({ 0.0f, dstNodes[it->second].m_localTransform.Translation() });
+
+			// 拡縮はモデルの単位とずれることがあるので使わない
+			dstNode.m_scales.clear();
+		}
+
+		dstAnim->m_nodes.push_back(dstNode);
+	}
+
+	char log[256];
+	sprintf_s(log, "【リターゲット】%s : 体格比 %.3f / 対応しない骨 %d 本\n", debugName.c_str(), heightRatio, skipCount);
+	OutputDebugStringA(log);
+
+	return dstAnim;
 }
 
 void BaseChara::GroundHit()

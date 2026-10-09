@@ -96,4 +96,11 @@ private:
 
 	// ルートボーンを探す
 	static KdModelWork::Node* FindRootNode(std::vector<KdModelWork::Node>& nodes);
+
+	// 別のファイルから読み込んだアニメーションを、このキャラのモデルに合わせて作り直す（リターゲット）
+	// ・骨の対応は「番号」ではなく「名前」で行う（骨の並び順が違っても正しく動くように）
+	// ・骨の長さはモデル側を使い、root / pelvis の移動量だけ体格の比率で拡大縮小する
+	// 骨の並び・長さが元から一致している場合は、元のアニメーションをそのまま返す
+	static std::shared_ptr<KdAnimationData> RetargetAnimation(const std::shared_ptr<KdAnimationData>& srcAnim,
+		const KdModelData& srcModel, const KdModelData& dstModel, const std::string& debugName);
 };
