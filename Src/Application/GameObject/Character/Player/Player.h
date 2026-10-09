@@ -163,9 +163,13 @@ private:
 	Math::Vector3 GetInputDir() const;
 
 	// 鞘・剣の行列を計算
-	Math::Matrix CalcScabbardMatrix(const std::string& holderName, const Math::Vector3& rot, const Math::Vector3& pos) const;
-	Math::Matrix CalcSwordMatrix(const std::string& handName, const Math::Vector3& rot, const Math::Vector3& pos,
+	// （nodeNames を上から順に探し、最初に見つかったノードに付ける）
+	Math::Matrix CalcScabbardMatrix(const std::vector<std::string>& nodeNames, const Math::Vector3& rot, const Math::Vector3& pos) const;
+	Math::Matrix CalcSwordMatrix(const std::vector<std::string>& nodeNames, const Math::Vector3& rot, const Math::Vector3& pos,
 		const Math::Matrix& scabbardMat) const;
+
+	// 候補の名前を上から順に探し、最初に見つかったノードを返す（無ければ nullptr）
+	const KdModelWork::Node* FindFirstNode(const std::vector<std::string>& nodeNames) const;
 
 	// 読み込むアニメーションのリストを作成
 	static std::vector<AnimLoadInfo> CreateAnimList();

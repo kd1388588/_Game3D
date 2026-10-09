@@ -88,7 +88,20 @@ namespace
 	// カメラの注視点を腰の骨から下げる量
 	constexpr float kCameraTargetOffsetY	= -0.9f;
 
-	const std::string kAnimDir = "Asset/Models/GameObject/Player/Kari/Sequence1/";
+	// モデル・アニメーション（UEでSK_Assassinにリターゲットして書き出したもの）
+	const std::string kPlayerAssetDir		= "Asset/Models/GameObject/Player/New/";
+	const std::string kPlayerModelPath		= kPlayerAssetDir + "CharaBase/SK_Assassin.gltf";
+	const std::string kAnimDir				= kPlayerAssetDir + "Sequence2/";
+
+	// 武器のモデル（空文字なら読み込まない）
+	const std::string kSwordModelPath		= "Asset/Models/GameObject/Player/Sword/Kari/sword.gltf";
+	const std::string kScabbardModelPath	= "";
+
+	// 武器・鞘を付けるノード（上から順に探して、最初に見つかったものを使う）
+	const std::vector<std::string> kSwordNodeNamesR		= { "Blade_R", "Weapon_R", "hand_r" };
+	const std::vector<std::string> kSwordNodeNamesL		= { "Blade_L", "Weapon_L", "hand_l" };
+	const std::vector<std::string> kScabbardNodeNamesR	= { "Weapon_Holder_R", "Scabbard_R", "spine_05" };
+	const std::vector<std::string> kScabbardNodeNamesL	= { "Weapon_Holder_L", "Scabbard_L", "spine_05" };
 
 	// 武器装備中のアニメーション名に付ける接頭辞
 	const std::string kCombatAnimPrefix = "Combat_";
@@ -111,12 +124,12 @@ std::vector<AnimLoadInfo> Player::CreateAnimList()
 		{ "Dash",				kAnimDir + "06_Dodge/01_Dodge/AS_Dodge_F_0_Seq/AS_Dodge_F_0_Seq.gltf" },
 		{ "Combat_Run",			kAnimDir + "04_Run/02_Run_Combat/01_Run_Combat_F_0/AS_Run_Combat_F_0_Loop_Seq/AS_Run_Combat_F_0_Loop_Seq.gltf" },
 		{ "Run",				kAnimDir + "04_Run/01_Run/01_Run_F_0/AS_Run_F_0_Loop_Seq/AS_Run_F_0_Loop_Seq.gltf" },
-		{ "JumpStart",			kAnimDir + "05_Jump/01_Jump/01_Jump_0/AS_Jump_Start_0_Seq/AS_Jump_Start_0_Seq.gltf" },
-		{ "JumpLoop",			kAnimDir + "05_Jump/01_Jump/01_Jump_0/AS_Jump_Loop_0_Seq/AS_Jump_Loop_0_Seq.gltf" },
-		{ "JumpEnd",			kAnimDir + "05_Jump/01_Jump/01_Jump_0/AS_Jump_End_0_Seq/AS_Jump_End_0_Seq.gltf" },
-		{ "Combat_JumpStart",	kAnimDir + "05_Jump/02_Jump_Combat/01_Jump_Combat_0/AS_Jump_Combat_Start_0_Seq/AS_Jump_Combat_Start_0_Seq.gltf" },
-		{ "Combat_JumpLoop",	kAnimDir + "05_Jump/02_Jump_Combat/01_Jump_Combat_0/AS_Jump_Combat_Loop_0_Seq/AS_Jump_Combat_Loop_0_Seq.gltf" },
-		{ "Combat_JumpEnd",		kAnimDir + "05_Jump/02_Jump_Combat/01_Jump_Combat_0/AS_Jump_Combat_End_0_Seq/AS_Jump_Combat_End_0_Seq.gltf" },
+		{ "JumpStart",			kAnimDir + "05_Jump/01_Jump/AS_Jump_Start_0_Seq/AS_Jump_Start_0_Seq.gltf" },
+		{ "JumpLoop",			kAnimDir + "05_Jump/01_Jump/AS_Jump_Loop_0_Seq/AS_Jump_Loop_0_Seq.gltf" },
+		{ "JumpEnd",			kAnimDir + "05_Jump/01_Jump/AS_Jump_End_0_Seq/AS_Jump_End_0_Seq.gltf" },
+		{ "Combat_JumpStart",	kAnimDir + "05_Jump/02_Jump_Combat/AS_Jump_Combat_Start_0_Seq/AS_Jump_Combat_Start_0_Seq.gltf" },
+		{ "Combat_JumpLoop",	kAnimDir + "05_Jump/02_Jump_Combat/AS_Jump_Combat_Loop_0_Seq/AS_Jump_Combat_Loop_0_Seq.gltf" },
+		{ "Combat_JumpEnd",		kAnimDir + "05_Jump/02_Jump_Combat/AS_Jump_Combat_End_0_Seq/AS_Jump_Combat_End_0_Seq.gltf" },
 		{ "Damage",				kAnimDir + "08_Hit/01_Hit/AS_Hit_F_Seq/AS_Hit_F_Seq.gltf" },
 		{ "Death",				kAnimDir + "08_Hit/01_Hit/AS_Hit_Death_Seq/AS_Hit_Death_Seq.gltf" },
 	};
@@ -258,9 +271,16 @@ void Player::Init()
 	m_pDebugWire = std::make_unique<KdDebugWireFrame>();
 
 	// モデル・武器セットの読み込み
-	m_model->SetModelData("Asset/Models/GameObject/Player/Animation/CharaBase/Kari/SK_Mannequin.gltf");
-	m_swordModel->Load("Asset/Models/GameObject/Player/Sword/Kari/sword.gltf");
-	m_scabbardModel->Load("");
+	m_model->SetModelData(kPlayerModelPath);
+	if (!kSwordModelPath.empty())		m_swordModel->Load(kSwordModelPath);
+	if (!kScabbardModelPath.empty())	m_scabbardModel->Load(kScabbardModelPath);
+
+	// 武器・鞘をどのノードに付けたかを出力ウィンドウに表示（モデルを差し替えた時の確認用）
+	for (const auto* pNames : { &kSwordNodeNamesR, &kSwordNodeNamesL, &kScabbardNodeNamesR, &kScabbardNodeNamesL })
+	{
+		const KdModelWork::Node* pNode = FindFirstNode(*pNames);
+		OutputDebugStringA(("武器の取り付け先: " + (pNode ? pNode->m_name : std::string("見つからない")) + "\n").c_str());
+	}
 
 	PlayerParamManager::Instance().Load("Asset/Data/PlayerParams.txt");
 	PlayerParamManager::Instance().LoadWeaponParams("Asset/Data/WeaponParams.json");
@@ -418,31 +438,44 @@ void Player::UpdateWeaponMatrix()
 	if (!m_model) return;
 
 	// 右
-	m_scabbardWorldR = CalcScabbardMatrix("Weapon_Holder_R", s_sheathedRotR, s_sheathedPosR);
-	m_swordWorldR = CalcSwordMatrix("Weapon_R", s_weaponRotR, s_weaponPosR, m_scabbardWorldR);
+	m_scabbardWorldR = CalcScabbardMatrix(kScabbardNodeNamesR, s_sheathedRotR, s_sheathedPosR);
+	m_swordWorldR = CalcSwordMatrix(kSwordNodeNamesR, s_weaponRotR, s_weaponPosR, m_scabbardWorldR);
 
 	// 左
-	m_scabbardWorldL = CalcScabbardMatrix("Weapon_Holder_L", s_sheathedRotL, s_sheathedPosL);
-	m_swordWorldL = CalcSwordMatrix("Weapon_L", s_weaponRotL, s_weaponPosL, m_scabbardWorldL);
+	m_scabbardWorldL = CalcScabbardMatrix(kScabbardNodeNamesL, s_sheathedRotL, s_sheathedPosL);
+	m_swordWorldL = CalcSwordMatrix(kSwordNodeNamesL, s_weaponRotL, s_weaponPosL, m_scabbardWorldL);
 }
 
-Math::Matrix Player::CalcScabbardMatrix(const std::string& holderName, const Math::Vector3& rot, const Math::Vector3& pos) const
+const KdModelWork::Node* Player::FindFirstNode(const std::vector<std::string>& nodeNames) const
 {
-	// ホルダーの骨が見つからない場合は背骨で代用
-	const KdModelWork::Node* pNode = m_model->FindNode(holderName);
-	if (!pNode) pNode = m_model->FindNode("spine_05");
+	// モデルが読み込めていない場合は探さない
+	if (!m_model || !m_model->IsEnable()) return nullptr;
+
+	for (const auto& name : nodeNames)
+	{
+		if (const KdModelWork::Node* pNode = m_model->FindNode(name))
+		{
+			return pNode;
+		}
+	}
+	return nullptr;
+}
+
+Math::Matrix Player::CalcScabbardMatrix(const std::vector<std::string>& nodeNames, const Math::Vector3& rot, const Math::Vector3& pos) const
+{
+	const KdModelWork::Node* pNode = FindFirstNode(nodeNames);
 	if (!pNode) return Math::Matrix::Identity;
 
 	return CreateAttachMatrix(rot, pos, pNode->m_worldTransform, m_mWorld);
 }
 
-Math::Matrix Player::CalcSwordMatrix(const std::string& handName, const Math::Vector3& rot, const Math::Vector3& pos,
+Math::Matrix Player::CalcSwordMatrix(const std::vector<std::string>& nodeNames, const Math::Vector3& rot, const Math::Vector3& pos,
 	const Math::Matrix& scabbardMat) const
 {
 	// 納刀時は鞘に合わせる
 	if (m_weaponState != WeaponState::Equipped) return scabbardMat;
 
-	const KdModelWork::Node* pNode = m_model->FindNode(handName);
+	const KdModelWork::Node* pNode = FindFirstNode(nodeNames);
 	if (!pNode) return Math::Matrix::Identity;
 
 	return CreateAttachMatrix(rot, pos, pNode->m_worldTransform, m_mWorld);
