@@ -247,6 +247,15 @@ void KdStandardShader::DrawModel(KdModelWork& rModel, const Math::Matrix& mWorld
 	// 全描画用メッシュノードを描画
 	for (auto& nodeIdx : data->GetDrawMeshNodeIndices())
 	{
+		// スキンメッシュのモデルに含まれる「骨に付いているだけの静的メッシュ」（武器など）は
+		// スキニングせずにノードの行列で描画する（メッシュごとに切り替える）
+		bool isSkinMeshNode = dataNodes[nodeIdx].m_isSkinMesh;
+		if (m_cb0_Obj.Work().IsSkinMeshObj != (int)isSkinMeshNode)
+		{
+			SetIsSkinMeshObj(isSkinMeshNode);
+			m_cb0_Obj.Write();
+		}
+
 		// 描画
 		DrawMesh(dataNodes[nodeIdx].m_spMesh.get(), workNodes[nodeIdx].m_worldTransform * mWorld,
 			data->GetMaterials(), colRate, emissive);
