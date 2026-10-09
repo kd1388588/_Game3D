@@ -122,36 +122,44 @@ bool KdAnimationData::Node::InterpolateScales(Math::Vector3& result, float time)
 
 void KdAnimationData::Node::Interpolate(Math::Matrix& rDst, float time)
 {
-	// ベクターによる拡縮補間
+	// キーが無い成分（位置・回転・拡縮）は、元の行列の値をそのまま使う
+	// （UE5などで書き出したファイルは、変化しない骨の位置のキーが省かれていることがあり、
+	//   その骨の位置を0にすると体が潰れてしまうため）
+	Math::Vector3		scale;
+	Math::Quaternion	rotation;
+	Math::Vector3		translation;
+	rDst.Decompose(scale, rotation, translation);
+
 	bool isChange = false;
-	Math::Matrix scale;
+
+	// ベクターによる拡縮補間
 	Math::Vector3 resultVec;
 	if (InterpolateScales(resultVec, time))
 	{
-		scale = scale.CreateScale(resultVec);
+		scale = resultVec;
 		isChange = true;
 	}
 
 	// クォタニオンによる回転補間
-	Math::Matrix rotate;
 	Math::Quaternion resultQuat;
 	if (InterpolateRotations(resultQuat, time))
 	{
-		rotate = rotate.CreateFromQuaternion(resultQuat);
+		rotation = resultQuat;
 		isChange = true;
 	}
 
 	// ベクターによる座標補間
-	Math::Matrix trans;
 	if (InterpolateTranslations(resultVec, time))
 	{
-		trans = trans.CreateTranslation(resultVec);
+		translation = resultVec;
 		isChange = true;
 	}
 
 	if (isChange)
 	{
-		rDst = scale * rotate * trans;
+		rDst = Math::Matrix::CreateScale(scale)
+			* Math::Matrix::CreateFromQuaternion(rotation)
+			* Math::Matrix::CreateTranslation(translation);
 	}
 }
 

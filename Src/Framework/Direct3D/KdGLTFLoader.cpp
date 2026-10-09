@@ -615,6 +615,43 @@ std::shared_ptr<KdGLTFModel> KdLoadGLTFModel(std::string_view path)
 							skinWei[cnt - 1] = 1.0f - totalW;
 						}
 					}
+
+					// 1頂点あたり5本以上の骨の影響がある場合（UE5は最大8本で書き出す）
+					// シェーダーは4本までなので、影響の大きい順に4本を選んで正規化し直す
+					if (srcPrimitive.attributes.count("JOINTS_0") > 0 && srcPrimitive.attributes.count("WEIGHTS_0") > 0 &&
+						srcPrimitive.attributes.count("JOINTS_1") > 0 && srcPrimitive.attributes.count("WEIGHTS_1") > 0)
+					{
+						GLTFBufferGetter jointGetter0(&model, srcPrimitive.attributes["JOINTS_0"]);
+						GLTFBufferGetter weightGetter0(&model, srcPrimitive.attributes["WEIGHTS_0"]);
+						GLTFBufferGetter jointGetter1(&model, srcPrimitive.attributes["JOINTS_1"]);
+						GLTFBufferGetter weightGetter1(&model, srcPrimitive.attributes["WEIGHTS_1"]);
+
+						for (UINT vi = 0; vi < destPrimitive->Vertices.size(); vi++)
+						{
+							// 8本分の（骨, ウェイト）を集める
+							std::array<std::pair<float, short>, 8> influences;
+							for (int k = 0; k < 4; k++)
+							{
+								influences[k] = { weightGetter0.GetValue_UNORM(vi * 4 + k), (short)jointGetter0.GetValue_Int(vi * 4 + k) };
+								influences[k + 4] = { weightGetter1.GetValue_UNORM(vi * 4 + k), (short)jointGetter1.GetValue_Int(vi * 4 + k) };
+							}
+
+							// ウェイトの大きい順に並べて、上位4本を使う
+							std::sort(influences.begin(), influences.end(),
+								[](const auto& a, const auto& b) { return a.first > b.first; });
+
+							float totalW = 0.0f;
+							for (int k = 0; k < 4; k++) totalW += influences[k].first;
+
+							auto& skinIndex = destPrimitive->Vertices[vi].SkinIndexList;
+							auto& skinWei = destPrimitive->Vertices[vi].SkinWeightList;
+							for (int k = 0; k < 4; k++)
+							{
+								skinIndex[k] = influences[k].second;
+								skinWei[k] = (totalW > 0.0f) ? influences[k].first / totalW : (k == 0 ? 1.0f : 0.0f);
+							}
+						}
+					}
 				}
 			}
 

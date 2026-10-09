@@ -94,7 +94,8 @@ namespace
 	const std::string kAnimDir				= kPlayerAssetDir + "Sequence2/";
 
 	// 武器のモデル（空文字なら読み込まない）
-	const std::string kSwordModelPath		= "Asset/Models/GameObject/Player/Sword/Kari/sword.gltf";
+	// ※SK_Assassin には剣（SM_Blade）が最初から含まれているので、別の剣は読み込まない
+	const std::string kSwordModelPath		= "";
 	const std::string kScabbardModelPath	= "";
 
 	// 武器・鞘を付けるノード（上から順に探して、最初に見つかったものを使う）
