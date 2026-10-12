@@ -11,6 +11,7 @@ public:
 		Small,
 		Medium,
 		Large,
+		Title,		// タイトルロゴ用（特大）
 	};
 
 	UIText() {}
@@ -26,6 +27,13 @@ public:
 	void SetCenterPos(const Math::Vector2& pos) { m_centerPos = pos; }
 
 	void SetColor(const Math::Color& color) { m_color = color; }
+	void SetAlpha(float alpha) { m_color.w = alpha; }
+
+	// 文字の拡大率（中心を基準に拡大・縮小する）
+	void SetScale(float scale) { m_scale = scale; }
+
+	// 拡大前の文字列の大きさ（ピクセル）
+	Math::Vector2 GetSize() const;
 
 	// 点滅させるかどうか
 	void SetBlink(bool isBlink) { m_isBlink = isBlink; m_blinkTimer = 0; }
@@ -41,6 +49,7 @@ private:
 	std::shared_ptr<KdFontSprite>	m_fontSprite = nullptr;
 	Math::Vector2					m_centerPos = Math::Vector2::Zero;
 	Math::Color						m_color = { 1.0f, 1.0f, 1.0f, 1.0f };
+	float							m_scale = 1.0f;
 	bool							m_isBlink = false;
 	int								m_blinkTimer = 0;
 };

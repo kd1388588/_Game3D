@@ -1,29 +1,56 @@
 ﻿#include "TitleScene.h"
 #include "../SceneManager.h"
+#include "../../main.h"
 
-#include "../../GameObject/UI/Text/UIText.h"
+// Stage関連（ゲーム画面と同じ背景）
+#include "../../GameObject/Stage/Ground/Ground.h"
+#include "../../GameObject/Stage/Sky/Sky.h"
+#include "../../GameObject/Stage/Object/CathedralRuins/CathedralRuins.h"
+
+// タイトル画面の演出
+#include "../../GameObject/Title/TitleChara/TitleChara.h"
+#include "../../GameObject/Title/TitleCamera/TitleCamera.h"
+#include "../../GameObject/Title/TitleEmber/TitleEmber.h"
+#include "../../GameObject/Title/TitleUI/TitleUI.h"
+
+// Effekseer関連
+#include "../../../Framework/Effekseer/KdEffekseerManager.h"
 
 void TitleScene::Event()
 {
-	// Enterでゲーム開始
-	if (m_decideKey.Update())
+	auto ui = m_wpUI.lock();
+	if (!ui) return;
+
+	// メニューで決定し、フェードアウトが終わったら画面を切り替える
+	switch (ui->GetResult())
 	{
+	case TitleUI::Result::Start:
 		SceneManager::Instance().SetNextScene(SceneManager::SceneType::Game);
+		break;
+	case TitleUI::Result::Exit:
+		Application::Instance().End();
+		break;
+	default:
+		break;
 	}
 }
 
 void TitleScene::Init()
 {
-	// タイトル（仮：あとで画像に差し替え）
-	std::shared_ptr<UIText> title = std::make_shared<UIText>();
-	title->SetText("GAME TITLE", UIText::FontSize::Large);
-	title->SetCenterPos({ 0.0f, 120.0f });
-	m_objList.push_back(title);
+	// 背景（ゲーム画面と同じステージ）
+	CreateObject<Ground>();
+	CreateObject<Sky>();
+	CreateObject<CathedralRuins>();
 
-	// 操作案内（点滅）
-	std::shared_ptr<UIText> guide = std::make_shared<UIText>();
-	guide->SetText("PRESS ENTER", UIText::FontSize::Medium);
-	guide->SetCenterPos({ 0.0f, -150.0f });
-	guide->SetBlink(true);
-	m_objList.push_back(guide);
+	// 待機と連続攻撃を繰り返すキャラクター
+	std::shared_ptr<TitleChara> chara = CreateObject<TitleChara>();
+
+	// キャラクターの周りをゆっくり動き続けるカメラ
+	std::shared_ptr<TitleCamera> camera = CreateObject<TitleCamera>();
+	camera->SetChara(chara);
+	KdEffekseerManager::GetInstance().SetCamera(camera->GetCamera());
+
+	// 2D：舞い上がる火の粉 → ロゴ・メニュー（後に追加したものほど手前に描かれる）
+	CreateObject<TitleEmber>();
+	m_wpUI = CreateObject<TitleUI>();
 }

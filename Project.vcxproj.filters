@@ -67,6 +67,21 @@
     <Filter Include="Src\Application\Utility">
       <UniqueIdentifier>{7d3c1f2a-5b6e-4c8d-9a1f-2e3b4c5d6e7f}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Src\Application\GameObject\Title">
+      <UniqueIdentifier>{fac5a41a-073b-4721-ae0e-89ac890be530}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Src\Application\GameObject\Title\TitleChara">
+      <UniqueIdentifier>{5a39834e-0d5e-4b4d-9eef-8e4e5d568ada}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Src\Application\GameObject\Title\TitleCamera">
+      <UniqueIdentifier>{5e21ceea-6980-4525-8e83-5fdbe87fb9f3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Src\Application\GameObject\Title\TitleEmber">
+      <UniqueIdentifier>{b6a8be85-ab58-4d78-aec7-cf85d165b03b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Src\Application\GameObject\Title\TitleUI">
+      <UniqueIdentifier>{7c2ad1af-4721-4291-88d3-3b6082eab013}</UniqueIdentifier>
+    </Filter>
     <Filter Include="Src\Application\GameObject\UI\Text">
       <UniqueIdentifier>{3ab3531c-51ed-4dd7-a5f1-2b22040c1673}</UniqueIdentifier>
     </Filter>
@@ -318,6 +333,21 @@
     <ClInclude Include="Src\Application\Utility\InputHelper.h">
       <Filter>Src\Application\Utility</Filter>
     </ClInclude>
+    <ClInclude Include="Src\Application\Utility\SpriteUtil.h">
+      <Filter>Src\Application\Utility</Filter>
+    </ClInclude>
+    <ClInclude Include="Src\Application\GameObject\Title\TitleChara\TitleChara.h">
+      <Filter>Src\Application\GameObject\Title\TitleChara</Filter>
+    </ClInclude>
+    <ClInclude Include="Src\Application\GameObject\Title\TitleCamera\TitleCamera.h">
+      <Filter>Src\Application\GameObject\Title\TitleCamera</Filter>
+    </ClInclude>
+    <ClInclude Include="Src\Application\GameObject\Title\TitleEmber\TitleEmber.h">
+      <Filter>Src\Application\GameObject\Title\TitleEmber</Filter>
+    </ClInclude>
+    <ClInclude Include="Src\Application\GameObject\Title\TitleUI\TitleUI.h">
+      <Filter>Src\Application\GameObject\Title\TitleUI</Filter>
+    </ClInclude>
     <ClInclude Include="Src\Application\GameObject\UI\Text\UIText.h">
       <Filter>Src\Application\GameObject\UI\Text</Filter>
     </ClInclude>
@@ -532,6 +562,21 @@
     </ClCompile>
     <ClCompile Include="Src\Application\Scene\TitleScene\TitleScene.cpp">
       <Filter>Src\Application\Scene\TitleScene</Filter>
+    </ClCompile>
+    <ClCompile Include="Src\Application\Utility\SpriteUtil.cpp">
+      <Filter>Src\Application\Utility</Filter>
+    </ClCompile>
+    <ClCompile Include="Src\Application\GameObject\Title\TitleChara\TitleChara.cpp">
+      <Filter>Src\Application\GameObject\Title\TitleChara</Filter>
+    </ClCompile>
+    <ClCompile Include="Src\Application\GameObject\Title\TitleCamera\TitleCamera.cpp">
+      <Filter>Src\Application\GameObject\Title\TitleCamera</Filter>
+    </ClCompile>
+    <ClCompile Include="Src\Application\GameObject\Title\TitleEmber\TitleEmber.cpp">
+      <Filter>Src\Application\GameObject\Title\TitleEmber</Filter>
+    </ClCompile>
+    <ClCompile Include="Src\Application\GameObject\Title\TitleUI\TitleUI.cpp">
+      <Filter>Src\Application\GameObject\Title\TitleUI</Filter>
     </ClCompile>
     <ClCompile Include="Src\Application\GameObject\UI\Text\UIText.cpp">
       <Filter>Src\Application\GameObject\UI\Text</Filter>

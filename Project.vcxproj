@@ -300,6 +300,11 @@
     <ClInclude Include="Src\Application\Scene\GameClearScene\GameClearScene.h" />
     <ClInclude Include="Src\Application\Scene\GameOverScene\GameOverScene.h" />
     <ClInclude Include="Src\Application\Utility\InputHelper.h" />
+    <ClInclude Include="Src\Application\Utility\SpriteUtil.h" />
+    <ClInclude Include="Src\Application\GameObject\Title\TitleChara\TitleChara.h" />
+    <ClInclude Include="Src\Application\GameObject\Title\TitleCamera\TitleCamera.h" />
+    <ClInclude Include="Src\Application\GameObject\Title\TitleEmber\TitleEmber.h" />
+    <ClInclude Include="Src\Application\GameObject\Title\TitleUI\TitleUI.h" />
     <ClInclude Include="Src\Framework\Direct3D\KdMaterial.h" />
     <ClInclude Include="Src\Framework\Direct3D\Polygon\KdPolygon.h" />
     <ClInclude Include="Src\Framework\Direct3D\Polygon\KdSquarePolygon.h" />
@@ -372,6 +377,11 @@
     <ClCompile Include="Src\Application\Scene\SceneManager.cpp" />
     <ClCompile Include="Src\Application\Scene\TitleScene\TitleScene.cpp" />
     <ClCompile Include="Src\Application\GameObject\UI\Text\UIText.cpp" />
+    <ClCompile Include="Src\Application\Utility\SpriteUtil.cpp" />
+    <ClCompile Include="Src\Application\GameObject\Title\TitleChara\TitleChara.cpp" />
+    <ClCompile Include="Src\Application\GameObject\Title\TitleCamera\TitleCamera.cpp" />
+    <ClCompile Include="Src\Application\GameObject\Title\TitleEmber\TitleEmber.cpp" />
+    <ClCompile Include="Src\Application\GameObject\Title\TitleUI\TitleUI.cpp" />
     <ClCompile Include="Src\Application\Scene\GameClearScene\GameClearScene.cpp" />
     <ClCompile Include="Src\Application\Scene\GameOverScene\GameOverScene.cpp" />
     <ClCompile Include="Src\Framework\Direct3D\KdMaterial.cpp">
