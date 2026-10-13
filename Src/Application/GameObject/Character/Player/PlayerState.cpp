@@ -60,6 +60,12 @@ void PlayerState::MoveForwardWithDecay(Player* player, float baseSpeed, float mo
 	player->BumpHit();
 }
 
+void PlayerState::UseRootMotion(Player* player)
+{
+	player->SetUseRootMotion(true);
+	player->SetRootMotionScale(1.0f);
+}
+
 // 待機・移動中に共通の入力によるステート遷移
 // 遷移した場合は true を返す
 bool PlayerState::TryCommonTransition(Player* player)
@@ -109,7 +115,7 @@ void PlayerStateIdle::ChangeState(Player* player)
 {
 	player->ChangeAnimation(player->GetWeaponAnimName("Idle"), true, false, kRunBlendFrame);
 	player->SetAnimationSpeed(1.0f);
-	player->SetUseRootMotion(false);
+	UseRootMotion(player);
 }
 
 void PlayerStateIdle::Update(Player* player)
@@ -124,31 +130,31 @@ void PlayerStateIdle::Update(Player* player)
 
 void PlayerStateRun::ChangeState(Player* player)
 {
-	std::string animName = player->GetWeaponAnimName("Run");
-	player->ChangeAnimation(animName, true, false, kRunBlendFrame);
+	player->ChangeAnimation(player->GetWeaponAnimName("Run"), true, false, kRunBlendFrame);
 	player->SetAnimationSpeed(1.0f);
 
-	// 走りのアニメーションに前へ進む動きが入っていれば、その動きで移動する（ルートモーション）
-	// 足の動きと移動の速さが一致するので、足が地面を滑らない
-	m_isRootMotion = player->HasHorizontalMotion(animName);
-	player->SetUseRootMotion(m_isRootMotion);
-	player->SetRootMotionScale(1.0f);
+	// 走りのアニメーションの動きで前へ進む（足の動きと移動の速さが一致するので、足が地面を滑らない）
+	UseRootMotion(player);
 }
 
 void PlayerStateRun::Update(Player* player)
 {
 	if (TryCommonTransition(player)) return;
 
-	// 覚醒中は速く走る（ルートモーションの時は、再生速度と移動倍率で速くする）
-	if (m_isRootMotion)
+	// アニメーションに前へ進む動きがあれば、その動きで移動する
+	// （その場で足踏みするだけのアニメーションなら、プログラムで移動する）
+	bool isAnimMotion = player->CurrentAnimHasHorizontalMotion();
+
+	// 覚醒中は速く走る（アニメーションの動きで進む時は、再生速度と移動倍率で速くする）
+	if (isAnimMotion)
 	{
 		bool isAwakening = player->IsAwakening();
 		player->SetAnimationSpeed(isAwakening ? kAwakeningRunAnimSpeed : 1.0f);
 		player->SetRootMotionScale(isAwakening ? kAwakeningRunRootScale : 1.0f);
 	}
 
-	// ルートモーションの時は向きを変えるだけ（前へ進むのはアニメーションの動き）
-	if (!player->MoveProcess(!m_isRootMotion))
+	// アニメーションの動きで進む時は、入力方向へ向きを変えるだけ
+	if (!player->MoveProcess(!isAnimMotion))
 	{
 		player->ChangeState(std::make_shared<PlayerStateIdle>());
 	}
@@ -157,7 +163,7 @@ void PlayerStateRun::Update(Player* player)
 void PlayerStateEquip::ChangeState(Player* player)
 {
 	player->ChangeAnimation("Equip", false);
-	player->SetUseRootMotion(false);
+	UseRootMotion(player);
 	player->SetAnimationSpeed(1.3f);
 }
 
@@ -175,7 +181,7 @@ void PlayerStateEquip::Update(Player* player)
 void PlayerStateUnequip::ChangeState(Player* player)
 {
 	player->ChangeAnimation("Unequip", false);
-	player->SetUseRootMotion(false);
+	UseRootMotion(player);
 	player->SetAnimationSpeed(1.0f);
 }
 
@@ -224,15 +230,6 @@ std::string PlayerStateComboAttack::GetAnimName() const
 		if (m_subStep == SubStepEnd)	return "Attack_4_3_End";
 	}
 	return "Attack_" + std::to_string(m_comboType) + "_" + std::to_string(m_comboStep);
-}
-
-bool PlayerStateComboAttack::IsRootMotionLocked() const
-{
-	return (m_comboType == 2 && m_comboStep == 4) ||
-		(m_comboType == 2 && m_comboStep == 5) ||
-		IsSplitAttack() ||
-		(m_comboType == 5 && m_comboStep == 2) ||
-		(m_comboType == 5 && m_comboStep == 3);
 }
 
 void PlayerStateComboAttack::ChangeToNextAttack(Player* player) const
@@ -308,10 +305,9 @@ void PlayerStateComboAttack::ChangeState(Player* player)
 	player->SetWeaponState(WeaponState::Equipped);
 
 	// マネージャーの変数を倍率としてセット。一部の攻撃はXZの座標移動を完全にロック
-	// 一部の攻撃（空中・溜め攻撃など）以外は、アニメーションの踏み込みどおりに前へ進む
-	// 倍率は 1.0（アニメーションと同じ距離）。小さくすると足が地面を滑って見える
-	player->SetUseRootMotion(!IsRootMotionLocked());
-	player->SetRootMotionScale(1.0f);
+	// アニメーションの踏み込みどおりに動く
+	// （倍率は 1.0。小さくすると足が地面を滑って見え、0にすると技の途中で剣を振る位置がずれる）
+	UseRootMotion(player);
 }
 
 void PlayerStateComboAttack::Update(Player* player)
@@ -398,7 +394,7 @@ void PlayerStateComboAttack::Update(Player* player)
 void PlayerStateEvade::ChangeState(Player* player)
 {
 	player->ChangeAnimation("Evade", false);
-	player->SetUseRootMotion(false);	// 回避の移動はプログラムで行う（MoveForwardWithDecay）
+	UseRootMotion(player);
 	EffectPlayer::Play(EffectName::Evade, player->GetPos(), kEvadeEffectScale);
 	//player->SetInvincibleTimer(10);
 	player->SetAnimationSpeed(1.55f);
@@ -406,7 +402,11 @@ void PlayerStateEvade::ChangeState(Player* player)
 
 void PlayerStateEvade::Update(Player* player)
 {
-	MoveForwardWithDecay(player, PlayerParamManager::Instance().m_evadeSpeed, kEvadeMoveFrame, false);
+	// アニメーションに前へ進む動きが無い場合だけ、プログラムで前へ進む
+	if (!player->CurrentAnimHasHorizontalMotion())
+	{
+		MoveForwardWithDecay(player, PlayerParamManager::Instance().m_evadeSpeed, kEvadeMoveFrame, false);
+	}
 
 	if (player->IsAnimEnd()) {
 		player->ChangeState(std::make_shared<PlayerStateIdle>());
@@ -417,12 +417,16 @@ void PlayerStateDash::ChangeState(Player* player)
 {
 	player->ChangeAnimation("Dash", false);
 	player->SetAnimationSpeed(1.0f);
-	player->SetUseRootMotion(false);
+	UseRootMotion(player);
 }
 
 void PlayerStateDash::Update(Player* player)
 {
-	MoveForwardWithDecay(player, PlayerParamManager::Instance().m_dashSpeed, kEvadeMoveFrame, true);
+	// アニメーションに前へ進む動きが無い場合だけ、プログラムで前へ進む
+	if (!player->CurrentAnimHasHorizontalMotion())
+	{
+		MoveForwardWithDecay(player, PlayerParamManager::Instance().m_dashSpeed, kEvadeMoveFrame, true);
+	}
 
 	if (player->IsAnimEnd()) {
 		player->ChangeState(std::make_shared<PlayerStateIdle>());
@@ -439,14 +443,15 @@ void PlayerStateJump::ChangeState(Player* player)
 	player->ExecJump(kJumpPower);
 	player->ChangeAnimation(player->GetWeaponAnimName("JumpStart"), false, true);
 	player->SetAnimationSpeed(1.0f);
-	player->SetUseRootMotion(false);
+	UseRootMotion(player);
 }
 
 void PlayerStateJump::Update(Player* player)
 {
 	if (m_jumpPhase != JumpPhaseLanding)
 	{
-		player->MoveProcess();
+		// 空中での移動（アニメーションに前へ進む動きがあれば、向きを変えるだけ）
+		player->MoveProcess(!player->CurrentAnimHasHorizontalMotion());
 	}
 
 	bool isFallingNow = player->GetGravity() > kFallingGravity;
@@ -544,14 +549,14 @@ void PlayerStateDamage::ChangeState(Player* player)
 {
 	// 仰け反るようなダメージモーションを再生
 	player->ChangeAnimation("Damage", false, true);
-	player->SetUseRootMotion(false);	// のけぞりの移動はプログラムで行う
+	UseRootMotion(player);
 	player->SetAnimationSpeed(1.0f);
 }
 
 void PlayerStateDamage::Update(Player* player)
 {
-	// 少しの間、後ろへノックバック
-	if (player->GetAnimTime() < kDamageKnockbackFrame)
+	// 少しの間、後ろへノックバック（アニメーションに後ろへ下がる動きが無い場合だけ）
+	if (player->GetAnimTime() < kDamageKnockbackFrame && !player->CurrentAnimHasHorizontalMotion())
 	{
 		Math::Vector3 backward = player->GetMatrix().Backward();
 		backward.y = 0.0f;
@@ -569,8 +574,7 @@ void PlayerStateDamage::Update(Player* player)
 void PlayerStateDead::ChangeState(Player* player)
 {
 	player->ChangeAnimation("Death", false, true);
-	player->SetUseRootMotion(true);		// 倒れる動きはアニメーションどおりに動かす
-	player->SetRootMotionScale(1.0f);
+	UseRootMotion(player);	// 倒れる動きはアニメーションどおりに動かす
 	player->SetAnimationSpeed(1.0f);
 }
 

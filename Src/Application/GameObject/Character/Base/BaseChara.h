@@ -53,6 +53,9 @@ public:
 	// （その場で足踏みするだけのアニメーションなら false）
 	bool HasHorizontalMotion(const std::string& animName) const;
 
+	// 再生中のアニメーションに「前へ進む動き」が入っているか
+	bool CurrentAnimHasHorizontalMotion() const { return HasHorizontalMotion(m_currentAnimName); }
+
 	Math::Vector3 GetPos() const override { return m_pos; }
 	void SetPos(const Math::Vector3& pos) override { m_pos = pos; }
 

@@ -23,6 +23,10 @@ protected:
 
 	// 待機・移動中に共通の入力によるステート遷移（遷移した場合は true）
 	static bool TryCommonTransition(Player* player);
+
+	// ルートモーション（アニメーションの動きどおりに移動する）を使う設定にする
+	// プレイヤーの動きはすべてこれを使う（倍率は 1.0 ＝ アニメーションと同じ距離）
+	static void UseRootMotion(Player* player);
 };
 
 // 派生クラス
@@ -39,10 +43,6 @@ public:
 	void ChangeState(Player* player) override;
 	void Update(Player* player) override;
 
-private:
-	// 走りのアニメーションに前へ進む動きが入っているか
-	// （入っていればルートモーションで移動し、入っていなければプログラムで移動する）
-	bool m_isRootMotion = false;
 };
 
 class PlayerStateEquip : public PlayerState
@@ -118,7 +118,6 @@ private:
 	bool IsSplitAttack() const { return m_comboType == 4 && m_comboStep == 3; }
 
 	// ルートモーションによる前進を止める攻撃かどうか
-	bool IsRootMotionLocked() const;
 
 	// 次の段の攻撃へ移行（5段目以降はIdleへ）
 	void ChangeToNextAttack(Player* player) const;
