@@ -141,6 +141,7 @@ public:
 	static bool						s_useRootMotion;			// true：アニメーションの動きどおりに移動する
 	static bool						s_bladeShapeHitbox;			// true：攻撃判定・軌跡を剣のメッシュに合わせる
 	static float					s_throwAngleOffset;			// 剣を投げる攻撃の向きの微調整（度）
+	static float					s_runSpeedRate;				// 走る速さの倍率（1.0 でアニメーションと同じ速さ）
 
 private:
 

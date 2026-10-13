@@ -34,8 +34,8 @@ namespace
 
 	// 走り（ルートモーション）
 	constexpr float kRunBlendFrame			= 6.0f;		// 待機⇔走りのブレンドフレーム数
-	constexpr float kAwakeningRunAnimSpeed	= 1.5f;		// 覚醒中の走りアニメーションの再生速度
-	constexpr float kAwakeningRunRootScale	= 1.33f;	// 覚醒中の移動倍率（再生速度×倍率 ≒ 2倍の速さ）
+	constexpr float kAwakeningRunSpeedRate	= 1.7f;		// 覚醒中は、普段の走る速さの何倍にするか
+	constexpr float kRunAnimSpeedShare		= 0.6f;		// 速くする分のうち、アニメーションの再生速度で上げる割合
 
 	// 斬撃エフェクト（プレイヤーの前方・胸の高さあたりに出す）
 	constexpr float kSlashEffectForward		= 1.0f;		// 前方へずらす距離
@@ -151,12 +151,18 @@ void PlayerStateRun::Update(Player* player)
 	// （その場で足踏みするだけのアニメーションなら、プログラムで移動する）
 	bool isAnimMotion = player->CurrentAnimHasHorizontalMotion();
 
-	// 覚醒中は速く走る（アニメーションの動きで進む時は、再生速度と移動倍率で速くする）
+	// 走る速さ（アニメーションの動きで進む時は、再生速度と移動倍率の両方で速くする）
+	//   再生速度だけを上げると足の動きがせわしなくなり、移動倍率だけを上げると足が滑って見えるので、
+	//   速くする分の 6 割を再生速度、残りを移動倍率で上げる
+	//   例：倍率 1.5 → 再生速度 1.3 × 移動倍率 約1.15
 	if (isAnimMotion)
 	{
-		bool isAwakening = player->IsAwakening();
-		player->SetAnimationSpeed(isAwakening ? kAwakeningRunAnimSpeed : 1.0f);
-		player->SetRootMotionScale(isAwakening ? kAwakeningRunRootScale : 1.0f);
+		float speedRate = Player::s_runSpeedRate;
+		if (player->IsAwakening()) speedRate *= kAwakeningRunSpeedRate;	// 覚醒中はさらに速く
+
+		float animSpeed = 1.0f + (speedRate - 1.0f) * kRunAnimSpeedShare;
+		player->SetAnimationSpeed(animSpeed);
+		player->SetRootMotionScale(speedRate / animSpeed);
 	}
 
 	// アニメーションの動きで進む時は、入力方向へ向きを変えるだけ

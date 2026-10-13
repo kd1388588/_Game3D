@@ -110,6 +110,7 @@ void KdDebugGUI::GuiProcess()
 			ImGui::Checkbox("Root Motion", &Player::s_useRootMotion);
 			ImGui::Checkbox("Hitbox/Trail Along Blade", &Player::s_bladeShapeHitbox);
 			ImGui::SliderFloat("Throw Angle Offset", &Player::s_throwAngleOffset, -90.0f, 90.0f);
+			ImGui::SliderFloat("Run Speed", &Player::s_runSpeedRate, 1.0f, 2.5f);
 
 			if (ImGui::Button("Save Params"))
 			{

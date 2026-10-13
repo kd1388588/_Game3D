@@ -41,6 +41,7 @@ int Player::s_currentAttackType = 1;
 bool Player::s_useRootMotion = true;
 bool Player::s_bladeShapeHitbox = true;
 float Player::s_throwAngleOffset = 0.0f;
+float Player::s_runSpeedRate = 1.5f;
 
 namespace
 {
