@@ -281,9 +281,23 @@ const std::string& PlayerStateComboAttack::GetSlashEffectName() const
 	return EffectName::ComboSlashDefault;
 }
 
+const std::string& PlayerStateComboAttack::GetHitEffectName() const
+{
+	// 溜め攻撃のループ中はドリル（ループするエフェクト）なので、当たった時はタイプ4の斬撃にする
+	if (IsSplitAttack() && m_subStep == SubStepLoop)
+	{
+		return EffectName::ComboSlash4;
+	}
+	return GetSlashEffectName();
+}
+
 void PlayerStateComboAttack::PlaySlashEffect(Player* player)
 {
 	if (m_isEffect) return;
+
+	// 斬撃のエフェクトは敵に当たった時に出す（AttackOBB）
+	// ここでは溜め攻撃のループ中のドリルだけを、振っている間ずっと出す
+	if (!(IsSplitAttack() && m_subStep == SubStepLoop)) return;
 
 	m_effect = EffectPlayer::Play(GetSlashEffectName(),
 		player->CreateEffectMatrix(kSlashEffectForward, kSlashEffectHeight, kSlashEffectScale));
@@ -341,8 +355,9 @@ void PlayerStateComboAttack::Update(Player* player)
 
 		if (!m_isHit)
 		{
-			bool hitR = player->AttackOBB(player->GetSwordMatrixR(), m_isCritical);
-			bool hitL = player->AttackOBB(player->GetSwordMatrixL(), m_isCritical);
+			// 当たったら、攻撃の種類・段数ごとのエフェクトをその位置に出す
+			bool hitR = player->AttackOBB(player->GetSwordMatrixR(), m_isCritical, GetHitEffectName());
+			bool hitL = player->AttackOBB(player->GetSwordMatrixL(), m_isCritical, GetHitEffectName());
 
 			// 右手か左手どちらかが敵に当たったらヒットストップ
 			if (hitR || hitL)
@@ -352,7 +367,7 @@ void PlayerStateComboAttack::Update(Player* player)
 			}
 		}
 
-		// 攻撃の振り始めに斬撃エフェクト
+		// 溜め攻撃のループ中はドリルのエフェクト
 		PlaySlashEffect(player);
 	}
 

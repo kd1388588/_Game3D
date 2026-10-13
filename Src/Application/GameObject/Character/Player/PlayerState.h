@@ -117,15 +117,16 @@ private:
 	// 4-3（Start/Loop/Endに分かれた攻撃）かどうか
 	bool IsSplitAttack() const { return m_comboType == 4 && m_comboStep == 3; }
 
-	// ルートモーションによる前進を止める攻撃かどうか
-
 	// 次の段の攻撃へ移行（5段目以降はIdleへ）
 	void ChangeToNextAttack(Player* player) const;
 
 	// 今の攻撃で出す斬撃エフェクトのファイル名を取得
 	const std::string& GetSlashEffectName() const;
 
-	// 斬撃エフェクトを再生する（1回の攻撃につき1回だけ）
+	// 敵に当たった時に出すエフェクトの名前（攻撃の種類・段数ごと）
+	const std::string& GetHitEffectName() const;
+
+	// 溜め攻撃のループ中に、ドリルのエフェクトを再生する（斬撃のエフェクトは敵に当たった時に出す）
 	void PlaySlashEffect(Player* player);
 };
 

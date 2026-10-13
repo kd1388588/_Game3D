@@ -84,7 +84,11 @@ public:
 	bool IsDead() const { return m_hp <= 0; }
 
 	// ボックス（OBB）による攻撃判定
-	bool AttackOBB(const Math::Matrix& swordMatrix, bool isCritical);
+	// 敵に当たったら、その位置に hitEffectName のエフェクトを出す（空ならいつものヒットエフェクト）
+	bool AttackOBB(const Math::Matrix& swordMatrix, bool isCritical, const std::string& hitEffectName = "");
+
+	// 攻撃が当たった位置に、プレイヤーの攻撃の向きでヒットエフェクトを出す
+	void PlayHitEffect(const std::string& effectName, const Math::Vector3& hitPos, bool isCritical) const;
 
 	// ヒットストップ用タイマー
 	void SetHitStopTimer(int timer) { m_hitStopTimer = timer; }

@@ -1014,7 +1014,20 @@ void Player::ChangeAnimationLazy(const std::string& animName, bool isLoop, bool 
 	ChangeAnimation(animName, isLoop, forceRestart, blendFrame);
 }
 
-bool Player::AttackOBB(const Math::Matrix& swordMatrix, bool isCritical)
+void Player::PlayHitEffect(const std::string& effectName, const Math::Vector3& hitPos, bool isCritical) const
+{
+	// 攻撃の種類ごとのエフェクトが無ければ、いつものヒットエフェクト
+	const std::string& name = effectName.empty() ? EffectName::HitEnemy : effectName;
+
+	// プレイヤーの攻撃の向きに合わせ、当たった位置に出す（クリティカルは大きく）
+	float scale = isCritical ? kCriticalHitEffectScale : kHitEffectScale;
+	Math::Matrix mWorld = Math::Matrix::CreateScale(scale)
+		* Math::Matrix::CreateRotationY(GetAngleRad())
+		* Math::Matrix::CreateTranslation(hitPos);
+	EffectPlayer::Play(name, mWorld);
+}
+
+bool Player::AttackOBB(const Math::Matrix& swordMatrix, bool isCritical, const std::string& hitEffectName)
 {
 	// 刃の根元から先端までを囲む、Y軸方向に長い箱
 	float obbOffsetY = (m_swordBladeBaseY + m_swordBladeTipY) * 0.5f;
@@ -1047,9 +1060,10 @@ bool Player::AttackOBB(const Math::Matrix& swordMatrix, bool isCritical)
 		enemy->OnDamage(damage, isCritical);
 		isHit = true;
 
-		// 当たった位置にヒットエフェクト（クリティカルは大きく）
+		// 当たった位置にヒットエフェクト
+		// （敵は当たると少しの間無敵になるので、同じ敵に毎フレーム出続けることはない）
 		Math::Vector3 hitPos = retList.empty() ? obbMatrix.Translation() : retList.back().m_hitPos;
-		EffectPlayer::Play(EffectName::HitEnemy, hitPos, isCritical ? kCriticalHitEffectScale : kHitEffectScale);
+		PlayHitEffect(hitEffectName, hitPos, isCritical);
 	}
 
 	return isHit;
