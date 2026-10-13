@@ -44,10 +44,18 @@ TARGET_MESH_NAME = "SK_Assassin"
 TARGET_SEARCH_ROOT = "/Game/Scifi_Assassin"
 
 # 剣の骨のチェーン（チェーン名, 始まりの骨, 終わりの骨）
-WEAPON_CHAINS = [
-	("Weapon_R", "weapon_r", "sword_r"),
-	("Weapon_L", "weapon_l", "sword_l"),
+# 元（Dual_Sword の SK_Mannequin）と先（SK_Assassin）で剣の骨の作りが違うので、別々に指定する
+#   元：Weapon_R / Weapon_L（1本だけ。sword_r は無い）
+#   先：weapon_r → sword_r / weapon_l → sword_l
+SOURCE_WEAPON_CHAINS = [
+	("Weapon_R", "Weapon_R", "Weapon_R"),
+	("Weapon_L", "Weapon_L", "Weapon_L"),
 ]
+TARGET_WEAPON_CHAINS = [
+	("Weapon_R", "weapon_r", "weapon_r"),
+	("Weapon_L", "weapon_l", "weapon_l"),
+]
+WEAPON_CHAIN_NAMES = ["Weapon_R", "Weapon_L"]
 
 # 書き出し先（ゲームが読み込むフォルダと同じ構成）
 EXPORT_FOLDER = r"C:\UE_gltf\Player\New\Sequence2\02_Attack\05_Combo_Attack_05\AS_Combo_Attack_05_02_Seq"
@@ -176,14 +184,41 @@ def chain_names(rig):
 	return names
 
 
-def ensure_weapon_chains(rig, rig_label):
+def print_bone_parents(rig, rig_label, bone_names):
+	"""剣の骨の親が何の骨か表示する（元と先で親が違うと、飛ぶ向きがずれる原因になる）"""
+	try:
+		skeleton = unreal.IKRigController.get_controller(rig).get_ik_rig_skeleton()
+		names = [str(n) for n in skeleton.get_editor_property("bone_names")]
+		parents = list(skeleton.get_editor_property("parent_indices"))
+	except Exception as e:
+		warn("{}：骨の親子関係を取得できませんでした ({})".format(rig_label, e))
+		return
+	lower = [n.lower() for n in names]
+	for bone in bone_names:
+		if bone.lower() not in lower:
+			log("{}：骨 {} は無い".format(rig_label, bone))
+			continue
+		chain = []
+		index = lower.index(bone.lower())
+		while index >= 0:
+			chain.append(names[index])
+			index = parents[index]
+		log("{}：{}".format(rig_label, " ← ".join(chain)))
+
+
+def ensure_weapon_chains(rig, rig_label, weapon_chains):
 	"""IK Rig に剣の骨のチェーンが無ければ追加する"""
 	controller = unreal.IKRigController.get_controller(rig)
 	existing = chain_names(rig)
-	for chain_name, start_bone, end_bone in WEAPON_CHAINS:
+	for chain_name, start_bone, end_bone in weapon_chains:
 		if chain_name in existing:
-			log("{}：チェーン {} は作成済み".format(rig_label, chain_name))
-			continue
+			# 前回のスクリプトで違う骨のチェーンが作られている場合があるので、作り直す
+			try:
+				controller.remove_retarget_chain(chain_name)
+				log("{}：チェーン {} を作り直します".format(rig_label, chain_name))
+			except Exception:
+				log("{}：チェーン {} は作成済み".format(rig_label, chain_name))
+				continue
 		result = None
 		try:
 			result = controller.add_retarget_chain(chain_name, start_bone, end_bone, "")
@@ -201,7 +236,7 @@ def setup_weapon_chain_settings(rtg):
 	"""剣のチェーンを対応づけ、「世界での位置」を元のアニメーションに合わせる設定にする"""
 	controller = unreal.IKRetargeterController.get_controller(rtg)
 
-	for chain_name, _, _ in WEAPON_CHAINS:
+	for chain_name in WEAPON_CHAIN_NAMES:
 		# 元と先のチェーンを対応づける
 		try:
 			controller.set_source_chain(chain_name, chain_name)
@@ -339,9 +374,13 @@ def main():
 	log("IK Retargeter: " + rtg.get_path_name())
 	controller = unreal.IKRetargeterController.get_controller(rtg)
 
+	# 剣の骨の親子関係を表示（確認用）
+	print_bone_parents(controller.get_ik_rig(SRC), "元の骨", ["Weapon_R", "Weapon_L", "Weapon_Holder_R", "Weapon_Holder_L"])
+	print_bone_parents(controller.get_ik_rig(TGT), "先の骨", ["weapon_r", "weapon_l", "sword_r", "sword_l"])
+
 	# 剣の骨のチェーンを追加・設定
-	ensure_weapon_chains(controller.get_ik_rig(SRC), "元の IK Rig")
-	ensure_weapon_chains(controller.get_ik_rig(TGT), "先の IK Rig")
+	ensure_weapon_chains(controller.get_ik_rig(SRC), "元の IK Rig", SOURCE_WEAPON_CHAINS)
+	ensure_weapon_chains(controller.get_ik_rig(TGT), "先の IK Rig", TARGET_WEAPON_CHAINS)
 	setup_weapon_chain_settings(rtg)
 
 	# 前回のリターゲット結果を削除してから、作り直す
