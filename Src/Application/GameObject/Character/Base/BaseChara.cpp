@@ -65,6 +65,7 @@ void BaseChara::Update()
 		// 1. アニメーション時間を進める
 		//    （AdvanceTime は「進める前の時間」でポーズを作るので、その時間を覚えておく）
 		float poseTime = m_animator.GetTime();
+		ResetPoseToRest();
 		m_animator.AdvanceTime(m_model->WorkNodes(), m_animSpeed);
 
 		// 2. ルートモーションの移動量を計算
@@ -444,26 +445,51 @@ void BaseChara::FindMotionNodes()
 	}
 }
 
-Math::Vector3 BaseChara::SampleMotionPos(float time) const
+void BaseChara::ResetPoseToRest()
+{
+	if (!m_model || !m_model->GetData()) return;
+
+	const auto& restNodes = m_model->GetData()->GetOriginalNodes();
+	auto& workNodes = m_model->WorkNodes();
+	size_t count = std::min(restNodes.size(), workNodes.size());
+	for (size_t i = 0; i < count; ++i)
+	{
+		workNodes[i].m_localTransform = restNodes[i].m_localTransform;
+	}
+}
+
+bool BaseChara::HasHorizontalMotion(const std::string& animName) const
+{
+	constexpr float kMinTravelDistance = 0.05f;	// 1回の再生でこれ以上進めば「前へ進む動きがある」とみなす
+
+	auto it = m_animMap.find(animName);
+	if (it == m_animMap.end() || !it->second || m_pelvisNodeIndex < 0) return false;
+
+	// 最初と最後の腰の位置を比べる
+	Math::Vector3 start = SampleMotionPos(*it->second, 0.0f);
+	Math::Vector3 end = SampleMotionPos(*it->second, it->second->m_maxLength);
+	return (end - start).Length() >= kMinTravelDistance;
+}
+
+Math::Vector3 BaseChara::SampleMotionPos(const KdAnimationData& anim, float time, Math::Vector3* pOutPelvisPos) const
 {
 	Math::Vector3 rootPos = Math::Vector3::Zero;
 	Math::Vector3 pelvisPos = m_pelvisRestPos;
 
-	// 再生中のアニメーションから、root と pelvis の位置だけを取り出す
-	if (m_currentAnim)
+	// アニメーションから、root と pelvis の位置だけを取り出す
+	for (const auto& animNode : anim.m_nodes)
 	{
-		for (auto& animNode : m_currentAnim->m_nodes)
+		if (animNode.m_nodeOffset == m_rootNodeIndex)
 		{
-			if (animNode.m_nodeOffset == m_rootNodeIndex)
-			{
-				animNode.InterpolateTranslations(rootPos, time);
-			}
-			else if (animNode.m_nodeOffset == m_pelvisNodeIndex)
-			{
-				animNode.InterpolateTranslations(pelvisPos, time);
-			}
+			animNode.InterpolateTranslations(rootPos, time);
+		}
+		else if (animNode.m_nodeOffset == m_pelvisNodeIndex)
+		{
+			animNode.InterpolateTranslations(pelvisPos, time);
 		}
 	}
+
+	if (pOutPelvisPos) *pOutPelvisPos = pelvisPos;
 
 	// root の移動 ＋ 腰が立ち位置からずれた分（上下は除く）
 	return
@@ -480,7 +506,8 @@ void BaseChara::UpdatePelvisMotion(float poseTime)
 	if (m_pelvisNodeIndex < 0 || !m_currentAnim) return;
 
 	// ① 今回のポーズの腰の水平位置
-	Math::Vector3 motionPos = SampleMotionPos(poseTime);
+	Math::Vector3 animPelvisPos;
+	Math::Vector3 motionPos = SampleMotionPos(*m_currentAnim, poseTime, &animPelvisPos);
 
 	// ② 前回からの移動量
 	Math::Vector3 delta = Math::Vector3::Zero;
@@ -491,8 +518,8 @@ void BaseChara::UpdatePelvisMotion(float poseTime)
 	else if (poseTime < m_prevMotionTime)
 	{
 		// ループして最初に戻った：最後までの移動 ＋ 最初からの移動
-		delta = (SampleMotionPos(m_currentAnim->m_maxLength) - m_prevMotionPos)
-			+ (motionPos - SampleMotionPos(0.0f));
+		delta = (SampleMotionPos(*m_currentAnim, m_currentAnim->m_maxLength) - m_prevMotionPos)
+			+ (motionPos - SampleMotionPos(*m_currentAnim, 0.0f));
 	}
 	else
 	{
@@ -510,14 +537,23 @@ void BaseChara::UpdatePelvisMotion(float poseTime)
 		nodes[m_rootNodeIndex].m_localTransform.Translation(Math::Vector3::Zero);
 	}
 
-	// ④ ルートモーションを使う時だけ、腰をキャラの位置に固定する（動いた分はキャラ自体を動かす）
-	//    使わない時（移動を止めている攻撃・待機・回避など）は、腰はアニメーションどおりに動かす
-	//    （固定すると、回転する攻撃などで剣を振る位置が変わってしまうため）
-	if (!m_useRootMotion) return;
-
+	// ④ 腰の水平位置を決める（高さはアニメーションのまま）
+	//    ・ルートモーションを使う時：腰をキャラの位置に固定する（動いた分はキャラ自体を動かす）
+	//    ・使わない時（移動を止めている攻撃・待機・回避など）：今のアニメーションの位置そのまま
+	//      （固定すると、回転する攻撃などで剣を振る位置が変わってしまうため）
+	//    どちらも「前のアニメーションと混ぜた位置」は使わない
+	//    （前のアニメーションで進んだ分はキャラの位置に入っているので、混ぜると体が一瞬前にずれる）
 	Math::Vector3 pelvisPos = nodes[m_pelvisNodeIndex].m_localTransform.Translation();
-	pelvisPos.x = m_pelvisRestPos.x;
-	pelvisPos.z = m_pelvisRestPos.z;
+	if (m_useRootMotion)
+	{
+		pelvisPos.x = m_pelvisRestPos.x;
+		pelvisPos.z = m_pelvisRestPos.z;
+	}
+	else
+	{
+		pelvisPos.x = animPelvisPos.x;
+		pelvisPos.z = animPelvisPos.z;
+	}
 	nodes[m_pelvisNodeIndex].m_localTransform.Translation(pelvisPos);
 }
 

@@ -921,7 +921,7 @@ bool Player::AttackOBB(const Math::Matrix& swordMatrix, bool isCritical)
 	return isHit;
 }
 
-bool Player::MoveProcess()
+bool Player::MoveProcess(bool moveByCode)
 {
 	// カメラの向きを基準に移動方向を決める
 	Math::Matrix cameraRotY = Math::Matrix::Identity;
@@ -950,9 +950,12 @@ bool Player::MoveProcess()
 		else { m_angle -= angle; }
 	}
 
-	// 座標移動
-	float moveSpeed = m_isAwakening ? kAwakeningMoveSpeed : kMoveSpeed;
-	m_pos += dir * moveSpeed;
+	// 座標移動（ルートモーションで動く時は、ここでは動かさない）
+	if (moveByCode)
+	{
+		float moveSpeed = m_isAwakening ? kAwakeningMoveSpeed : kMoveSpeed;
+		m_pos += dir * moveSpeed;
+	}
 	return true;
 }
 

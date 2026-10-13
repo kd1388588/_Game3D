@@ -26,6 +26,11 @@ namespace
 	constexpr int	kMaxLandingPredictFrame	= 120;		// 着地予測を行う最大フレーム数
 	constexpr float kLandingBlendFrame		= 3.0f;		// 空中ループ→着地アニメのブレンドフレーム数
 
+	// 走り（ルートモーション）
+	constexpr float kRunBlendFrame			= 6.0f;		// 待機⇔走りのブレンドフレーム数
+	constexpr float kAwakeningRunAnimSpeed	= 1.5f;		// 覚醒中の走りアニメーションの再生速度
+	constexpr float kAwakeningRunRootScale	= 1.33f;	// 覚醒中の移動倍率（再生速度×倍率 ≒ 2倍の速さ）
+
 	// 斬撃エフェクト（プレイヤーの前方・胸の高さあたりに出す）
 	constexpr float kSlashEffectForward		= 1.0f;		// 前方へずらす距離
 	constexpr float kSlashEffectHeight		= 1.0f;		// 足元からの高さ
@@ -102,7 +107,7 @@ bool PlayerState::TryCommonTransition(Player* player)
 
 void PlayerStateIdle::ChangeState(Player* player)
 {
-	player->ChangeAnimation(player->GetWeaponAnimName("Idle"), true);
+	player->ChangeAnimation(player->GetWeaponAnimName("Idle"), true, false, kRunBlendFrame);
 	player->SetAnimationSpeed(1.0f);
 	player->SetUseRootMotion(false);
 }
@@ -119,16 +124,31 @@ void PlayerStateIdle::Update(Player* player)
 
 void PlayerStateRun::ChangeState(Player* player)
 {
-	player->ChangeAnimation(player->GetWeaponAnimName("Run"), true);
+	std::string animName = player->GetWeaponAnimName("Run");
+	player->ChangeAnimation(animName, true, false, kRunBlendFrame);
 	player->SetAnimationSpeed(1.0f);
-	player->SetUseRootMotion(false);
+
+	// 走りのアニメーションに前へ進む動きが入っていれば、その動きで移動する（ルートモーション）
+	// 足の動きと移動の速さが一致するので、足が地面を滑らない
+	m_isRootMotion = player->HasHorizontalMotion(animName);
+	player->SetUseRootMotion(m_isRootMotion);
+	player->SetRootMotionScale(1.0f);
 }
 
 void PlayerStateRun::Update(Player* player)
 {
 	if (TryCommonTransition(player)) return;
 
-	if (!player->MoveProcess())
+	// 覚醒中は速く走る（ルートモーションの時は、再生速度と移動倍率で速くする）
+	if (m_isRootMotion)
+	{
+		bool isAwakening = player->IsAwakening();
+		player->SetAnimationSpeed(isAwakening ? kAwakeningRunAnimSpeed : 1.0f);
+		player->SetRootMotionScale(isAwakening ? kAwakeningRunRootScale : 1.0f);
+	}
+
+	// ルートモーションの時は向きを変えるだけ（前へ進むのはアニメーションの動き）
+	if (!player->MoveProcess(!m_isRootMotion))
 	{
 		player->ChangeState(std::make_shared<PlayerStateIdle>());
 	}

@@ -39,7 +39,10 @@ public:
 	bool CheckEquipInput()	{ return m_equipKey.Update(); }
 	bool CheckAttackInput()	{ return m_attackKey.Update(); }
 	bool CheckJumpInput()	{ return m_jumpKey.Update(); }
-	bool MoveProcess();
+	// 入力方向へ向きを変え、moveByCode が true なら決まった速さで移動する
+	// （false の時は向きを変えるだけ。移動はルートモーションに任せる）
+	// 入力が無ければ false を返す
+	bool MoveProcess(bool moveByCode = true);
 
 	// ステート（アニメーション）関連
 	WeaponState GetWeaponState() const { return m_weaponState; }

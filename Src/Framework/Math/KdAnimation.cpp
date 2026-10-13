@@ -21,7 +21,7 @@ int BinarySearchNextAnimKey(const std::vector<T>& list, float time)
 	return low;
 }
 
-bool KdAnimationData::Node::InterpolateTranslations(Math::Vector3& result, float time)
+bool KdAnimationData::Node::InterpolateTranslations(Math::Vector3& result, float time) const
 {
 	if (m_translations.size() == 0)return false;
 
@@ -55,7 +55,7 @@ bool KdAnimationData::Node::InterpolateTranslations(Math::Vector3& result, float
 	return true;
 }
 
-bool KdAnimationData::Node::InterpolateRotations(Math::Quaternion& result, float time)
+bool KdAnimationData::Node::InterpolateRotations(Math::Quaternion& result, float time) const
 {
 	if (m_rotations.size() == 0)return false;
 
@@ -86,7 +86,7 @@ bool KdAnimationData::Node::InterpolateRotations(Math::Quaternion& result, float
 	return true;
 }
 
-bool KdAnimationData::Node::InterpolateScales(Math::Vector3& result, float time)
+bool KdAnimationData::Node::InterpolateScales(Math::Vector3& result, float time) const
 {
 	if (m_scales.size() == 0)return false;
 

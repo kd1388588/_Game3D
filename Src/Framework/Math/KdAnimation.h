@@ -35,9 +35,9 @@ struct KdAnimationData
 		std::vector<KdAnimKeyVector3>		m_scales;		// 拡縮キーリスト
 
 		void Interpolate(Math::Matrix& rDst, float time);
-		bool InterpolateTranslations(Math::Vector3& result, float time);
-		bool InterpolateRotations(Math::Quaternion& result, float time);
-		bool InterpolateScales(Math::Vector3& result, float time);
+		bool InterpolateTranslations(Math::Vector3& result, float time) const;
+		bool InterpolateRotations(Math::Quaternion& result, float time) const;
+		bool InterpolateScales(Math::Vector3& result, float time) const;
 	};
 
 	// 全ノード用アニメーションデータ

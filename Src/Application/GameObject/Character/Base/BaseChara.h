@@ -43,7 +43,15 @@ public:
 	// true にすると、腰が動いた分が m_rootMoveDelta に入り、
 	// ルートモーションを使う時（SetUseRootMotion(true)）は腰がキャラの位置に固定される
 	// （アニメーションが切り替わっても、体が元の位置に戻らなくなる）
-	void SetExtractPelvisMotion(bool extract) { m_extractPelvisMotion = extract; }
+	void SetExtractPelvisMotion(bool extract)
+	{
+		m_extractPelvisMotion = extract;
+		if (extract && !m_isMotionNodeReady) FindMotionNodes();
+	}
+
+	// アニメーションに「前へ進む動き」（腰の水平移動）が入っているか
+	// （その場で足踏みするだけのアニメーションなら false）
+	bool HasHorizontalMotion(const std::string& animName) const;
 
 	Math::Vector3 GetPos() const override { return m_pos; }
 	void SetPos(const Math::Vector3& pos) override { m_pos = pos; }
@@ -77,8 +85,13 @@ protected:
 	// （poseTime：今回のポーズを作った再生時間）
 	void UpdatePelvisMotion(float poseTime);
 
-	// 再生中のアニメーションの、指定した時間の「腰の水平位置」（立ち位置からのずれ）
-	Math::Vector3 SampleMotionPos(float time) const;
+	// 指定したアニメーションの、指定した時間の「腰の水平位置」（立ち位置からのずれ）
+	// pOutPelvisPos を渡すと、腰の位置（アニメーションの値そのまま）も受け取れる
+	Math::Vector3 SampleMotionPos(const KdAnimationData& anim, float time, Math::Vector3* pOutPelvisPos = nullptr) const;
+
+	// 全ての骨をモデルの初期姿勢に戻す
+	// （アニメーションにキーが無い骨が、前のアニメーションの姿勢のまま残らないようにする）
+	void ResetPoseToRest();
 
 	// root・pelvis のノード番号と、腰の立ち位置を調べる（最初の1回だけ）
 	void FindMotionNodes();

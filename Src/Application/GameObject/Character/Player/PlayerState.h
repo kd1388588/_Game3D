@@ -38,6 +38,11 @@ class PlayerStateRun : public PlayerState
 public:
 	void ChangeState(Player* player) override;
 	void Update(Player* player) override;
+
+private:
+	// 走りのアニメーションに前へ進む動きが入っているか
+	// （入っていればルートモーションで移動し、入っていなければプログラムで移動する）
+	bool m_isRootMotion = false;
 };
 
 class PlayerStateEquip : public PlayerState
