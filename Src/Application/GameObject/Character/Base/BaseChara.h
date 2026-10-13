@@ -28,7 +28,7 @@ public:
 	void LoadAnimations(const std::vector<AnimLoadInfo>& loadList);
 	void SetAnimationSpeed(float speed) { m_animSpeed = speed; }
 	float GetAnimTime() const { return m_animator.GetTime(); }
-	void SetAnimTime(float time) { m_animator.SetTime(time); }
+	void SetAnimTime(float time) { m_animator.SetTime(time); m_prevMotionTime = -1.0f; }
 	bool IsAnimEnd() const { return m_animator.IsAnimationEnd(); }
 	bool HasAnimation(const std::string& animName) const;
 
@@ -38,6 +38,11 @@ public:
 	// ルートモーション関連
 	void SetUseRootMotion(bool use) { m_useRootMotion = use; }
 	void SetRootMotionScale(float scale) { m_rootScale = scale; }
+
+	// アニメーションの「腰の水平移動」を、キャラの移動として取り出すかどうか
+	// true にすると、腰はキャラの位置に固定され、腰が動いた分は m_rootMoveDelta に入る
+	// （アニメーションが切り替わっても、体が元の位置に戻らなくなる）
+	void SetExtractPelvisMotion(bool extract) { m_extractPelvisMotion = extract; }
 
 	Math::Vector3 GetPos() const override { return m_pos; }
 	void SetPos(const Math::Vector3& pos) override { m_pos = pos; }
@@ -67,6 +72,16 @@ protected:
 	// ルートモーションの移動量をY軸回転(ラジアン)で向きを合わせて座標に加算する
 	void ApplyRootMotion(float scale, float rotYRad);
 
+	// 腰の水平移動を取り出して m_rootMoveDelta に入れ、腰をキャラの位置に固定する
+	// （poseTime：今回のポーズを作った再生時間）
+	void UpdatePelvisMotion(float poseTime);
+
+	// 再生中のアニメーションの、指定した時間の「腰の水平位置」（立ち位置からのずれ）
+	Math::Vector3 SampleMotionPos(float time) const;
+
+	// root・pelvis のノード番号と、腰の立ち位置を調べる（最初の1回だけ）
+	void FindMotionNodes();
+
 	Math::Vector3					m_pos;
 	std::shared_ptr<KdModelWork>	m_model;
 	float							m_gravity = 0.0f;
@@ -77,8 +92,18 @@ protected:
 	bool							m_useRootMotion = false;	// ルートモーションを使うかどうか
 	float							m_rootScale = 1.0f;			// ルートモーションの移動倍率
 
+	// 腰の水平移動の取り出し用
+	bool							m_extractPelvisMotion = false;	// 腰の水平移動を取り出すか
+	bool							m_isMotionNodeReady = false;	// ノード番号を調べ終わったか
+	int								m_rootNodeIndex = -1;			// root のノード番号
+	int								m_pelvisNodeIndex = -1;			// pelvis のノード番号
+	Math::Vector3					m_pelvisRestPos = Math::Vector3::Zero;	// 腰の立ち位置（モデルの初期姿勢）
+	float							m_prevMotionTime = -1.0f;		// 前回の再生時間（-1 は切り替え直後）
+	Math::Vector3					m_prevMotionPos = Math::Vector3::Zero;	// 前回の腰の水平位置
+
 	std::unordered_map<std::string, std::shared_ptr<KdAnimationData>> m_animMap;
 	std::string						m_currentAnimName = "";
+	std::shared_ptr<KdAnimationData> m_currentAnim = nullptr;		// 再生中のアニメーション
 	KdAnimator						m_animator;
 	float							m_animSpeed = 1.0f;
 

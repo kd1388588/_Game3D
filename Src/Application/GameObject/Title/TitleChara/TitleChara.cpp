@@ -100,6 +100,10 @@ void TitleChara::Init()
 	m_model = std::make_shared<KdModelWork>();
 	m_model->SetModelData(kModelPath);
 
+	// 腰をキャラの位置に固定し、技がつながっても体が元の位置に戻らないようにする
+	// （ルートモーションは使わないので、その場で演技する）
+	SetExtractPelvisMotion(true);
+
 	LoadAnimations(CreateAnimList());
 
 	m_showcase = CreateShowcase();

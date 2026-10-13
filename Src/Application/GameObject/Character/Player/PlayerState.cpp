@@ -137,6 +137,7 @@ void PlayerStateRun::Update(Player* player)
 void PlayerStateEquip::ChangeState(Player* player)
 {
 	player->ChangeAnimation("Equip", false);
+	player->SetUseRootMotion(false);
 	player->SetAnimationSpeed(1.3f);
 }
 
@@ -154,6 +155,7 @@ void PlayerStateEquip::Update(Player* player)
 void PlayerStateUnequip::ChangeState(Player* player)
 {
 	player->ChangeAnimation("Unequip", false);
+	player->SetUseRootMotion(false);
 	player->SetAnimationSpeed(1.0f);
 }
 
@@ -286,8 +288,10 @@ void PlayerStateComboAttack::ChangeState(Player* player)
 	player->SetWeaponState(WeaponState::Equipped);
 
 	// マネージャーの変数を倍率としてセット。一部の攻撃はXZの座標移動を完全にロック
+	// 一部の攻撃（空中・溜め攻撃など）以外は、アニメーションの踏み込みどおりに前へ進む
+	// 倍率は 1.0（アニメーションと同じ距離）。小さくすると足が地面を滑って見える
 	player->SetUseRootMotion(!IsRootMotionLocked());
-	player->SetRootMotionScale(PlayerParamManager::Instance().m_attackRootScale);
+	player->SetRootMotionScale(1.0f);
 }
 
 void PlayerStateComboAttack::Update(Player* player)
@@ -374,6 +378,7 @@ void PlayerStateComboAttack::Update(Player* player)
 void PlayerStateEvade::ChangeState(Player* player)
 {
 	player->ChangeAnimation("Evade", false);
+	player->SetUseRootMotion(false);	// 回避の移動はプログラムで行う（MoveForwardWithDecay）
 	EffectPlayer::Play(EffectName::Evade, player->GetPos(), kEvadeEffectScale);
 	//player->SetInvincibleTimer(10);
 	player->SetAnimationSpeed(1.55f);
@@ -519,6 +524,7 @@ void PlayerStateDamage::ChangeState(Player* player)
 {
 	// 仰け反るようなダメージモーションを再生
 	player->ChangeAnimation("Damage", false, true);
+	player->SetUseRootMotion(false);	// のけぞりの移動はプログラムで行う
 	player->SetAnimationSpeed(1.0f);
 }
 
@@ -543,6 +549,8 @@ void PlayerStateDamage::Update(Player* player)
 void PlayerStateDead::ChangeState(Player* player)
 {
 	player->ChangeAnimation("Death", false, true);
+	player->SetUseRootMotion(true);		// 倒れる動きはアニメーションどおりに動かす
+	player->SetRootMotionScale(1.0f);
 	player->SetAnimationSpeed(1.0f);
 }
 

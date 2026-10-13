@@ -37,7 +37,6 @@ Math::Vector3 Player::s_sheathedRotL = { 0.0f, 0.0f, 0.0f };
 Math::Vector3 Player::s_sheathedPosL = { 0.0f, 0.0f, 0.0f };
 
 int Player::s_currentAttackType = 1;
-float Player::s_attackRootScale = 0.2f;
 
 namespace
 {
@@ -389,6 +388,10 @@ void Player::Init()
 
 	// モデル・武器セットの読み込み
 	m_model->SetModelData(kPlayerModelPath);
+
+	// アニメーションで腰が水平に動いた分は、プレイヤー自体の移動に置き換える
+	// （体が元の位置に戻らず、アニメーションが自然につながるようにする）
+	SetExtractPelvisMotion(true);
 	if (!kSwordModelPath.empty())		m_swordModel->Load(kSwordModelPath);
 	if (!kScabbardModelPath.empty())	m_scabbardModel->Load(kScabbardModelPath);
 
@@ -470,7 +473,8 @@ void Player::Update()
 	// アニメーション時間の進行とCalcNodeMatricesの実行はBaseで
 	BaseChara::Update();
 
-	ApplyRootMotion(s_attackRootScale, GetAngleRad());
+	// アニメーションで腰が動いた分だけ、プレイヤーを動かす
+	ApplyAnimationMotion();
 
 	UpdateInvincibleTimer();
 
@@ -486,9 +490,20 @@ void Player::Update()
 	UpdateHpGage();
 	UpdateAttackTypeSwitch();
 
-	ApplyRootMotion(m_rootScale, GetAngleRad());
-
 	UpdateWorldMatrix();
+}
+
+void Player::ApplyAnimationMotion()
+{
+	if (!m_useRootMotion) return;
+
+	// 腰の移動量はモデルから見た向きなので、モデルの向き（m_angle + 180度）で回してワールドの向きにする
+	Math::Matrix modelRot = Math::Matrix::CreateRotationY(DirectX::XMConvertToRadians(m_angle + 180.0f));
+	Math::Vector3 move = Math::Vector3::TransformNormal(m_rootMoveDelta, modelRot) * m_rootScale;
+
+	// 上下の移動は重力と地面判定に任せる
+	move.y = 0.0f;
+	m_pos += move;
 }
 
 void Player::PostUpdate()

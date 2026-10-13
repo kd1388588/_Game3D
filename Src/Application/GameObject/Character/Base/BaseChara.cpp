@@ -63,10 +63,17 @@ void BaseChara::Update()
 	if (m_model)
 	{
 		// 1. アニメーション時間を進める
+		//    （AdvanceTime は「進める前の時間」でポーズを作るので、その時間を覚えておく）
+		float poseTime = m_animator.GetTime();
 		m_animator.AdvanceTime(m_model->WorkNodes(), m_animSpeed);
 
 		// 2. ルートモーションの移動量を計算
-		if (KdModelWork::Node* pRoot = FindRootNode(m_model->WorkNodes()))
+		if (m_extractPelvisMotion)
+		{
+			// 腰の水平移動をキャラの移動として取り出す
+			UpdatePelvisMotion(poseTime);
+		}
+		else if (KdModelWork::Node* pRoot = FindRootNode(m_model->WorkNodes()))
 		{
 			// 今のフレームの絶対座標を取得
 			Math::Vector3 currentAnimRootPos = pRoot->m_localTransform.Translation();
@@ -417,6 +424,97 @@ void BaseChara::ApplyRootMotion(float scale, float rotYRad)
 	m_pos += Math::Vector3::TransformNormal(fixedDelta, rotY);
 }
 
+void BaseChara::FindMotionNodes()
+{
+	m_isMotionNodeReady = true;
+	if (!m_model || !m_model->GetData()) return;
+
+	const auto& nodes = m_model->GetData()->GetOriginalNodes();
+	for (int i = 0; i < static_cast<int>(nodes.size()); ++i)
+	{
+		if (nodes[i].m_name == kRootNodeName)
+		{
+			m_rootNodeIndex = i;
+		}
+		else if (nodes[i].m_name == kPelvisNodeName)
+		{
+			m_pelvisNodeIndex = i;
+			m_pelvisRestPos = nodes[i].m_localTransform.Translation();
+		}
+	}
+}
+
+Math::Vector3 BaseChara::SampleMotionPos(float time) const
+{
+	Math::Vector3 rootPos = Math::Vector3::Zero;
+	Math::Vector3 pelvisPos = m_pelvisRestPos;
+
+	// 再生中のアニメーションから、root と pelvis の位置だけを取り出す
+	if (m_currentAnim)
+	{
+		for (auto& animNode : m_currentAnim->m_nodes)
+		{
+			if (animNode.m_nodeOffset == m_rootNodeIndex)
+			{
+				animNode.InterpolateTranslations(rootPos, time);
+			}
+			else if (animNode.m_nodeOffset == m_pelvisNodeIndex)
+			{
+				animNode.InterpolateTranslations(pelvisPos, time);
+			}
+		}
+	}
+
+	// root の移動 ＋ 腰が立ち位置からずれた分（上下は除く）
+	return
+	{
+		rootPos.x + (pelvisPos.x - m_pelvisRestPos.x),
+		0.0f,
+		rootPos.z + (pelvisPos.z - m_pelvisRestPos.z),
+	};
+}
+
+void BaseChara::UpdatePelvisMotion(float poseTime)
+{
+	if (!m_isMotionNodeReady) FindMotionNodes();
+	if (m_pelvisNodeIndex < 0 || !m_currentAnim) return;
+
+	// ① 今回のポーズの腰の水平位置
+	Math::Vector3 motionPos = SampleMotionPos(poseTime);
+
+	// ② 前回からの移動量
+	Math::Vector3 delta = Math::Vector3::Zero;
+	if (m_prevMotionTime < 0.0f)
+	{
+		// アニメーションを切り替えた直後は、移動の基準を作るだけ
+	}
+	else if (poseTime < m_prevMotionTime)
+	{
+		// ループして最初に戻った：最後までの移動 ＋ 最初からの移動
+		delta = (SampleMotionPos(m_currentAnim->m_maxLength) - m_prevMotionPos)
+			+ (motionPos - SampleMotionPos(0.0f));
+	}
+	else
+	{
+		delta = motionPos - m_prevMotionPos;
+	}
+
+	m_rootMoveDelta = delta;
+	m_prevMotionPos = motionPos;
+	m_prevMotionTime = poseTime;
+
+	// ③ 腰をキャラの位置に固定する（動いた分は、キャラ自体を動かして表現する）
+	auto& nodes = m_model->WorkNodes();
+	if (m_rootNodeIndex >= 0)
+	{
+		nodes[m_rootNodeIndex].m_localTransform.Translation(Math::Vector3::Zero);
+	}
+	Math::Vector3 pelvisPos = nodes[m_pelvisNodeIndex].m_localTransform.Translation();
+	pelvisPos.x = m_pelvisRestPos.x;
+	pelvisPos.z = m_pelvisRestPos.z;
+	nodes[m_pelvisNodeIndex].m_localTransform.Translation(pelvisPos);
+}
+
 void BaseChara::ChangeAnimation(const std::string& animName, bool isLoop, bool forceRestart, float blendFrame)
 {
 	// 同じアニメーションを再生中なら何もしない
@@ -434,8 +532,10 @@ void BaseChara::ChangeAnimation(const std::string& animName, bool isLoop, bool f
 	if (targetAnim)
 	{
 		m_currentAnimName = animName;
+		m_currentAnim = targetAnim;
 		m_animator.SetAnimation(targetAnim, isLoop, blendFrame);
 
 		m_prevAnimRootPos = Math::Vector3::Zero;
+		m_prevMotionTime = -1.0f;	// 腰の移動の基準を作り直す
 	}
 }

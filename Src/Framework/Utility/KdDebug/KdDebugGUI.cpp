@@ -105,7 +105,6 @@ void KdDebugGUI::GuiProcess()
 		{
 			ImGui::SliderFloat("Evade Speed", &PlayerParamManager::Instance().m_evadeSpeed, 0.01f, 0.5f);
 			ImGui::SliderFloat("Dash Speed", &PlayerParamManager::Instance().m_dashSpeed, 0.01f, 0.5f);
-			ImGui::SliderFloat("Attack Step", &PlayerParamManager::Instance().m_attackRootScale, 0.001f, 0.5f);
 
 			if (ImGui::Button("Save Params"))
 			{

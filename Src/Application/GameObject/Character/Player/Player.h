@@ -123,7 +123,6 @@ public:
 	static	Math::Vector3			s_sheathedPosL;
 
 	static int						s_currentAttackType;		// 現在の攻撃パターン
-	static float					s_attackRootScale;
 
 private:
 
@@ -131,6 +130,9 @@ private:
 
 	void UpdateWorldMatrix();
 	void UpdateWeaponMatrix();
+
+	// アニメーションで腰が動いた分だけ、プレイヤーを移動させる（ルートモーションを使う時だけ）
+	void ApplyAnimationMotion();
 	void UpdateAwakening();
 
 	// 覚醒中のオーラエフェクトを更新（覚醒中は再生し続け、終わったら止める）
