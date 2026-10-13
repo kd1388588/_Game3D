@@ -44,6 +44,9 @@ private:
 	// 演技の順番を作成（待機→連続攻撃を、攻撃の種類を変えながら繰り返す）
 	static std::vector<ShowcaseStep> CreateShowcase();
 
+	// その場で行う攻撃か（ゲーム中に移動を止めている攻撃と同じもの。腰を固定しない）
+	static bool IsInPlaceAttack(int attackType, int attackStep);
+
 	// 攻撃の種類・段数に対応する斬撃エフェクトの名前
 	static const std::string& GetSlashEffectName(int attackType, int attackStep);
 

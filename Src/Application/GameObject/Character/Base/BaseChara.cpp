@@ -503,12 +503,18 @@ void BaseChara::UpdatePelvisMotion(float poseTime)
 	m_prevMotionPos = motionPos;
 	m_prevMotionTime = poseTime;
 
-	// ③ 腰をキャラの位置に固定する（動いた分は、キャラ自体を動かして表現する）
+	// ③ root の移動は、今までどおり見た目からは消す
 	auto& nodes = m_model->WorkNodes();
 	if (m_rootNodeIndex >= 0)
 	{
 		nodes[m_rootNodeIndex].m_localTransform.Translation(Math::Vector3::Zero);
 	}
+
+	// ④ ルートモーションを使う時だけ、腰をキャラの位置に固定する（動いた分はキャラ自体を動かす）
+	//    使わない時（移動を止めている攻撃・待機・回避など）は、腰はアニメーションどおりに動かす
+	//    （固定すると、回転する攻撃などで剣を振る位置が変わってしまうため）
+	if (!m_useRootMotion) return;
+
 	Math::Vector3 pelvisPos = nodes[m_pelvisNodeIndex].m_localTransform.Translation();
 	pelvisPos.x = m_pelvisRestPos.x;
 	pelvisPos.z = m_pelvisRestPos.z;

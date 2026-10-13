@@ -75,6 +75,12 @@ std::vector<TitleChara::ShowcaseStep> TitleChara::CreateShowcase()
 	return showcase;
 }
 
+bool TitleChara::IsInPlaceAttack(int attackType, int attackStep)
+{
+	// PlayerStateComboAttack::IsRootMotionLocked() と同じ攻撃
+	return (attackType == 5 && (attackStep == 2 || attackStep == 3));
+}
+
 const std::string& TitleChara::GetSlashEffectName(int attackType, int attackStep)
 {
 	if (attackType == 1)
@@ -100,8 +106,8 @@ void TitleChara::Init()
 	m_model = std::make_shared<KdModelWork>();
 	m_model->SetModelData(kModelPath);
 
-	// 腰をキャラの位置に固定し、技がつながっても体が元の位置に戻らないようにする
-	// （ルートモーションは使わないので、その場で演技する）
+	// 踏み込む攻撃では腰をキャラの位置に固定し、技がつながっても体が元の位置に戻らないようにする
+	// （移動量は使わないので、その場で演技する）
 	SetExtractPelvisMotion(true);
 
 	LoadAnimations(CreateAnimList());
@@ -134,6 +140,10 @@ void TitleChara::StartStep(size_t index)
 	const ShowcaseStep& step = m_showcase[m_stepIndex];
 	bool isLoop = (step.holdFrame > 0);
 	ChangeAnimation(step.animName, isLoop, true, kAnimBlendFrame);
+
+	// 腰を固定するのは、踏み込む攻撃の時だけ（ゲーム中と同じ見た目にする）
+	bool isAttack = (step.attackType != 0);
+	SetUseRootMotion(isAttack && !IsInPlaceAttack(step.attackType, step.attackStep));
 }
 
 void TitleChara::UpdateShowcase()

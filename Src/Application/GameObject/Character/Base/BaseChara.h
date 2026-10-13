@@ -40,7 +40,8 @@ public:
 	void SetRootMotionScale(float scale) { m_rootScale = scale; }
 
 	// アニメーションの「腰の水平移動」を、キャラの移動として取り出すかどうか
-	// true にすると、腰はキャラの位置に固定され、腰が動いた分は m_rootMoveDelta に入る
+	// true にすると、腰が動いた分が m_rootMoveDelta に入り、
+	// ルートモーションを使う時（SetUseRootMotion(true)）は腰がキャラの位置に固定される
 	// （アニメーションが切り替わっても、体が元の位置に戻らなくなる）
 	void SetExtractPelvisMotion(bool extract) { m_extractPelvisMotion = extract; }
 
