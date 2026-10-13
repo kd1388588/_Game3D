@@ -38,6 +38,9 @@ Math::Vector3 Player::s_sheathedPosL = { 0.0f, 0.0f, 0.0f };
 
 int Player::s_currentAttackType = 1;
 
+bool Player::s_useRootMotion = true;
+bool Player::s_bladeShapeHitbox = true;
+
 namespace
 {
 	// 移動
@@ -470,6 +473,12 @@ void Player::Update()
 		return;
 	}
 
+	// ルートモーションの切り替え（確認用。オフにすると、腰の動きはその場でのアニメーションになる）
+	if (m_extractPelvisMotion != s_useRootMotion)
+	{
+		SetExtractPelvisMotion(s_useRootMotion);
+	}
+
 	// アニメーション時間の進行とCalcNodeMatricesの実行はBaseで
 	BaseChara::Update();
 
@@ -585,15 +594,28 @@ void Player::UpdateWeaponMatrix()
 
 	if (!m_model) return;
 
+	// 攻撃判定・軌跡を剣のメッシュに合わせるか（モデルに剣が含まれている時だけ）
+	bool useBladeShape = s_bladeShapeHitbox && m_bladeShapeR.nodeIndex >= 0;
+	if (useBladeShape)
+	{
+		m_swordBladeBaseY = std::min(kBladeBaseOffset, m_bladeShapeR.tipLength * 0.5f);
+		m_swordBladeTipY = m_bladeShapeR.tipLength;
+	}
+	else
+	{
+		m_swordBladeBaseY = kSwordBladeBaseY;
+		m_swordBladeTipY = kSwordBladeTipY;
+	}
+
 	// 右
 	m_scabbardWorldR = CalcScabbardMatrix(kScabbardNodeNamesR, s_sheathedRotR, s_sheathedPosR);
-	m_swordWorldR = (m_bladeShapeR.nodeIndex >= 0)
+	m_swordWorldR = useBladeShape
 		? CalcBladeMatrix(m_bladeShapeR)	// モデルに含まれる剣：メッシュの位置そのもの
 		: CalcSwordMatrix(kSwordNodeNamesR, s_weaponRotR, s_weaponPosR, m_scabbardWorldR);
 
 	// 左
 	m_scabbardWorldL = CalcScabbardMatrix(kScabbardNodeNamesL, s_sheathedRotL, s_sheathedPosL);
-	m_swordWorldL = (m_bladeShapeL.nodeIndex >= 0)
+	m_swordWorldL = (useBladeShape && m_bladeShapeL.nodeIndex >= 0)
 		? CalcBladeMatrix(m_bladeShapeL)
 		: CalcSwordMatrix(kSwordNodeNamesL, s_weaponRotL, s_weaponPosL, m_scabbardWorldL);
 }

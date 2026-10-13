@@ -106,6 +106,10 @@ void KdDebugGUI::GuiProcess()
 			ImGui::SliderFloat("Evade Speed", &PlayerParamManager::Instance().m_evadeSpeed, 0.01f, 0.5f);
 			ImGui::SliderFloat("Dash Speed", &PlayerParamManager::Instance().m_dashSpeed, 0.01f, 0.5f);
 
+			// 見た目の確認用の切り替え
+			ImGui::Checkbox("Root Motion", &Player::s_useRootMotion);
+			ImGui::Checkbox("Hitbox/Trail Along Blade", &Player::s_bladeShapeHitbox);
+
 			if (ImGui::Button("Save Params"))
 			{
 				PlayerParamManager::Instance().Save("Asset/Data/PlayerParams.txt");

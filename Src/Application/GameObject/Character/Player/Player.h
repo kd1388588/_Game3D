@@ -127,6 +127,10 @@ public:
 
 	static int						s_currentAttackType;		// 現在の攻撃パターン
 
+	// 見た目の確認用の切り替え（Player Parameter Editor の「Animation Move」タブから変更）
+	static bool						s_useRootMotion;			// true：アニメーションの動きどおりに移動する
+	static bool						s_bladeShapeHitbox;			// true：攻撃判定・軌跡を剣のメッシュに合わせる
+
 private:
 
 	void Release();

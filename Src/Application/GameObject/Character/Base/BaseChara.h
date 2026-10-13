@@ -46,6 +46,7 @@ public:
 	void SetExtractPelvisMotion(bool extract)
 	{
 		m_extractPelvisMotion = extract;
+		m_prevMotionTime = -1.0f;	// 移動の基準を作り直す
 		if (extract && !m_isMotionNodeReady) FindMotionNodes();
 	}
 
@@ -54,7 +55,11 @@ public:
 	bool HasHorizontalMotion(const std::string& animName) const;
 
 	// 再生中のアニメーションに「前へ進む動き」が入っているか
-	bool CurrentAnimHasHorizontalMotion() const { return HasHorizontalMotion(m_currentAnimName); }
+	// （腰の水平移動を取り出していない時は、常に false）
+	bool CurrentAnimHasHorizontalMotion() const
+	{
+		return m_extractPelvisMotion && HasHorizontalMotion(m_currentAnimName);
+	}
 
 	Math::Vector3 GetPos() const override { return m_pos; }
 	void SetPos(const Math::Vector3& pos) override { m_pos = pos; }
