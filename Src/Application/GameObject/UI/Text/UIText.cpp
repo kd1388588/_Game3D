@@ -11,10 +11,11 @@ namespace
 	constexpr int		kFontHeightSmall	= 24;
 	constexpr int		kFontHeightMedium	= 40;
 	constexpr int		kFontHeightLarge	= 96;
-	constexpr int		kFontHeightTitle	= 150;
+	constexpr int		kFontHeightTitle	= 100;
 
-	// タイトルロゴ用のフォント（見つからない場合はWindowsが似たフォントで代用する）
-	const std::string	kTitleFontName		= "Times New Roman";
+	// タイトルロゴ用のフォント（Asset/Font に置いたフォントファイルを読み込んで使う）
+	const std::string	kTitleFontPath		= "Asset/Font/Y224.ttf";
+	const std::string	kTitleFontName		= "Y224";	// ファイル名ではなく、フォントの中に書かれている名前
 
 	constexpr int		kBlinkCycle			= 60;	// 点滅の周期（フレーム）
 }
@@ -27,7 +28,22 @@ void UIText::RegisterFonts()
 	KdFontManager::Instance().AddFont(kFontNoSmall, kFontName, kFontHeightSmall);
 	KdFontManager::Instance().AddFont(kFontNoMedium, kFontName, kFontHeightMedium);
 	KdFontManager::Instance().AddFont(kFontNoLarge, kFontName, kFontHeightLarge);
-	KdFontManager::Instance().AddFont(kFontNoTitle, kTitleFontName, kFontHeightTitle);
+
+	// タイトルロゴ用：フォントファイルを読み込んでから登録する
+	// （ファイルが無い場合はWindowsが似たフォントで代用する）
+	if (std::filesystem::exists(kTitleFontPath))
+	{
+		KdFontManager::Instance().AddFontResource(kTitleFontPath);
+	}
+	else
+	{
+		OutputDebugStringA(("【フォントファイルが見つかりません】: " + kTitleFontPath + "\n").c_str());
+	}
+
+	// Y224 は Shift-JIS に対応しておらず、文字ごとに幅が違うフォントなので、
+	// 文字セット・文字幅を指定せずに「名前」を優先して探させる
+	// （指定したままだと、条件に合う別のフォントが選ばれてしまう）
+	KdFontManager::Instance().AddFont(kFontNoTitle, kTitleFontName, kFontHeightTitle, DEFAULT_CHARSET, DEFAULT_PITCH | FF_DONTCARE);
 	isRegistered = true;
 }
 

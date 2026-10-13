@@ -7,7 +7,7 @@ static bool isSJIS(char a)
 }
 
 // フォント作成
-static HFONT MakeFont(const std::string& fontName, int h, int angle)
+static HFONT MakeFont(const std::string& fontName, int h, int angle, BYTE charSet, BYTE pitchAndFamily)
 {
 	HFONT hFont;
 	hFont = CreateFont(h,		//フォント高さ
@@ -18,11 +18,11 @@ static HFONT MakeFont(const std::string& fontName, int h, int angle)
 		FALSE,					//イタリック体
 		FALSE,					//アンダーライン
 		FALSE,					//打ち消し線
-		SHIFTJIS_CHARSET,		//文字セット
+		charSet,				//文字セット
 		OUT_DEFAULT_PRECIS,		//出力精度
 		CLIP_DEFAULT_PRECIS,	//クリッピング精度
 		PROOF_QUALITY,			//出力品質
-		FIXED_PITCH | FF_MODERN,//ピッチとファミリー
+		pitchAndFamily,			//ピッチとファミリー
 		fontName.c_str());		//書体名
 
 	return hFont;
@@ -291,9 +291,9 @@ void KdFontManager::Release()
 
 }
 
-void KdFontManager::AddFont(int fontNo, const std::string& fontName, int h)
+void KdFontManager::AddFont(int fontNo, const std::string& fontName, int h, BYTE charSet, BYTE pitchAndFamily)
 {
-	HFONT hFont = MakeFont(fontName.c_str(), h, 0);
+	HFONT hFont = MakeFont(fontName.c_str(), h, 0, charSet, pitchAndFamily);
 	m_FontTbl[fontNo].hFont = hFont;
 	m_FontTbl[fontNo].CreatedFontDataTbl.fill(nullptr);
 }

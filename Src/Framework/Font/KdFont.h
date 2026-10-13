@@ -96,8 +96,11 @@ public:
 	//[in] fontNo		… 登録するIndex番号
 	//[in] fontName		… 追加するフォント名
 	//[in] h			… フォントの大きさ(高さ)
+	//[in] charSet			… 文字セット（Shift-JIS に対応していないフォントは DEFAULT_CHARSET を指定する）
+	//[in] pitchAndFamily	… 文字幅の種類（文字ごとに幅が違うフォントは DEFAULT_PITCH を指定する）
 	//------------------------------------------------------------
-	void AddFont(int fontNo, const std::string& fontName, int h);
+	void AddFont(int fontNo, const std::string& fontName, int h,
+		BYTE charSet = SHIFTJIS_CHARSET, BYTE pitchAndFamily = FIXED_PITCH | FF_MODERN);
 
 	//------------------------------------------------------------
 	// 指定番号のフォントを使用し、文字列をフォントテクスチャとして生成する
