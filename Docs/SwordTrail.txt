@@ -80,8 +80,10 @@
   もっとなめらかにしたい         → kSwordTrailSubdivision（増やすと少し重くなる）
   色を変えたい                   → kSwordTrailColor（全体の色）/ kSwordTrailCoreColor（芯の色）
   根元側を明るく・暗くしたい     → kSwordTrailBaseBrightness
-  軌跡が出る範囲を変えたい       → kSwordBladeBaseY（根元）/ kSwordBladeTipY（先端）
+  軌跡が出る範囲を変えたい       → kBladeBaseOffset（手から刃の根元までの距離）
+                                   ※ 刃先の位置は、モデルの剣（SM_Blade_R / L）の形から自動で求めている
                                    ※ 攻撃判定の赤い箱も同じ範囲なので一緒に変わる
+                                   ※ 別ファイルの剣を持たせる場合は kSwordBladeBaseY / kSwordBladeTipY を使う
 
 ■ 画像ファイルで描きたくなったら
   Player::Init() の中の CreateSwordTrailTexture() の代わりに、

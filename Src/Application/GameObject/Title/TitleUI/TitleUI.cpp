@@ -50,10 +50,10 @@ namespace
 	constexpr int		kFadeOutFrame		= 40;			// 黒へのフェードアウト
 
 	// ===== 操作説明 =====
-	constexpr float		kControlsHalfWidth	= 360.0f;
+	constexpr float		kControlsHalfWidth	= 380.0f;
 	constexpr float		kControlsHalfHeight	= 235.0f;
-	constexpr float		kControlsKeyX		= -300.0f;		// キーの列の左端
-	constexpr float		kControlsActionX	= -40.0f;		// 動作の列の左端
+	constexpr float		kControlsKeyX		= -330.0f;		// キーの列の左端
+	constexpr float		kControlsActionX	= -110.0f;		// 動作の列の左端
 	constexpr float		kControlsTopY		= 120.0f;
 	constexpr float		kControlsRowSpacing	= 34.0f;
 
@@ -119,23 +119,23 @@ void TitleUI::Init()
 	// 操作案内（下の黒帯）
 	m_selectGuide = CreateText("W / S : SELECT        ENTER : DECIDE", UIText::FontSize::Small);
 	m_selectGuide->SetCenterPos({ 0.0f, kGuideY });
-	m_controlsGuide = CreateText("ENTER / BACKSPACE : BACK", UIText::FontSize::Small);
+	m_controlsGuide = CreateText("Enter / BackSpace：戻る", UIText::FontSize::Small);
 	m_controlsGuide->SetCenterPos({ 0.0f, kGuideY });
 
 	// 操作説明
-	m_controlsTitle = CreateText("CONTROLS", UIText::FontSize::Medium);
+	m_controlsTitle = CreateText("操作説明", UIText::FontSize::Medium);
 	m_controlsTitle->SetCenterPos({ 0.0f, 180.0f });
 
 	const std::vector<std::pair<std::string, std::string>> controls =
 	{
-		{ "W A S D",		"MOVE" },
-		{ "MOUSE",			"CAMERA" },
-		{ "E",				"DRAW / SHEATHE SWORDS" },
-		{ "LEFT CLICK",		"ATTACK (COMBO)" },
-		{ "C",				"CHANGE COMBO TYPE" },
-		{ "SPACE",			"JUMP" },
-		{ "SHIFT",			"EVADE (DASH WHEN SHEATHED)" },
-		{ "G",				"AWAKENING (WHEN GAUGE IS FULL)" },
+		{ "W A S D",		"移動" },
+		{ "マウス",			"カメラを回す" },
+		{ "E",				"剣を抜く / 剣を納める" },
+		{ "左クリック",		"攻撃（続けて押すとコンボ）" },
+		{ "C",				"コンボの種類を切り替える" },
+		{ "Space",			"ジャンプ" },
+		{ "Shift",			"回避（剣を納めている時はダッシュ）" },
+		{ "G",				"覚醒（ゲージが満タンの時）" },
 	};
 	for (size_t i = 0; i < controls.size(); ++i)
 	{

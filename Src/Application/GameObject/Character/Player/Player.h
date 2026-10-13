@@ -171,6 +171,22 @@ private:
 	// 候補の名前を上から順に探し、最初に見つかったノードを返す（無ければ nullptr）
 	const KdModelWork::Node* FindFirstNode(const std::vector<std::string>& nodeNames) const;
 
+	// モデルに含まれる剣のメッシュから求めた、刃の向きと長さ（メッシュのノードから見た座標）
+	struct BladeShape
+	{
+		int				nodeIndex = -1;		// 剣のメッシュのノード番号（-1ならモデルに剣が無い）
+		Math::Vector3	localHand;			// 刃の中心線の上で、手（ノードの原点）に一番近い点
+		Math::Vector3	localDir;			// 手から刃先への向き（長さ1）
+		float			tipLength = 0.0f;	// 手から刃先までの長さ
+	};
+
+	// 剣のメッシュの頂点から、刃の中心線（一番長く伸びている向き）と刃先の位置を求める
+	// （候補の名前のメッシュが見つからなければ nodeIndex = -1 のまま返す）
+	static BladeShape CalcBladeShape(const KdModelData& modelData, const std::vector<std::string>& meshNodeNames);
+
+	// 刃の形から剣の行列を作る（原点：手、Y軸：刃先の方向。Y座標がそのまま手からの距離になる）
+	Math::Matrix CalcBladeMatrix(const BladeShape& shape) const;
+
 	// 読み込むアニメーションのリストを作成
 	static std::vector<AnimLoadInfo> CreateAnimList();
 
@@ -209,6 +225,12 @@ private:
 	std::weak_ptr<TPSCamera>		m_camera;
 	Math::Matrix					m_swordWorldR;
 	Math::Matrix					m_swordWorldL;
+
+	// 刃の範囲（剣の行列のY座標。攻撃判定の箱と軌跡に使う）
+	BladeShape						m_bladeShapeR;
+	BladeShape						m_bladeShapeL;
+	float							m_swordBladeBaseY = 0.0f;	// 刃の根元
+	float							m_swordBladeTipY = 0.0f;	// 刃の先端
 	Math::Matrix					m_scabbardWorldR;
 	Math::Matrix					m_scabbardWorldL;
 

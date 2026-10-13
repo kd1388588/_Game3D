@@ -70,6 +70,13 @@ void KdFontSprite::CreateFontTexture(HDC hdc, const std::string& text, int antiA
 			{
 				bCreate = false;
 				m_TexList.push_back((*pFontDataArray)[code]);
+
+				// 作成済みの文字も総幅に加える（加えないと、同じ文字や他の文字列で使った文字の分だけ
+				// 総幅が短くなり、中央揃えなどの位置がずれる）
+				if ((*pFontDataArray)[code]->FontTex)
+				{
+					m_TotalWidth += (*pFontDataArray)[code]->FontTex->GetInfo().Width;
+				}
 			}
 		}
 

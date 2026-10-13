@@ -63,10 +63,15 @@ namespace
 	constexpr float kOnGroundGravityMax		= 0.011f;
 
 	// 剣の刃の位置（剣のローカルY軸上。攻撃判定の箱と同じ範囲）
+	// ※別ファイルの剣を持たせる場合に使う。モデルに剣が含まれている場合はメッシュから自動で求める
 	constexpr float kSwordBladeBaseY		= 0.05f;	// 刃の根元
 	constexpr float kSwordBladeTipY			= 1.15f;	// 刃の先端
-	constexpr float kSwordOBBOffsetY		= (kSwordBladeBaseY + kSwordBladeTipY) * 0.5f;	// 判定の箱の中心
-	const Math::Vector3 kSwordOBBExtents	= { 0.1f, (kSwordBladeTipY - kSwordBladeBaseY) * 0.5f, 0.1f };	// Y軸方向に長い箱
+	constexpr float kSwordOBBHalfWidth		= 0.1f;		// 攻撃判定の箱の太さ（半分）
+
+	// モデルに含まれる剣のメッシュ（上から順に探して、最初に見つかったものを使う）
+	const std::vector<std::string> kBladeMeshNodeNamesR	= { "SM_Blade_R" };
+	const std::vector<std::string> kBladeMeshNodeNamesL	= { "SM_Blade_L" };
+	constexpr float kBladeBaseOffset		= 0.1f;		// 手から刃の根元（つば）までの距離
 
 	// 剣の軌跡
 	constexpr float kSwordTrailWidthRate	= 1.0f;		// 帯の幅の倍率（1.0で刃の根元から先端まで）
@@ -185,6 +190,117 @@ Math::Vector3 Player::GetSwordPoint(const Math::Matrix& swordMat, float localY)
 	return Math::Vector3::Transform(Math::Vector3(0.0f, localY, 0.0f), swordMat);
 }
 
+Player::BladeShape Player::CalcBladeShape(const KdModelData& modelData, const std::vector<std::string>& meshNodeNames)
+{
+	BladeShape shape;
+
+	// 剣のメッシュのノードを探す
+	const auto& nodes = modelData.GetOriginalNodes();
+	const std::vector<Math::Vector3>* pPositions = nullptr;
+	for (const auto& name : meshNodeNames)
+	{
+		for (int i = 0; i < static_cast<int>(nodes.size()); ++i)
+		{
+			if (nodes[i].m_name != name || !nodes[i].m_spMesh) continue;
+
+			shape.nodeIndex = i;
+			pPositions = &nodes[i].m_spMesh->GetVertexPositions();
+			break;
+		}
+		if (pPositions) break;
+	}
+	if (!pPositions || pPositions->empty())
+	{
+		shape.nodeIndex = -1;
+		return shape;
+	}
+	const auto& positions = *pPositions;
+
+	// ① 頂点の中心
+	Math::Vector3 center = Math::Vector3::Zero;
+	for (const auto& pos : positions) { center += pos; }
+	center /= static_cast<float>(positions.size());
+
+	// ② 頂点が一番長く広がっている向き（＝刃の中心線）を求める（主成分分析）
+	//    頂点の散らばり具合を表す行列を作り、その行列を何度も掛けると、一番散らばっている向きに近づく
+	float cov[3][3] = {};
+	for (const auto& pos : positions)
+	{
+		float d[3] = { pos.x - center.x, pos.y - center.y, pos.z - center.z };
+		for (int r = 0; r < 3; ++r)
+		{
+			for (int c = 0; c < 3; ++c) { cov[r][c] += d[r] * d[c]; }
+		}
+	}
+	Math::Vector3 axis = { 1.0f, 1.0f, 1.0f };
+	axis.Normalize();
+	for (int i = 0; i < 32; ++i)
+	{
+		Math::Vector3 next =
+		{
+			cov[0][0] * axis.x + cov[0][1] * axis.y + cov[0][2] * axis.z,
+			cov[1][0] * axis.x + cov[1][1] * axis.y + cov[1][2] * axis.z,
+			cov[2][0] * axis.x + cov[2][1] * axis.y + cov[2][2] * axis.z,
+		};
+		if (next.LengthSquared() <= 0.0f) break;
+		next.Normalize();
+		axis = next;
+	}
+
+	// ③ 中心線の上で、頂点が一番遠くまである位置（剣の両端）
+	float minT = std::numeric_limits<float>::max();
+	float maxT = -std::numeric_limits<float>::max();
+	for (const auto& pos : positions)
+	{
+		float t = (pos - center).Dot(axis);
+		minT = std::min(minT, t);
+		maxT = std::max(maxT, t);
+	}
+
+	// ④ ノードの原点が手の位置なので、中心線の上で手に一番近い点を求め、
+	//    手から遠い方の端を刃先とする
+	float handT = (Math::Vector3::Zero - center).Dot(axis);
+	shape.localHand = center + axis * handT;
+	if (maxT - handT >= handT - minT)
+	{
+		shape.localDir = axis;
+		shape.tipLength = maxT - handT;
+	}
+	else
+	{
+		shape.localDir = -axis;
+		shape.tipLength = handT - minT;
+	}
+
+	return shape;
+}
+
+Math::Matrix Player::CalcBladeMatrix(const BladeShape& shape) const
+{
+	if (!m_model || shape.nodeIndex < 0 || shape.nodeIndex >= static_cast<int>(m_model->GetNodes().size()))
+	{
+		return Math::Matrix::Identity;
+	}
+
+	// 剣のメッシュが今いる位置（モデルの中の位置 × キャラの位置）
+	Math::Matrix nodeMat = m_model->GetNodes()[shape.nodeIndex].m_worldTransform * m_mWorld;
+
+	Math::Vector3 hand = Math::Vector3::Transform(shape.localHand, nodeMat);
+	Math::Vector3 up = Math::Vector3::TransformNormal(shape.localDir, nodeMat);
+	up.Normalize();
+
+	// X軸はノードのX軸を、刃の向きと直角になるように直したもの
+	Math::Vector3 right = nodeMat.Right();
+	right -= up * right.Dot(up);
+	if (right.LengthSquared() < 1e-6f) { right = nodeMat.Backward().Cross(up); }
+	right.Normalize();
+	Math::Vector3 forward = right.Cross(up);
+
+	Math::Matrix mat(right, up, forward);
+	mat.Translation(hand);
+	return mat;
+}
+
 // 剣の軌跡ポリゴンに渡す行列を作成
 // KdTrailPolygonは行列のX軸方向に帯を作るので、X軸を刃の向き・長さに合わせる
 Math::Matrix Player::CreateTrailMatrix(const Math::Vector3& base, const Math::Vector3& tip)
@@ -285,6 +401,22 @@ void Player::Init()
 
 	PlayerParamManager::Instance().Load("Asset/Data/PlayerParams.txt");
 	PlayerParamManager::Instance().LoadWeaponParams("Asset/Data/WeaponParams.json");
+
+	// モデルに剣が含まれていれば、剣のメッシュから刃の向き・長さを求める
+	// （攻撃判定の箱と軌跡を、実際の刃に合わせるため）
+	m_swordBladeBaseY = kSwordBladeBaseY;
+	m_swordBladeTipY = kSwordBladeTipY;
+	if (m_model->GetData())
+	{
+		m_bladeShapeR = CalcBladeShape(*m_model->GetData(), kBladeMeshNodeNamesR);
+		m_bladeShapeL = CalcBladeShape(*m_model->GetData(), kBladeMeshNodeNamesL);
+	}
+	if (m_bladeShapeR.nodeIndex >= 0)
+	{
+		m_swordBladeBaseY = std::min(kBladeBaseOffset, m_bladeShapeR.tipLength * 0.5f);
+		m_swordBladeTipY = m_bladeShapeR.tipLength;
+		OutputDebugStringA(("剣のメッシュから刃の長さを計算: " + std::to_string(m_bladeShapeR.tipLength) + "\n").c_str());
+	}
 
 	// アニメーションの読み込み
 	LoadAnimations(CreateAnimList());
@@ -440,11 +572,15 @@ void Player::UpdateWeaponMatrix()
 
 	// 右
 	m_scabbardWorldR = CalcScabbardMatrix(kScabbardNodeNamesR, s_sheathedRotR, s_sheathedPosR);
-	m_swordWorldR = CalcSwordMatrix(kSwordNodeNamesR, s_weaponRotR, s_weaponPosR, m_scabbardWorldR);
+	m_swordWorldR = (m_bladeShapeR.nodeIndex >= 0)
+		? CalcBladeMatrix(m_bladeShapeR)	// モデルに含まれる剣：メッシュの位置そのもの
+		: CalcSwordMatrix(kSwordNodeNamesR, s_weaponRotR, s_weaponPosR, m_scabbardWorldR);
 
 	// 左
 	m_scabbardWorldL = CalcScabbardMatrix(kScabbardNodeNamesL, s_sheathedRotL, s_sheathedPosL);
-	m_swordWorldL = CalcSwordMatrix(kSwordNodeNamesL, s_weaponRotL, s_weaponPosL, m_scabbardWorldL);
+	m_swordWorldL = (m_bladeShapeL.nodeIndex >= 0)
+		? CalcBladeMatrix(m_bladeShapeL)
+		: CalcSwordMatrix(kSwordNodeNamesL, s_weaponRotL, s_weaponPosL, m_scabbardWorldL);
 }
 
 const KdModelWork::Node* Player::FindFirstNode(const std::vector<std::string>& nodeNames) const
@@ -512,8 +648,8 @@ void Player::AddSwordTrailSample(SwordTrail& trail, const Math::Matrix& swordMat
 {
 	if (!trail.polygon) return;
 
-	Math::Vector3 base = GetSwordPoint(swordMat, kSwordBladeBaseY);
-	Math::Vector3 tip = GetSwordPoint(swordMat, kSwordBladeTipY);
+	Math::Vector3 base = GetSwordPoint(swordMat, m_swordBladeBaseY);
+	Math::Vector3 tip = GetSwordPoint(swordMat, m_swordBladeTipY);
 
 	auto& baseHist = trail.baseHistory;
 	auto& tipHist = trail.tipHistory;
@@ -731,15 +867,18 @@ void Player::ChangeAnimationLazy(const std::string& animName, bool isLoop, bool 
 
 bool Player::AttackOBB(const Math::Matrix& swordMatrix, bool isCritical)
 {
-	Math::Matrix obbMatrix = Math::Matrix::CreateTranslation(0.0f, kSwordOBBOffsetY, 0.0f) * swordMatrix;
+	// 刃の根元から先端までを囲む、Y軸方向に長い箱
+	float obbOffsetY = (m_swordBladeBaseY + m_swordBladeTipY) * 0.5f;
+	Math::Vector3 obbExtents = { kSwordOBBHalfWidth, (m_swordBladeTipY - m_swordBladeBaseY) * 0.5f, kSwordOBBHalfWidth };
+	Math::Matrix obbMatrix = Math::Matrix::CreateTranslation(0.0f, obbOffsetY, 0.0f) * swordMatrix;
 	Math::Vector3 offset = Math::Vector3::Zero;
 
-	KdCollider::BoxInfo obbInfo(KdCollider::TypeDamage, obbMatrix, offset, kSwordOBBExtents, true);
+	KdCollider::BoxInfo obbInfo(KdCollider::TypeDamage, obbMatrix, offset, obbExtents, true);
 
 	// デバッグ用の赤い箱を描画
 	if (m_pDebugWire)
 	{
-		m_pDebugWire->AddDebugBox(obbMatrix, kSwordOBBExtents, offset, true, { 1.0f, 0.0f, 0.0f, 1.0f });
+		m_pDebugWire->AddDebugBox(obbMatrix, obbExtents, offset, true, { 1.0f, 0.0f, 0.0f, 1.0f });
 	}
 
 	bool isHit = false;
@@ -822,22 +961,22 @@ void Player::OnDamage(int damage, bool isCritical)
 
 Math::Vector3 Player::GetSwordTipPositionR() const
 {
-	return GetSwordPoint(m_swordWorldR, kSwordBladeTipY);
+	return GetSwordPoint(m_swordWorldR, m_swordBladeTipY);
 }
 
 Math::Vector3 Player::GetSwordTipPositionL() const
 {
-	return GetSwordPoint(m_swordWorldL, kSwordBladeTipY);
+	return GetSwordPoint(m_swordWorldL, m_swordBladeTipY);
 }
 
 Math::Vector3 Player::GetSwordBasePositionR() const
 {
-	return GetSwordPoint(m_swordWorldR, kSwordBladeBaseY);
+	return GetSwordPoint(m_swordWorldR, m_swordBladeBaseY);
 }
 
 Math::Vector3 Player::GetSwordBasePositionL() const
 {
-	return GetSwordPoint(m_swordWorldL, kSwordBladeBaseY);
+	return GetSwordPoint(m_swordWorldL, m_swordBladeBaseY);
 }
 
 Math::Vector3 Player::GetCameraTargetPos() const
