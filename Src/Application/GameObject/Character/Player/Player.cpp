@@ -40,6 +40,7 @@ int Player::s_currentAttackType = 1;
 
 bool Player::s_useRootMotion = true;
 bool Player::s_bladeShapeHitbox = true;
+float Player::s_throwAngleOffset = 0.0f;
 
 namespace
 {
@@ -110,6 +111,11 @@ namespace
 	const std::vector<std::string> kSwordNodeNamesL		= { "Blade_L", "Weapon_L", "hand_l" };
 	const std::vector<std::string> kScabbardNodeNamesR	= { "Weapon_Holder_R", "Scabbard_R", "spine_05" };
 	const std::vector<std::string> kScabbardNodeNamesL	= { "Weapon_Holder_L", "Scabbard_L", "spine_05" };
+
+	// 剣を投げる攻撃（投げた剣がまっすぐ前へ飛ぶように補正する）
+	const std::string kThrowAnimName		= "Attack_5_2";
+	constexpr float kThrowCorrectStartDist	= 0.3f;		// 手からこの距離までは補正しない（手に持っている間）
+	constexpr float kThrowCorrectFullDist	= 1.0f;		// 手からこの距離以上離れたら、補正を全部かける
 
 	// 武器装備中のアニメーション名に付ける接頭辞
 	const std::string kCombatAnimPrefix = "Combat_";
@@ -427,6 +433,17 @@ void Player::Init()
 	// アニメーションの読み込み
 	LoadAnimations(CreateAnimList());
 
+	// 剣を投げる攻撃で、剣をまっすぐ前へ向けるための角度を事前に計算
+	m_weaponNodeR = FindNodeIndex("weapon_r");
+	m_weaponNodeL = FindNodeIndex("weapon_l");
+	m_handNodeR = FindNodeIndex("hand_r");
+	m_handNodeL = FindNodeIndex("hand_l");
+	m_pelvisNode = FindNodeIndex("pelvis");
+	m_throwAngleR = CalcThrowCorrectionAngle(kThrowAnimName, m_weaponNodeR);
+	m_throwAngleL = CalcThrowCorrectionAngle(kThrowAnimName, m_weaponNodeL);
+	OutputDebugStringA(("剣を投げる向きの補正: 右 " + std::to_string(m_throwAngleR)
+		+ " 度 / 左 " + std::to_string(m_throwAngleL) + " 度\n").c_str());
+
 	// 着地アニメーションで両足が接地するフレームを事前に計算
 	for (const auto& animName : kLandingAnimNames)
 	{
@@ -485,6 +502,9 @@ void Player::Update()
 	// アニメーションで腰が動いた分だけ、プレイヤーを動かす
 	ApplyAnimationMotion();
 
+	// 剣を投げる攻撃では、投げた剣がまっすぐ前へ飛ぶように補正する
+	ApplyThrowCorrection();
+
 	UpdateInvincibleTimer();
 
 	m_isTrailAddedThisFrame = false;
@@ -500,6 +520,98 @@ void Player::Update()
 	UpdateAttackTypeSwitch();
 
 	UpdateWorldMatrix();
+}
+
+int Player::FindNodeIndex(const std::string& name) const
+{
+	if (!m_model || !m_model->GetData()) return -1;
+
+	const auto& nodes = m_model->GetData()->GetOriginalNodes();
+	for (int i = 0; i < static_cast<int>(nodes.size()); ++i)
+	{
+		if (nodes[i].m_name == name) return i;
+	}
+	return -1;
+}
+
+float Player::CalcThrowCorrectionAngle(const std::string& animName, int weaponIndex) const
+{
+	auto it = m_animMap.find(animName);
+	if (it == m_animMap.end() || !m_model || !m_model->GetData()) return 0.0f;
+	if (weaponIndex < 0 || m_pelvisNode < 0) return 0.0f;
+
+	// 計算用にモデルを複製し、1フレームずつ再生して、剣が腰から一番離れたフレームを探す
+	KdModelWork work(m_model->GetData());
+	KdAnimator animator;
+	animator.SetAnimation(it->second, false);
+
+	Math::Vector3 farthest = Math::Vector3::Zero;
+	float maxDistSq = 0.0f;
+	for (int i = 0; i < 1000 && !animator.IsAnimationEnd(); ++i)
+	{
+		animator.AdvanceTime(work.WorkNodes(), 1.0f);
+		work.CalcNodeMatrices();
+
+		Math::Vector3 diff = work.GetNodes()[weaponIndex].m_worldTransform.Translation()
+			- work.GetNodes()[m_pelvisNode].m_worldTransform.Translation();
+		diff.y = 0.0f;
+		if (diff.LengthSquared() > maxDistSq)
+		{
+			maxDistSq = diff.LengthSquared();
+			farthest = diff;
+		}
+	}
+	if (maxDistSq < 0.0001f) return 0.0f;
+
+	// 剣が飛んだ向きを、モデルの前（-Z。描画で180度回しているため）に向ける回転角度
+	Math::Vector3 dir = farthest;
+	dir.Normalize();
+	const Math::Vector3 forward = { 0.0f, 0.0f, -1.0f };
+	float angle = std::atan2(dir.Cross(forward).y, dir.Dot(forward));
+
+	// 回転の向き（符号）を確かめ、逆なら反対に回す
+	Math::Vector3 rotated = Math::Vector3::TransformNormal(dir, Math::Matrix::CreateRotationY(angle));
+	if (rotated.Dot(forward) < 0.99f) angle = -angle;
+
+	return DirectX::XMConvertToDegrees(angle);
+}
+
+void Player::ApplyThrowCorrection()
+{
+	if (!m_model || m_currentAnimName != kThrowAnimName) return;
+
+	CorrectThrownWeapon(m_weaponNodeR, m_handNodeR, m_throwAngleR + s_throwAngleOffset);
+	CorrectThrownWeapon(m_weaponNodeL, m_handNodeL, m_throwAngleL + s_throwAngleOffset);
+
+	// 剣の骨の位置を変えたので、子の骨（剣のモデル）の位置を計算し直す
+	m_model->CalcNodeMatrices();
+}
+
+void Player::CorrectThrownWeapon(int weaponIndex, int handIndex, float angleDeg)
+{
+	if (weaponIndex < 0 || handIndex < 0 || m_pelvisNode < 0) return;
+
+	auto& nodes = m_model->WorkNodes();
+	const Math::Matrix& weaponWorld = nodes[weaponIndex].m_worldTransform;
+
+	// 手から離れるほど強く補正する（手に持っている間は補正しない）
+	float dist = (weaponWorld.Translation() - nodes[handIndex].m_worldTransform.Translation()).Length();
+	float t = std::clamp((dist - kThrowCorrectStartDist) / (kThrowCorrectFullDist - kThrowCorrectStartDist), 0.0f, 1.0f);
+	float weight = t * t * (3.0f - 2.0f * t);
+	if (weight <= 0.0f) return;
+
+	// 腰を中心に、剣を水平に回して前へ向ける
+	Math::Vector3 pivot = nodes[m_pelvisNode].m_worldTransform.Translation();
+	pivot.y = 0.0f;
+	Math::Matrix correction = Math::Matrix::CreateTranslation(-pivot)
+		* Math::Matrix::CreateRotationY(DirectX::XMConvertToRadians(angleDeg * weight))
+		* Math::Matrix::CreateTranslation(pivot);
+	Math::Matrix newWorld = weaponWorld * correction;
+
+	// 親（手）から見た行列に直して書き戻す
+	int parent = m_model->GetData()->GetOriginalNodes()[weaponIndex].m_parent;
+	Math::Matrix parentWorld = (parent >= 0) ? nodes[parent].m_worldTransform : Math::Matrix::Identity;
+	nodes[weaponIndex].m_localTransform = newWorld * parentWorld.Invert();
 }
 
 void Player::ApplyAnimationMotion()

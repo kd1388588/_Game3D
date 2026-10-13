@@ -130,6 +130,7 @@ public:
 	// 見た目の確認用の切り替え（Player Parameter Editor の「Animation Move」タブから変更）
 	static bool						s_useRootMotion;			// true：アニメーションの動きどおりに移動する
 	static bool						s_bladeShapeHitbox;			// true：攻撃判定・軌跡を剣のメッシュに合わせる
+	static float					s_throwAngleOffset;			// 剣を投げる攻撃の向きの微調整（度）
 
 private:
 
@@ -140,6 +141,20 @@ private:
 
 	// アニメーションで腰が動いた分だけ、プレイヤーを移動させる（ルートモーションを使う時だけ）
 	void ApplyAnimationMotion();
+
+	// 剣を投げる攻撃で、投げた剣がまっすぐ前へ飛ぶように向きを補正する
+	// （アニメーションのデータでは、剣が斜め前へ飛んでいるため）
+	void ApplyThrowCorrection();
+
+	// 剣1本分の補正（手から離れるほど強く、腰を中心に剣を回して前へ向ける）
+	void CorrectThrownWeapon(int weaponIndex, int handIndex, float angleDeg);
+
+	// 剣を投げるアニメーションで、剣が一番遠くまで飛んだ時の向きを調べ、
+	// それをまっすぐ前に向けるための回転角度（度）を求める
+	float CalcThrowCorrectionAngle(const std::string& animName, int weaponIndex) const;
+
+	// モデルのノード番号を名前で探す（見つからなければ -1）
+	int FindNodeIndex(const std::string& name) const;
 	void UpdateAwakening();
 
 	// 覚醒中のオーラエフェクトを更新（覚醒中は再生し続け、終わったら止める）
@@ -238,6 +253,15 @@ private:
 	// 刃の範囲（剣の行列のY座標。攻撃判定の箱と軌跡に使う）
 	BladeShape						m_bladeShapeR;
 	BladeShape						m_bladeShapeL;
+
+	// 剣を投げる攻撃の補正
+	int								m_weaponNodeR = -1;			// weapon_r のノード番号
+	int								m_weaponNodeL = -1;			// weapon_l のノード番号
+	int								m_handNodeR = -1;			// hand_r のノード番号
+	int								m_handNodeL = -1;			// hand_l のノード番号
+	int								m_pelvisNode = -1;			// pelvis のノード番号
+	float							m_throwAngleR = 0.0f;		// 右の剣をまっすぐ前へ向ける角度（度）
+	float							m_throwAngleL = 0.0f;		// 左の剣をまっすぐ前へ向ける角度（度）
 	float							m_swordBladeBaseY = 0.0f;	// 刃の根元
 	float							m_swordBladeTipY = 0.0f;	// 刃の先端
 	Math::Matrix					m_scabbardWorldR;

@@ -109,6 +109,7 @@ void KdDebugGUI::GuiProcess()
 			// 見た目の確認用の切り替え
 			ImGui::Checkbox("Root Motion", &Player::s_useRootMotion);
 			ImGui::Checkbox("Hitbox/Trail Along Blade", &Player::s_bladeShapeHitbox);
+			ImGui::SliderFloat("Throw Angle Offset", &Player::s_throwAngleOffset, -90.0f, 90.0f);
 
 			if (ImGui::Button("Save Params"))
 			{
