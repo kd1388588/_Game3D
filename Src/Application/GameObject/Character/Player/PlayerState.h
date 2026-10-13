@@ -167,10 +167,16 @@ private:
 	// framesToLand：何フレーム後に着地するか（このフレームで両足が接地している状態になるよう再生位置を合わせる）
 	void StartLandingAnim(Player* player, int framesToLand);
 
+	// 空中での移動（踏み切った時の勢いを保ち、入力の方向へ少しずつ曲がる）
+	void UpdateAirMove(Player* player);
+
 	int  m_jumpPhase = JumpPhaseNone;
 	int  m_jumpCount = 0;
 	bool m_isFalling = false;
 	bool m_isLandingAnimStarted = false;	// 着地アニメーションを開始済みか
+
+	Math::Vector3 m_airVelocity = Math::Vector3::Zero;	// 空中での水平方向の速さ（1フレームの移動量）
+	float m_airSpeed = 0.0f;							// 空中で入力した時の速さ
 };
 
 class PlayerStateDamage : public PlayerState

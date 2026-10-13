@@ -26,6 +26,12 @@ namespace
 	constexpr int	kMaxLandingPredictFrame	= 120;		// 着地予測を行う最大フレーム数
 	constexpr float kLandingBlendFrame		= 3.0f;		// 空中ループ→着地アニメのブレンドフレーム数
 
+	// 空中での移動
+	constexpr float kAirMinSpeed			= 0.06f;	// その場ジャンプから入力した時の速さ（1フレームの移動量）
+	constexpr float kAirMaxSpeed			= 0.3f;		// 空中の速さの上限
+	constexpr float kAirSteerRate			= 0.08f;	// 入力の方向へ曲がる強さ（0～1）
+	constexpr float kAirDrag				= 0.98f;	// 入力が無い時の減速（1フレームごとに掛ける）
+
 	// 走り（ルートモーション）
 	constexpr float kRunBlendFrame			= 6.0f;		// 待機⇔走りのブレンドフレーム数
 	constexpr float kAwakeningRunAnimSpeed	= 1.5f;		// 覚醒中の走りアニメーションの再生速度
@@ -458,15 +464,43 @@ void PlayerStateJump::ChangeState(Player* player)
 	player->ExecJump(kJumpPower);
 	player->ChangeAnimation(player->GetWeaponAnimName("JumpStart"), false, true);
 	player->SetAnimationSpeed(1.0f);
+
+	// 空中の移動は「踏み切った時の勢い」で行うので、アニメーションの動きでは移動しない
+	// （腰はキャラの位置に固定し、アニメーションの切り替えで体がずれないようにする）
 	UseRootMotion(player);
+	player->SetRootMotionScale(0.0f);
+
+	// 走っていた勢いをそのまま引き継ぐ
+	m_airVelocity = player->GetLastMoveDelta();
+	m_airSpeed = std::clamp(m_airVelocity.Length(), kAirMinSpeed, kAirMaxSpeed);
+}
+
+void PlayerStateJump::UpdateAirMove(Player* player)
+{
+	// 入力の方向へ向きを変える（覚醒の入力もここで受け付ける）
+	bool hasInput = player->MoveProcess(false);
+
+	Math::Vector3 inputDir;
+	if (hasInput && player->GetMoveInputDir(inputDir))
+	{
+		// 速さを保ったまま、入力の方向へ少しずつ曲がる
+		m_airVelocity = Math::Vector3::Lerp(m_airVelocity, inputDir * m_airSpeed, kAirSteerRate);
+	}
+	else
+	{
+		// 入力が無ければ、勢いをゆっくり弱める
+		m_airVelocity *= kAirDrag;
+	}
+
+	player->SetPos(player->GetPos() + m_airVelocity);
 }
 
 void PlayerStateJump::Update(Player* player)
 {
 	if (m_jumpPhase != JumpPhaseLanding)
 	{
-		// 空中での移動（アニメーションに前へ進む動きがあれば、向きを変えるだけ）
-		player->MoveProcess(!player->CurrentAnimHasHorizontalMotion());
+		// 空中での移動
+		UpdateAirMove(player);
 	}
 
 	bool isFallingNow = player->GetGravity() > kFallingGravity;

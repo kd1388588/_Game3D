@@ -466,6 +466,7 @@ void Player::Init()
 	}
 
 	m_pos = { 0, 0.0f, 0.5f };
+	m_prevFramePos = m_pos;
 
 	m_maxHp = kMaxHp;
 	m_hp = m_maxHp;
@@ -489,6 +490,11 @@ void Player::Update()
 		UpdateWorldMatrix();
 		return;
 	}
+
+	// 前のフレームに水平方向へ動いた量を記録（ジャンプで勢いを引き継ぐため）
+	m_lastMoveDelta = m_pos - m_prevFramePos;
+	m_lastMoveDelta.y = 0.0f;
+	m_prevFramePos = m_pos;
 
 	// ルートモーションの切り替え（確認用。オフにすると、腰の動きはその場でのアニメーションになる）
 	if (m_extractPelvisMotion != s_useRootMotion)
@@ -1069,7 +1075,7 @@ bool Player::AttackOBB(const Math::Matrix& swordMatrix, bool isCritical, const s
 	return isHit;
 }
 
-bool Player::MoveProcess(bool moveByCode)
+bool Player::GetMoveInputDir(Math::Vector3& outDir) const
 {
 	// カメラの向きを基準に移動方向を決める
 	Math::Matrix cameraRotY = Math::Matrix::Identity;
@@ -1078,13 +1084,20 @@ bool Player::MoveProcess(bool moveByCode)
 		cameraRotY = camera->GetRotationYMatrix();
 	}
 
-	Math::Vector3 dir = Math::Vector3::TransformNormal(GetInputDir(), cameraRotY);
+	outDir = Math::Vector3::TransformNormal(GetInputDir(), cameraRotY);
+	outDir.y = 0.0f;
+	if (outDir.LengthSquared() == 0.0f) return false;
 
+	outDir.Normalize();
+	return true;
+}
+
+bool Player::MoveProcess(bool moveByCode)
+{
 	UpdateAwakeningInput();
 
-	if (dir.LengthSquared() == 0.0f) return false;
-
-	dir.Normalize();
+	Math::Vector3 dir;
+	if (!GetMoveInputDir(dir)) return false;
 
 	// 旋回（1フレームに最大kMaxTurnAngle度まで）
 	Math::Matrix nowRot = Math::Matrix::CreateRotationY(GetAngleRad());

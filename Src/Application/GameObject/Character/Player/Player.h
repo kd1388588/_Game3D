@@ -44,6 +44,12 @@ public:
 	// 入力が無ければ false を返す
 	bool MoveProcess(bool moveByCode = true);
 
+	// カメラの向きを基準にした入力方向（長さ1）を取得する（入力が無ければ false）
+	bool GetMoveInputDir(Math::Vector3& outDir) const;
+
+	// 前のフレームに水平方向へ動いた量（ジャンプで勢いを引き継ぐために使う）
+	const Math::Vector3& GetLastMoveDelta() const { return m_lastMoveDelta; }
+
 	// ステート（アニメーション）関連
 	WeaponState GetWeaponState() const { return m_weaponState; }
 	void SetWeaponState(WeaponState state) { m_weaponState = state; }
@@ -293,4 +299,8 @@ private:
 	InputHelper::KeyTrigger			m_attackTypeKey{ 'C' };
 
 	BaseScene*						m_owner = nullptr;
+
+	// 前のフレームからの移動量（水平方向）
+	Math::Vector3					m_prevFramePos = Math::Vector3::Zero;
+	Math::Vector3					m_lastMoveDelta = Math::Vector3::Zero;
 };
