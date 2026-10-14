@@ -96,6 +96,7 @@ namespace
 
 	// カメラの注視点を腰の骨から下げる量
 	constexpr float kCameraTargetOffsetY	= -0.9f;
+	constexpr float kCameraFollowRateY		= 0.1f;		// 地面の高さが変わった時、カメラが付いていく速さ（0～1）
 
 	// モデル・アニメーション（UEでSK_Assassinにリターゲットして書き出したもの）
 	const std::string kPlayerAssetDir		= "Asset/Models/GameObject/Player/New/";
@@ -469,6 +470,11 @@ void Player::Init()
 	m_pos = { 0, 0.0f, 0.5f };
 	m_prevFramePos = m_pos;
 
+	// カメラの注視点の高さ：立っている時の腰の高さを基準にする（腰が上下に動いても付いていかない）
+	float pelvisHeight = (m_pelvisRestPos.y > 0.0f) ? m_pelvisRestPos.y : 0.9f;	// 腰の骨が無いモデルの時は標準の高さ
+	m_cameraHeight = pelvisHeight + kCameraTargetOffsetY;
+	m_cameraTargetY = m_pos.y + m_cameraHeight;
+
 	m_maxHp = kMaxHp;
 	m_hp = m_maxHp;
 
@@ -638,6 +644,18 @@ void Player::PostUpdate()
 {
 	BaseChara::PostUpdate();
 	UpdateWeaponMatrix();
+	UpdateCameraTargetY();
+}
+
+void Player::UpdateCameraTargetY()
+{
+	float groundTargetY = m_pos.y + m_cameraHeight;
+
+	// 地面にいる時：足元の高さに合わせる（階段などで高さが変わった時はなめらかに付いていく）
+	// 空中にいる時：ジャンプでは上に付いていかない。落ちて元の高さより下になった時だけ付いていく
+	float desiredY = IsOnGround() ? groundTargetY : std::min(m_cameraTargetY, groundTargetY);
+
+	m_cameraTargetY += (desiredY - m_cameraTargetY) * kCameraFollowRateY;
 }
 
 void Player::GenerateDepthMapFromLight()
@@ -1161,16 +1179,9 @@ Math::Vector3 Player::GetSwordBasePositionL() const
 
 Math::Vector3 Player::GetCameraTargetPos() const
 {
-	Math::Vector3 targetPos = m_pos; // XとZは足元の滑らかな座標を使う
-
-	if (m_model)
-	{
-		// マネキンの腰の骨（pelvis）の高さを使う
-		if (const KdModelWork::Node* pNode = m_model->FindNode("pelvis"))
-		{
-			Math::Matrix m = pNode->m_worldTransform * m_mWorld;
-			targetPos.y = m.Translation().y + kCameraTargetOffsetY;
-		}
-	}
+	// X・Z は足元の位置、Y は回避やジャンプで上下しない高さを使う
+	// （前は腰の骨の高さを使っていたため、回避で腰が下がるとカメラがガクンと下がっていた）
+	Math::Vector3 targetPos = m_pos;
+	targetPos.y = m_cameraTargetY;
 	return targetPos;
 }

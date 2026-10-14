@@ -153,6 +153,10 @@ private:
 	// アニメーションで腰が動いた分だけ、プレイヤーを移動させる（ルートモーションを使う時だけ）
 	void ApplyAnimationMotion();
 
+	// カメラの注視点の高さを更新する
+	// （腰の上下の動きやジャンプには付いていかず、地面の高さが変わった時だけなめらかに付いていく）
+	void UpdateCameraTargetY();
+
 	// 剣を投げる攻撃で、投げた剣がまっすぐ前へ飛ぶように向きを補正する
 	// （アニメーションのデータでは、剣が斜め前へ飛んでいるため）
 	void ApplyThrowCorrection();
@@ -300,6 +304,10 @@ private:
 	InputHelper::KeyTrigger			m_attackTypeKey{ 'C' };
 
 	BaseScene*						m_owner = nullptr;
+
+	// カメラの注視点
+	float							m_cameraHeight = 0.0f;		// 足元からの高さ
+	float							m_cameraTargetY = 0.0f;		// 今の注視点の高さ（なめらかに変化させる）
 
 	// 前のフレームからの移動量（水平方向）
 	Math::Vector3					m_prevFramePos = Math::Vector3::Zero;
