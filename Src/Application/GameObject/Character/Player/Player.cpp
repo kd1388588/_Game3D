@@ -96,7 +96,8 @@ namespace
 
 	// カメラの注視点を腰の骨から下げる量
 	constexpr float kCameraTargetOffsetY	= -0.9f;
-	constexpr float kCameraFollowRateY		= 0.2f;		// ジャンプなどで高さが変わった時、カメラが付いていく速さ（0～1）
+	constexpr float kCameraFollowRateY		= 0.25f;	// ジャンプなどで高さが変わった時、カメラが付いていく速さ（0～1）
+	constexpr float kCameraRiseDeadZone		= 0.15f;	// 腰がこれ以上上がった時だけカメラも上げる（攻撃の小さな上下では動かさない）
 
 	// モデル・アニメーション（UEでSK_Assassinにリターゲットして書き出したもの）
 	const std::string kPlayerAssetDir		= "Asset/Models/GameObject/Player/New/";
@@ -649,9 +650,18 @@ void Player::PostUpdate()
 
 void Player::UpdateCameraTargetY()
 {
-	// 足元の高さに合わせる（ジャンプ・階段・落下のどれでも、なめらかに付いていく）
-	// 腰の骨は使わないので、回避などで腰が上下に動いてもカメラは動かない
+	// 基本は足元の高さに合わせる（ジャンプ・階段・落下）
 	float desiredY = m_pos.y + m_cameraHeight;
+
+	// アニメーションで体が上に上がった分（ジャンプや飛び上がる攻撃）だけ、カメラも上げる
+	// 腰が下がった分（回避・しゃがむ動き）は無視するので、回避でカメラがガクンと下がらない
+	if (m_model && m_pelvisNode >= 0 && m_pelvisNode < static_cast<int>(m_model->GetNodes().size()))
+	{
+		float pelvisY = m_model->GetNodes()[m_pelvisNode].m_worldTransform.Translation().y;
+		float rise = pelvisY - m_pelvisRestPos.y - kCameraRiseDeadZone;
+		if (rise > 0.0f) desiredY += rise;
+	}
+
 	m_cameraTargetY += (desiredY - m_cameraTargetY) * kCameraFollowRateY;
 }
 
