@@ -293,6 +293,28 @@ const std::string& PlayerStateComboAttack::GetSlashEffectName() const
 	return EffectName::ComboSlashDefault;
 }
 
+bool PlayerStateComboAttack::IsTrailFrame(const Player* player, float animTime) const
+{
+	// 溜め攻撃（4-3）：Start の振り始めから、End で剣を地面に叩きつけるまで、途切れずに出す
+	if (IsSplitAttack())
+	{
+		switch (m_subStep)
+		{
+		case SubStepStart:	return animTime >= kAttackHitStartFrame;
+		case SubStepLoop:	return true;
+		case SubStepEnd:
+		{
+			float slamFrame = player->GetSwordSlamFrame();
+			return animTime <= ((slamFrame >= 0.0f) ? slamFrame : kAttackHitEndFrame);
+		}
+		default:			break;
+		}
+	}
+
+	// 普通の攻撃：攻撃判定のフレームの間
+	return animTime >= kAttackHitStartFrame && animTime <= kAttackHitEndFrame;
+}
+
 const std::string& PlayerStateComboAttack::GetHitEffectName() const
 {
 	// 溜め攻撃のループ中はドリル（ループするエフェクト）なので、当たった時はタイプ4の斬撃にする
@@ -359,12 +381,15 @@ void PlayerStateComboAttack::Update(Player* player)
 
 	float animTime = player->GetAnimTime();
 
-	// 攻撃判定と剣の軌跡
+	// 剣の軌跡（攻撃していないフレームはPlayer側で徐々に消える）
+	if (IsTrailFrame(player, animTime))
+	{
+		player->AddSwordTrailPoints();
+	}
+
+	// 攻撃判定
 	if (animTime >= kAttackHitStartFrame && animTime <= kAttackHitEndFrame)
 	{
-		// 左右の剣の軌跡を伸ばす（攻撃していないフレームはPlayer側で徐々に消える）
-		player->AddSwordTrailPoints();
-
 		if (!m_isHit)
 		{
 			// 当たったら、攻撃の種類・段数ごとのエフェクトをその位置に出す
@@ -467,8 +492,18 @@ void PlayerStateJump::ChangeState(Player* player)
 	m_isFalling = false;
 	m_isLandingAnimStarted = false;
 
-	player->ExecJump(kJumpPower);
-	player->ChangeAnimation(player->GetWeaponAnimName("JumpStart"), false, true);
+	// アニメーションの踏み切り（足が地面から離れる）フレームで跳ぶ
+	// （すぐ跳ぶと、しゃがんで力をためている姿勢のまま宙に浮いてしまうため）
+	std::string startAnimName = player->GetWeaponAnimName("JumpStart");
+	m_takeoffFrame = player->GetTakeoffFrame(startAnimName);
+	m_isTakeoffDone = false;
+	if (m_takeoffFrame <= 0.0f)
+	{
+		player->ExecJump(kJumpPower);
+		m_isTakeoffDone = true;
+	}
+
+	player->ChangeAnimation(startAnimName, false, true);
 	player->SetAnimationSpeed(1.0f);
 
 	// 空中の移動は「踏み切った時の勢い」で行うので、アニメーションの動きでは移動しない
@@ -505,8 +540,19 @@ void PlayerStateJump::Update(Player* player)
 {
 	if (m_jumpPhase != JumpPhaseLanding)
 	{
-		// 空中での移動
+		// 空中での移動（踏み切る前も、走っていた勢いのまま進む）
 		UpdateAirMove(player);
+	}
+
+	// 踏み切りのフレームになったら跳ぶ（それまでは地面にいるので、着地の判定もしない）
+	if (!m_isTakeoffDone)
+	{
+		if (player->GetAnimTime() >= m_takeoffFrame)
+		{
+			player->ExecJump(kJumpPower);
+			m_isTakeoffDone = true;
+		}
+		return;
 	}
 
 	bool isFallingNow = player->GetGravity() > kFallingGravity;

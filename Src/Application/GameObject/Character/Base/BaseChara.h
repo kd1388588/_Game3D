@@ -35,6 +35,10 @@ public:
 	// 指定した足の骨がすべて接地している最初のフレームを求める（見つからなければ0）
 	float CalcFootPlantFrame(const std::string& animName, const std::vector<std::string>& footNodeNames) const;
 
+	// 指定した足の骨がすべて地面から離れる最初のフレームを求める（見つからなければ -1）
+	// （ジャンプで、アニメーションの踏み切りに合わせて跳ぶために使う）
+	float CalcFootLiftFrame(const std::string& animName, const std::vector<std::string>& footNodeNames) const;
+
 	// ルートモーション関連
 	void SetUseRootMotion(bool use) { m_useRootMotion = use; }
 	void SetRootMotionScale(float scale) { m_rootScale = scale; }
@@ -143,6 +147,10 @@ private:
 
 	// ルートボーンを探す
 	static KdModelWork::Node* FindRootNode(std::vector<KdModelWork::Node>& nodes);
+
+	// アニメーションを1フレームずつ再生し、指定した骨の高さを記録する（足の接地・離地の計算用）
+	bool SampleNodeHeights(const std::string& animName, const std::vector<std::string>& nodeNames,
+		std::vector<float>& outTimes, std::vector<std::vector<float>>& outHeights) const;
 
 	// 別のファイルから読み込んだアニメーションを、このキャラのモデルに合わせて作り直す（リターゲット）
 	// ・骨の対応は「番号」ではなく「名前」で行う（骨の並び順が違っても正しく動くように）

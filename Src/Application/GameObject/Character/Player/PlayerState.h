@@ -126,6 +126,10 @@ private:
 	// 敵に当たった時に出すエフェクトの名前（攻撃の種類・段数ごと）
 	const std::string& GetHitEffectName() const;
 
+	// 今のフレームに剣の軌跡を出すか
+	// （普通の攻撃は攻撃判定のフレームの間。溜め攻撃は、振り始めから地面に叩きつけるまでずっと）
+	bool IsTrailFrame(const Player* player, float animTime) const;
+
 	// 溜め攻撃のループ中に、ドリルのエフェクトを再生する（斬撃のエフェクトは敵に当たった時に出す）
 	void PlaySlashEffect(Player* player);
 };
@@ -174,6 +178,8 @@ private:
 	int  m_jumpCount = 0;
 	bool m_isFalling = false;
 	bool m_isLandingAnimStarted = false;	// 着地アニメーションを開始済みか
+	bool m_isTakeoffDone = false;			// 実際に跳んだか（アニメーションの踏み切りまで待つ）
+	float m_takeoffFrame = 0.0f;			// 跳ぶフレーム（ジャンプ開始アニメーションで足が地面から離れるフレーム）
 
 	Math::Vector3 m_airVelocity = Math::Vector3::Zero;	// 空中での水平方向の速さ（1フレームの移動量）
 	float m_airSpeed = 0.0f;							// 空中で入力した時の速さ

@@ -67,6 +67,12 @@ public:
 	// 着地アニメーションで両足が接地しているフレーム
 	float GetLandingFrame(const std::string& animName) const;
 
+	// ジャンプ開始アニメーションで、足が地面から離れる（踏み切る）フレーム（無ければ 0）
+	float GetTakeoffFrame(const std::string& animName) const;
+
+	// 溜め攻撃（4-3）の End で、剣が地面に叩きつけられる（一番低くなる）フレーム（無ければ -1）
+	float GetSwordSlamFrame() const { return m_swordSlamFrame; }
+
 	// 攻撃アニメーション
 	void ChangeAnimationLazy(const std::string& animName, bool isLoop = true, bool forceRestart = false, float blendFrame = 0.0f);
 	void RegisterAnimPath(const std::string& name, const std::string& path) { m_lazyAnimPaths[name] = path; }
@@ -170,6 +176,9 @@ private:
 
 	// モデルのノード番号を名前で探す（見つからなければ -1）
 	int FindNodeIndex(const std::string& name) const;
+
+	// 指定したアニメーションで、剣先が一番低くなる（地面に叩きつける）フレームを求める（無ければ -1）
+	float CalcSwordLowestFrame(const std::string& animName) const;
 	void UpdateAwakening();
 
 	// 覚醒中のオーラエフェクトを更新（覚醒中は再生し続け、終わったら止める）
@@ -259,6 +268,8 @@ private:
 
 	std::unordered_map<std::string, std::string> m_lazyAnimPaths;
 	std::unordered_map<std::string, float>		 m_landingFrames;	// 着地アニメ名 → 両足が接地するフレーム
+	std::unordered_map<std::string, float>		 m_takeoffFrames;	// ジャンプ開始アニメ名 → 足が地面から離れるフレーム
+	float										 m_swordSlamFrame = -1.0f;	// 4-3 の End で剣を地面に叩きつけるフレーム
 
 	std::weak_ptr<HPGage>			m_wpHpGage;
 	std::weak_ptr<TPSCamera>		m_camera;

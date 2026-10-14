@@ -14,6 +14,7 @@ namespace
 	// 足の接地判定
 	constexpr int	kMaxSampleFrames		= 1000;		// アニメーションを調べる最大フレーム数
 	constexpr float kFootPlantTolerance		= 0.03f;	// 最も低い位置からこの高さ以内なら接地とみなす
+	constexpr float kFootLiftHeight			= 0.03f;	// 立っている高さよりこれ以上上がったら、足が地面から離れたとみなす
 
 	// リターゲット
 	const std::string kRootNodeName			= "root";
@@ -152,38 +153,39 @@ bool BaseChara::HasAnimation(const std::string& animName) const
 	return m_model && m_model->GetAnimation(animName);
 }
 
-float BaseChara::CalcFootPlantFrame(const std::string& animName, const std::vector<std::string>& footNodeNames) const
+bool BaseChara::SampleNodeHeights(const std::string& animName, const std::vector<std::string>& nodeNames,
+	std::vector<float>& outTimes, std::vector<std::vector<float>>& outHeights) const
 {
+	outTimes.clear();
+	outHeights.clear();
+
 	auto it = m_animMap.find(animName);
-	if (it == m_animMap.end() || !m_model || !m_model->GetData()) return 0.0f;
+	if (it == m_animMap.end() || !m_model || !m_model->GetData()) return false;
 
 	// 計算用にモデルを複製（表示中のモデルには影響させない）
 	KdModelWork work(m_model->GetData());
 
-	std::vector<const KdModelWork::Node*> feet;
-	for (const auto& name : footNodeNames)
+	std::vector<const KdModelWork::Node*> nodes;
+	for (const auto& name : nodeNames)
 	{
 		if (const KdModelWork::Node* pNode = work.FindNode(name))
 		{
-			feet.push_back(pNode);
+			nodes.push_back(pNode);
 		}
 	}
-	if (feet.empty())
+	if (nodes.empty())
 	{
 		OutputDebugStringA(("【足の骨が見つかりません】: " + animName + "\n").c_str());
-		return 0.0f;
+		return false;
 	}
 
 	KdAnimator animator;
 	animator.SetAnimation(it->second, false);
 
-	// 1フレームずつ再生して、各フレームの足の高さを記録する
-	std::vector<float> frameTimes;
-	std::vector<std::vector<float>> footHeights;
-
+	// 1フレームずつ再生して、各フレームの骨の高さを記録する
 	for (int i = 0; i < kMaxSampleFrames && !animator.IsAnimationEnd(); ++i)
 	{
-		frameTimes.push_back(animator.GetTime());
+		outTimes.push_back(animator.GetTime());
 		animator.AdvanceTime(work.WorkNodes(), 1.0f);
 
 		// ゲーム中と同じくルートの移動を打ち消してから計算する
@@ -194,20 +196,29 @@ float BaseChara::CalcFootPlantFrame(const std::string& animName, const std::vect
 		work.CalcNodeMatrices();
 
 		std::vector<float> heights;
-		for (const KdModelWork::Node* pFoot : feet)
+		for (const KdModelWork::Node* pNode : nodes)
 		{
-			heights.push_back(pFoot->m_worldTransform.Translation().y);
+			heights.push_back(pNode->m_worldTransform.Translation().y);
 		}
-		footHeights.push_back(heights);
+		outHeights.push_back(heights);
 	}
 
-	if (frameTimes.empty()) return 0.0f;
+	return !outTimes.empty();
+}
+
+float BaseChara::CalcFootPlantFrame(const std::string& animName, const std::vector<std::string>& footNodeNames) const
+{
+	std::vector<float> frameTimes;
+	std::vector<std::vector<float>> footHeights;
+	if (!SampleNodeHeights(animName, footNodeNames, frameTimes, footHeights)) return 0.0f;
+
+	size_t footNum = footHeights[0].size();
 
 	// 足ごとの一番低い位置（＝地面についている高さ）
 	std::vector<float> minHeights = footHeights[0];
 	for (const auto& heights : footHeights)
 	{
-		for (size_t f = 0; f < feet.size(); ++f)
+		for (size_t f = 0; f < footNum; ++f)
 		{
 			minHeights[f] = std::min(minHeights[f], heights[f]);
 		}
@@ -217,7 +228,7 @@ float BaseChara::CalcFootPlantFrame(const std::string& animName, const std::vect
 	for (size_t i = 0; i < frameTimes.size(); ++i)
 	{
 		bool isAllPlanted = true;
-		for (size_t f = 0; f < feet.size(); ++f)
+		for (size_t f = 0; f < footNum; ++f)
 		{
 			if (footHeights[i][f] > minHeights[f] + kFootPlantTolerance)
 			{
@@ -230,6 +241,33 @@ float BaseChara::CalcFootPlantFrame(const std::string& animName, const std::vect
 	}
 
 	return 0.0f;
+}
+
+float BaseChara::CalcFootLiftFrame(const std::string& animName, const std::vector<std::string>& footNodeNames) const
+{
+	std::vector<float> frameTimes;
+	std::vector<std::vector<float>> footHeights;
+	if (!SampleNodeHeights(animName, footNodeNames, frameTimes, footHeights)) return -1.0f;
+
+	size_t footNum = footHeights[0].size();
+
+	// 最初のフレームの足の高さ（＝地面に立っている高さ）より、すべての足が上がった最初のフレームを探す
+	for (size_t i = 0; i < frameTimes.size(); ++i)
+	{
+		bool isAllLifted = true;
+		for (size_t f = 0; f < footNum; ++f)
+		{
+			if (footHeights[i][f] <= footHeights[0][f] + kFootLiftHeight)
+			{
+				isAllLifted = false;
+				break;
+			}
+		}
+
+		if (isAllLifted) return frameTimes[i];
+	}
+
+	return -1.0f;
 }
 
 bool BaseChara::FindGroundBelow(float range, Math::Vector3& outHitPos) const
