@@ -96,7 +96,7 @@ namespace
 
 	// カメラの注視点を腰の骨から下げる量
 	constexpr float kCameraTargetOffsetY	= -0.9f;
-	constexpr float kCameraFollowRateY		= 0.1f;		// 地面の高さが変わった時、カメラが付いていく速さ（0～1）
+	constexpr float kCameraFollowRateY		= 0.2f;		// ジャンプなどで高さが変わった時、カメラが付いていく速さ（0～1）
 
 	// モデル・アニメーション（UEでSK_Assassinにリターゲットして書き出したもの）
 	const std::string kPlayerAssetDir		= "Asset/Models/GameObject/Player/New/";
@@ -649,12 +649,9 @@ void Player::PostUpdate()
 
 void Player::UpdateCameraTargetY()
 {
-	float groundTargetY = m_pos.y + m_cameraHeight;
-
-	// 地面にいる時：足元の高さに合わせる（階段などで高さが変わった時はなめらかに付いていく）
-	// 空中にいる時：ジャンプでは上に付いていかない。落ちて元の高さより下になった時だけ付いていく
-	float desiredY = IsOnGround() ? groundTargetY : std::min(m_cameraTargetY, groundTargetY);
-
+	// 足元の高さに合わせる（ジャンプ・階段・落下のどれでも、なめらかに付いていく）
+	// 腰の骨は使わないので、回避などで腰が上下に動いてもカメラは動かない
+	float desiredY = m_pos.y + m_cameraHeight;
 	m_cameraTargetY += (desiredY - m_cameraTargetY) * kCameraFollowRateY;
 }
 
