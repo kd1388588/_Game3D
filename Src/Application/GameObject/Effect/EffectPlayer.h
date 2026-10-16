@@ -27,6 +27,8 @@ namespace EffectName
 	inline const std::string AwakeningAura		= "";					// 覚醒中のオーラ（覚醒中は繰り返し再生）
 	inline const std::string Evade				= "";					// 回避
 	inline const std::string Landing			= "";					// ジャンプの着地
+	inline const std::string ModeChange			= "";					// バトルモードの切り替え（Eキー）
+	inline const std::string AbilityStart		= "";					// アビリティ（右クリック）の発動
 }
 
 // ============================================================

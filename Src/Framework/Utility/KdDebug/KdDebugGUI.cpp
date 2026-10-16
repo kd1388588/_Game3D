@@ -104,7 +104,6 @@ void KdDebugGUI::GuiProcess()
 		if (ImGui::BeginTabItem("Animation Move"))
 		{
 			ImGui::SliderFloat("Evade Speed", &PlayerParamManager::Instance().m_evadeSpeed, 0.01f, 0.5f);
-			ImGui::SliderFloat("Dash Speed", &PlayerParamManager::Instance().m_dashSpeed, 0.01f, 0.5f);
 
 			// 見た目の確認用の切り替え
 			ImGui::Checkbox("Root Motion", &Player::s_useRootMotion);
@@ -142,14 +141,6 @@ void KdDebugGUI::GuiProcess()
 			ImGui::DragFloat3("Position (Right)", &Player::s_weaponPosR.x, 0.001f);
 			ImGui::DragFloat3("Rotation (Left)", &Player::s_weaponRotL.x, 0.1f);
 			ImGui::DragFloat3("Position (Left)", &Player::s_weaponPosL.x, 0.001f);
-
-			ImGui::Separator();
-			ImGui::Text("--- Sheathed (Back) ---");
-
-			ImGui::DragFloat3("Sheath Rot (R)", &Player::s_sheathedRotR.x, 0.1f);
-			ImGui::DragFloat3("Sheath Pos (R)", &Player::s_sheathedPosR.x, 0.001f);
-			ImGui::DragFloat3("Sheath Rot (L)", &Player::s_sheathedRotL.x, 0.1f);
-			ImGui::DragFloat3("Sheath Pos (L)", &Player::s_sheathedPosL.x, 0.001f);
 
 			ImGui::EndTabItem();
 		}

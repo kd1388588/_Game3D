@@ -15,7 +15,7 @@ namespace
 	constexpr int	kChargeLoopFrame		= 90;		// 4-3 Loop の持続フレーム
 	constexpr int	kMaxComboStep			= 5;
 
-	// 回避・ダッシュ・被弾で移動するフレーム数
+	// 回避・被弾で移動するフレーム数
 	constexpr float kEvadeMoveFrame			= 25.0f;
 	constexpr float kDamageKnockbackFrame	= 15.0f;
 	constexpr float kDamageKnockbackSpeed	= 0.06f;
@@ -45,9 +45,32 @@ namespace
 	// 回避・着地エフェクトの大きさ
 	constexpr float kEvadeEffectScale		= 1.0f;
 	constexpr float kLandingEffectScale		= 1.0f;
+
+	// プレイヤーは常に剣を抜いているので、剣を持った（Combat_）アニメーションを使う
+	const std::string kIdleAnimName			= "Combat_Idle";
+	const std::string kRunAnimName			= "Combat_Run";
+	const std::string kJumpStartAnimName	= "Combat_JumpStart";
+	const std::string kJumpLoopAnimName		= "Combat_JumpLoop";
+	const std::string kJumpEndAnimName		= "Combat_JumpEnd";
+
+	// アビリティ（ATBゲージを1本使う技）
+	// モードごとに出す技（今ある攻撃アニメーションの中から、強そうなものを使っている）
+	const std::string kOperatorAbilityAnim	= "Attack_1_4";		// オペレーター：素早い連続斬り
+	const std::string kPunisherAbilityAnim	= "Attack_4_4";		// パニッシャー：重い一撃
+	constexpr float kAbilityDamageRate		= 2.5f;		// 普通の攻撃の何倍のダメージか
+	constexpr int	kAbilityHitStopFrame	= 4;		// 当たった時に止まるフレーム数（普通の攻撃は1）
+	constexpr float kAbilityAnimSpeed		= 1.0f;		// 再生速度
+	constexpr float kAbilityBlendFrame		= 5.0f;		// 前の動きから技へのブレンドフレーム数
+	constexpr float kAbilityEffectScale		= 1.0f;		// 発動エフェクトの大きさ
+
+	// ATBゲージが足りない時のお知らせ（ログに出す）
+	void LogAtbShortage()
+	{
+		KdDebugGUI::Instance().AddLog("[System] ATBゲージが足りません\n");
+	}
 }
 
-// 前方へ減速しながら移動する（回避・ダッシュ用）
+// 前方へ減速しながら移動する（回避用）
 void PlayerState::MoveForwardWithDecay(Player* player, float baseSpeed, float moveFrame, bool isFlat)
 {
 	float animTime = player->GetAnimTime();
@@ -72,21 +95,32 @@ void PlayerState::UseRootMotion(Player* player)
 	player->SetRootMotionScale(1.0f);
 }
 
+bool PlayerState::TryUseAbility(Player* player)
+{
+	// ATBゲージを1本使う（足りなければ出さない）
+	if (!player->UseAtbBar())
+	{
+		LogAtbShortage();
+		return false;
+	}
+
+	player->ChangeState(std::make_shared<PlayerStateAbility>());
+	return true;
+}
+
 // 待機・移動中に共通の入力によるステート遷移
 // 遷移した場合は true を返す
 bool PlayerState::TryCommonTransition(Player* player)
 {
-	// Shift：武器装備中は回避、未装備ならダッシュ
+	// Shift：回避
+	// （パニッシャーの時は、オペレーターに戻ってから回避する。FF7リメイクのクラウドと同じ動き）
 	if (IsKeyDown(VK_SHIFT))
 	{
-		if (player->GetWeaponState() == WeaponState::Equipped)
+		if (player->IsPunisherMode())
 		{
-			player->ChangeState(std::make_shared<PlayerStateEvade>());
+			player->SetBattleMode(BattleMode::Operator);
 		}
-		else
-		{
-			player->ChangeState(std::make_shared<PlayerStateDash>());
-		}
+		player->ChangeState(std::make_shared<PlayerStateEvade>());
 		return true;
 	}
 
@@ -97,18 +131,14 @@ bool PlayerState::TryCommonTransition(Player* player)
 		return true;
 	}
 
-	// 武器の抜刀・納刀切り替え
-	if (player->CheckEquipInput())
+	// 右クリック：ATBゲージを1本使ってアビリティ
+	if (player->CheckAbilityInput() && TryUseAbility(player))
 	{
-		bool toCombat = !player->IsCombatMode();
-		player->SetCombatMode(toCombat);
-		if (toCombat)	player->ChangeState(std::make_shared<PlayerStateEquip>());
-		else			player->ChangeState(std::make_shared<PlayerStateUnequip>());
 		return true;
 	}
 
-	// 攻撃
-	if (player->GetWeaponState() == WeaponState::Equipped && player->CheckAttackInput())
+	// 攻撃（剣は常に抜いているので、いつでも攻撃できる）
+	if (player->CheckAttackInput())
 	{
 		player->ChangeState(std::make_shared<PlayerStateComboAttack>(player->GetCurrentAttackType(), 1));
 		return true;
@@ -119,7 +149,7 @@ bool PlayerState::TryCommonTransition(Player* player)
 
 void PlayerStateIdle::ChangeState(Player* player)
 {
-	player->ChangeAnimation(player->GetWeaponAnimName("Idle"), true, false, kRunBlendFrame);
+	player->ChangeAnimation(kIdleAnimName, true, false, kRunBlendFrame);
 	player->SetAnimationSpeed(1.0f);
 	UseRootMotion(player);
 }
@@ -136,7 +166,7 @@ void PlayerStateIdle::Update(Player* player)
 
 void PlayerStateRun::ChangeState(Player* player)
 {
-	player->ChangeAnimation(player->GetWeaponAnimName("Run"), true, false, kRunBlendFrame);
+	player->ChangeAnimation(kRunAnimName, true, false, kRunBlendFrame);
 	player->SetAnimationSpeed(1.0f);
 
 	// 走りのアニメーションの動きで前へ進む（足の動きと移動の速さが一致するので、足が地面を滑らない）
@@ -159,6 +189,7 @@ void PlayerStateRun::Update(Player* player)
 	{
 		float speedRate = Player::s_runSpeedRate;
 		if (player->IsAwakening()) speedRate *= kAwakeningRunSpeedRate;	// 覚醒中はさらに速く
+		speedRate *= player->GetModeMoveRate();								// パニッシャーの時は遅く
 
 		float animSpeed = 1.0f + (speedRate - 1.0f) * kRunAnimSpeedShare;
 		player->SetAnimationSpeed(animSpeed);
@@ -168,42 +199,6 @@ void PlayerStateRun::Update(Player* player)
 	// アニメーションの動きで進む時は、入力方向へ向きを変えるだけ
 	if (!player->MoveProcess(!isAnimMotion))
 	{
-		player->ChangeState(std::make_shared<PlayerStateIdle>());
-	}
-}
-
-void PlayerStateEquip::ChangeState(Player* player)
-{
-	player->ChangeAnimation("Equip", false);
-	UseRootMotion(player);
-	player->SetAnimationSpeed(1.3f);
-}
-
-void PlayerStateEquip::Update(Player* player)
-{
-	if (player->GetAnimTime() >= player->GetEquipFrame()) {
-		player->SetWeaponState(WeaponState::Equipped);
-	}
-
-	if (player->IsAnimEnd()) {
-		player->ChangeState(std::make_shared<PlayerStateIdle>());
-	}
-}
-
-void PlayerStateUnequip::ChangeState(Player* player)
-{
-	player->ChangeAnimation("Unequip", false);
-	UseRootMotion(player);
-	player->SetAnimationSpeed(1.0f);
-}
-
-void PlayerStateUnequip::Update(Player* player)
-{
-	if (player->GetAnimTime() >= player->GetUnequipFrame()) {
-		player->SetWeaponState(WeaponState::Sheathed);
-	}
-
-	if (player->IsAnimEnd()) {
 		player->ChangeState(std::make_shared<PlayerStateIdle>());
 	}
 }
@@ -350,7 +345,6 @@ void PlayerStateComboAttack::ChangeState(Player* player)
 	player->ChangeAnimation(GetAnimName(), isLoop, true, 5.0f);
 
 	player->SetAnimationSpeed(1.0f);
-	player->SetWeaponState(WeaponState::Equipped);
 
 	// マネージャーの変数を倍率としてセット。一部の攻撃はXZの座標移動を完全にロック
 	// アニメーションの踏み込みどおりに動く
@@ -366,6 +360,13 @@ void PlayerStateComboAttack::Update(Player* player)
 	if (player->CheckAttackInput())
 	{
 		m_nextAttackReserved = true;
+	}
+
+	// 右クリックされたらアビリティを「予約」する（ATBゲージが1本以上ある時だけ）
+	if (player->CheckAbilityInput())
+	{
+		if (player->GetAtbBarCount() >= 1)	m_abilityReserved = true;
+		else								LogAtbShortage();
 	}
 	
 	// 攻撃タイプ04のLoopは一定時間でEndへ
@@ -408,6 +409,13 @@ void PlayerStateComboAttack::Update(Player* player)
 		PlaySlashEffect(player);
 	}
 
+	// アビリティの予約があり、キャンセル可能フレームを超えたら、コンボを止めてアビリティを出す
+	if (m_abilityReserved && animTime >= GetCancelFrame())
+	{
+		m_abilityReserved = false;
+		if (TryUseAbility(player)) return;
+	}
+
 	// 予約があり、キャンセル可能フレームを超えたら次へ滑らかに移行
 	if (m_nextAttackReserved && animTime >= GetCancelFrame() && !player->IsAnimEnd())
 	{
@@ -431,6 +439,9 @@ void PlayerStateComboAttack::Update(Player* player)
 		player->ChangeState(std::make_shared<PlayerStateComboAttack>(4, 3, SubStepLoop));
 		return;
 	}
+
+	// 最後まで再生してからアビリティの予約を使う（キャンセルできない攻撃の時）
+	if (m_abilityReserved && TryUseAbility(player)) return;
 
 	// 予約があれば次の段へ、なければIdleへ（4_3_End の次は 4_4）
 	if (m_nextAttackReserved)
@@ -465,22 +476,48 @@ void PlayerStateEvade::Update(Player* player)
 	}
 }
 
-void PlayerStateDash::ChangeState(Player* player)
+void PlayerStateAbility::ChangeState(Player* player)
 {
-	player->ChangeAnimation("Dash", false);
-	player->SetAnimationSpeed(1.0f);
+	// アビリティの攻撃中は、当ててもATBゲージがたまらない
+	player->SetAbilityAttack(true);
+
+	m_isCritical = (KdRandom::GetInt(0, 99) < player->GetCritRate());
+
+	// モードごとの技を出す
+	const std::string& animName = player->IsPunisherMode() ? kPunisherAbilityAnim : kOperatorAbilityAnim;
+	player->ChangeAnimation(animName, false, true, kAbilityBlendFrame);
+	player->SetAnimationSpeed(kAbilityAnimSpeed);
 	UseRootMotion(player);
+
+	EffectPlayer::Play(EffectName::AbilityStart, player->GetPos(), kAbilityEffectScale);
+
+	KdDebugGUI::Instance().AddLog("[System] アビリティ発動: %s\n", animName.c_str());
 }
 
-void PlayerStateDash::Update(Player* player)
+void PlayerStateAbility::Update(Player* player)
 {
-	// アニメーションに前へ進む動きが無い場合だけ、プログラムで前へ進む
-	if (!player->CurrentAnimHasHorizontalMotion())
+	player->ExecJump(0.0f);
+
+	float animTime = player->GetAnimTime();
+
+	// 攻撃判定のフレームの間は、剣の軌跡を出して攻撃判定を行う
+	if (animTime >= kAttackHitStartFrame && animTime <= kAttackHitEndFrame)
 	{
-		MoveForwardWithDecay(player, PlayerParamManager::Instance().m_dashSpeed, kEvadeMoveFrame, true);
+		player->AddSwordTrailPoints();
+
+		const std::string& hitEffect = player->IsPunisherMode() ? EffectName::ComboSlash4 : EffectName::ComboSlash1_4;
+		bool hitR = player->AttackOBB(player->GetSwordMatrixR(), m_isCritical, hitEffect, kAbilityDamageRate);
+		bool hitL = player->AttackOBB(player->GetSwordMatrixL(), m_isCritical, hitEffect, kAbilityDamageRate);
+
+		// 普通の攻撃より長く止めて、重い一撃に見せる
+		if (hitR || hitL)
+		{
+			player->SetHitStopTimer(kAbilityHitStopFrame);
+		}
 	}
 
-	if (player->IsAnimEnd()) {
+	if (player->IsAnimEnd())
+	{
 		player->ChangeState(std::make_shared<PlayerStateIdle>());
 	}
 }
@@ -494,7 +531,7 @@ void PlayerStateJump::ChangeState(Player* player)
 
 	// アニメーションの踏み切り（足が地面から離れる）フレームで跳ぶ
 	// （すぐ跳ぶと、しゃがんで力をためている姿勢のまま宙に浮いてしまうため）
-	std::string startAnimName = player->GetWeaponAnimName("JumpStart");
+	const std::string& startAnimName = kJumpStartAnimName;
 	m_takeoffFrame = player->GetTakeoffFrame(startAnimName);
 	m_isTakeoffDone = false;
 	if (m_takeoffFrame <= 0.0f)
@@ -563,7 +600,7 @@ void PlayerStateJump::Update(Player* player)
 		// ジャンプ開始アニメが終わった・落下し始めたら空中ループへ
 		if (!m_isLandingAnimStarted && (player->IsAnimEnd() || isFallingNow) && player->GetAnimTime() > 0.0f)
 		{
-			player->ChangeAnimation(player->GetWeaponAnimName("JumpLoop"), true);
+			player->ChangeAnimation(kJumpLoopAnimName, true);
 		}
 
 		//// 2段ジャンプの入力検知
@@ -622,7 +659,7 @@ void PlayerStateJump::TryStartLandingAnim(Player* player)
 	if (framesToLand < 0) return;
 
 	// 着地までに再生するフレーム数が、接地フレームより手前で収まるなら開始する
-	float landFrame = player->GetLandingFrame(player->GetWeaponAnimName("JumpEnd"));
+	float landFrame = player->GetLandingFrame(kJumpEndAnimName);
 	if (static_cast<float>(std::max(framesToLand - 1, 0)) <= landFrame)
 	{
 		StartLandingAnim(player, framesToLand);
@@ -631,7 +668,7 @@ void PlayerStateJump::TryStartLandingAnim(Player* player)
 
 void PlayerStateJump::StartLandingAnim(Player* player, int framesToLand)
 {
-	std::string animName = player->GetWeaponAnimName("JumpEnd");
+	const std::string& animName = kJumpEndAnimName;
 	float landFrame = player->GetLandingFrame(animName);
 
 	// 次のフレームから再生されるので、着地フレームで landFrame が表示されるよう逆算する

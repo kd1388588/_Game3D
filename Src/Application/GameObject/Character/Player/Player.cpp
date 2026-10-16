@@ -10,6 +10,7 @@
 
 // UI
 #include "../UI/Gage/HP/HPGage.h"
+#include "../UI/Gage/ATB/ATBGage.h"
 
 // Enemy
 #include "../Enemy/Enemy.h"
@@ -30,11 +31,6 @@ Math::Vector3 Player::s_weaponRotR = { 0.0f, 0.0f, 0.0f };
 Math::Vector3 Player::s_weaponPosR = { 0.0f, 0.0f, 0.0f };
 Math::Vector3 Player::s_weaponRotL = { 0.0f, 0.0f, 0.0f };
 Math::Vector3 Player::s_weaponPosL = { 0.0f, 0.0f, 0.0f };
-
-Math::Vector3 Player::s_sheathedRotR = { 0.0f, 0.0f, 0.0f };
-Math::Vector3 Player::s_sheathedPosR = { 0.0f, 0.0f, 0.0f };
-Math::Vector3 Player::s_sheathedRotL = { 0.0f, 0.0f, 0.0f };
-Math::Vector3 Player::s_sheathedPosL = { 0.0f, 0.0f, 0.0f };
 
 int Player::s_currentAttackType = 1;
 
@@ -58,6 +54,19 @@ namespace
 	constexpr int	kAttackDamage			= 10;
 	constexpr int	kCriticalAttackDamage	= 20;
 	constexpr int	kAttackTypeNum			= 5;		// 攻撃パターンの数
+
+	// バトルモード（FF7リメイクのクラウド風）
+	// モードごとに使える攻撃パターン（Cキーでこの中を切り替える）
+	const std::vector<int> kOperatorAttackTypes	= { 1, 2, 3 };	// オペレーター：手数の多い攻撃
+	const std::vector<int> kPunisherAttackTypes	= { 4, 5 };		// パニッシャー：重い攻撃
+	constexpr float kPunisherMoveRate		= 0.6f;		// パニッシャーの移動の速さ（オペレーターを1.0とした倍率）
+	constexpr float kPunisherDamageRate		= 1.5f;		// パニッシャーのダメージの倍率
+
+	// ATBゲージのたまり方
+	constexpr float kAtbPassiveGain			= 0.05f;	// オペレーターの時、1フレームにたまる量（約33秒で1本）
+	constexpr float kAtbHitGain				= 8.0f;		// 攻撃を当てた時にたまる量
+	constexpr float kPunisherAtbHitRate		= 2.0f;		// パニッシャーの時、当てた時にたまる量の倍率
+	constexpr float kAtbCriticalRate		= 1.5f;		// クリティカルの時、当てた時にたまる量の倍率
 
 	// 覚醒
 	constexpr int	kAwakeningFrame			= 60 * 15;	// 15秒間持続
@@ -107,25 +116,20 @@ namespace
 	// 武器のモデル（空文字なら読み込まない）
 	// ※SK_Assassin には剣（SM_Blade）が最初から含まれているので、別の剣は読み込まない
 	const std::string kSwordModelPath		= "";
-	const std::string kScabbardModelPath	= "";
 
-	// 武器・鞘を付けるノード（上から順に探して、最初に見つかったものを使う）
+	// 武器を付けるノード（上から順に探して、最初に見つかったものを使う）
 	const std::vector<std::string> kSwordNodeNamesR		= { "Blade_R", "Weapon_R", "hand_r" };
 	const std::vector<std::string> kSwordNodeNamesL		= { "Blade_L", "Weapon_L", "hand_l" };
-	const std::vector<std::string> kScabbardNodeNamesR	= { "Weapon_Holder_R", "Scabbard_R", "spine_05" };
-	const std::vector<std::string> kScabbardNodeNamesL	= { "Weapon_Holder_L", "Scabbard_L", "spine_05" };
 
 	// 剣を投げる攻撃（投げた剣がまっすぐ前へ飛ぶように補正する）
 	const std::string kThrowAnimName		= "Attack_5_2";
 	constexpr float kThrowCorrectStartDist	= 0.3f;		// 手からこの距離までは補正しない（手に持っている間）
 	constexpr float kThrowCorrectFullDist	= 1.0f;		// 手からこの距離以上離れたら、補正を全部かける
 
-	// 武器装備中のアニメーション名に付ける接頭辞
-	const std::string kCombatAnimPrefix = "Combat_";
-
 	// 着地アニメーション（両足の接地フレームを事前に計算する）
-	const std::vector<std::string> kLandingAnimNames	= { "JumpEnd", "Combat_JumpEnd" };
-	const std::vector<std::string> kTakeoffAnimNames	= { "JumpStart", "Combat_JumpStart" };
+	// ※プレイヤーは常に剣を抜いているので、剣を持った（Combat_）アニメーションだけを使う
+	const std::vector<std::string> kLandingAnimNames	= { "Combat_JumpEnd" };
+	const std::vector<std::string> kTakeoffAnimNames	= { "Combat_JumpStart" };
 	constexpr float kMaxTakeoffFrame		= 15.0f;	// 踏み切りがこれより遅いアニメーションは、待たずにすぐ跳ぶ（操作の遅れを防ぐ）
 
 	// 溜め攻撃（4-3）の最後で、剣を地面に叩きつけるアニメーション
@@ -135,21 +139,15 @@ namespace
 }
 
 // 読み込むアニメーションのリストを作成
+// ※プレイヤーは常に剣を抜いているので、剣を納めている時のアニメーション（Idle・Run・Jump・抜刀・納刀・ダッシュ）は読み込まない
+//   （ファイルは Asset フォルダに残してある）
 std::vector<AnimLoadInfo> Player::CreateAnimList()
 {
 	std::vector<AnimLoadInfo> animList =
 	{
-		{ "Idle",				kAnimDir + "01_Idle/01_Idle/AS_Idle_Seq/AS_Idle_Seq.gltf" },
-		{ "Equip",				kAnimDir + "01_Idle/01_Idle/AS_Idle_to_Idle_Combat_Seq/AS_Idle_to_Idle_Combat_Seq.gltf" },
-		{ "Unequip",			kAnimDir + "01_Idle/02_Idle_Combat/AS_Idle_Combat_to_Idle_Seq/AS_Idle_Combat_to_Idle_Seq.gltf" },
 		{ "Combat_Idle",		kAnimDir + "01_Idle/02_Idle_Combat/AS_Idle_Combat_Seq/AS_Idle_Combat_Seq.gltf" },
 		{ "Evade",				kAnimDir + "07_Roll/02_Roll_Combat/AS_Roll_Combat_F_0_Seq/AS_Roll_Combat_F_0_Seq.gltf" },
-		{ "Dash",				kAnimDir + "06_Dodge/01_Dodge/AS_Dodge_F_0_Seq/AS_Dodge_F_0_Seq.gltf" },
 		{ "Combat_Run",			kAnimDir + "04_Run/02_Run_Combat/01_Run_Combat_F_0/AS_Run_Combat_F_0_Loop_Seq/AS_Run_Combat_F_0_Loop_Seq.gltf" },
-		{ "Run",				kAnimDir + "04_Run/01_Run/01_Run_F_0/AS_Run_F_0_Loop_Seq/AS_Run_F_0_Loop_Seq.gltf" },
-		{ "JumpStart",			kAnimDir + "05_Jump/01_Jump/AS_Jump_Start_0_Seq/AS_Jump_Start_0_Seq.gltf" },
-		{ "JumpLoop",			kAnimDir + "05_Jump/01_Jump/AS_Jump_Loop_0_Seq/AS_Jump_Loop_0_Seq.gltf" },
-		{ "JumpEnd",			kAnimDir + "05_Jump/01_Jump/AS_Jump_End_0_Seq/AS_Jump_End_0_Seq.gltf" },
 		{ "Combat_JumpStart",	kAnimDir + "05_Jump/02_Jump_Combat/AS_Jump_Combat_Start_0_Seq/AS_Jump_Combat_Start_0_Seq.gltf" },
 		{ "Combat_JumpLoop",	kAnimDir + "05_Jump/02_Jump_Combat/AS_Jump_Combat_Loop_0_Seq/AS_Jump_Combat_Loop_0_Seq.gltf" },
 		{ "Combat_JumpEnd",		kAnimDir + "05_Jump/02_Jump_Combat/AS_Jump_Combat_End_0_Seq/AS_Jump_Combat_End_0_Seq.gltf" },
@@ -388,7 +386,6 @@ void Player::Init()
 {
 	m_model = std::make_shared<KdModelWork>();
 	m_swordModel = std::make_shared<KdModelData>();
-	m_scabbardModel = std::make_shared<KdModelData>();
 	m_swordTrailR.polygon = std::make_shared<KdTrailPolygon>();
 	m_swordTrailL.polygon = std::make_shared<KdTrailPolygon>();
 
@@ -411,10 +408,9 @@ void Player::Init()
 	// （体が元の位置に戻らず、アニメーションが自然につながるようにする）
 	SetExtractPelvisMotion(true);
 	if (!kSwordModelPath.empty())		m_swordModel->Load(kSwordModelPath);
-	if (!kScabbardModelPath.empty())	m_scabbardModel->Load(kScabbardModelPath);
 
-	// 武器・鞘をどのノードに付けたかを出力ウィンドウに表示（モデルを差し替えた時の確認用）
-	for (const auto* pNames : { &kSwordNodeNamesR, &kSwordNodeNamesL, &kScabbardNodeNamesR, &kScabbardNodeNamesL })
+	// 武器をどのノードに付けたかを出力ウィンドウに表示（モデルを差し替えた時の確認用）
+	for (const auto* pNames : { &kSwordNodeNamesR, &kSwordNodeNamesL })
 	{
 		const KdModelWork::Node* pNode = FindFirstNode(*pNames);
 		OutputDebugStringA(("武器の取り付け先: " + (pNode ? pNode->m_name : std::string("見つからない")) + "\n").c_str());
@@ -478,7 +474,7 @@ void Player::Init()
 	}
 
 	ChangeState(std::make_shared<PlayerStateIdle>());
-	ChangeAnimation("Idle", true);
+	ChangeAnimation("Combat_Idle", true);
 
 	// 剣の軌跡（左右）
 	m_swordTrailTex = CreateSwordTrailTexture();
@@ -507,6 +503,19 @@ void Player::Init()
 		m_owner->AddObject(hpGage);
 	}
 	m_wpHpGage = hpGage;
+
+	// ATBゲージ（HPゲージの下）
+	std::shared_ptr<ATBGage> atbGage = std::make_shared<ATBGage>();
+	atbGage->Init();
+	if (m_owner)
+	{
+		m_owner->AddObject(atbGage);
+	}
+	m_wpAtbGage = atbGage;
+
+	// 最初はオペレーターモード
+	m_atbGage = 0.0f;
+	SetBattleMode(BattleMode::Operator);
 }
 
 void Player::Update()
@@ -551,7 +560,9 @@ void Player::Update()
 	UpdateSwordTrails();
 	UpdateAwakening();
 	UpdateHpGage();
+	UpdateModeSwitch();
 	UpdateAttackTypeSwitch();
+	UpdateAtb();
 
 	UpdateWorldMatrix();
 }
@@ -731,12 +742,6 @@ void Player::DrawLit()
 		shader.DrawModel(*m_swordModel, m_swordWorldL);
 	}
 
-	if (m_scabbardModel)
-	{
-		shader.DrawModel(*m_scabbardModel, m_scabbardWorldR);
-		shader.DrawModel(*m_scabbardModel, m_scabbardWorldL);
-	}
-
 	shaderManager.UndoBlendState();
 	shaderManager.UndoRasterizerState();
 }
@@ -753,8 +758,6 @@ void Player::UpdateWeaponMatrix()
 {
 	m_swordWorldR = Math::Matrix::Identity;
 	m_swordWorldL = Math::Matrix::Identity;
-	m_scabbardWorldR = Math::Matrix::Identity;
-	m_scabbardWorldL = Math::Matrix::Identity;
 
 	if (!m_model) return;
 
@@ -772,16 +775,14 @@ void Player::UpdateWeaponMatrix()
 	}
 
 	// 右
-	m_scabbardWorldR = CalcScabbardMatrix(kScabbardNodeNamesR, s_sheathedRotR, s_sheathedPosR);
 	m_swordWorldR = useBladeShape
 		? CalcBladeMatrix(m_bladeShapeR)	// モデルに含まれる剣：メッシュの位置そのもの
-		: CalcSwordMatrix(kSwordNodeNamesR, s_weaponRotR, s_weaponPosR, m_scabbardWorldR);
+		: CalcSwordMatrix(kSwordNodeNamesR, s_weaponRotR, s_weaponPosR);
 
 	// 左
-	m_scabbardWorldL = CalcScabbardMatrix(kScabbardNodeNamesL, s_sheathedRotL, s_sheathedPosL);
 	m_swordWorldL = (useBladeShape && m_bladeShapeL.nodeIndex >= 0)
 		? CalcBladeMatrix(m_bladeShapeL)
-		: CalcSwordMatrix(kSwordNodeNamesL, s_weaponRotL, s_weaponPosL, m_scabbardWorldL);
+		: CalcSwordMatrix(kSwordNodeNamesL, s_weaponRotL, s_weaponPosL);
 }
 
 const KdModelWork::Node* Player::FindFirstNode(const std::vector<std::string>& nodeNames) const
@@ -799,20 +800,8 @@ const KdModelWork::Node* Player::FindFirstNode(const std::vector<std::string>& n
 	return nullptr;
 }
 
-Math::Matrix Player::CalcScabbardMatrix(const std::vector<std::string>& nodeNames, const Math::Vector3& rot, const Math::Vector3& pos) const
+Math::Matrix Player::CalcSwordMatrix(const std::vector<std::string>& nodeNames, const Math::Vector3& rot, const Math::Vector3& pos) const
 {
-	const KdModelWork::Node* pNode = FindFirstNode(nodeNames);
-	if (!pNode) return Math::Matrix::Identity;
-
-	return CreateAttachMatrix(rot, pos, pNode->m_worldTransform, m_mWorld);
-}
-
-Math::Matrix Player::CalcSwordMatrix(const std::vector<std::string>& nodeNames, const Math::Vector3& rot, const Math::Vector3& pos,
-	const Math::Matrix& scabbardMat) const
-{
-	// 納刀時は鞘に合わせる
-	if (m_weaponState != WeaponState::Equipped) return scabbardMat;
-
 	const KdModelWork::Node* pNode = FindFirstNode(nodeNames);
 	if (!pNode) return Math::Matrix::Identity;
 
@@ -953,14 +942,21 @@ void Player::UpdateHpGage()
 	hpGage->SetHpRatio(std::max(ratio, 0.0f));
 }
 
+const std::vector<int>& Player::GetModeAttackTypes(BattleMode mode)
+{
+	return (mode == BattleMode::Punisher) ? kPunisherAttackTypes : kOperatorAttackTypes;
+}
+
 void Player::UpdateAttackTypeSwitch()
 {
-	// Cキーで攻撃パターンを切り替え（1～kAttackTypeNumをループ）
+	// Cキーで攻撃パターンを切り替え（今のモードで使える攻撃パターンの中をループ）
 	if (!m_attackTypeKey.Update()) return;
 
-	m_currentAttackType++;
-	if (m_currentAttackType > kAttackTypeNum) m_currentAttackType = 1;
+	const std::vector<int>& types = GetModeAttackTypes(m_battleMode);
+	int& index = m_modeAttackTypeIndex[static_cast<int>(m_battleMode)];
+	index = (index + 1) % static_cast<int>(types.size());
 
+	m_currentAttackType = std::clamp(types[index], 1, kAttackTypeNum);
 	s_currentAttackType = m_currentAttackType;
 
 	KdDebugGUI::Instance().AddLog
@@ -968,6 +964,76 @@ void Player::UpdateAttackTypeSwitch()
 		"[System] 攻撃タイプ切り替え: 0%d\n",
 		m_currentAttackType
 	);
+}
+
+void Player::SetBattleMode(BattleMode mode)
+{
+	m_battleMode = mode;
+
+	// 攻撃パターンを、そのモードで最後に選んでいたものにする
+	const std::vector<int>& types = GetModeAttackTypes(mode);
+	int& index = m_modeAttackTypeIndex[static_cast<int>(mode)];
+	index = std::clamp(index, 0, static_cast<int>(types.size()) - 1);
+	m_currentAttackType = std::clamp(types[index], 1, kAttackTypeNum);
+	s_currentAttackType = m_currentAttackType;
+
+	// 画面のモード表示を変える
+	if (auto atbGage = m_wpAtbGage.lock())
+	{
+		atbGage->SetPunisherMode(mode == BattleMode::Punisher);
+	}
+}
+
+float Player::GetModeMoveRate() const
+{
+	return (m_battleMode == BattleMode::Punisher) ? kPunisherMoveRate : 1.0f;
+}
+
+void Player::UpdateModeSwitch()
+{
+	// Eキーが押されたら、オペレーター ⇔ パニッシャー を切り替える
+	// （キーの状態は毎フレーム更新する。倒れている時は切り替えない）
+	if (!m_modeKey.Update() || IsDead()) return;
+
+	bool toPunisher = (m_battleMode == BattleMode::Operator);
+	SetBattleMode(toPunisher ? BattleMode::Punisher : BattleMode::Operator);
+
+	// 切り替えた合図のエフェクト（足元）
+	EffectPlayer::Play(EffectName::ModeChange, m_pos, 1.0f);
+
+	KdDebugGUI::Instance().AddLog
+	(
+		"[System] モード切り替え: %s\n",
+		toPunisher ? "PUNISHER" : "OPERATOR"
+	);
+}
+
+void Player::AddAtbGage(float val)
+{
+	m_atbGage = std::clamp(m_atbGage + val, 0.0f, kAtbBarMax * kAtbBarNum);
+}
+
+bool Player::UseAtbBar()
+{
+	if (m_atbGage < kAtbBarMax) return false;
+
+	m_atbGage -= kAtbBarMax;
+	return true;
+}
+
+void Player::UpdateAtb()
+{
+	// オペレーターの時は、時間でも少しずつたまる
+	if (m_battleMode == BattleMode::Operator && !IsDead())
+	{
+		AddAtbGage(kAtbPassiveGain);
+	}
+
+	// UIへ「何本分たまっているか」を伝える（例：1.5 なら 1本目が満タン、2本目が半分）
+	if (auto atbGage = m_wpAtbGage.lock())
+	{
+		atbGage->SetAtbValue(m_atbGage / kAtbBarMax);
+	}
 }
 
 void Player::UpdateAwakeningInput()
@@ -997,11 +1063,13 @@ void Player::Release()
 {
 	m_model = nullptr;
 	m_swordModel = nullptr;
-	m_scabbardModel = nullptr;
 }
 
 void Player::ChangeState(const std::shared_ptr<PlayerState>& newState)
 {
+	// アビリティの攻撃中の印は、次のステートに入る時に消す（アビリティのステートが入る時にまた付ける）
+	m_isAbilityAttack = false;
+
 	m_state = newState;
 	if (m_state)
 	{
@@ -1029,16 +1097,6 @@ bool Player::CheckMoveInput() const
 bool Player::IsOnGround() const
 {
 	return m_gravity >= 0.0f && m_gravity <= kOnGroundGravityMax;
-}
-
-std::string Player::GetWeaponAnimName(const std::string& baseName) const
-{
-	if (m_weaponState == WeaponState::Equipped)
-	{
-		std::string combatName = kCombatAnimPrefix + baseName;
-		if (HasAnimation(combatName)) return combatName;
-	}
-	return baseName;
 }
 
 float Player::GetTakeoffFrame(const std::string& animName) const
@@ -1131,7 +1189,7 @@ void Player::PlayHitEffect(const std::string& effectName, const Math::Vector3& h
 	EffectPlayer::Play(name, mWorld);
 }
 
-bool Player::AttackOBB(const Math::Matrix& swordMatrix, bool isCritical, const std::string& hitEffectName)
+bool Player::AttackOBB(const Math::Matrix& swordMatrix, bool isCritical, const std::string& hitEffectName, float damageRate)
 {
 	// 刃の根元から先端までを囲む、Y軸方向に長い箱
 	float obbOffsetY = (m_swordBladeBaseY + m_swordBladeTipY) * 0.5f;
@@ -1148,7 +1206,10 @@ bool Player::AttackOBB(const Math::Matrix& swordMatrix, bool isCritical, const s
 	}
 
 	bool isHit = false;
-	int damage = isCritical ? kCriticalAttackDamage : kAttackDamage;
+	// ダメージ（パニッシャーは重い攻撃なので倍率をかける）
+	float modeRate = (m_battleMode == BattleMode::Punisher) ? kPunisherDamageRate : 1.0f;
+	int baseDamage = isCritical ? kCriticalAttackDamage : kAttackDamage;
+	int damage = static_cast<int>(std::round(baseDamage * modeRate * damageRate));
 
 	std::list<KdCollider::CollisionResult> retList;
 	for (auto& obj : SceneManager::Instance().GetObjList())
@@ -1163,6 +1224,15 @@ bool Player::AttackOBB(const Math::Matrix& swordMatrix, bool isCritical, const s
 
 		enemy->OnDamage(damage, isCritical);
 		isHit = true;
+
+		// 攻撃を当てるとATBゲージがたまる（パニッシャーは多くたまる。アビリティの攻撃ではたまらない）
+		if (!m_isAbilityAttack)
+		{
+			float gain = kAtbHitGain;
+			if (m_battleMode == BattleMode::Punisher) gain *= kPunisherAtbHitRate;
+			if (isCritical) gain *= kAtbCriticalRate;
+			AddAtbGage(gain);
+		}
 
 		// 当たった位置にヒットエフェクト
 		// （敵は当たると少しの間無敵になるので、同じ敵に毎フレーム出続けることはない）
@@ -1212,7 +1282,7 @@ bool Player::MoveProcess(bool moveByCode)
 	// 座標移動（ルートモーションで動く時は、ここでは動かさない）
 	if (moveByCode)
 	{
-		float moveSpeed = m_isAwakening ? kAwakeningMoveSpeed : kMoveSpeed;
+		float moveSpeed = (m_isAwakening ? kAwakeningMoveSpeed : kMoveSpeed) * GetModeMoveRate();
 		m_pos += dir * moveSpeed;
 	}
 	return true;

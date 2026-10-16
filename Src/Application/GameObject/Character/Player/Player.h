@@ -2,16 +2,18 @@
 #include "../Base/BaseChara.h"
 #include "../../../Utility/InputHelper.h"
 
-enum class WeaponState
+// バトルモード（FF7リメイクのクラウドのように、Eキーで切り替える）
+enum class BattleMode
 {
-	Sheathed,	// 収めている状態
-	Equipped	// 装備している状態
+	Operator,	// オペレーターモード：素早く動ける。時間でもATBゲージがたまる
+	Punisher	// パニッシャーモード：動きは遅いが攻撃が重い。攻撃を当てるとATBゲージが多くたまる
 };
 
 class TPSCamera;
 class PlayerState;
 class BaseScene;
 class HPGage;
+class ATBGage;
 
 class Player : public BaseChara
 {
@@ -36,9 +38,9 @@ public:
 
 	// 入力関連
 	bool CheckMoveInput() const;
-	bool CheckEquipInput()	{ return m_equipKey.Update(); }
 	bool CheckAttackInput()	{ return m_attackKey.Update(); }
 	bool CheckJumpInput()	{ return m_jumpKey.Update(); }
+	bool CheckAbilityInput()	{ return m_abilityKey.Update(); }	// 右クリック（アビリティ）
 	// 入力方向へ向きを変え、moveByCode が true なら決まった速さで移動する
 	// （false の時は向きを変えるだけ。移動はルートモーションに任せる）
 	// 入力が無ければ false を返す
@@ -51,18 +53,25 @@ public:
 	const Math::Vector3& GetLastMoveDelta() const { return m_lastMoveDelta; }
 
 	// ステート（アニメーション）関連
-	WeaponState GetWeaponState() const { return m_weaponState; }
-	void SetWeaponState(WeaponState state) { m_weaponState = state; }
-	bool IsCombatMode() const { return m_isCombatMode; }
-	void SetCombatMode(bool isCombat) { m_isCombatMode = isCombat; }
-	float GetEquipFrame() const { return m_equipFrame; }
-	float GetUnequipFrame() const { return m_unequipFrame; }
 	float GetGravity() const { return m_gravity; }
 	bool IsOnGround() const;	// 接地中（ジャンプ可能）かどうか
 
-	// 武器の装備状態に応じたアニメーション名を取得
-	// 装備中は "Combat_" 付きのものを返す（用意されていなければ通常版）
-	std::string GetWeaponAnimName(const std::string& baseName) const;
+	// バトルモード（オペレーター / パニッシャー）
+	BattleMode GetBattleMode() const { return m_battleMode; }
+	bool IsPunisherMode() const { return m_battleMode == BattleMode::Punisher; }
+	void SetBattleMode(BattleMode mode);			// モードを変える（攻撃パターンもそのモードのものに変わる）
+	float GetModeMoveRate() const;					// 今のモードの移動の速さの倍率
+
+	// ATBゲージ（1本 = kAtbBarMax。kAtbBarNum 本までためられる）
+	static constexpr int	kAtbBarNum	= 2;
+	static constexpr float	kAtbBarMax	= 100.0f;
+	float GetAtbGage() const { return m_atbGage; }
+	int GetAtbBarCount() const { return static_cast<int>(m_atbGage / kAtbBarMax); }	// たまっている本数
+	void AddAtbGage(float val);
+	bool UseAtbBar();								// 1本使う（足りなければ false）
+
+	// アビリティの攻撃中か（アビリティの攻撃ではATBゲージはたまらない）
+	void SetAbilityAttack(bool isAbility) { m_isAbilityAttack = isAbility; }
 
 	// 着地アニメーションで両足が接地しているフレーム
 	float GetLandingFrame(const std::string& animName) const;
@@ -97,7 +106,8 @@ public:
 
 	// ボックス（OBB）による攻撃判定
 	// 敵に当たったら、その位置に hitEffectName のエフェクトを出す（空ならいつものヒットエフェクト）
-	bool AttackOBB(const Math::Matrix& swordMatrix, bool isCritical, const std::string& hitEffectName = "");
+	// damageRate：ダメージの倍率（アビリティなど）
+	bool AttackOBB(const Math::Matrix& swordMatrix, bool isCritical, const std::string& hitEffectName = "", float damageRate = 1.0f);
 
 	// 攻撃が当たった位置に、プレイヤーの攻撃の向きでヒットエフェクトを出す
 	void PlayHitEffect(const std::string& effectName, const Math::Vector3& hitPos, bool isCritical) const;
@@ -134,12 +144,6 @@ public:
 	static	Math::Vector3			s_weaponPosR;
 	static	Math::Vector3			s_weaponRotL;
 	static	Math::Vector3			s_weaponPosL;
-
-	// 納刀位置
-	static	Math::Vector3			s_sheathedRotR;
-	static	Math::Vector3			s_sheathedPosR;
-	static	Math::Vector3			s_sheathedRotL;
-	static	Math::Vector3			s_sheathedPosL;
 
 	static int						s_currentAttackType;		// 現在の攻撃パターン
 
@@ -187,6 +191,15 @@ private:
 	void UpdateHpGage();
 	void UpdateAttackTypeSwitch();
 
+	// Eキーでバトルモードを切り替える
+	void UpdateModeSwitch();
+
+	// ATBゲージを時間でためて、UIに伝える
+	void UpdateAtb();
+
+	// 今のモードで使える攻撃パターンの一覧
+	static const std::vector<int>& GetModeAttackTypes(BattleMode mode);
+
 	// 剣の軌跡（1本分）
 	struct SwordTrail
 	{
@@ -210,11 +223,9 @@ private:
 	// 入力方向（ローカル座標 X:左右 Z:前後）を取得
 	Math::Vector3 GetInputDir() const;
 
-	// 鞘・剣の行列を計算
+	// 剣の行列を計算
 	// （nodeNames を上から順に探し、最初に見つかったノードに付ける）
-	Math::Matrix CalcScabbardMatrix(const std::vector<std::string>& nodeNames, const Math::Vector3& rot, const Math::Vector3& pos) const;
-	Math::Matrix CalcSwordMatrix(const std::vector<std::string>& nodeNames, const Math::Vector3& rot, const Math::Vector3& pos,
-		const Math::Matrix& scabbardMat) const;
+	Math::Matrix CalcSwordMatrix(const std::vector<std::string>& nodeNames, const Math::Vector3& rot, const Math::Vector3& pos) const;
 
 	// 候補の名前を上から順に探し、最初に見つかったノードを返す（無ければ nullptr）
 	const KdModelWork::Node* FindFirstNode(const std::vector<std::string>& nodeNames) const;
@@ -253,10 +264,7 @@ private:
 	static std::shared_ptr<KdTexture> CreateSwordTrailTexture();
 
 
-	WeaponState						m_weaponState = WeaponState::Sheathed;
-
 	std::shared_ptr<KdModelData>	m_swordModel = nullptr;
-	std::shared_ptr<KdModelData>	m_scabbardModel = nullptr;
 	std::shared_ptr<PlayerState>	m_state = nullptr;
 	SwordTrail						m_swordTrailR;						// 右手の剣の軌跡
 	SwordTrail						m_swordTrailL;						// 左手の剣の軌跡
@@ -272,6 +280,7 @@ private:
 	float										 m_swordSlamFrame = -1.0f;	// 4-3 の End で剣を地面に叩きつけるフレーム
 
 	std::weak_ptr<HPGage>			m_wpHpGage;
+	std::weak_ptr<ATBGage>			m_wpAtbGage;
 	std::weak_ptr<TPSCamera>		m_camera;
 	Math::Matrix					m_swordWorldR;
 	Math::Matrix					m_swordWorldL;
@@ -290,8 +299,6 @@ private:
 	float							m_throwAngleL = 0.0f;		// 左の剣をまっすぐ前へ向ける角度（度）
 	float							m_swordBladeBaseY = 0.0f;	// 刃の根元
 	float							m_swordBladeTipY = 0.0f;	// 刃の先端
-	Math::Matrix					m_scabbardWorldR;
-	Math::Matrix					m_scabbardWorldL;
 
 	// ステータス系
 	float							m_angle = 0;				// Y軸回転角度（度）
@@ -302,15 +309,19 @@ private:
 	int								m_currentAttackType = 1;	// 攻撃アニメーションの番号
 	int								m_hitStopTimer = 0;			// ヒットストップ用タイマー
 
+	// バトルモード・ATB
+	BattleMode						m_battleMode = BattleMode::Operator;
+	int								m_modeAttackTypeIndex[2] = { 0, 0 };	// モードごとに、今選んでいる攻撃パターン（一覧の何番目か）
+	float							m_atbGage = 0.0f;			// ATBゲージ（0 ～ kAtbBarMax × kAtbBarNum）
+	bool							m_isAbilityAttack = false;	// アビリティの攻撃中か
+
 	// フラグ関係
-	bool							m_isCombatMode = false;		// 戦闘モードかどうか
 	bool							m_isAwakening = false;		// 覚醒中かどうか
-	float							m_equipFrame = 30.0f;		// 装備アニメーションのフレーム数
-	float							m_unequipFrame = 25.0f;		// 収めるアニメーションのフレーム数
 
 	// 入力（押した瞬間の判定用）
 	InputHelper::KeyTrigger			m_attackKey{ VK_LBUTTON };
-	InputHelper::KeyTrigger			m_equipKey{ 'E' };
+	InputHelper::KeyTrigger			m_abilityKey{ VK_RBUTTON };
+	InputHelper::KeyTrigger			m_modeKey{ 'E' };
 	InputHelper::KeyTrigger			m_jumpKey{ VK_SPACE };
 	InputHelper::KeyTrigger			m_attackTypeKey{ 'C' };
 

@@ -37,7 +37,7 @@ public:
 	std::unordered_map<std::string, AttackParam>& GetAttackMap() { return m_attackParams; }
 
 	float m_evadeSpeed = 0.4f;
-	float m_dashSpeed = 0.5f;
+	float m_dashSpeed = 0.5f;		// ※ダッシュは削除したので使っていない（PlayerParams.txt の形式を変えないために残している）
 	float m_attackRootScale = 1.0f;
 
 private:

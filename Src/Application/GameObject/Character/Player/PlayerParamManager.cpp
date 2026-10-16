@@ -48,8 +48,6 @@ const std::vector<PlayerParamManager::WeaponParamEntry>& PlayerParamManager::Get
 	{
 		{ "WeaponR",	&Player::s_weaponPosR,		&Player::s_weaponRotR },
 		{ "WeaponL",	&Player::s_weaponPosL,		&Player::s_weaponRotL },
-		{ "SheathedR",	&Player::s_sheathedPosR,	&Player::s_sheathedRotR },
-		{ "SheathedL",	&Player::s_sheathedPosL,	&Player::s_sheathedRotL },
 	};
 	return entries;
 }
@@ -84,13 +82,18 @@ void PlayerParamManager::LoadWeaponParams(const std::string& filepath)
 
 	while (std::getline(file, line))
 	{
-		// どの武器のブロックかを判定
-		for (const auto& entry : GetWeaponParamEntries())
+		// ブロックの始まり（"名前": {）なら、どの武器のブロックかを判定
+		// 知らない名前のブロック（前に使っていた納刀位置 "SheathedR" など）は読み飛ばす
+		if (line.find("\":") != std::string::npos && line.find('{') != std::string::npos)
 		{
-			if (line.find("\"" + std::string(entry.key) + "\"") != std::string::npos)
+			pCurrent = nullptr;
+			for (const auto& entry : GetWeaponParamEntries())
 			{
-				pCurrent = &entry;
-				break;
+				if (line.find("\"" + std::string(entry.key) + "\"") != std::string::npos)
+				{
+					pCurrent = &entry;
+					break;
+				}
 			}
 		}
 

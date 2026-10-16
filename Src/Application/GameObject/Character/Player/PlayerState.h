@@ -18,7 +18,7 @@ public:
 
 protected:
 
-	// 前方へ減速しながら移動する（回避・ダッシュ用）
+	// 前方へ減速しながら移動する（回避用）
 	static void MoveForwardWithDecay(Player* player, float baseSpeed, float moveFrame, bool isFlat);
 
 	// 待機・移動中に共通の入力によるステート遷移（遷移した場合は true）
@@ -27,6 +27,9 @@ protected:
 	// ルートモーション（アニメーションの動きどおりに移動する）を使う設定にする
 	// プレイヤーの動きはすべてこれを使う（倍率は 1.0 ＝ アニメーションと同じ距離）
 	static void UseRootMotion(Player* player);
+
+	// ATBゲージを1本使ってアビリティを出す（ゲージが足りなければ出さずに false）
+	static bool TryUseAbility(Player* player);
 };
 
 // 派生クラス
@@ -43,20 +46,6 @@ public:
 	void ChangeState(Player* player) override;
 	void Update(Player* player) override;
 
-};
-
-class PlayerStateEquip : public PlayerState
-{
-public:
-	void ChangeState(Player* player) override;
-	void Update(Player* player) override;
-};
-
-class PlayerStateUnequip : public PlayerState
-{
-public:
-	void ChangeState(Player* player) override;
-	void Update(Player* player) override;
 };
 
 class PlayerStateComboAttack : public PlayerState
@@ -101,6 +90,7 @@ private:
 	int m_subStep = 0;
 	bool m_isCritical = false;
 	bool m_nextAttackReserved = false;
+	bool m_abilityReserved = false;		// 攻撃中に右クリックされた（キャンセルできるフレームでアビリティを出す）
 
 	// エフェクト再生フラグ
 	bool m_isEffect = false;
@@ -142,11 +132,15 @@ public:
 	void Update(Player* player) override;
 };
 
-class PlayerStateDash : public PlayerState
+// アビリティ（ATBゲージを1本使って出す強力な技）
+class PlayerStateAbility : public PlayerState
 {
 public:
 	void ChangeState(Player* player) override;
 	void Update(Player* player) override;
+
+private:
+	bool m_isCritical = false;
 };
 
 
