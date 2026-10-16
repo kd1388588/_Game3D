@@ -459,6 +459,27 @@ void Player::Init()
 		OutputDebugStringA(("踏み切りフレーム: " + animName + " = " + std::to_string(frame) + "\n").c_str());
 	}
 
+	// ジャンプのアニメーションで、腰がどれだけ上下するかを出力ウィンドウに表示（ジャンプの調整用）
+	// （上がる量が大きいほど、アニメーション自体に「跳ぶ高さ」が入っている）
+	for (const char* animName : { "Combat_JumpStart", "Combat_JumpLoop", "Combat_JumpEnd" })
+	{
+		auto it = m_animMap.find(animName);
+		if (it == m_animMap.end() || !it->second) continue;
+
+		float minY = std::numeric_limits<float>::max();
+		float maxY = -std::numeric_limits<float>::max();
+		for (float t = 0.0f; t <= it->second->m_maxLength; t += 1.0f)
+		{
+			Math::Vector3 pelvisPos;
+			SampleMotionPos(*it->second, t, &pelvisPos);
+			minY = std::min(minY, pelvisPos.y - m_pelvisRestPos.y);
+			maxY = std::max(maxY, pelvisPos.y - m_pelvisRestPos.y);
+		}
+		OutputDebugStringA(("ジャンプの腰の上下: " + std::string(animName)
+			+ " 長さ " + std::to_string(it->second->m_maxLength)
+			+ " / 最低 " + std::to_string(minY) + " / 最高 " + std::to_string(maxY) + "\n").c_str());
+	}
+
 	// 溜め攻撃（4-3）で、剣を地面に叩きつけるフレームを事前に計算（軌跡をそこまで出すため）
 	m_swordSlamFrame = CalcSwordLowestFrame(kSlamAnimName);
 	OutputDebugStringA(("剣を叩きつけるフレーム: " + std::to_string(m_swordSlamFrame) + "\n").c_str());
@@ -1070,6 +1091,10 @@ void Player::ChangeState(const std::shared_ptr<PlayerState>& newState)
 	// アビリティの攻撃中の印は、次のステートに入る時に消す（アビリティのステートが入る時にまた付ける）
 	m_isAbilityAttack = false;
 
+	// ジャンプ用の設定（空中で腰が上がらないようにする・速く落ちる）も、ステートが変わったら元に戻す
+	SetAirPelvisLock(false);
+	SetFallGravityRate(1.0f);
+
 	m_state = newState;
 	if (m_state)
 	{
@@ -1268,16 +1293,7 @@ bool Player::MoveProcess(bool moveByCode)
 	if (!GetMoveInputDir(dir)) return false;
 
 	// 旋回（1フレームに最大kMaxTurnAngle度まで）
-	Math::Matrix nowRot = Math::Matrix::CreateRotationY(GetAngleRad());
-	Math::Vector3 nowDir = Math::Vector3::TransformNormal(Math::Vector3(0, 0, 1), nowRot);
-	float angle = DirectX::XMConvertToDegrees(acos(std::clamp(nowDir.Dot(dir), -1.0f, 1.0f)));
-
-	if (angle >= kMinTurnAngle)
-	{
-		angle = std::min(angle, kMaxTurnAngle);
-		if (nowDir.Cross(dir).y >= 0) { m_angle += angle; }
-		else { m_angle -= angle; }
-	}
+	TurnToward(dir, kMaxTurnAngle);
 
 	// 座標移動（ルートモーションで動く時は、ここでは動かさない）
 	if (moveByCode)
@@ -1286,6 +1302,19 @@ bool Player::MoveProcess(bool moveByCode)
 		m_pos += dir * moveSpeed;
 	}
 	return true;
+}
+
+void Player::TurnToward(const Math::Vector3& dir, float maxAngle)
+{
+	Math::Matrix nowRot = Math::Matrix::CreateRotationY(GetAngleRad());
+	Math::Vector3 nowDir = Math::Vector3::TransformNormal(Math::Vector3(0, 0, 1), nowRot);
+	float angle = DirectX::XMConvertToDegrees(acos(std::clamp(nowDir.Dot(dir), -1.0f, 1.0f)));
+
+	if (angle < kMinTurnAngle) return;
+
+	angle = std::min(angle, maxAngle);
+	if (nowDir.Cross(dir).y >= 0) { m_angle += angle; }
+	else { m_angle -= angle; }
 }
 
 void Player::OnDamage(int damage, bool isCritical)

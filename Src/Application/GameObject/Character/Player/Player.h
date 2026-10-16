@@ -46,6 +46,12 @@ public:
 	// 入力が無ければ false を返す
 	bool MoveProcess(bool moveByCode = true);
 
+	// dir の方向へ向きを変える（1フレームに maxAngle 度まで）
+	void TurnToward(const Math::Vector3& dir, float maxAngle);
+
+	// 覚醒の入力（U：ゲージ満タン（デバッグ用）、G：発動）
+	void UpdateAwakeningInput();
+
 	// カメラの向きを基準にした入力方向（長さ1）を取得する（入力が無ければ false）
 	bool GetMoveInputDir(Math::Vector3& outDir) const;
 
@@ -187,7 +193,6 @@ private:
 
 	// 覚醒中のオーラエフェクトを更新（覚醒中は再生し続け、終わったら止める）
 	void UpdateAwakeningEffect();
-	void UpdateAwakeningInput();
 	void UpdateHpGage();
 	void UpdateAttackTypeSwitch();
 

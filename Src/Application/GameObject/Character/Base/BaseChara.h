@@ -54,6 +54,14 @@ public:
 		if (extract && !m_isMotionNodeReady) FindMotionNodes();
 	}
 
+	// 空中で、アニメーションで腰（体全体）が上がる分を止める
+	// （プログラムでキャラを上に飛ばしているので、アニメーションでも上がると2重に高く見えるため）
+	// true にした時の腰の高さ（立ち位置より低ければ立ち位置）より上には、腰が上がらなくなる
+	void SetAirPelvisLock(bool isLock);
+
+	// 落下中の重力の倍率（1.0 で普通。大きくすると、上がる時より落ちる時が速くなる）
+	void SetFallGravityRate(float rate) { m_fallGravityRate = rate; }
+
 	// アニメーションに「前へ進む動き」（腰の水平移動）が入っているか
 	// （その場で足踏みするだけのアニメーションなら false）
 	bool HasHorizontalMotion(const std::string& animName) const;
@@ -126,6 +134,9 @@ protected:
 	Math::Vector3					m_pelvisRestPos = Math::Vector3::Zero;	// 腰の立ち位置（モデルの初期姿勢）
 	float							m_prevMotionTime = -1.0f;		// 前回の再生時間（-1 は切り替え直後）
 	Math::Vector3					m_prevMotionPos = Math::Vector3::Zero;	// 前回の腰の水平位置
+	float							m_pelvisMaxY = -1.0f;			// 空中で腰が上がれる高さ（-1 は制限なし）
+
+	float							m_fallGravityRate = 1.0f;		// 落下中の重力の倍率
 
 	std::unordered_map<std::string, std::shared_ptr<KdAnimationData>> m_animMap;
 	std::string						m_currentAnimName = "";

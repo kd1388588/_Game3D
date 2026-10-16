@@ -96,8 +96,27 @@ void BaseChara::Update()
 		m_model->CalcNodeMatrices();
 	}
 
-	m_gravity += kGravityAccel;
+	// 落下中（m_gravity が正）だけ、重力の倍率をかける
+	// （地面にいる時は毎フレーム 0 に戻るので、接地の判定には影響しない）
+	float accel = (m_gravity > 0.0f) ? kGravityAccel * m_fallGravityRate : kGravityAccel;
+	m_gravity += accel;
 	m_pos.y -= m_gravity;
+}
+
+void BaseChara::SetAirPelvisLock(bool isLock)
+{
+	if (!isLock)
+	{
+		m_pelvisMaxY = -1.0f;
+		return;
+	}
+
+	if (!m_isMotionNodeReady) FindMotionNodes();
+	if (!m_model || m_pelvisNodeIndex < 0 || m_pelvisNodeIndex >= static_cast<int>(m_model->WorkNodes().size())) return;
+
+	// 今の腰の高さ（踏み切った瞬間の高さ）を上限にする（立ち位置より低い時は立ち位置）
+	float nowY = m_model->WorkNodes()[m_pelvisNodeIndex].m_localTransform.Translation().y;
+	m_pelvisMaxY = std::max(nowY, m_pelvisRestPos.y);
 }
 
 void BaseChara::DrawLit()
@@ -410,7 +429,8 @@ int BaseChara::PredictLandingFrames(int maxFrames) const
 	{
 		if (height <= gravity + kEnableStepHeight) return frame;
 
-		gravity += kGravityAccel;
+		// Update と同じく、落下中は重力の倍率をかける
+		gravity += (gravity > 0.0f) ? kGravityAccel * m_fallGravityRate : kGravityAccel;
 		height -= gravity;
 	}
 
@@ -591,6 +611,12 @@ void BaseChara::UpdatePelvisMotion(float poseTime)
 	{
 		pelvisPos.x = animPelvisPos.x;
 		pelvisPos.z = animPelvisPos.z;
+	}
+
+	// ⑤ 空中では、アニメーションで腰が上がる分を止める（高さはプログラムのジャンプに任せる）
+	if (m_pelvisMaxY >= 0.0f)
+	{
+		pelvisPos.y = std::min(pelvisPos.y, m_pelvisMaxY);
 	}
 	nodes[m_pelvisNodeIndex].m_localTransform.Translation(pelvisPos);
 }

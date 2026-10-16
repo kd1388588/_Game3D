@@ -25,12 +25,18 @@ namespace
 	constexpr float kFallingGravity			= 0.011f;	// これを超えたら落下中とみなす
 	constexpr int	kMaxLandingPredictFrame	= 120;		// 着地予測を行う最大フレーム数
 	constexpr float kLandingBlendFrame		= 3.0f;		// 空中ループ→着地アニメのブレンドフレーム数
+	constexpr float kJumpStartBlendFrame	= 4.0f;		// 待機・走り→ジャンプ開始のブレンドフレーム数
+	constexpr float kAirLoopBlendFrame		= 8.0f;		// ジャンプ開始→空中ループのブレンドフレーム数（パッと切り替わらないように）
+	constexpr float kFallGravityRate		= 1.5f;		// 落ちる時の重力の倍率（上がる時より速く落ちて、ふわふわしない）
 
 	// 空中での移動
 	constexpr float kAirMinSpeed			= 0.06f;	// その場ジャンプから入力した時の速さ（1フレームの移動量）
 	constexpr float kAirMaxSpeed			= 0.3f;		// 空中の速さの上限
 	constexpr float kAirSteerRate			= 0.08f;	// 入力の方向へ曲がる強さ（0～1）
-	constexpr float kAirDrag				= 0.98f;	// 入力が無い時の減速（1フレームごとに掛ける）
+	constexpr float kAirDrag				= 0.99f;	// 入力が無い時の減速（1フレームごとに掛ける。空中で急に止まらないよう弱め）
+	constexpr float kAirMaxTurnAngle		= 6.0f;		// 空中で1フレームに向きを変えられる角度（度）
+	constexpr float kAirFaceMinSpeed		= 0.02f;	// これより遅い時は向きを変えない（その場ジャンプで体がぶれないように）
+	constexpr float kLandingSlideDrag		= 0.75f;	// 着地した後、勢いを少しだけ残して止まる（1フレームごとに掛ける）
 
 	// 走り（ルートモーション）
 	constexpr float kRunBlendFrame			= 6.0f;		// 待機⇔走りのブレンドフレーム数
@@ -534,13 +540,8 @@ void PlayerStateJump::ChangeState(Player* player)
 	const std::string& startAnimName = kJumpStartAnimName;
 	m_takeoffFrame = player->GetTakeoffFrame(startAnimName);
 	m_isTakeoffDone = false;
-	if (m_takeoffFrame <= 0.0f)
-	{
-		player->ExecJump(kJumpPower);
-		m_isTakeoffDone = true;
-	}
 
-	player->ChangeAnimation(startAnimName, false, true);
+	player->ChangeAnimation(startAnimName, false, true, kJumpStartBlendFrame);
 	player->SetAnimationSpeed(1.0f);
 
 	// 空中の移動は「踏み切った時の勢い」で行うので、アニメーションの動きでは移動しない
@@ -551,23 +552,52 @@ void PlayerStateJump::ChangeState(Player* player)
 	// 走っていた勢いをそのまま引き継ぐ
 	m_airVelocity = player->GetLastMoveDelta();
 	m_airSpeed = std::clamp(m_airVelocity.Length(), kAirMinSpeed, kAirMaxSpeed);
+
+	// 落ちる時は速く落とす（着地の予測もこの重力で計算される）
+	player->SetFallGravityRate(kFallGravityRate);
+
+	// 踏み切りを待たないアニメーションなら、すぐ跳ぶ
+	if (m_takeoffFrame <= 0.0f)
+	{
+		Takeoff(player);
+	}
+}
+
+void PlayerStateJump::Takeoff(Player* player)
+{
+	player->ExecJump(kJumpPower);
+	m_isTakeoffDone = true;
+
+	// ここから先は、アニメーションで腰が上がる分を止める
+	// （高さはプログラムのジャンプで出しているので、アニメーションでも上がると2重に高くなり、
+	//   空中ループに切り替わった時に体がガクッと下がって見えるため）
+	player->SetAirPelvisLock(true);
 }
 
 void PlayerStateJump::UpdateAirMove(Player* player)
 {
-	// 入力の方向へ向きを変える（覚醒の入力もここで受け付ける）
-	bool hasInput = player->MoveProcess(false);
+	// 覚醒の入力も受け付ける
+	player->UpdateAwakeningInput();
 
 	Math::Vector3 inputDir;
-	if (hasInput && player->GetMoveInputDir(inputDir))
+	if (player->GetMoveInputDir(inputDir))
 	{
 		// 速さを保ったまま、入力の方向へ少しずつ曲がる
 		m_airVelocity = Math::Vector3::Lerp(m_airVelocity, inputDir * m_airSpeed, kAirSteerRate);
 	}
 	else
 	{
-		// 入力が無ければ、勢いをゆっくり弱める
+		// 入力が無くても、勢いはほとんど残す（空中で急にブレーキがかからないように）
 		m_airVelocity *= kAirDrag;
+	}
+
+	// 体の向きは「入力の方向」ではなく「実際に進んでいる方向」に合わせる
+	// （前は入力の方向へすぐ向いていたので、体の向きと進む方向がずれて、空中で横滑りして見えていた）
+	if (m_airVelocity.LengthSquared() > kAirFaceMinSpeed * kAirFaceMinSpeed)
+	{
+		Math::Vector3 moveDir = m_airVelocity;
+		moveDir.Normalize();
+		player->TurnToward(moveDir, kAirMaxTurnAngle);
 	}
 
 	player->SetPos(player->GetPos() + m_airVelocity);
@@ -586,8 +616,7 @@ void PlayerStateJump::Update(Player* player)
 	{
 		if (player->GetAnimTime() >= m_takeoffFrame)
 		{
-			player->ExecJump(kJumpPower);
-			m_isTakeoffDone = true;
+			Takeoff(player);
 		}
 		return;
 	}
@@ -600,7 +629,7 @@ void PlayerStateJump::Update(Player* player)
 		// ジャンプ開始アニメが終わった・落下し始めたら空中ループへ
 		if (!m_isLandingAnimStarted && (player->IsAnimEnd() || isFallingNow) && player->GetAnimTime() > 0.0f)
 		{
-			player->ChangeAnimation(kJumpLoopAnimName, true);
+			player->ChangeAnimation(kJumpLoopAnimName, true, false, kAirLoopBlendFrame);
 		}
 
 		//// 2段ジャンプの入力検知
@@ -627,6 +656,9 @@ void PlayerStateJump::Update(Player* player)
 			}
 			m_jumpPhase = JumpPhaseLanding;
 
+			// 地面に着いたので、腰の高さはアニメーションどおりに戻す（着地でひざを曲げる動きのため）
+			player->SetAirPelvisLock(false);
+
 			// 着地エフェクト（足元に出す）
 			EffectPlayer::Play(EffectName::Landing, player->GetPos(), kLandingEffectScale);
 		}
@@ -640,6 +672,10 @@ void PlayerStateJump::Update(Player* player)
 	// --------------------------------------------------
 	else if (m_jumpPhase == JumpPhaseLanding) // 【着地硬直】
 	{
+		// 空中の勢いを少しだけ残して止まる（着地の瞬間にピタッと止まらないように）
+		m_airVelocity *= kLandingSlideDrag;
+		player->SetPos(player->GetPos() + m_airVelocity);
+
 		if (player->CheckMoveInput())
 		{
 			player->ChangeState(std::make_shared<PlayerStateRun>());

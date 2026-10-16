@@ -168,6 +168,9 @@ private:
 	// 空中での移動（踏み切った時の勢いを保ち、入力の方向へ少しずつ曲がる）
 	void UpdateAirMove(Player* player);
 
+	// 踏み切る（キャラを上に飛ばす）
+	void Takeoff(Player* player);
+
 	int  m_jumpPhase = JumpPhaseNone;
 	int  m_jumpCount = 0;
 	bool m_isFalling = false;
