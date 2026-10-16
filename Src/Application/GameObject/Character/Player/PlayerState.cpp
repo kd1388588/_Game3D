@@ -26,6 +26,8 @@ namespace
 	constexpr int	kMaxLandingPredictFrame	= 120;		// 着地予測を行う最大フレーム数
 	constexpr float kLandingBlendFrame		= 3.0f;		// 空中ループ→着地アニメのブレンドフレーム数
 	constexpr float kJumpStartBlendFrame	= 4.0f;		// 待機・走り→ジャンプ開始のブレンドフレーム数
+	constexpr float kJumpWindupFrames		= 6.0f;		// ジャンプの「ため」を見せるフレーム数（アニメーションのためが長い時は、途中から再生する）
+	constexpr int	kMaxLandingLeadFrames	= 10;		// 着地アニメーションを、着地の何フレーム前まで早めに始めてよいか
 	constexpr float kAirLoopBlendFrame		= 8.0f;		// ジャンプ開始→空中ループのブレンドフレーム数（パッと切り替わらないように）
 	constexpr float kFallGravityRate		= 1.5f;		// 落ちる時の重力の倍率（上がる時より速く落ちて、ふわふわしない）
 
@@ -544,6 +546,13 @@ void PlayerStateJump::ChangeState(Player* player)
 	player->ChangeAnimation(startAnimName, false, true, kJumpStartBlendFrame);
 	player->SetAnimationSpeed(1.0f);
 
+	// アニメーションの「ため」（しゃがんで力をためる動き）が長いと、ボタンを押してから跳ぶまで待たされるので、
+	// 踏み切りの kJumpWindupFrames フレーム前から再生する
+	if (m_takeoffFrame > kJumpWindupFrames)
+	{
+		player->SetAnimTime(m_takeoffFrame - kJumpWindupFrames);
+	}
+
 	// 空中の移動は「踏み切った時の勢い」で行うので、アニメーションの動きでは移動しない
 	// （腰はキャラの位置に固定し、アニメーションの切り替えで体がずれないようにする）
 	UseRootMotion(player);
@@ -626,8 +635,12 @@ void PlayerStateJump::Update(Player* player)
 	// --------------------------------------------------
 	if (m_jumpPhase == JumpPhaseAir) // 【空中】
 	{
-		// ジャンプ開始アニメが終わった・落下し始めたら空中ループへ
-		if (!m_isLandingAnimStarted && (player->IsAnimEnd() || isFallingNow) && player->GetAnimTime() > 0.0f)
+		// ジャンプ開始アニメが終わった・体が一番高くなった・落下し始めたら空中ループへ
+		// （ジャンプ開始アニメの後半に、体が下がって着地するような動きが入っていると、空中でつぶれて見えるため、
+		//   体が一番高くなった所で切り替える）
+		float airEndFrame = player->GetJumpAirEndFrame();
+		bool isStartAnimAirEnd = (airEndFrame > m_takeoffFrame) && (player->GetAnimTime() >= airEndFrame);
+		if (!m_isLandingAnimStarted && (player->IsAnimEnd() || isFallingNow || isStartAnimAirEnd) && player->GetAnimTime() > 0.0f)
 		{
 			player->ChangeAnimation(kJumpLoopAnimName, true, false, kAirLoopBlendFrame);
 		}
@@ -695,6 +708,9 @@ void PlayerStateJump::TryStartLandingAnim(Player* player)
 	if (framesToLand < 0) return;
 
 	// 着地までに再生するフレーム数が、接地フレームより手前で収まるなら開始する
+	// （ただし早すぎると空中で着地の動きを始めてしまうので、kMaxLandingLeadFrames フレーム前まで）
+	if (framesToLand > kMaxLandingLeadFrames) return;
+
 	float landFrame = player->GetLandingFrame(kJumpEndAnimName);
 	if (static_cast<float>(std::max(framesToLand - 1, 0)) <= landFrame)
 	{

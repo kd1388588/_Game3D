@@ -130,7 +130,8 @@ namespace
 	// ※プレイヤーは常に剣を抜いているので、剣を持った（Combat_）アニメーションだけを使う
 	const std::vector<std::string> kLandingAnimNames	= { "Combat_JumpEnd" };
 	const std::vector<std::string> kTakeoffAnimNames	= { "Combat_JumpStart" };
-	constexpr float kMaxTakeoffFrame		= 15.0f;	// 踏み切りがこれより遅いアニメーションは、待たずにすぐ跳ぶ（操作の遅れを防ぐ）
+	constexpr float kMaxTakeoffFrame		= 60.0f;	// 踏み切りがこれより遅いアニメーションは、待たずにすぐ跳ぶ
+	// （ためが長いアニメーションでも、ためを途中から再生するので操作は遅れない（PlayerState.cpp の kJumpWindupFrames））
 
 	// 溜め攻撃（4-3）の最後で、剣を地面に叩きつけるアニメーション
 	const std::string kSlamAnimName			= "Attack_4_3_End";
@@ -457,6 +458,14 @@ void Player::Init()
 		float frame = CalcFootLiftFrame(animName, kFootNodeNames);
 		m_takeoffFrames[animName] = (frame >= 0.0f && frame <= kMaxTakeoffFrame) ? frame : 0.0f;
 		OutputDebugStringA(("踏み切りフレーム: " + animName + " = " + std::to_string(frame) + "\n").c_str());
+	}
+
+	// ジャンプ開始アニメーションで、踏み切った後に体が一番高くなるフレーム
+	// （それより後は、アニメーションの中で体が下がって着地する動きになっていることがあるので、空中ループに切り替える）
+	if (!kTakeoffAnimNames.empty() && HasAnimation(kTakeoffAnimNames[0]))
+	{
+		m_jumpAirEndFrame = CalcFootPeakFrame(kTakeoffAnimNames[0], kFootNodeNames, GetTakeoffFrame(kTakeoffAnimNames[0]));
+		OutputDebugStringA(("ジャンプ開始で体が一番高いフレーム: " + std::to_string(m_jumpAirEndFrame) + "\n").c_str());
 	}
 
 	// ジャンプのアニメーションで、腰がどれだけ上下するかを出力ウィンドウに表示（ジャンプの調整用）

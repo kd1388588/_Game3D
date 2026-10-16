@@ -15,6 +15,7 @@ namespace
 	constexpr int	kMaxSampleFrames		= 1000;		// アニメーションを調べる最大フレーム数
 	constexpr float kFootPlantTolerance		= 0.03f;	// 最も低い位置からこの高さ以内なら接地とみなす
 	constexpr float kFootLiftHeight			= 0.03f;	// 立っている高さよりこれ以上上がったら、足が地面から離れたとみなす
+	constexpr float kFootNearGroundHeight	= 0.1f;		// 最初のフレームで足がこの高さ以内なら「最初から着地している」とみなす
 
 	// リターゲット
 	const std::string kRootNodeName			= "root";
@@ -243,6 +244,21 @@ float BaseChara::CalcFootPlantFrame(const std::string& animName, const std::vect
 		}
 	}
 
+	// 最初のフレームで、すべての足が地面の近くにあれば「着地した瞬間から始まるアニメーション」とみなし、0 を返す
+	// （つま先→かかとの順に着く着地では、かかとが着く（一番低くなる）のが少し後のフレームになる。
+	//   そのフレームを着地とすると、着地のアニメーションを空中で早めに始めてしまい、
+	//   空中でひざを曲げて「つぶれる」ように見えてしまうため）
+	bool isStartOnGround = true;
+	for (size_t f = 0; f < footNum; ++f)
+	{
+		if (footHeights[0][f] > minHeights[f] + kFootNearGroundHeight)
+		{
+			isStartOnGround = false;
+			break;
+		}
+	}
+	if (isStartOnGround) return 0.0f;
+
 	// すべての足が地面についている最初のフレームを探す
 	for (size_t i = 0; i < frameTimes.size(); ++i)
 	{
@@ -287,6 +303,29 @@ float BaseChara::CalcFootLiftFrame(const std::string& animName, const std::vecto
 	}
 
 	return -1.0f;
+}
+
+float BaseChara::CalcFootPeakFrame(const std::string& animName, const std::vector<std::string>& footNodeNames, float startTime) const
+{
+	std::vector<float> frameTimes;
+	std::vector<std::vector<float>> footHeights;
+	if (!SampleNodeHeights(animName, footNodeNames, frameTimes, footHeights)) return -1.0f;
+
+	// 低い方の足の高さが、一番高くなるフレームを探す
+	float peakFrame = -1.0f;
+	float peakHeight = -std::numeric_limits<float>::max();
+	for (size_t i = 0; i < frameTimes.size(); ++i)
+	{
+		if (frameTimes[i] < startTime) continue;
+
+		float lowest = *std::min_element(footHeights[i].begin(), footHeights[i].end());
+		if (lowest > peakHeight)
+		{
+			peakHeight = lowest;
+			peakFrame = frameTimes[i];
+		}
+	}
+	return peakFrame;
 }
 
 bool BaseChara::FindGroundBelow(float range, Math::Vector3& outHitPos) const

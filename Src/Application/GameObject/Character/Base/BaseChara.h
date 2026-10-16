@@ -39,6 +39,10 @@ public:
 	// （ジャンプで、アニメーションの踏み切りに合わせて跳ぶために使う）
 	float CalcFootLiftFrame(const std::string& animName, const std::vector<std::string>& footNodeNames) const;
 
+	// startTime 以降で、指定した足の骨が一番高く上がるフレームを求める（見つからなければ -1）
+	// （ジャンプ開始のアニメーションで、体が一番高くなった所＝これ以降は下がり始める所を調べるために使う）
+	float CalcFootPeakFrame(const std::string& animName, const std::vector<std::string>& footNodeNames, float startTime) const;
+
 	// ルートモーション関連
 	void SetUseRootMotion(bool use) { m_useRootMotion = use; }
 	void SetRootMotionScale(float scale) { m_rootScale = scale; }
