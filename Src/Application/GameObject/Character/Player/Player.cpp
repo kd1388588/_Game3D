@@ -136,7 +136,14 @@ namespace
 	// 溜め攻撃（4-3）の最後で、剣を地面に叩きつけるアニメーション
 	const std::string kSlamAnimName			= "Attack_4_3_End";
 	constexpr float kSwordSlamTolerance		= 0.05f;	// 剣先が一番低い高さから、これ以内に来たら「叩きつけた」とみなす
+	// 足が地面に着いている・離れたかを調べる骨
+	// つま先の付け根（ball）を優先して使う。足首（foot）は、着地でひざを曲げるとかかとが浮いて高くなるので、
+	// 足首で調べると「まだ着地していない」と間違えてしまう（ball が無いモデルの時だけ foot を使う）
+	const std::vector<std::string> kToeNodeNames		= { "ball_l", "ball_r" };
 	const std::vector<std::string> kFootNodeNames		= { "foot_l", "foot_r" };
+
+	// 空中ループのアニメーション（空中で腰が上がってよい高さを、このアニメーションの腰の高さにする）
+	const std::string kAirLoopAnimName		= "Combat_JumpLoop";
 }
 
 // 読み込むアニメーションのリストを作成
@@ -450,23 +457,34 @@ void Player::Init()
 	OutputDebugStringA(("剣を投げる向きの補正: 右 " + std::to_string(m_throwAngleR)
 		+ " 度 / 左 " + std::to_string(m_throwAngleL) + " 度\n").c_str());
 
+	// 足の接地を調べる骨（つま先の付け根が無いモデルなら足首）
+	const std::vector<std::string>& groundNodeNames =
+		(FindNodeIndex(kToeNodeNames[0]) >= 0 && FindNodeIndex(kToeNodeNames[1]) >= 0) ? kToeNodeNames : kFootNodeNames;
+
 	// ジャンプ開始アニメーションで、足が地面から離れる（踏み切る）フレームを事前に計算
 	for (const auto& animName : kTakeoffAnimNames)
 	{
 		if (!HasAnimation(animName)) continue;
 
-		float frame = CalcFootLiftFrame(animName, kFootNodeNames);
+		float frame = CalcFootLiftFrame(animName, groundNodeNames);
 		m_takeoffFrames[animName] = (frame >= 0.0f && frame <= kMaxTakeoffFrame) ? frame : 0.0f;
 		OutputDebugStringA(("踏み切りフレーム: " + animName + " = " + std::to_string(frame) + "\n").c_str());
 	}
 
-	// ジャンプ開始アニメーションで、踏み切った後に体が一番高くなるフレーム
-	// （それより後は、アニメーションの中で体が下がって着地する動きになっていることがあるので、空中ループに切り替える）
-	if (!kTakeoffAnimNames.empty() && HasAnimation(kTakeoffAnimNames[0]))
+	// 空中で腰が上がってよい高さ ＝ 空中ループのアニメーションの腰の一番高い位置（立ち位置より低ければ立ち位置）
+	// （ジャンプ開始のアニメーションは、踏み切った後に腰が空中ループより高く上がってから下がる。
+	//   プログラムでもキャラを上に飛ばしているので、その分は止めて、2重に上下しないようにする）
+	m_airPelvisMaxY = m_pelvisRestPos.y;
+	if (auto it = m_animMap.find(kAirLoopAnimName); it != m_animMap.end() && it->second)
 	{
-		m_jumpAirEndFrame = CalcFootPeakFrame(kTakeoffAnimNames[0], kFootNodeNames, GetTakeoffFrame(kTakeoffAnimNames[0]));
-		OutputDebugStringA(("ジャンプ開始で体が一番高いフレーム: " + std::to_string(m_jumpAirEndFrame) + "\n").c_str());
+		for (float t = 0.0f; t <= it->second->m_maxLength; t += 1.0f)
+		{
+			Math::Vector3 pelvisPos;
+			SampleMotionPos(*it->second, t, &pelvisPos);
+			m_airPelvisMaxY = std::max(m_airPelvisMaxY, pelvisPos.y);
+		}
 	}
+	OutputDebugStringA(("空中で腰が上がってよい高さ: " + std::to_string(m_airPelvisMaxY) + "\n").c_str());
 
 	// ジャンプのアニメーションで、腰がどれだけ上下するかを出力ウィンドウに表示（ジャンプの調整用）
 	// （上がる量が大きいほど、アニメーション自体に「跳ぶ高さ」が入っている）
@@ -498,7 +516,7 @@ void Player::Init()
 	{
 		if (!HasAnimation(animName)) continue;
 
-		float frame = CalcFootPlantFrame(animName, kFootNodeNames);
+		float frame = CalcFootPlantFrame(animName, groundNodeNames);
 		m_landingFrames[animName] = frame;
 		OutputDebugStringA(("着地フレーム: " + animName + " = " + std::to_string(frame) + "\n").c_str());
 	}
@@ -1101,7 +1119,7 @@ void Player::ChangeState(const std::shared_ptr<PlayerState>& newState)
 	m_isAbilityAttack = false;
 
 	// ジャンプ用の設定（空中で腰が上がらないようにする・速く落ちる）も、ステートが変わったら元に戻す
-	SetAirPelvisLock(false);
+	SetAirPelvisMaxY(-1.0f);
 	SetFallGravityRate(1.0f);
 
 	m_state = newState;

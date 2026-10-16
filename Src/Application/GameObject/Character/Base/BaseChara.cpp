@@ -104,22 +104,6 @@ void BaseChara::Update()
 	m_pos.y -= m_gravity;
 }
 
-void BaseChara::SetAirPelvisLock(bool isLock)
-{
-	if (!isLock)
-	{
-		m_pelvisMaxY = -1.0f;
-		return;
-	}
-
-	if (!m_isMotionNodeReady) FindMotionNodes();
-	if (!m_model || m_pelvisNodeIndex < 0 || m_pelvisNodeIndex >= static_cast<int>(m_model->WorkNodes().size())) return;
-
-	// 今の腰の高さ（踏み切った瞬間の高さ）を上限にする（立ち位置より低い時は立ち位置）
-	float nowY = m_model->WorkNodes()[m_pelvisNodeIndex].m_localTransform.Translation().y;
-	m_pelvisMaxY = std::max(nowY, m_pelvisRestPos.y);
-}
-
 void BaseChara::DrawLit()
 {
 }
@@ -303,29 +287,6 @@ float BaseChara::CalcFootLiftFrame(const std::string& animName, const std::vecto
 	}
 
 	return -1.0f;
-}
-
-float BaseChara::CalcFootPeakFrame(const std::string& animName, const std::vector<std::string>& footNodeNames, float startTime) const
-{
-	std::vector<float> frameTimes;
-	std::vector<std::vector<float>> footHeights;
-	if (!SampleNodeHeights(animName, footNodeNames, frameTimes, footHeights)) return -1.0f;
-
-	// 低い方の足の高さが、一番高くなるフレームを探す
-	float peakFrame = -1.0f;
-	float peakHeight = -std::numeric_limits<float>::max();
-	for (size_t i = 0; i < frameTimes.size(); ++i)
-	{
-		if (frameTimes[i] < startTime) continue;
-
-		float lowest = *std::min_element(footHeights[i].begin(), footHeights[i].end());
-		if (lowest > peakHeight)
-		{
-			peakHeight = lowest;
-			peakFrame = frameTimes[i];
-		}
-	}
-	return peakFrame;
 }
 
 bool BaseChara::FindGroundBelow(float range, Math::Vector3& outHitPos) const

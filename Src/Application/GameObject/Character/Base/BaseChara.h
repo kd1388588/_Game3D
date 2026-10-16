@@ -39,10 +39,6 @@ public:
 	// （ジャンプで、アニメーションの踏み切りに合わせて跳ぶために使う）
 	float CalcFootLiftFrame(const std::string& animName, const std::vector<std::string>& footNodeNames) const;
 
-	// startTime 以降で、指定した足の骨が一番高く上がるフレームを求める（見つからなければ -1）
-	// （ジャンプ開始のアニメーションで、体が一番高くなった所＝これ以降は下がり始める所を調べるために使う）
-	float CalcFootPeakFrame(const std::string& animName, const std::vector<std::string>& footNodeNames, float startTime) const;
-
 	// ルートモーション関連
 	void SetUseRootMotion(bool use) { m_useRootMotion = use; }
 	void SetRootMotionScale(float scale) { m_rootScale = scale; }
@@ -58,10 +54,9 @@ public:
 		if (extract && !m_isMotionNodeReady) FindMotionNodes();
 	}
 
-	// 空中で、アニメーションで腰（体全体）が上がる分を止める
+	// 空中で、アニメーションで腰（体全体）が maxY より上に上がらないようにする（maxY < 0 で制限なし）
 	// （プログラムでキャラを上に飛ばしているので、アニメーションでも上がると2重に高く見えるため）
-	// true にした時の腰の高さ（立ち位置より低ければ立ち位置）より上には、腰が上がらなくなる
-	void SetAirPelvisLock(bool isLock);
+	void SetAirPelvisMaxY(float maxY) { m_pelvisMaxY = maxY; }
 
 	// 落下中の重力の倍率（1.0 で普通。大きくすると、上がる時より落ちる時が速くなる）
 	void SetFallGravityRate(float rate) { m_fallGravityRate = rate; }

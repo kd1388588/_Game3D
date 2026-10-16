@@ -85,8 +85,8 @@ public:
 	// ジャンプ開始アニメーションで、足が地面から離れる（踏み切る）フレーム（無ければ 0）
 	float GetTakeoffFrame(const std::string& animName) const;
 
-	// ジャンプ開始アニメーションで、体が一番高くなるフレーム（これ以降は下がり始めるので、空中ループに切り替える。無ければ -1）
-	float GetJumpAirEndFrame() const { return m_jumpAirEndFrame; }
+	// 空中で腰が上がってよい高さ（空中ループのアニメーションの腰の高さ。これより上はプログラムのジャンプに任せる）
+	float GetAirPelvisMaxY() const { return m_airPelvisMaxY; }
 
 	// 溜め攻撃（4-3）の End で、剣が地面に叩きつけられる（一番低くなる）フレーム（無ければ -1）
 	float GetSwordSlamFrame() const { return m_swordSlamFrame; }
@@ -286,7 +286,7 @@ private:
 	std::unordered_map<std::string, float>		 m_landingFrames;	// 着地アニメ名 → 両足が接地するフレーム
 	std::unordered_map<std::string, float>		 m_takeoffFrames;	// ジャンプ開始アニメ名 → 足が地面から離れるフレーム
 	float										 m_swordSlamFrame = -1.0f;	// 4-3 の End で剣を地面に叩きつけるフレーム
-	float										 m_jumpAirEndFrame = -1.0f;	// ジャンプ開始アニメで体が一番高くなるフレーム
+	float										 m_airPelvisMaxY = -1.0f;	// 空中で腰が上がってよい高さ
 
 	std::weak_ptr<HPGage>			m_wpHpGage;
 	std::weak_ptr<ATBGage>			m_wpAtbGage;
