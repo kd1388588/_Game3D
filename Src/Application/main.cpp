@@ -150,7 +150,7 @@ bool Application::Init(int w, int h)
 	//===================================================================
 	// ウィンドウ作成
 	//===================================================================
-	if (m_window.Create(w, h, "3D GameProgramming", "Window") == false) {
+	if (m_window.Create(w, h, "BRAVER", "Window") == false) {
 		MessageBoxA(nullptr, "ウィンドウ作成に失敗", "エラー", MB_OK);
 		return false;
 	}
@@ -337,8 +337,14 @@ void Application::Execute()
 
 		m_fpsController.Update();
 
-		std::string TitleBar = "ブレイバー  FPS:" + std::to_string(m_fpsController.m_nowfps);
-		SetWindowTextA(m_window.GetWndHandle(), TitleBar.c_str());
+		// ウィンドウのタイトル（FPS が変わった時だけ書き換える）
+		static int prevFps = -1;
+		if (m_fpsController.m_nowfps != prevFps)
+		{
+			prevFps = m_fpsController.m_nowfps;
+			std::string TitleBar = "BRAVER  FPS: " + std::to_string(m_fpsController.m_nowfps);
+			SetWindowTextA(m_window.GetWndHandle(), TitleBar.c_str());
+		}
 	}
 
 	//===================================================================

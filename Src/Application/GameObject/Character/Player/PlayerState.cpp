@@ -90,6 +90,11 @@ namespace
 	constexpr float kAttackAnimSpeed		= 1.15f;	// 攻撃の再生速度（少し速くして、もっさりしないようにする）
 	constexpr float kAttack5_3AnimSpeed		= 0.9f;		// 攻撃05の3段目だけは、少しゆっくり再生する
 	constexpr float kAttackEvadeCancelFrame	= 12.0f;	// 攻撃のこのフレーム以降なら、回避でキャンセルできる
+	constexpr float kAttackRecoveryFrame	= 6.0f;		// 次の攻撃に移れるフレームから、さらにこれだけたったら、移動・ジャンプで攻撃の後のすきをキャンセルできる
+
+	// 回避した時に、パニッシャーからオペレーターに戻すか（FF7リメイクのクラウドと同じ動き）
+	// false にすると、回避してもモードはそのまま
+	constexpr bool	kEvadeReturnsToOperator	= true;
 
 	// 着地
 	constexpr float kLandingCancelFrame		= 4.0f;		// 着地してからこのフレーム数がたったら、攻撃・回避・ジャンプに移れる
@@ -128,7 +133,7 @@ bool PlayerState::TryCommonTransition(Player* player)
 	// （パニッシャーの時は、オペレーターに戻ってから回避する。FF7リメイクのクラウドと同じ動き）
 	if (player->CheckEvadeInput())
 	{
-		if (player->IsPunisherMode())
+		if (kEvadeReturnsToOperator && player->IsPunisherMode())
 		{
 			player->SetBattleMode(BattleMode::Operator);
 		}
@@ -503,6 +508,11 @@ void PlayerStateComboAttack::PlaySlashEffect(Player* player)
 	m_isEffect = true;
 }
 
+PlayerStateComboAttack::~PlayerStateComboAttack()
+{
+	EffectPlayer::Stop(m_effect);
+}
+
 void PlayerStateComboAttack::ChangeState(Player* player)
 {
 	m_isCritical = (KdRandom::GetInt(0, 99) < player->GetCritRate());
@@ -513,6 +523,9 @@ void PlayerStateComboAttack::ChangeState(Player* player)
 
 	bool isLoop = (IsSplitAttack() && m_subStep == SubStepLoop);
 	player->ChangeAnimation(GetAnimName(), isLoop, true, 5.0f);
+
+	// ロックオン中は、振り始める時に敵の方を向く（振っている途中は向きを変えない）
+	player->FaceLockTarget();
 
 	// 再生速度（05の3段目だけ少しゆっくり）
 	bool isSlowAttack = (m_comboType == 5 && m_comboStep == 3);
@@ -541,7 +554,7 @@ void PlayerStateComboAttack::Update(Player* player)
 	// 右クリック：攻撃の途中でも、回避でキャンセルできる（攻撃の出始めは除く）
 	if (player->GetAnimTime() >= kAttackEvadeCancelFrame && player->CheckEvadeInput())
 	{
-		if (player->IsPunisherMode()) player->SetBattleMode(BattleMode::Operator);
+		if (kEvadeReturnsToOperator && player->IsPunisherMode()) player->SetBattleMode(BattleMode::Operator);
 		player->ChangeState(std::make_shared<PlayerStateEvade>());
 		return;
 	}
@@ -595,6 +608,25 @@ void PlayerStateComboAttack::Update(Player* player)
 		if (m_comboStep < kMaxComboStep)
 		{
 			ChangeToNextAttack(player);
+			return;
+		}
+	}
+
+	// 次の攻撃の予約が無く、少したったら、移動・ジャンプで攻撃の後のすきをキャンセルできる
+	// （アビリティ・溜め攻撃の途中・最後まで再生する攻撃は除く）
+	float cancelFrame = GetCancelFrame();
+	bool canRecoveryCancel = !m_isAbility && !m_nextAttackReserved && !IsSplitAttack()
+		&& cancelFrame < kAttackHitEndFrame && animTime >= cancelFrame + kAttackRecoveryFrame;
+	if (canRecoveryCancel)
+	{
+		if (player->IsOnGround() && player->CheckJumpInput())
+		{
+			player->ChangeState(std::make_shared<PlayerStateJump>());
+			return;
+		}
+		if (player->CheckMoveInput())
+		{
+			player->ChangeState(std::make_shared<PlayerStateRun>());
 			return;
 		}
 	}

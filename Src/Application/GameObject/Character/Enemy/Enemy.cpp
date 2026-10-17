@@ -119,6 +119,7 @@ void Enemy::Update()
 	UpdateInvincibleTimer();
 
 	if (m_jumpAttackCT > 0) m_jumpAttackCT--;
+	if (m_stunTimer > 0) m_stunTimer--;
 
 	if (m_state)
 	{
@@ -262,7 +263,8 @@ void Enemy::OnDamage(int damage, bool isCritical)
 	);
 
 	// 飛びかかり攻撃などの途中は、のけぞらない（ダメージだけ受ける）
-	if (m_isSuperArmor) return;
+	// （ただし、プレイヤーのATBコマンドの技を受けている時は、のけぞる）
+	if (m_isSuperArmor && m_stunTimer <= 0) return;
 
 	ChangeState(std::make_shared<EnemyStateDamage>());
 }

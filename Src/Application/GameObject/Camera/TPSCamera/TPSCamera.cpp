@@ -1,5 +1,6 @@
 ﻿#include "TPSCamera.h"
 #include "../../Character/Player/Player.h"
+#include "../../Character/Enemy/Enemy.h"
 #include "../../../Utility/HitStop.h"
 
 namespace
@@ -10,6 +11,11 @@ namespace
 	constexpr float kLookAheadRate		= 3.0f;		// 横に動いた量 × これだけ、注視点を進む方向へずらす
 	constexpr float kMaxLookAhead		= 0.6f;		// 注視点をずらす量の上限
 	constexpr float kLookAheadFollow	= 0.08f;	// 注視点をずらす速さ（0～1。小さいほどゆっくり）
+
+	// ロックオン中
+	constexpr float kLockOnFollowRate	= 0.12f;	// 敵の方へカメラを回す速さ（0～1）
+	constexpr float kLockOnPitch		= 12.0f;	// 少し上から見下ろす角度（度）
+	constexpr float kLockOnPitchRate	= 0.05f;
 }
 
 void TPSCamera::Init()
@@ -36,8 +42,17 @@ void TPSCamera::PostUpdate()
 		{
 			targetPos = player->GetCameraTargetPos();
 
-			// 右に動いたらカメラも右へ（左も同じ）
-			UpdateSideFollow(player->GetLastMoveDelta());
+			if (auto lockTarget = player->GetLockTarget())
+			{
+				// ロックオン中：プレイヤーの後ろから、敵の方を見る
+				UpdateLockOnFollow(player->GetPos(), lockTarget->GetPos());
+				m_lookAhead *= 0.9f;
+			}
+			else
+			{
+				// 右に動いたらカメラも右へ（左も同じ）
+				UpdateSideFollow(player->GetLastMoveDelta());
+			}
 			targetPos += m_lookAhead;
 		}
 
@@ -132,6 +147,23 @@ void TPSCamera::UpdateSideFollow(const Math::Vector3& moveDelta)
 	float offset = std::clamp(side * kLookAheadRate, -kMaxLookAhead, kMaxLookAhead);
 	Math::Vector3 target = right * offset;
 	m_lookAhead += (target - m_lookAhead) * kLookAheadFollow;
+}
+
+void TPSCamera::UpdateLockOnFollow(const Math::Vector3& playerPos, const Math::Vector3& targetPos)
+{
+	Math::Vector3 dir = targetPos - playerPos;
+	dir.y = 0.0f;
+	if (dir.LengthSquared() <= 0.0001f) return;
+
+	// 敵の方向の角度（度）へ、近い回り方でなめらかに回す
+	float targetYaw = DirectX::XMConvertToDegrees(std::atan2(dir.x, dir.z));
+	float diff = targetYaw - m_DegAng.y;
+	while (diff > 180.0f)	diff -= 360.0f;
+	while (diff < -180.0f)	diff += 360.0f;
+	m_DegAng.y += diff * kLockOnFollowRate;
+
+	// 上下は少し見下ろす角度へ
+	m_DegAng.x += (kLockOnPitch - m_DegAng.x) * kLockOnPitchRate;
 }
 
 void TPSCamera::ApplyHitShake()

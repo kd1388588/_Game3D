@@ -117,6 +117,9 @@ public:
 		m_isAbility(isAbility)
 	{}
 
+	// 攻撃が終わったら、溜め攻撃のドリルのエフェクトを止める（残ったままにならないように）
+	~PlayerStateComboAttack() override;
+
 	void ChangeState(Player* player) override;
 	void Update(Player* player) override;
 

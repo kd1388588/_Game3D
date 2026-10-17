@@ -57,6 +57,10 @@ public:
 	// 攻撃中にのけぞらないようにする（ダメージは受ける）
 	void SetSuperArmor(bool isSuperArmor) { m_isSuperArmor = isSuperArmor; }
 
+	// のけぞりを続けさせる（プレイヤーのATBコマンドの技を受けている間など。frames：続ける長さ）
+	void AddStun(int frames) { m_stunTimer = std::max(m_stunTimer, frames); }
+	bool IsStunned() const { return m_stunTimer > 0; }
+
 	float GetBodyScale() const { return m_scale; }	// 体の大きさ（エフェクトの大きさ・高さに使う）
 
 	float GetSearchRange() const { return m_searchRange; }
@@ -86,4 +90,5 @@ private:
 	Math::Vector3					m_leapVelocity = Math::Vector3::Zero;	// 空中での水平方向の移動量（1フレーム）
 	bool							m_isLeapFalling = false;	// 飛び上がった後、落ち始めたか
 	bool							m_isSuperArmor = false;		// のけぞらない
+	int								m_stunTimer = 0;			// のけぞりを続ける残りフレーム
 };

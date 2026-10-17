@@ -12,6 +12,7 @@
 #include "../UI/Gage/HP/HPGage.h"
 #include "../UI/Gage/ATB/ATBGage.h"
 #include "../UI/Gage/ATB/ATBCommandMenu.h"
+#include "../UI/LockOn/LockOnMarker.h"
 
 // Enemy
 #include "../Enemy/Enemy.h"
@@ -92,6 +93,7 @@ namespace
 		{ 5, 2, 60 * 8, "攻撃05" },	// ゲージ2本、CT 8秒
 	};
 	constexpr int	kModeLockFrame			= 60 * 5;	// 攻撃05を使った後、オペレーターに固定する時間（5秒）
+	constexpr int	kAbilityStunFrame		= 50;		// ATBコマンドの技が当たった敵が、のけぞり続けるフレーム数（当たるたびに延びる）
 
 	// ヒットストップ（攻撃が当たった瞬間に止めるフレーム数と、カメラの揺れの強さ）
 	// ※プレイヤーの攻撃はすべて AttackOBB で、敵の攻撃は OnDamage で、ここの値を使う
@@ -151,6 +153,22 @@ namespace
 
 	// ダッシュ
 	constexpr float	kDashMoveRate			= 1.6f;		// ダッシュ中の移動の速さの倍率
+
+	// ロックオン
+	constexpr float	kLockOnRange			= 15.0f;	// この距離の中で一番近い敵をロックオンする
+	constexpr float	kLockOnLoseRange		= 20.0f;	// これより離れたらロックオンを外す
+	constexpr float	kLockOnMarkHeightRate	= 1.2f;		// マークを出す高さ（敵の体の大きさに掛ける）
+
+	// オーラ（バトルモードを切り替えた時・覚醒中）
+	constexpr int	kModeAuraFrame			= 40;		// モードを切り替えた時に光る長さ
+	constexpr int	kAuraLayerNum			= 3;		// 少しずつ大きくした体を何枚重ねるか
+	constexpr float	kAuraBaseScale			= 1.03f;	// 1枚目の大きさ
+	constexpr float	kAuraScaleStep			= 0.035f;	// 1枚ごとに大きくする量
+	const Math::Vector3 kOperatorAuraColor	= { 0.3f, 0.7f, 1.6f };	// オペレーター：青
+	const Math::Vector3 kPunisherAuraColor	= { 1.6f, 0.6f, 0.15f };	// パニッシャー：オレンジ
+	const Math::Vector3 kAwakeningAuraColor	= { 1.4f, 1.1f, 0.3f };	// 覚醒：金色
+	constexpr float	kAwakeningAuraBase		= 0.55f;	// 覚醒中のオーラの明るさ（基本）
+	constexpr float	kAwakeningAuraPulse		= 0.25f;	// 覚醒中のオーラの明るさの揺れ
 
 	// 覚醒
 	constexpr int	kAwakeningFrame			= 60 * 15;	// 15秒間持続
@@ -660,6 +678,15 @@ void Player::Init()
 	}
 	m_wpAtbGage = atbGage;
 
+	// ロックオンのマーク
+	std::shared_ptr<LockOnMarker> lockOnMarker = std::make_shared<LockOnMarker>();
+	lockOnMarker->Init();
+	if (m_owner)
+	{
+		m_owner->AddObject(lockOnMarker);
+	}
+	m_wpLockOnMarker = lockOnMarker;
+
 	// ATBコマンドメニュー
 	std::shared_ptr<ATBCommandMenu> commandMenu = std::make_shared<ATBCommandMenu>();
 	commandMenu->Init();
@@ -712,6 +739,7 @@ void Player::Update()
 		UpdateHpGage();
 		UpdateAtb();
 		UpdateWorldMatrix();
+		UpdateLockOnMarker();
 		return;
 	}
 
@@ -755,8 +783,158 @@ void Player::Update()
 	UpdateAbilityTimers();
 	UpdateAtb();
 	UpdateAwakeningInput();
+	UpdateLockOn();
+
+	m_auraFrame++;
+	if (m_modeAuraTimer > 0) m_modeAuraTimer--;
 
 	UpdateWorldMatrix();
+	UpdateLockOnMarker();
+}
+
+std::shared_ptr<Enemy> Player::FindLockTarget(const Enemy* exclude) const
+{
+	std::shared_ptr<Enemy> nearest = nullptr;
+	float nearestDist = kLockOnRange;
+
+	for (auto& obj : SceneManager::Instance().GetObjList())
+	{
+		auto enemy = std::dynamic_pointer_cast<Enemy>(obj);
+		if (!enemy || enemy.get() == exclude || !enemy->IsAlive() || enemy->IsExpired()) continue;
+
+		Math::Vector3 diff = enemy->GetPos() - m_pos;
+		diff.y = 0.0f;
+		float dist = diff.Length();
+		if (dist < nearestDist)
+		{
+			nearestDist = dist;
+			nearest = enemy;
+		}
+	}
+	return nearest;
+}
+
+void Player::UpdateLockOn()
+{
+	// どちらのキーも毎フレーム更新する
+	bool mainKey = m_lockOnKey.Update();
+	bool subKey = m_lockOnSubKey.Update();
+
+	auto target = m_wpLockTarget.lock();
+
+	// キーを押したら、ロックオンする／外す
+	if (mainKey || subKey)
+	{
+		if (target)
+		{
+			m_wpLockTarget.reset();
+			KdDebugGUI::Instance().AddLog("[System] ロックオン解除\n");
+		}
+		else if (auto newTarget = FindLockTarget())
+		{
+			m_wpLockTarget = newTarget;
+			KdDebugGUI::Instance().AddLog("[System] ロックオン\n");
+		}
+		return;
+	}
+
+	if (!target) return;
+
+	// 敵が倒れた・離れすぎた：近くに他の敵がいればそちらへ、いなければ外す
+	Math::Vector3 diff = target->GetPos() - m_pos;
+	diff.y = 0.0f;
+	if (!target->IsAlive() || target->IsExpired() || diff.Length() > kLockOnLoseRange)
+	{
+		m_wpLockTarget = FindLockTarget(target.get());
+	}
+}
+
+void Player::UpdateLockOnMarker()
+{
+	auto marker = m_wpLockOnMarker.lock();
+	if (!marker) return;
+
+	auto target = m_wpLockTarget.lock();
+	auto camera = m_camera.lock();
+	if (!target || !camera || !camera->WorkCamera())
+	{
+		marker->SetVisible(false);
+		return;
+	}
+
+	// 敵の胸のあたりを、画面の座標に直す（カメラの後ろにいる時は出さない）
+	Math::Vector3 worldPos = target->GetPos() + Math::Vector3(0.0f, target->GetBodyScale() * kLockOnMarkHeightRate, 0.0f);
+	Math::Vector3 screenPos;
+	camera->WorkCamera()->ConvertWorldToScreenDetail(worldPos, screenPos);
+	if (screenPos.z <= 0.0f)
+	{
+		marker->SetVisible(false);
+		return;
+	}
+
+	marker->SetVisible(true);
+	marker->SetScreenPos({ screenPos.x, screenPos.y });
+}
+
+void Player::FaceLockTarget()
+{
+	auto target = m_wpLockTarget.lock();
+	if (!target) return;
+
+	Math::Vector3 dir = target->GetPos() - m_pos;
+	dir.y = 0.0f;
+	if (dir.LengthSquared() <= 0.0001f) return;
+	dir.Normalize();
+	TurnToward(dir, 180.0f);
+}
+
+void Player::DrawAura()
+{
+	if (!m_model) return;
+
+	// 光の強さと色：モードを切り替えた直後の光（だんだん消える）＋ 覚醒中の脈打つ光
+	Math::Vector3 color = Math::Vector3::Zero;
+	if (m_modeAuraTimer > 0)
+	{
+		float rate = static_cast<float>(m_modeAuraTimer) / kModeAuraFrame;
+		color += (IsPunisherMode() ? kPunisherAuraColor : kOperatorAuraColor) * rate;
+	}
+	if (m_isAwakening)
+	{
+		float rate = kAwakeningAuraBase + kAwakeningAuraPulse * std::sin(m_auraFrame * 0.15f);
+		color += kAwakeningAuraColor * rate;
+	}
+	if (color.LengthSquared() <= 0.0001f) return;
+
+	// 腰を中心に少しずつ大きくした体を、裏側だけ光らせて重ねる
+	// （表を描かずに裏だけ描くと、体のふちだけが光って見える）
+	Math::Vector3 center = m_pos;
+	if (m_pelvisNode >= 0 && m_pelvisNode < static_cast<int>(m_model->GetNodes().size()))
+	{
+		center = Math::Vector3::Transform(m_model->GetNodes()[m_pelvisNode].m_worldTransform.Translation(), m_mWorld);
+	}
+
+	auto& shaderManager = KdShaderManager::Instance();
+	shaderManager.ChangeRasterizerState(KdRasterizerState::CullFront);
+	shaderManager.ChangeBlendState(KdBlendState::Add);
+	shaderManager.ChangeDepthStencilState(KdDepthStencilState::ZWriteDisable);
+
+	for (int i = 0; i < kAuraLayerNum; ++i)
+	{
+		float scale = kAuraBaseScale + kAuraScaleStep * i;
+		Math::Matrix auraMat = m_mWorld
+			* Math::Matrix::CreateTranslation(-center)
+			* Math::Matrix::CreateScale(scale)
+			* Math::Matrix::CreateTranslation(center);
+
+		// 外側ほど薄く（体の色は使わず、光の色だけで描く）
+		Math::Vector3 layerColor = color / static_cast<float>(i + 1);
+		shaderManager.m_StandardShader.DrawModel(*m_model, auraMat, Math::Color(0.0f, 0.0f, 0.0f, 1.0f), layerColor);
+	}
+
+	shaderManager.UndoDepthStencilState();
+	shaderManager.UndoBlendState();
+	shaderManager.UndoRasterizerState();
 }
 
 void Player::UpdateInputBuffer()
@@ -1026,6 +1204,9 @@ void Player::DrawEffect()
 {
 	auto& shaderManager = KdShaderManager::Instance();
 
+	// バトルモードを切り替えた時・覚醒中のオーラ
+	DrawAura();
+
 	// 軌跡は他のオブジェクトを描いた後に、加算合成・深度書き込みなしで描く
 	// （帯の暗い部分が後ろの物を隠さないように）
 	// 裏からも見えるようにカリングも切る
@@ -1266,6 +1447,9 @@ void Player::UpdateHpGage()
 
 void Player::SetBattleMode(BattleMode mode)
 {
+	// モードが変わった時は、体を光らせて知らせる
+	if (mode != m_battleMode) m_modeAuraTimer = kModeAuraFrame;
+
 	m_battleMode = mode;
 
 	// 左クリックの攻撃：オペレーターは攻撃01、パニッシャーは攻撃02
@@ -1725,6 +1909,9 @@ bool Player::AttackOBB(const Math::Matrix& swordMatrix, bool isCritical, const s
 		// （毎フレームヒット扱いになって、ヒットストップやエフェクトが連続しないように）
 		auto enemy = std::dynamic_pointer_cast<Enemy>(obj);
 		if (!enemy || enemy->IsInvincible() || !enemy->IsAlive()) continue;
+
+		// ATBコマンドの技を受けている敵は、のけぞり続ける（その間は攻撃してこない）
+		if (m_isAbilityAttack) enemy->AddStun(kAbilityStunFrame);
 
 		enemy->OnDamage(damage, isCritical);
 		isHit = true;

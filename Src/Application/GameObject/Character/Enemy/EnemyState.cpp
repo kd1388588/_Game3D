@@ -218,11 +218,18 @@ void EnemyStateDamage::ChangeState(Enemy* enemy)
 
 void EnemyStateDamage::Update(Enemy* enemy)
 {
-	// アニメーションが最後まで再生されたらIdleに戻る
-	if (enemy->IsAnimEnd())
+	if (!enemy->IsAnimEnd()) return;
+
+	// のけぞりを続ける間（プレイヤーのATBコマンドの技を受けている間）は、のけぞりをもう一度再生する
+	// （その間は攻撃してこない）
+	if (enemy->IsStunned())
 	{
-		enemy->ChangeState(std::make_shared<EnemyStateIdle>());
+		enemy->ChangeAnimation("Damage", false, true, 3.0f);
+		return;
 	}
+
+	// アニメーションが最後まで再生されたらIdleに戻る
+	enemy->ChangeState(std::make_shared<EnemyStateIdle>());
 }
 
 // ==========================================

@@ -1,5 +1,6 @@
 ﻿#include "TitleUI.h"
 #include "../../../Utility/SpriteUtil.h"
+#include "../../../main.h"
 
 #include <cmath>	// std::lerp
 
@@ -11,12 +12,13 @@ namespace
 	const std::vector<std::string> kMenuNames	= { "START", "CONTROLS", "EXIT" };	// MenuItem の順番
 
 	// ===== 配置（画面中央が原点、上が+Y。キャラクターが右寄りに映るので左側にまとめる） =====
-	const Math::Vector2	kLogoPos			= { -290.0f, 150.0f };
+	// （キャラクターから出るエフェクトとメニューが重ならないよう、少し左に寄せている）
+	const Math::Vector2	kLogoPos			= { -370.0f, 150.0f };
 	constexpr float		kLogoScale			= 0.85f;
 	constexpr float		kLineY				= 72.0f;		// ロゴの下の光の線
 	constexpr float		kLineWidth			= 520.0f;
-	const Math::Vector2	kSubTitlePos		= { -290.0f, 40.0f };
-	constexpr float		kMenuX				= -290.0f;
+	const Math::Vector2	kSubTitlePos		= { -370.0f, 40.0f };
+	constexpr float		kMenuX				= -370.0f;
 	constexpr float		kMenuTopY			= -70.0f;
 	constexpr float		kMenuSpacing		= 62.0f;
 	constexpr float		kLetterBoxHeight	= 50.0f;		// 画面の上下の黒帯の太さ
@@ -44,6 +46,11 @@ namespace
 	constexpr float		kSelectedScale		= 1.12f;		// 選択中の項目の拡大率
 	constexpr float		kUnselectedScale	= 0.9f;
 	constexpr float		kUnselectedAlpha	= 0.45f;
+
+	// ===== マウス =====
+	constexpr float		kScreenWidth		= 1280.0f;		// 画面の大きさ（UIの座標の範囲）
+	constexpr float		kScreenHeight		= 720.0f;
+	constexpr float		kMenuHitMinHalfW	= 110.0f;		// メニューの項目にマウスが乗っているとみなす範囲（横の半分の最小）
 
 	// ===== 決定時 =====
 	constexpr int		kDecideFlashFrame	= 30;			// 決定した項目を点滅させるフレーム数
@@ -136,6 +143,7 @@ void TitleUI::Init()
 		{ "F",				"ATBコマンド（スローにして技を選ぶ）" },
 		{ "Shift",			"走りながら：ダッシュ　止まって：ガード" },
 		{ "Space",			"ジャンプ" },
+		{ "ホイール / R",	"ロックオン（近くの敵に視点を合わせる）" },
 		{ "G",				"覚醒（WPゲージが満タンの時）" },
 	};
 	for (size_t i = 0; i < controls.size(); ++i)
@@ -163,7 +171,8 @@ void TitleUI::UpdateInput()
 
 	m_input.up		= up || upArrow;
 	m_input.down	= down || downArrow;
-	m_input.decide	= enter || space || click;
+	m_input.decide	= enter || space;
+	m_input.click	= click;
 	m_input.back	= backSpace || rightClick;
 }
 
@@ -193,8 +202,8 @@ void TitleUI::Update()
 
 void TitleUI::UpdateIntro()
 {
-	// 決定ボタンで登場演出を飛ばす
-	if (m_input.decide)
+	// 決定ボタン・クリックで登場演出を飛ばす
+	if (m_input.decide || m_input.click)
 	{
 		m_frame = std::max(m_frame, kIntroEndFrame);
 	}
@@ -205,12 +214,69 @@ void TitleUI::UpdateIntro()
 	}
 }
 
+bool TitleUI::GetMouseUIPos(Math::Vector2& outPos) const
+{
+	// マウスの位置（ウィンドウの中の座標）
+	POINT point;
+	if (!GetCursorPos(&point)) return false;
+
+	HWND hwnd = Application::Instance().GetWindowHandle();
+	if (!ScreenToClient(hwnd, &point)) return false;
+
+	RECT rect;
+	if (!GetClientRect(hwnd, &rect)) return false;
+	float width = static_cast<float>(rect.right - rect.left);
+	float height = static_cast<float>(rect.bottom - rect.top);
+	if (width <= 0.0f || height <= 0.0f) return false;
+
+	// UIの座標（画面の中央が原点、上が＋Y）に直す（ウィンドウの大きさが変わっても合うように割合で計算）
+	outPos.x = (static_cast<float>(point.x) / width - 0.5f) * kScreenWidth;
+	outPos.y = (0.5f - static_cast<float>(point.y) / height) * kScreenHeight;
+	return true;
+}
+
+int TitleUI::GetHoveredMenuIndex(const Math::Vector2& mousePos) const
+{
+	for (size_t i = 0; i < m_menuTexts.size(); ++i)
+	{
+		Math::Vector2 center = GetMenuItemPos(static_cast<int>(i));
+		float halfW = std::max(m_menuTexts[i]->GetSize().x * 0.5f * m_menuScales[i], kMenuHitMinHalfW);
+		float halfH = kMenuSpacing * 0.5f;
+
+		if (std::abs(mousePos.x - center.x) <= halfW && std::abs(mousePos.y - center.y) <= halfH)
+		{
+			return static_cast<int>(i);
+		}
+	}
+	return -1;
+}
+
 void TitleUI::UpdateSelect()
 {
 	int itemNum = static_cast<int>(MenuItem::Num);
 
 	if (m_input.up)		{ m_selectIndex = (m_selectIndex + itemNum - 1) % itemNum; }
 	if (m_input.down)	{ m_selectIndex = (m_selectIndex + 1) % itemNum; }
+
+	// マウス：項目に乗せたら選び、クリックで決定
+	// （キーで選んだ後にマウスが勝手に選び直さないよう、マウスを動かした時だけ選ぶ）
+	Math::Vector2 mousePos;
+	int hovered = -1;
+	if (GetMouseUIPos(mousePos))
+	{
+		hovered = GetHoveredMenuIndex(mousePos);
+		bool isMouseMoved = (mousePos - m_prevMousePos).LengthSquared() > 1.0f;
+		if (isMouseMoved && hovered >= 0) m_selectIndex = hovered;
+		m_prevMousePos = mousePos;
+	}
+
+	// クリックは、項目の上でクリックした時だけ決定する
+	if (m_input.click && hovered >= 0)
+	{
+		m_selectIndex = hovered;
+		Decide(static_cast<MenuItem>(m_selectIndex));
+		return;
+	}
 
 	if (m_input.decide)
 	{
@@ -220,7 +286,7 @@ void TitleUI::UpdateSelect()
 
 void TitleUI::UpdateControls()
 {
-	if (m_input.decide || m_input.back)
+	if (m_input.decide || m_input.click || m_input.back)
 	{
 		ChangeState(State::Select);
 	}

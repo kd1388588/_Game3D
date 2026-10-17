@@ -23,6 +23,8 @@ class BaseScene;
 class HPGage;
 class ATBGage;
 class ATBCommandMenu;
+class LockOnMarker;
+class Enemy;
 
 class Player : public BaseChara
 {
@@ -56,6 +58,12 @@ public:
 
 	// ATBコマンドメニューを開いているか（開いている間は時間がゆっくりになる）
 	bool IsCommandMenuOpen() const { return m_isCommandOpen; }
+
+	// ロックオン中の敵（いなければ nullptr）
+	std::shared_ptr<Enemy> GetLockTarget() const { return m_wpLockTarget.lock(); }
+
+	// ロックオン中の敵の方へすぐ向く（攻撃・技を出す瞬間に呼ぶ。出した後は向きを変えない）
+	void FaceLockTarget();
 
 	// Shift を押している間（移動中はダッシュ、止まっている時はガード）
 	bool IsShiftDown() const;
@@ -237,6 +245,18 @@ private:
 	// 先行入力をすべて消す（メニューを開く・閉じる時に、メニューの操作が攻撃などに使われないように）
 	void ClearInputBuffers();
 
+	// ロックオン（ホイールクリック・R キーで、近くの敵に視点を合わせる／外す）
+	void UpdateLockOn();
+
+	// ロックオンできる一番近い敵を探す（exclude の敵は除く。いなければ nullptr）
+	std::shared_ptr<Enemy> FindLockTarget(const Enemy* exclude = nullptr) const;
+
+	// ロックオンのマークの位置を更新する
+	void UpdateLockOnMarker();
+
+	// バトルモードを切り替えた時・覚醒中に、体のまわりを光らせる（簡単なオーラ）
+	void DrawAura();
+
 	// ATBコマンドメニュー（F キーで開き、技を選ぶと自動で最後まで出す）
 	// 開いている間は true を返す
 	bool UpdateCommandMenu();
@@ -360,6 +380,10 @@ private:
 	std::weak_ptr<HPGage>			m_wpHpGage;
 	std::weak_ptr<ATBGage>			m_wpAtbGage;
 	std::weak_ptr<ATBCommandMenu>	m_wpCommandMenu;
+	std::weak_ptr<LockOnMarker>		m_wpLockOnMarker;
+	std::weak_ptr<Enemy>			m_wpLockTarget;			// ロックオン中の敵
+	int								m_modeAuraTimer = 0;	// モードを切り替えた時のオーラの残りフレーム
+	int								m_auraFrame = 0;		// オーラを揺らす用のフレーム数
 	std::weak_ptr<TPSCamera>		m_camera;
 	Math::Matrix					m_swordWorldR;
 	Math::Matrix					m_swordWorldL;
@@ -409,6 +433,8 @@ private:
 	InputHelper::KeyTrigger			m_abilityKeys[static_cast<int>(AbilitySlot::Num)] = { InputHelper::KeyTrigger{ '1' }, InputHelper::KeyTrigger{ '2' } };	// メニューで直接選ぶ
 
 	// ATBコマンドメニューの操作
+	InputHelper::KeyTrigger			m_lockOnKey{ VK_MBUTTON };	// ロックオン（ホイールクリック）
+	InputHelper::KeyTrigger			m_lockOnSubKey{ 'R' };		// ロックオン（R キー）
 	InputHelper::KeyTrigger			m_commandKey{ 'F' };		// 開く・閉じる
 	InputHelper::KeyTrigger			m_menuUpKey{ 'W' };
 	InputHelper::KeyTrigger			m_menuDownKey{ 'S' };

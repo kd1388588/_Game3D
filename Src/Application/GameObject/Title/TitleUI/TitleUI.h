@@ -51,12 +51,19 @@ private:
 	{
 		bool up = false;
 		bool down = false;
-		bool decide = false;	// Enter・Space・左クリック
+		bool decide = false;	// Enter・Space
+		bool click = false;		// 左クリック
 		bool back = false;		// BackSpace・右クリック
 	};
 
 	// 全てのキーの入力を更新する（押した瞬間を正しく判定するため、毎フレーム全てのキーを更新する）
 	void UpdateInput();
+
+	// マウスの位置を、UIの座標（画面の中央が原点、上が＋Y）で取得する（取れなければ false）
+	bool GetMouseUIPos(Math::Vector2& outPos) const;
+
+	// マウスが乗っているメニューの項目（乗っていなければ -1）
+	int GetHoveredMenuIndex(const Math::Vector2& mousePos) const;
 
 	// 状態を切り替える
 	void ChangeState(State state);
@@ -114,6 +121,7 @@ private:
 	Result									m_result = Result::None;
 	MenuItem								m_decidedItem = MenuItem::Start;
 	Input									m_input;
+	Math::Vector2							m_prevMousePos = Math::Vector2::Zero;	// 前のフレームのマウスの位置
 	int										m_frame = 0;			// タイトル画面が始まってからのフレーム数
 	int										m_stateFrame = 0;		// 今の状態になってからのフレーム数
 	int										m_selectIndex = 0;		// 選択中のメニュー
