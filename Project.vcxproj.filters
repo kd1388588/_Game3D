@@ -336,6 +336,9 @@
     <ClInclude Include="Src\Application\Utility\HitStop.h">
       <Filter>Src\Application\Utility</Filter>
     </ClInclude>
+    <ClInclude Include="Src\Application\Utility\GameTime.h">
+      <Filter>Src\Application\Utility</Filter>
+    </ClInclude>
     <ClInclude Include="Src\Application\Utility\SpriteUtil.h">
       <Filter>Src\Application\Utility</Filter>
     </ClInclude>
@@ -412,6 +415,9 @@
       <Filter>Src\Application\GameObject\UI\Gage\HP</Filter>
     </ClInclude>
     <ClInclude Include="Src\Application\GameObject\Character\UI\Gage\ATB\ATBGage.h">
+      <Filter>Src\Application\GameObject\UI\Gage\ATB</Filter>
+    </ClInclude>
+    <ClInclude Include="Src\Application\GameObject\Character\UI\Gage\ATB\ATBCommandMenu.h">
       <Filter>Src\Application\GameObject\UI\Gage\ATB</Filter>
     </ClInclude>
     <ClInclude Include="Src\Application\GameObject\Character\UI\Gage\Base\BaseGage.h">
@@ -639,6 +645,9 @@
       <Filter>Src\Application\GameObject\UI\Gage\HP</Filter>
     </ClCompile>
     <ClCompile Include="Src\Application\GameObject\Character\UI\Gage\ATB\ATBGage.cpp">
+      <Filter>Src\Application\GameObject\UI\Gage\ATB</Filter>
+    </ClCompile>
+    <ClCompile Include="Src\Application\GameObject\Character\UI\Gage\ATB\ATBCommandMenu.cpp">
       <Filter>Src\Application\GameObject\UI\Gage\ATB</Filter>
     </ClCompile>
     <ClCompile Include="Src\Application\GameObject\Character\UI\Gage\Base\BaseGage.cpp">

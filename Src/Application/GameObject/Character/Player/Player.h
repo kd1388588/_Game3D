@@ -9,11 +9,11 @@ enum class BattleMode
 	Punisher	// パニッシャーモード：動きは遅いが攻撃が重い。攻撃を当てるとATBゲージが多くたまる（左クリックは攻撃02）
 };
 
-// アビリティ（数字キーで出す技。ATBゲージを使い、使った後はCT（クールタイム）がある）
+// アビリティ（ATBコマンドメニューで選ぶ技。ATBゲージを使い、使った後はCT（クールタイム）がある）
 enum class AbilitySlot
 {
-	Slot1 = 0,	// 1キー：攻撃04（ATBゲージ1本）
-	Slot2 = 1,	// 2キー：攻撃05（ATBゲージ2本。使った後しばらくオペレーターに固定）
+	Slot1 = 0,	// 攻撃04（ATBゲージ1本）
+	Slot2 = 1,	// 攻撃05（ATBゲージ2本。使った後しばらくオペレーターに固定）
 	Num
 };
 
@@ -22,13 +22,14 @@ class PlayerState;
 class BaseScene;
 class HPGage;
 class ATBGage;
+class ATBCommandMenu;
 
 class Player : public BaseChara
 {
 public:
 
 	Player() {}
-	~Player()			override {}
+	~Player()			override;
 
 	void Init()			override;
 
@@ -52,7 +53,9 @@ public:
 	bool CheckAttackInput()		{ return ConsumeInput(m_attackBuffer); }	// 左クリック（攻撃）
 	bool CheckJumpInput()		{ return ConsumeInput(m_jumpBuffer); }		// Space（ジャンプ）
 	bool CheckEvadeInput()		{ return ConsumeInput(m_evadeBuffer); }		// 右クリック（回避）
-	bool CheckAbilityInput(AbilitySlot slot) { return ConsumeInput(m_abilityBuffer[static_cast<int>(slot)]); }	// 1・2キー（アビリティ）
+
+	// ATBコマンドメニューを開いているか（開いている間は時間がゆっくりになる）
+	bool IsCommandMenuOpen() const { return m_isCommandOpen; }
 
 	// Shift を押している間（移動中はダッシュ、止まっている時はガード）
 	bool IsShiftDown() const;
@@ -219,6 +222,21 @@ private:
 	// ボタンの先行入力を更新する（毎フレーム1回）
 	void UpdateInputBuffer();
 
+	// 先行入力をすべて消す（メニューを開く・閉じる時に、メニューの操作が攻撃などに使われないように）
+	void ClearInputBuffers();
+
+	// ATBコマンドメニュー（F キーで開き、技を選ぶと自動で最後まで出す）
+	// 開いている間は true を返す
+	bool UpdateCommandMenu();
+	void OpenCommandMenu();
+	void CloseCommandMenu();
+
+	// 技を選んだ（使えたら技を出してメニューを閉じる）
+	void DecideCommand(int index);
+
+	// メニューで技を選べるか（ATBゲージが足りて、CT中でない）
+	bool CanUseAbility(int index) const;
+
 	// 先行入力が残っていれば消して true を返す
 	static bool ConsumeInput(int& bufferTimer);
 	void UpdateHpGage();
@@ -314,6 +332,7 @@ private:
 
 	std::weak_ptr<HPGage>			m_wpHpGage;
 	std::weak_ptr<ATBGage>			m_wpAtbGage;
+	std::weak_ptr<ATBCommandMenu>	m_wpCommandMenu;
 	std::weak_ptr<TPSCamera>		m_camera;
 	Math::Matrix					m_swordWorldR;
 	Math::Matrix					m_swordWorldL;
@@ -346,6 +365,8 @@ private:
 	int								m_modeLockTimer = 0;		// モードを切り替えられない残りフレーム（攻撃05の後）
 	int								m_abilityCT[static_cast<int>(AbilitySlot::Num)] = {};	// アビリティごとのCTの残りフレーム
 	bool							m_isGuarding = false;		// ガード中か
+	bool							m_isCommandOpen = false;	// ATBコマンドメニューを開いているか
+	int								m_commandCursor = 0;		// メニューで選んでいる技
 	float							m_atbGage = 0.0f;			// ATBゲージ（0 ～ kAtbBarMax × kAtbBarNum）
 	bool							m_isAbilityAttack = false;	// アビリティの攻撃中か
 
@@ -355,7 +376,16 @@ private:
 	// 入力（押した瞬間の判定用）
 	InputHelper::KeyTrigger			m_attackKey{ VK_LBUTTON };
 	InputHelper::KeyTrigger			m_evadeKey{ VK_RBUTTON };
-	InputHelper::KeyTrigger			m_abilityKeys[static_cast<int>(AbilitySlot::Num)] = { InputHelper::KeyTrigger{ '1' }, InputHelper::KeyTrigger{ '2' } };
+	InputHelper::KeyTrigger			m_abilityKeys[static_cast<int>(AbilitySlot::Num)] = { InputHelper::KeyTrigger{ '1' }, InputHelper::KeyTrigger{ '2' } };	// メニューで直接選ぶ
+
+	// ATBコマンドメニューの操作
+	InputHelper::KeyTrigger			m_commandKey{ 'F' };		// 開く・閉じる
+	InputHelper::KeyTrigger			m_menuUpKey{ 'W' };
+	InputHelper::KeyTrigger			m_menuDownKey{ 'S' };
+	InputHelper::KeyTrigger			m_menuUpArrowKey{ VK_UP };
+	InputHelper::KeyTrigger			m_menuDownArrowKey{ VK_DOWN };
+	InputHelper::KeyTrigger			m_menuDecideKey{ VK_RETURN };
+	InputHelper::KeyTrigger			m_menuBackKey{ VK_BACK };
 	InputHelper::KeyTrigger			m_modeKey{ 'E' };
 	InputHelper::KeyTrigger			m_jumpKey{ VK_SPACE };
 

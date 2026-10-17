@@ -286,6 +286,7 @@
     <ClInclude Include="Src\Application\GameObject\Character\UI\Gage\Base\BaseGage.h" />
     <ClInclude Include="Src\Application\GameObject\Character\UI\Gage\HP\HPGage.h" />
     <ClInclude Include="Src\Application\GameObject\Character\UI\Gage\ATB\ATBGage.h" />
+    <ClInclude Include="Src\Application\GameObject\Character\UI\Gage\ATB\ATBCommandMenu.h" />
     <ClInclude Include="Src\Application\GameObject\Effect\Effect.h" />
     <ClInclude Include="Src\Application\GameObject\Effect\EffectPlayer.h" />
     <ClInclude Include="Src\Application\GameObject\Stage\Ground\Ground.h" />
@@ -302,6 +303,7 @@
     <ClInclude Include="Src\Application\Scene\GameOverScene\GameOverScene.h" />
     <ClInclude Include="Src\Application\Utility\InputHelper.h" />
     <ClInclude Include="Src\Application\Utility\HitStop.h" />
+    <ClInclude Include="Src\Application\Utility\GameTime.h" />
     <ClInclude Include="Src\Application\Utility\SpriteUtil.h" />
     <ClInclude Include="Src\Application\GameObject\Title\TitleChara\TitleChara.h" />
     <ClInclude Include="Src\Application\GameObject\Title\TitleCamera\TitleCamera.h" />
@@ -368,6 +370,7 @@
     <ClCompile Include="Src\Application\GameObject\Character\UI\Gage\Base\BaseGage.cpp" />
     <ClCompile Include="Src\Application\GameObject\Character\UI\Gage\HP\HPGage.cpp" />
     <ClCompile Include="Src\Application\GameObject\Character\UI\Gage\ATB\ATBGage.cpp" />
+    <ClCompile Include="Src\Application\GameObject\Character\UI\Gage\ATB\ATBCommandMenu.cpp" />
     <ClCompile Include="Src\Application\GameObject\Effect\Effect.cpp" />
     <ClCompile Include="Src\Application\GameObject\Effect\EffectPlayer.cpp" />
     <ClCompile Include="Src\Application\GameObject\Stage\Ground\Ground.cpp" />

@@ -11,6 +11,7 @@
 // UI
 #include "../UI/Gage/HP/HPGage.h"
 #include "../UI/Gage/ATB/ATBGage.h"
+#include "../UI/Gage/ATB/ATBCommandMenu.h"
 
 // Enemy
 #include "../Enemy/Enemy.h"
@@ -23,6 +24,7 @@
 
 // Utility
 #include "../../../Utility/HitStop.h"
+#include "../../../Utility/GameTime.h"
 
 // Scene
 #include "../../../Scene/SceneManager.h"
@@ -73,7 +75,10 @@ namespace
 	constexpr float kPunisherAtbHitRate		= 2.0f;		// パニッシャーの時、当てた時にたまる量の倍率
 	constexpr float kAtbCriticalRate		= 1.5f;		// クリティカルの時、当てた時にたまる量の倍率
 
-	// アビリティ（1キー：攻撃04、2キー：攻撃05）
+	// ATBコマンドメニュー
+	constexpr float	kCommandTimeScale		= 0.1f;		// メニューを開いている間の時間の速さ（10分の1）
+
+	// アビリティ（メニューで選ぶ。攻撃04・05）
 	struct AbilityInfo
 	{
 		int			attackType;		// 出す攻撃の種類
@@ -83,8 +88,8 @@ namespace
 	};
 	constexpr AbilityInfo kAbilityInfos[] =
 	{
-		{ 4, 1, 60 * 3, "攻撃04" },	// 1キー：ゲージ1本、CT 3秒
-		{ 5, 2, 60 * 8, "攻撃05" },	// 2キー：ゲージ2本、CT 8秒
+		{ 4, 1, 60 * 3, "攻撃04" },	// ゲージ1本、CT 3秒
+		{ 5, 2, 60 * 8, "攻撃05" },	// ゲージ2本、CT 8秒
 	};
 	constexpr int	kModeLockFrame			= 60 * 5;	// 攻撃05を使った後、オペレーターに固定する時間（5秒）
 
@@ -604,11 +609,29 @@ void Player::Init()
 	}
 	m_wpAtbGage = atbGage;
 
+	// ATBコマンドメニュー
+	std::shared_ptr<ATBCommandMenu> commandMenu = std::make_shared<ATBCommandMenu>();
+	commandMenu->Init();
+	if (m_owner)
+	{
+		m_owner->AddObject(commandMenu);
+	}
+	m_wpCommandMenu = commandMenu;
+
 	// 最初はオペレーターモード
 	m_atbGage = 0.0f;
 	SetBattleMode(BattleMode::Operator);
 
-	// 前のシーンのヒットストップが残らないようにする
+	// 前のシーンのヒットストップ・スローモーションが残らないようにする
+	HitStop::Reset();
+	GameTime::Reset();
+	m_isCommandOpen = false;
+}
+
+Player::~Player()
+{
+	// スローモーション・ヒットストップのまま別のシーンへ行かないようにする
+	GameTime::Reset();
 	HitStop::Reset();
 }
 
@@ -621,6 +644,22 @@ void Player::Update()
 	// （敵も同じように止まる。時間は PostUpdate で進める）
 	if (HitStop::IsStopping())
 	{
+		UpdateWorldMatrix();
+		return;
+	}
+
+	// ATBコマンドメニュー（開いている間は、時間がゆっくりになり、技を選ぶ操作だけを受け付ける）
+	if (UpdateCommandMenu())
+	{
+		// 止まっている扱いにする（カメラが横移動に付いていかないように）
+		m_lastMoveDelta = Math::Vector3::Zero;
+		m_prevFramePos = m_pos;
+
+		BaseChara::Update();		// アニメーション・重力はゆっくり進む
+		ApplyAnimationMotion();
+		ApplyThrowCorrection();
+		UpdateHpGage();
+		UpdateAtb();
 		UpdateWorldMatrix();
 		return;
 	}
@@ -685,6 +724,107 @@ void Player::UpdateInputBuffer()
 	{
 		update(m_abilityKeys[i], m_abilityBuffer[i]);
 	}
+}
+
+void Player::ClearInputBuffers()
+{
+	m_attackBuffer = 0;
+	m_jumpBuffer = 0;
+	m_evadeBuffer = 0;
+	for (int& buffer : m_abilityBuffer) buffer = 0;
+}
+
+bool Player::CanUseAbility(int index) const
+{
+	if (index < 0 || index >= static_cast<int>(AbilitySlot::Num)) return false;
+	return m_abilityCT[index] <= 0 && m_atbGage >= kAtbBarMax * kAbilityInfos[index].atbCost;
+}
+
+bool Player::UpdateCommandMenu()
+{
+	// キーの状態は毎フレーム更新する（開いていない時も。押した瞬間を正しく判定するため）
+	bool toggle		= m_commandKey.Update();
+	bool up			= m_menuUpKey.Update();
+	bool down		= m_menuDownKey.Update();
+	bool upArrow	= m_menuUpArrowKey.Update();
+	bool downArrow	= m_menuDownArrowKey.Update();
+	bool enter		= m_menuDecideKey.Update();
+	bool back		= m_menuBackKey.Update();
+
+	if (!m_isCommandOpen)
+	{
+		// F キーで開く（倒れている時・アビリティの技を出している途中は開けない）
+		if (toggle && !IsDead() && !m_isAbilityAttack)
+		{
+			OpenCommandMenu();
+		}
+		return m_isCommandOpen;
+	}
+
+	// 閉じる：F キー・右クリック・BackSpace
+	if (toggle || back || ConsumeInput(m_evadeBuffer))
+	{
+		CloseCommandMenu();
+		return false;
+	}
+
+	// 選ぶ：W / S・矢印キー
+	constexpr int itemNum = static_cast<int>(AbilitySlot::Num);
+	if (up || upArrow)		m_commandCursor = (m_commandCursor + itemNum - 1) % itemNum;
+	if (down || downArrow)	m_commandCursor = (m_commandCursor + 1) % itemNum;
+
+	// メニューを開いている時に 1・2キーを押したら、その技をすぐ決定
+	for (int i = 0; i < itemNum; ++i)
+	{
+		if (ConsumeInput(m_abilityBuffer[i]))
+		{
+			m_commandCursor = i;
+			DecideCommand(i);
+			return m_isCommandOpen;
+		}
+	}
+
+	// 決定：左クリック・Enter・Space
+	if (enter || ConsumeInput(m_attackBuffer) || ConsumeInput(m_jumpBuffer))
+	{
+		DecideCommand(m_commandCursor);
+	}
+
+	return m_isCommandOpen;
+}
+
+void Player::OpenCommandMenu()
+{
+	m_isCommandOpen = true;
+	GameTime::SetScale(kCommandTimeScale);
+	ClearInputBuffers();
+
+	// 選べる技があれば、最初からそこを選んでおく
+	if (!CanUseAbility(m_commandCursor))
+	{
+		for (int i = 0; i < static_cast<int>(AbilitySlot::Num); ++i)
+		{
+			if (CanUseAbility(i)) { m_commandCursor = i; break; }
+		}
+	}
+}
+
+void Player::CloseCommandMenu()
+{
+	m_isCommandOpen = false;
+	GameTime::SetScale(1.0f);
+	ClearInputBuffers();
+}
+
+void Player::DecideCommand(int index)
+{
+	// 使えない技（ゲージが足りない・CT中）なら、メニューを開いたままにする
+	int attackType = TryStartAbility(static_cast<AbilitySlot>(index));
+	if (attackType <= 0) return;
+
+	// メニューを閉じて時間を戻し、選んだ技を最後の段まで自動で出す
+	CloseCommandMenu();
+	ChangeState(std::make_shared<PlayerStateComboAttack>(attackType, 1, PlayerStateComboAttack::SubStepNone, true, true));
 }
 
 bool Player::ConsumeInput(int& bufferTimer)
@@ -1177,8 +1317,8 @@ bool Player::IsShiftDown() const
 
 void Player::UpdateAtb()
 {
-	// オペレーターの時は、時間でも少しずつたまる
-	if (m_battleMode == BattleMode::Operator && !IsDead())
+	// オペレーターの時は、時間でも少しずつたまる（メニューを開いている間は止める）
+	if (m_battleMode == BattleMode::Operator && !IsDead() && !m_isCommandOpen)
 	{
 		AddAtbGage(kAtbPassiveGain);
 	}
@@ -1201,6 +1341,19 @@ void Player::UpdateAtb()
 		// モードの固定の残りの割合・ガード中か
 		atbGage->SetModeLockRatio(static_cast<float>(m_modeLockTimer) / static_cast<float>(kModeLockFrame));
 		atbGage->SetGuarding(m_isGuarding);
+
+		// ATBコマンドメニュー
+		if (auto commandMenu = m_wpCommandMenu.lock())
+		{
+			commandMenu->SetOpen(m_isCommandOpen);
+			commandMenu->SetCursor(m_commandCursor);
+			for (int i = 0; i < static_cast<int>(AbilitySlot::Num); ++i)
+			{
+				const AbilityInfo& info = kAbilityInfos[i];
+				float ctRatio = static_cast<float>(m_abilityCT[i]) / static_cast<float>(info.coolTime);
+				commandMenu->SetItemState(i, CanUseAbility(i), ctRatio, info.atbCost);
+			}
+		}
 
 		// WPゲージ（覚醒ゲージ）。覚醒中は残り時間を表示する
 		float wpRatio = m_isAwakening

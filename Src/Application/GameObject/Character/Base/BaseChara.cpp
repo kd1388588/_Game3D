@@ -1,5 +1,6 @@
 ﻿#include "BaseChara.h"
 #include "../../../Scene/SceneManager.h"
+#include "../../../Utility/GameTime.h"
 
 namespace
 {
@@ -62,13 +63,16 @@ void BaseChara::Update()
 {
 	m_rootMoveDelta = Math::Vector3::Zero;
 
+	// ゲームの時間の速さ（スローモーション中は 1.0 より小さい）
+	float timeScale = GameTime::GetScale();
+
 	if (m_model)
 	{
 		// 1. アニメーション時間を進める
 		//    （AdvanceTime は「進める前の時間」でポーズを作るので、その時間を覚えておく）
 		float poseTime = m_animator.GetTime();
 		ResetPoseToRest();
-		m_animator.AdvanceTime(m_model->WorkNodes(), m_animSpeed);
+		m_animator.AdvanceTime(m_model->WorkNodes(), m_animSpeed * timeScale);
 
 		// 2. ルートモーションの移動量を計算
 		if (m_extractPelvisMotion)
@@ -99,9 +103,10 @@ void BaseChara::Update()
 
 	// 落下中（m_gravity が正）だけ、重力の倍率をかける
 	// （地面にいる時は毎フレーム 0 に戻るので、接地の判定には影響しない）
+	// スローモーション中は、重力も落ちる速さもゆっくりにする
 	float accel = (m_gravity > 0.0f) ? kGravityAccel * m_fallGravityRate : kGravityAccel;
-	m_gravity += accel;
-	m_pos.y -= m_gravity;
+	m_gravity += accel * timeScale;
+	m_pos.y -= m_gravity * timeScale;
 }
 
 void BaseChara::DrawLit()

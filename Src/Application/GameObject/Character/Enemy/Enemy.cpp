@@ -1,5 +1,6 @@
 ﻿#include "Enemy.h"
 #include "../../../Utility/HitStop.h"
+#include "../../../Utility/GameTime.h"
 #include "../Player/Player.h"
 #include "../../../Scene/SceneManager.h"
 #include "EnemyState.h"
@@ -81,6 +82,15 @@ void Enemy::Update()
 	}
 
 	BaseChara::Update();
+
+	// スローモーション中（プレイヤーがコマンドを選んでいる間）は、アニメーションをゆっくり動かすだけにする
+	// （攻撃する・近づくなどの考える処理は止める）
+	if (GameTime::IsSlow())
+	{
+		ApplyRootMotion(m_rootScale, m_rotY);
+		UpdateWorldMatrix();
+		return;
+	}
 
 	UpdateInvincibleTimer();
 

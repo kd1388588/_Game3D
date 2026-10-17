@@ -237,7 +237,7 @@ void KdEffekseerManager::UpdateEffekseerEffect()
 {
 	if (m_isPause) { return; }
 
-	m_efkManager->Update();
+	m_efkManager->Update(m_updateSpeed);
 
 	m_efkManager->BeginUpdate();
 

@@ -89,11 +89,12 @@ void ATBGage::Init()
 	m_wpReadyText->SetColor(kWpFullColor);
 	SetTextLeft(m_wpReadyText, static_cast<float>(kGageLeft + kWpWidth + 8), static_cast<float>(kWpY));
 
-	// アビリティの枠の「1」「2」
+	// アビリティの枠の「04」「05」
+	const char* const slotNames[] = { "04", "05" };
 	for (int i = 0; i < static_cast<int>(AbilitySlot::Num); ++i)
 	{
 		auto text = std::make_shared<UIText>();
-		text->SetText(std::to_string(i + 1), UIText::FontSize::Small);
+		text->SetText(slotNames[i], UIText::FontSize::Small);
 		text->SetCenterPos({ static_cast<float>(kSlotCenterX + kSlotSpace * i), static_cast<float>(kSlotCenterY - 2) });
 		m_slotKeyTexts.push_back(text);
 	}

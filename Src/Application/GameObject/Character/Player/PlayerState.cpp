@@ -61,8 +61,8 @@ namespace
 	const std::string kJumpLoopAnimName		= "Combat_JumpLoop";
 	const std::string kJumpEndAnimName		= "Combat_JumpEnd";
 
-	// アビリティ（1キー：攻撃04、2キー：攻撃05。使うゲージの量・CTは Player.cpp の kAbilityInfos）
-	// アビリティの攻撃は、ボタンを押し続けなくても最後の段まで自動で出る
+	// アビリティ（ATBコマンドメニューで選ぶ攻撃04・05。使うゲージの量・CTは Player.cpp の kAbilityInfos）
+	// アビリティの攻撃は、ボタンを押さなくても最後の段まで自動で出る
 	constexpr float kAbilityDamageRate		= 1.5f;		// 普通の攻撃の何倍のダメージか
 
 	// ガード（止まっている時に Shift を押している間）
@@ -81,6 +81,7 @@ namespace
 
 	// 攻撃
 	constexpr float kAttackAnimSpeed		= 1.15f;	// 攻撃の再生速度（少し速くして、もっさりしないようにする）
+	constexpr float kAttack5_3AnimSpeed		= 0.9f;		// 攻撃05の3段目だけは、少しゆっくり再生する
 	constexpr float kAttackEvadeCancelFrame	= 12.0f;	// 攻撃のこのフレーム以降なら、回避でキャンセルできる
 
 	// 着地
@@ -112,27 +113,6 @@ void PlayerState::UseRootMotion(Player* player)
 	player->SetRootMotionScale(1.0f);
 }
 
-bool PlayerState::TryUseAbility(Player* player, AbilitySlot slot)
-{
-	// ATBゲージとCTを確かめて、使えたら攻撃04・05を出す
-	int attackType = player->TryStartAbility(slot);
-	if (attackType <= 0) return false;
-
-	player->ChangeState(std::make_shared<PlayerStateComboAttack>(attackType, 1, PlayerStateComboAttack::SubStepNone, true, true));
-	return true;
-}
-
-bool PlayerState::TryAbilityInput(Player* player)
-{
-	// 1キー・2キー（両方のキーの入力を毎フレーム確かめる）
-	bool slot1 = player->CheckAbilityInput(AbilitySlot::Slot1);
-	bool slot2 = player->CheckAbilityInput(AbilitySlot::Slot2);
-
-	if (slot1 && TryUseAbility(player, AbilitySlot::Slot1)) return true;
-	if (slot2 && TryUseAbility(player, AbilitySlot::Slot2)) return true;
-	return false;
-}
-
 // 待機・移動中に共通の入力によるステート遷移
 // 遷移した場合は true を返す
 bool PlayerState::TryCommonTransition(Player* player)
@@ -155,9 +135,6 @@ bool PlayerState::TryCommonTransition(Player* player)
 		player->ChangeState(std::make_shared<PlayerStateJump>());
 		return true;
 	}
-
-	// 1・2キー：ATBゲージを使ってアビリティ（攻撃04・05）
-	if (TryAbilityInput(player)) return true;
 
 	// 攻撃（剣は常に抜いているので、いつでも攻撃できる）
 	if (player->CheckAttackInput())
@@ -400,7 +377,9 @@ void PlayerStateComboAttack::ChangeState(Player* player)
 	bool isLoop = (IsSplitAttack() && m_subStep == SubStepLoop);
 	player->ChangeAnimation(GetAnimName(), isLoop, true, 5.0f);
 
-	player->SetAnimationSpeed(kAttackAnimSpeed);
+	// 再生速度（05の3段目だけ少しゆっくり）
+	bool isSlowAttack = (m_comboType == 5 && m_comboStep == 3);
+	player->SetAnimationSpeed(isSlowAttack ? kAttack5_3AnimSpeed : kAttackAnimSpeed);
 
 	// アビリティの攻撃中は、当ててもATBゲージがたまらない
 	player->SetAbilityAttack(m_isAbility);
@@ -430,9 +409,6 @@ void PlayerStateComboAttack::Update(Player* player)
 		return;
 	}
 
-	// 1・2キーが押されたらアビリティを「予約」する（キャンセルできるフレームで出す）
-	if (player->CheckAbilityInput(AbilitySlot::Slot1)) m_reservedAbility = static_cast<int>(AbilitySlot::Slot1);
-	if (player->CheckAbilityInput(AbilitySlot::Slot2)) m_reservedAbility = static_cast<int>(AbilitySlot::Slot2);
 
 	// 攻撃タイプ04のLoopは一定時間でEndへ
 	if (IsSplitAttack() && m_subStep == SubStepLoop)
@@ -469,14 +445,6 @@ void PlayerStateComboAttack::Update(Player* player)
 		PlaySlashEffect(player);
 	}
 
-	// アビリティの予約があり、キャンセル可能フレームを超えたら、コンボを止めてアビリティを出す
-	if (m_reservedAbility >= 0 && animTime >= GetCancelFrame())
-	{
-		AbilitySlot slot = static_cast<AbilitySlot>(m_reservedAbility);
-		m_reservedAbility = -1;
-		if (TryUseAbility(player, slot)) return;
-	}
-
 	// 予約があり、キャンセル可能フレームを超えたら次へ滑らかに移行
 	// （アビリティの時は、溜め攻撃のドリルのループを最後まで見せる）
 	bool isAbilityChargeLoop = m_isAbility && IsSplitAttack() && m_subStep == SubStepLoop;
@@ -502,9 +470,6 @@ void PlayerStateComboAttack::Update(Player* player)
 		player->ChangeState(std::make_shared<PlayerStateComboAttack>(4, 3, SubStepLoop, false, m_isAbility));
 		return;
 	}
-
-	// 最後まで再生してからアビリティの予約を使う（キャンセルできない攻撃の時）
-	if (m_reservedAbility >= 0 && TryUseAbility(player, static_cast<AbilitySlot>(m_reservedAbility))) return;
 
 	// 予約があれば次の段へ、なければIdleへ（4_3_End の次は 4_4）
 	if (m_nextAttackReserved)

@@ -47,6 +47,9 @@ public:
 
 	void SetPause(const int handle, const bool isPause);
 
+	// すべてのエフェクトの再生速度（スローモーション用。1.0 で普通の速さ）
+	void SetUpdateSpeed(const float speed) { m_updateSpeed = speed; }
+
 	// 再生中かどうか
 	const bool IsPlaying(const int handle) const;
 
@@ -84,6 +87,7 @@ private:
 	std::weak_ptr<KdCamera> m_wpCamera;
 
 	bool m_isPause = false;
+	float m_updateSpeed = 1.0f;		// すべてのエフェクトの再生速度
 
 public:
 

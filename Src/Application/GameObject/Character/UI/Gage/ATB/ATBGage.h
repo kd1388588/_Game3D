@@ -5,7 +5,7 @@ class UIText;
 
 // バトル用のゲージ表示（FF7リメイク風。HPゲージのまわりに並べる）
 // ・ATBゲージ（2本）：攻撃を当てたり時間がたつとたまる。アビリティで使う
-// ・アビリティ（1・2キー）：使えるか・CT（クールタイム）の残り・使うゲージの本数
+// ・アビリティ（攻撃04・05）：使えるか・CT（クールタイム）の残り・使うゲージの本数
 // ・WPゲージ：ためると G キーで覚醒できる（覚醒中は残り時間）
 // ・今のバトルモード（OPERATOR / PUNISHER）と、モードの固定の残り時間・ガード中の表示
 class ATBGage : public BaseGage
@@ -27,7 +27,7 @@ public:
 	// モードを切り替えられない残りの割合（0 なら切り替えられる）
 	void SetModeLockRatio(float ratio) { m_modeLockRatio = ratio; }
 
-	// アビリティの状態（index：0 が1キー、1 が2キー）
+	// アビリティの状態（index：0 が攻撃04、1 が攻撃05）
 	// canUse：今使えるか、ctRatio：CTの残りの割合（0～1）、cost：使うATBゲージの本数
 	void SetAbilityState(int index, bool canUse, float ctRatio, int cost);
 
@@ -78,5 +78,5 @@ private:
 	std::shared_ptr<UIText>					m_guardText = nullptr;
 	std::shared_ptr<UIText>					m_wpText = nullptr;
 	std::shared_ptr<UIText>					m_wpReadyText = nullptr;	// WPが満タンの時の「G：覚醒」
-	std::vector<std::shared_ptr<UIText>>	m_slotKeyTexts;				// アビリティの枠の「1」「2」
+	std::vector<std::shared_ptr<UIText>>	m_slotKeyTexts;				// アビリティの枠の「04」「05」
 };
