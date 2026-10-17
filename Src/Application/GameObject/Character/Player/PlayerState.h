@@ -47,11 +47,29 @@ public:
 };
 
 // ガード（止まっている時に Shift を押している間。受けるダメージが減り、のけぞらない）
+// 構える（Start）→ 構えたまま（Loop）→ 下ろす（End）。攻撃を受けた時は Hit を再生する
 class PlayerStateGuard : public PlayerState
 {
 public:
+	enum class Phase
+	{
+		Start,	// 構え始め
+		Loop,	// 構えたまま
+		Hit,	// 攻撃を受け止めた
+		End,	// 構えを解く（この間はガードしていない）
+	};
+
+	PlayerStateGuard(Phase phase = Phase::Start) : m_phase(phase) {}
+
 	void ChangeState(Player* player) override;
 	void Update(Player* player) override;
+
+private:
+
+	// ガードの段階を変えて、その段階のアニメーションを再生する
+	void ChangePhase(Player* player, Phase phase);
+
+	Phase m_phase = Phase::Start;
 };
 
 class PlayerStateComboAttack : public PlayerState

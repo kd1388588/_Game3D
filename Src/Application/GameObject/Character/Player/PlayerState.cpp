@@ -66,10 +66,14 @@ namespace
 	constexpr float kAbilityDamageRate		= 1.5f;		// 普通の攻撃の何倍のダメージか
 
 	// ガード（止まっている時に Shift を押している間）
-	// ※ガード専用のアニメーションが無いので、待機のアニメーションをゆっくり再生している
-	const std::string kGuardAnimName		= "Combat_Idle";
-	constexpr float kGuardAnimSpeed			= 0.3f;
-	constexpr float kGuardBlendFrame		= 4.0f;
+	// アニメーション：Sequence2/08_Hit/14_Block の Block_Start / Loop / Hit / End
+	const std::string kGuardStartAnimName	= "GuardStart";
+	const std::string kGuardLoopAnimName	= "GuardLoop";
+	const std::string kGuardHitAnimName		= "GuardHit";
+	const std::string kGuardEndAnimName		= "GuardEnd";
+	constexpr float kGuardBlendFrame		= 4.0f;		// ガードのアニメーションどうしのブレンドフレーム数
+	constexpr float kGuardStartAnimSpeed	= 1.5f;		// 構えるのは素早く（すぐ守れるように）
+	constexpr float kGuardEndCancelRate		= 0.3f;		// 構えを解くアニメーションがこの割合まで進んだら、次の行動に移れる
 
 	// ダッシュ（移動中に Shift を押している間）
 	constexpr float kDashSpeedRate			= 1.6f;		// 走る速さの何倍か
@@ -171,28 +175,111 @@ void PlayerStateIdle::Update(Player* player)
 
 void PlayerStateGuard::ChangeState(Player* player)
 {
-	player->ChangeAnimation(kGuardAnimName, true, false, kGuardBlendFrame);
-	player->SetAnimationSpeed(kGuardAnimSpeed);
-	UseRootMotion(player);
-	player->SetGuarding(true);
+	UseRootMotion(player);	// 受け止めた時に押し下がる動きも、アニメーションどおりに動かす
+	ChangePhase(player, m_phase);
+}
+
+void PlayerStateGuard::ChangePhase(Player* player, Phase phase)
+{
+	m_phase = phase;
+
+	switch (phase)
+	{
+	case Phase::Start:
+		player->ChangeAnimation(kGuardStartAnimName, false, true, kGuardBlendFrame);
+		player->SetAnimationSpeed(kGuardStartAnimSpeed);
+		break;
+	case Phase::Loop:
+		player->ChangeAnimation(kGuardLoopAnimName, true, false, kGuardBlendFrame);
+		player->SetAnimationSpeed(1.0f);
+		break;
+	case Phase::Hit:
+		// 続けて受けた時も最初から再生する
+		player->ChangeAnimation(kGuardHitAnimName, false, true, 2.0f);
+		player->SetAnimationSpeed(1.0f);
+		break;
+	case Phase::End:
+		player->ChangeAnimation(kGuardEndAnimName, false, true, kGuardBlendFrame);
+		player->SetAnimationSpeed(1.0f);
+		break;
+	}
+
+	// 構えを解いている時以外はガード中
+	player->SetGuarding(phase != Phase::End);
 }
 
 void PlayerStateGuard::Update(Player* player)
 {
+	// 構えを解いている途中
+	if (m_phase == Phase::End)
+	{
+		// もう一度 Shift を押したら、すぐ構え直す
+		if (player->IsShiftDown() && !player->CheckMoveInput())
+		{
+			ChangePhase(player, Phase::Start);
+			return;
+		}
+
+		// 少し進んだら、攻撃・回避・移動などに移れる
+		float animLength = player->GetAnimLength();
+		if (animLength <= 0.0f || player->GetAnimTime() >= animLength * kGuardEndCancelRate)
+		{
+			if (TryCommonTransition(player)) return;
+			if (player->CheckMoveInput())
+			{
+				player->ChangeState(std::make_shared<PlayerStateRun>());
+				return;
+			}
+		}
+
+		if (player->IsAnimEnd())
+		{
+			player->ChangeState(std::make_shared<PlayerStateIdle>());
+		}
+		return;
+	}
+
 	// ガード中の印（Player は毎フレーム消すので、付け直す）
 	player->SetGuarding(true);
 
 	// ガード中でも、攻撃・回避・ジャンプ・アビリティはすぐ出せる
 	if (TryCommonTransition(player)) return;
 
-	// 移動キーを押したらダッシュ、Shift を離したら待機へ
+	// 移動キーを押したらダッシュ
 	if (player->CheckMoveInput())
 	{
 		player->ChangeState(std::make_shared<PlayerStateRun>());
+		return;
 	}
-	else if (!player->IsShiftDown())
+
+	switch (m_phase)
 	{
-		player->ChangeState(std::make_shared<PlayerStateIdle>());
+	case Phase::Start:
+		// 構え終わったら、構えたままのループへ（Shift を離していたら、そのまま構えを解く）
+		if (player->IsAnimEnd())
+		{
+			ChangePhase(player, player->IsShiftDown() ? Phase::Loop : Phase::End);
+		}
+		break;
+
+	case Phase::Loop:
+		// Shift を離したら構えを解く
+		if (!player->IsShiftDown())
+		{
+			ChangePhase(player, Phase::End);
+		}
+		break;
+
+	case Phase::Hit:
+		// 受け止める動きが終わったら、Shift を押していれば構えたまま、離していれば構えを解く
+		if (player->IsAnimEnd())
+		{
+			ChangePhase(player, player->IsShiftDown() ? Phase::Loop : Phase::End);
+		}
+		break;
+
+	default:
+		break;
 	}
 }
 

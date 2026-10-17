@@ -208,6 +208,10 @@ std::vector<AnimLoadInfo> Player::CreateAnimList()
 		{ "Combat_JumpLoop",	kAnimDir + "05_Jump/02_Jump_Combat/AS_Jump_Combat_Loop_0_Seq/AS_Jump_Combat_Loop_0_Seq.gltf" },
 		{ "Combat_JumpEnd",		kAnimDir + "05_Jump/02_Jump_Combat/AS_Jump_Combat_End_0_Seq/AS_Jump_Combat_End_0_Seq.gltf" },
 		{ "Damage",				kAnimDir + "08_Hit/01_Hit/AS_Hit_F_Seq/AS_Hit_F_Seq.gltf" },
+		{ "GuardStart",			kAnimDir + "08_Hit/14_Block/AS_Block_Start_Seq/AS_Block_Start_Seq.gltf" },
+		{ "GuardLoop",			kAnimDir + "08_Hit/14_Block/AS_Block_Loop_Seq/AS_Block_Loop_Seq.gltf" },
+		{ "GuardHit",			kAnimDir + "08_Hit/14_Block/AS_Block_Hit_Seq/AS_Block_Hit_Seq.gltf" },
+		{ "GuardEnd",			kAnimDir + "08_Hit/14_Block/AS_Block_End_Seq/AS_Block_End_Seq.gltf" },
 		{ "Death",				kAnimDir + "08_Hit/01_Hit/AS_Hit_Death_Seq/AS_Hit_Death_Seq.gltf" },
 	};
 
@@ -1649,7 +1653,9 @@ void Player::OnDamage(int damage, bool isCritical)
 		HitStop::Request(kGuardHitStopFrame, kGuardShakePower);
 		EffectPlayer::Play(EffectName::Guard, m_pos + Math::Vector3(0.0f, 1.0f, 0.0f), 1.0f);
 
-		if (m_hp <= 0) ChangeState(std::make_shared<PlayerStateDead>());
+		// 倒れていなければ、受け止めるアニメーションを再生する
+		if (m_hp <= 0)	ChangeState(std::make_shared<PlayerStateDead>());
+		else			ChangeState(std::make_shared<PlayerStateGuard>(PlayerStateGuard::Phase::Hit));
 		return;
 	}
 
