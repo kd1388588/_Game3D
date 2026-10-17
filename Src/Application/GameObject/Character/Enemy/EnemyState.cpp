@@ -21,7 +21,18 @@ namespace
 	constexpr float kJumpAttackMaxDist		= 14.0f;	// これより近い時に使う
 	constexpr int	kJumpAttackChance		= 2;		// 使える距離にいる時、1フレームに使う確率（％）
 	constexpr int	kMaxLeapFrame			= 180;		// 空中にいる時間の上限（地面が無い所へ飛んだ時のため）
+	constexpr int	kMaxLandingPredictFrame	= 120;		// 着地予測を行う最大フレーム数
 	constexpr float kJumpAttackBlendFrame	= 5.0f;
+
+	// アニメーション（Ability_GroundSmash）を調べた結果
+	//   Start（50フレーム）：最初から空中にいて、両手を振り上げながら上がる
+	//   Loop（2フレーム）　：一番高い所の姿勢のまま
+	//   End（42フレーム）　：6フレーム目で足が地面に着き、10フレーム目で両手を地面に叩きつける。その後起き上がる
+	constexpr float kEndLandFrame			= 6.0f;		// End で足が地面に着くフレーム
+	constexpr float kEndSmashFrame			= 10.0f;	// End で両手を地面に叩きつけるフレーム（ここで攻撃する）
+	constexpr float kWindupPoseTime			= 12.6f;	// 構えに使う姿勢（End の、両手を地面に着いてしゃがんだ所）
+	constexpr int	kWindupFrame			= 24;		// 構えている時間（プレイヤーが回避・ガードの準備をする時間）
+	constexpr float kWindupBlendFrame		= 8.0f;
 	const std::string kJumpAttackStartAnim	= "JumpAttackStart";
 	const std::string kJumpAttackLoopAnim	= "JumpAttackLoop";
 	const std::string kJumpAttackEndAnim	= "JumpAttackEnd";
@@ -136,71 +147,106 @@ void EnemyStateAttack::Update(Enemy* enemy)
 // ==========================================
 void EnemyStateJumpAttack::ChangeState(Enemy* enemy)
 {
-	m_phase = Phase::Start;
-	m_airTimer = 0;
+	m_phase = Phase::Windup;
+	m_timer = 0;
+	m_isSmashDone = false;
 
 	enemy->StartJumpAttackCooldown();
 	enemy->TurnToPlayer();
-	enemy->ChangeAnimation(kJumpAttackStartAnim, false, true, kJumpAttackBlendFrame);
-	enemy->SetAnimationSpeed(1.0f);
 	enemy->SetUseRootMotion(false);		// 移動はプログラムで放物線を描いて飛ぶ
 	enemy->SetSuperArmor(true);			// 攻撃の途中で殴られても止まらない
+
+	// 構え：着地のアニメーションの「両手を地面に着いてしゃがんだ姿勢」で止めて、力をためる
+	// （飛び上がるアニメーションは最初から空中にいるので、構えには使えない）
+	// （再生速度を 0 にするとブレンドが進まないので、速度は 1 のまま、毎フレーム同じ時間に戻す）
+	enemy->ChangeAnimation(kJumpAttackEndAnim, false, true, kWindupBlendFrame);
+	enemy->SetAnimTime(kWindupPoseTime);
+	enemy->SetAnimationSpeed(1.0f);
+}
+
+void EnemyStateJumpAttack::StartSmashAnim(Enemy* enemy, int framesToLand)
+{
+	// 着地のアニメーションは kEndLandFrame で足が地面に着くので、
+	// 実際に着地する時にそのフレームになるよう、途中から再生する
+	float startTime = std::max(kEndLandFrame - static_cast<float>(framesToLand), 0.0f);
+	enemy->ChangeAnimation(kJumpAttackEndAnim, false, true, 2.0f);
+	enemy->SetAnimTime(startTime);
+	enemy->SetAnimationSpeed(1.0f);
+	m_phase = Phase::Smash;
 }
 
 void EnemyStateJumpAttack::Update(Enemy* enemy)
 {
 	switch (m_phase)
 	{
-	case Phase::Start:
-		// 構えている間は、プレイヤーの方を向き続ける
+	case Phase::Windup:
+		// 構えている間は、プレイヤーの方を向き続け、しゃがんだ姿勢のまま止めておく
 		enemy->TurnToPlayer();
+		enemy->SetAnimTime(kWindupPoseTime);
 
 		// 構え終わったら、その時のプレイヤーの位置へ飛び上がる
-		if (enemy->IsAnimEnd())
+		if (++m_timer >= kWindupFrame)
 		{
-			if (auto target = enemy->GetTarget().lock())
-			{
-				enemy->StartLeap(target->GetPos());
-			}
-			else
-			{
-				enemy->StartLeap(enemy->GetPos());
-			}
+			if (auto target = enemy->GetTarget().lock())	enemy->StartLeap(target->GetPos());
+			else											enemy->StartLeap(enemy->GetPos());
 
-			if (enemy->HasAnimation(kJumpAttackLoopAnim))
-			{
-				enemy->ChangeAnimation(kJumpAttackLoopAnim, true, false, kJumpAttackBlendFrame);
-			}
-			m_phase = Phase::Air;
+			// 飛び上がるアニメーション（両手を振り上げる）を、上がりきる時間に合わせて再生する
+			enemy->ChangeAnimation(kJumpAttackStartAnim, false, true, kJumpAttackBlendFrame);
+			float riseFrames = std::max(enemy->GetLeapRiseFrames(), 1.0f);
+			float animLength = enemy->GetAnimLength();
+			enemy->SetAnimationSpeed((animLength > 0.0f) ? animLength / riseFrames : 1.0f);
+
+			m_phase = Phase::Rise;
+			m_timer = 0;
 		}
 		break;
 
-	case Phase::Air:
+	case Phase::Rise:
+	case Phase::Hang:
+	{
 		// 空中：プレイヤーの方へ飛んでいく
 		enemy->UpdateLeapMove();
-		m_airTimer++;
+		m_timer++;
 
-		// 着地したら、周りを叩きつけて攻撃する
-		if (enemy->IsLeapLanded() || m_airTimer >= kMaxLeapFrame)
+		// 上がりきったら、一番高い所の姿勢のまま落ちる
+		if (m_phase == Phase::Rise && enemy->IsAnimEnd())
 		{
-			enemy->GroundSmash();
+			enemy->ChangeAnimation(kJumpAttackLoopAnim, true, false, 3.0f);
+			enemy->SetAnimationSpeed(1.0f);
+			m_phase = Phase::Hang;
+		}
 
-			if (enemy->HasAnimation(kJumpAttackEndAnim))
-			{
-				enemy->ChangeAnimation(kJumpAttackEndAnim, false, true, 2.0f);
-				m_phase = Phase::End;
-			}
-			else
-			{
-				enemy->ChangeState(std::make_shared<EnemyStateIdle>());
-			}
+		// 着地の少し前から、叩きつけるアニメーションを始める（着地の瞬間に足が地面に着くように）
+		int framesToLand = enemy->PredictLandingFrames(kMaxLandingPredictFrame);
+		if (framesToLand >= 0 && framesToLand <= static_cast<int>(kEndLandFrame))
+		{
+			StartSmashAnim(enemy, framesToLand);
+		}
+		else if (enemy->IsLeapLanded() || m_timer >= kMaxLeapFrame)
+		{
+			// 予測が間に合わなかった（高い所に着地した等）
+			StartSmashAnim(enemy, 0);
 		}
 		break;
+	}
 
-	case Phase::End:
-		// 叩きつけた後のすき（アニメーションが終わるまで動かない。プレイヤーの反撃のチャンス）
+	case Phase::Smash:
+		// 着地するまでは前へ進み、着地したら止まる
+		if (enemy->IsLeapLanded())	enemy->StopLeap();
+		else						enemy->UpdateLeapMove();
+
+		// 両手を地面に叩きつけた瞬間に、周りを攻撃する
+		if (!m_isSmashDone && enemy->GetAnimTime() >= kEndSmashFrame)
+		{
+			enemy->StopLeap();
+			enemy->GroundSmash();
+			m_isSmashDone = true;
+		}
+
+		// 叩きつけた後のすき（起き上がるまで動かない。プレイヤーの反撃のチャンス）
 		if (enemy->IsAnimEnd())
 		{
+			if (!m_isSmashDone) enemy->GroundSmash();
 			enemy->ChangeState(std::make_shared<EnemyStateIdle>());
 		}
 		break;

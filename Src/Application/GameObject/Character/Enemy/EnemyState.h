@@ -52,13 +52,18 @@ public:
 private:
 	enum class Phase
 	{
-		Start,	// 構え（飛び上がる前）
-		Air,	// 空中
-		End,	// 着地・叩きつけ・すき
+		Windup,	// 構え（しゃがんで力をためる）
+		Rise,	// 飛び上がって上がっている途中（Start）
+		Hang,	// 一番高い所から落ちている途中（Loop）
+		Smash,	// 着地・叩きつけ・すき（End）
 	};
 
-	Phase	m_phase = Phase::Start;
-	int		m_airTimer = 0;		// 飛び上がってからのフレーム数
+	// 叩きつけるアニメーションを始める（framesToLand：何フレーム後に着地するか）
+	void StartSmashAnim(Enemy* enemy, int framesToLand);
+
+	Phase	m_phase = Phase::Windup;
+	int		m_timer = 0;			// その段階になってからのフレーム数
+	bool	m_isSmashDone = false;	// 叩きつけの攻撃をしたか
 };
 
 class EnemyStateDamage : public EnemyState

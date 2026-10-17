@@ -45,8 +45,14 @@ public:
 	// target へ向かって飛び上がる（放物線で飛び、空中にいる時間は高さから決まる）
 	void StartLeap(const Math::Vector3& target);
 
+	// 上がりきるまでのフレーム数（飛び上がるアニメーションの再生速度を合わせるのに使う）
+	float GetLeapRiseFrames() const;
+
 	// 空中での移動（毎フレーム呼ぶ）
 	void UpdateLeapMove();
+
+	// 水平方向の移動を止める（着地した時）
+	void StopLeap();
 
 	// 着地したか（一度落ち始めた後、地面に着いたら true）
 	bool IsLeapLanded() const;

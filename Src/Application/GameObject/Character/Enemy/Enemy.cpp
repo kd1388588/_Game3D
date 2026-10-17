@@ -31,8 +31,9 @@ namespace
 	// 飛びかかり攻撃（ボスだけ）
 	const std::string kJumpAttackStartAnim	= "JumpAttackStart";
 	constexpr int	kJumpAttackCoolTime		= 60 * 6;	// 一度使ったら6秒は使わない
-	constexpr float	kLeapJumpPower			= 0.22f;	// 飛び上がる強さ（高さ約2.4、空中にいる時間 約44フレーム）
+	constexpr float	kLeapJumpPower			= 0.3f;		// 飛び上がる強さ（上がるのに30フレーム、高さ約4.5）
 	constexpr float	kGravityPerFrame		= 0.01f;	// 重力（BaseChara と同じ値）
+	constexpr float	kLeapFallGravityRate	= 1.6f;		// 落ちる時の重力の倍率（勢いよく落ちて叩きつける）
 	constexpr float	kMaxLeapDistance		= 14.0f;	// 飛べる距離の上限
 	constexpr float	kLeapLandOffset			= 1.5f;		// プレイヤーの少し手前に着地する（真上に落ちてめり込まないように）
 	constexpr float	kFallingGravity			= 0.03f;	// これを超えたら「落ち始めた」とみなす
@@ -181,8 +182,9 @@ void Enemy::PushAwayFromOtherEnemies()
 
 void Enemy::ChangeState(const std::shared_ptr<EnemyState>& newState)
 {
-	// のけぞらない状態は、その攻撃の間だけ（次のステートが必要なら付け直す）
+	// のけぞらない状態・落ちる時の重力の倍率は、その攻撃の間だけ（次のステートが必要なら付け直す）
 	m_isSuperArmor = false;
+	SetFallGravityRate(1.0f);
 
 	m_state = newState;
 	if (m_state)
@@ -305,12 +307,24 @@ void Enemy::StartLeap(const Math::Vector3& target)
 	if (dist > 0.0f) toTarget /= dist;
 	float leapDist = std::clamp(dist - kLeapLandOffset * m_scale * 0.5f, 0.0f, kMaxLeapDistance);
 
-	// 空中にいる時間（上がって下りるまで）＝ 2 × 飛び上がる強さ ÷ 重力
-	float airFrames = 2.0f * kLeapJumpPower / kGravityPerFrame;
+	// 空中にいる時間 ＝ 上がる時間（強さ ÷ 重力）＋ 落ちる時間（落ちる時は重力が強いので短い）
+	float riseFrames = GetLeapRiseFrames();
+	float airFrames = riseFrames * (1.0f + 1.0f / std::sqrt(kLeapFallGravityRate));
 	m_leapVelocity = toTarget * (leapDist / airFrames);
 
 	m_gravity = -kLeapJumpPower;
 	m_isLeapFalling = false;
+	SetFallGravityRate(kLeapFallGravityRate);	// 着地の予測（PredictLandingFrames）もこの重力で計算される
+}
+
+float Enemy::GetLeapRiseFrames() const
+{
+	return kLeapJumpPower / kGravityPerFrame;
+}
+
+void Enemy::StopLeap()
+{
+	m_leapVelocity = Math::Vector3::Zero;
 }
 
 void Enemy::UpdateLeapMove()
