@@ -21,6 +21,9 @@
 // Effect
 #include "../../Effect/EffectPlayer.h"
 
+// Utility
+#include "../../../Utility/HitStop.h"
+
 // Scene
 #include "../../../Scene/SceneManager.h"
 #include "../../../Scene/BaseScene/BaseScene.h"
@@ -59,17 +62,54 @@ namespace
 	constexpr int	kInputBufferFrame		= 10;
 
 	// バトルモード（FF7リメイクのクラウド風）
-	// モードごとに使える攻撃パターン（Cキーでこの中を切り替える）
-	const std::vector<int> kOperatorAttackTypes	= { 1, 2, 3 };	// オペレーター：手数の多い攻撃
-	const std::vector<int> kPunisherAttackTypes	= { 4, 5 };		// パニッシャー：重い攻撃
+	constexpr int	kOperatorAttackType		= 1;		// オペレーターの左クリックの攻撃（攻撃01）
+	constexpr int	kPunisherAttackType		= 2;		// パニッシャーの左クリックの攻撃（攻撃02）
 	constexpr float kPunisherMoveRate		= 0.6f;		// パニッシャーの移動の速さ（オペレーターを1.0とした倍率）
 	constexpr float kPunisherDamageRate		= 1.5f;		// パニッシャーのダメージの倍率
 
 	// ATBゲージのたまり方
-	constexpr float kAtbPassiveGain			= 0.05f;	// オペレーターの時、1フレームにたまる量（約33秒で1本）
-	constexpr float kAtbHitGain				= 8.0f;		// 攻撃を当てた時にたまる量
+	constexpr float kAtbPassiveGain			= 0.1f;		// オペレーターの時、1フレームにたまる量（約17秒で1本）
+	constexpr float kAtbHitGain				= 12.0f;	// 攻撃を当てた時にたまる量
 	constexpr float kPunisherAtbHitRate		= 2.0f;		// パニッシャーの時、当てた時にたまる量の倍率
 	constexpr float kAtbCriticalRate		= 1.5f;		// クリティカルの時、当てた時にたまる量の倍率
+
+	// アビリティ（1キー：攻撃04、2キー：攻撃05）
+	struct AbilityInfo
+	{
+		int			attackType;		// 出す攻撃の種類
+		int			atbCost;		// 使うATBゲージの本数
+		int			coolTime;		// CT（使った後、もう一度使えるまでのフレーム数）
+		const char*	name;			// ログに出す名前
+	};
+	constexpr AbilityInfo kAbilityInfos[] =
+	{
+		{ 4, 1, 60 * 3, "攻撃04" },	// 1キー：ゲージ1本、CT 3秒
+		{ 5, 2, 60 * 8, "攻撃05" },	// 2キー：ゲージ2本、CT 8秒
+	};
+	constexpr int	kModeLockFrame			= 60 * 5;	// 攻撃05を使った後、オペレーターに固定する時間（5秒）
+
+	// ヒットストップ（攻撃が当たった瞬間に止めるフレーム数と、カメラの揺れの強さ）
+	// ※プレイヤーの攻撃はすべて AttackOBB で、敵の攻撃は OnDamage で、ここの値を使う
+	constexpr int	kHitStopFrame			= 4;		// 普通の攻撃
+	constexpr int	kCriticalHitStopFrame	= 7;		// クリティカル
+	constexpr int	kHeavyHitStopBonus		= 2;		// パニッシャー・アビリティの時に足すフレーム数
+	constexpr float	kHitShakePower			= 0.04f;	// カメラの揺れ（普通）
+	constexpr float	kCriticalHitShakePower	= 0.08f;	// カメラの揺れ（クリティカル）
+	constexpr int	kDamageHitStopFrame		= 6;		// 敵の攻撃を受けた時
+	constexpr float	kDamageShakePower		= 0.1f;
+	constexpr int	kGuardHitStopFrame		= 4;		// 敵の攻撃をガードした時
+	constexpr float	kGuardShakePower		= 0.05f;
+
+	// ガード
+	constexpr float	kGuardDamageRate		= 0.2f;		// ガード中に受けるダメージの倍率
+
+	// WPゲージ（ためると G キーで覚醒できる）
+	constexpr float	kWpHitGain				= 4.0f;		// 攻撃を当てた時にたまる量
+	constexpr float	kWpDamageGain			= 8.0f;		// 攻撃を受けた時にたまる量
+	constexpr float	kWpGuardGain			= 6.0f;		// ガードした時にたまる量
+
+	// ダッシュ
+	constexpr float	kDashMoveRate			= 1.6f;		// ダッシュ中の移動の速さの倍率
 
 	// 覚醒
 	constexpr int	kAwakeningFrame			= 60 * 15;	// 15秒間持続
@@ -567,6 +607,9 @@ void Player::Init()
 	// 最初はオペレーターモード
 	m_atbGage = 0.0f;
 	SetBattleMode(BattleMode::Operator);
+
+	// 前のシーンのヒットストップが残らないようにする
+	HitStop::Reset();
 }
 
 void Player::Update()
@@ -575,9 +618,9 @@ void Player::Update()
 	UpdateInputBuffer();
 
 	// ヒットストップ中はアニメーションも移動も止め、座標の更新（描画）だけ行う
-	if (m_hitStopTimer > 0)
+	// （敵も同じように止まる。時間は PostUpdate で進める）
+	if (HitStop::IsStopping())
 	{
-		m_hitStopTimer--;
 		UpdateWorldMatrix();
 		return;
 	}
@@ -606,6 +649,10 @@ void Player::Update()
 
 	m_isTrailAddedThisFrame = false;
 
+	// ガード中の印は、ガードのステートが毎フレーム付け直す
+	// （敵の攻撃はこの後の敵の Update で当たるので、ステートの Update より前に消しておく）
+	m_isGuarding = false;
+
 	if (m_state)
 	{
 		m_state->Update(this);
@@ -615,8 +662,9 @@ void Player::Update()
 	UpdateAwakening();
 	UpdateHpGage();
 	UpdateModeSwitch();
-	UpdateAttackTypeSwitch();
+	UpdateAbilityTimers();
 	UpdateAtb();
+	UpdateAwakeningInput();
 
 	UpdateWorldMatrix();
 }
@@ -632,8 +680,11 @@ void Player::UpdateInputBuffer()
 
 	update(m_attackKey, m_attackBuffer);
 	update(m_jumpKey, m_jumpBuffer);
-	update(m_abilityKey, m_abilityBuffer);
 	update(m_evadeKey, m_evadeBuffer);
+	for (int i = 0; i < static_cast<int>(AbilitySlot::Num); ++i)
+	{
+		update(m_abilityKeys[i], m_abilityBuffer[i]);
+	}
 }
 
 bool Player::ConsumeInput(int& bufferTimer)
@@ -754,6 +805,9 @@ void Player::PostUpdate()
 	BaseChara::PostUpdate();
 	UpdateWeaponMatrix();
 	UpdateCameraTargetY();
+
+	// ヒットストップの時間を進める（すべてのキャラの Update が終わった後なので、敵も同じフレーム数だけ止まる）
+	HitStop::Advance();
 }
 
 void Player::UpdateCameraTargetY()
@@ -1019,39 +1073,12 @@ void Player::UpdateHpGage()
 	hpGage->SetHpRatio(std::max(ratio, 0.0f));
 }
 
-const std::vector<int>& Player::GetModeAttackTypes(BattleMode mode)
-{
-	return (mode == BattleMode::Punisher) ? kPunisherAttackTypes : kOperatorAttackTypes;
-}
-
-void Player::UpdateAttackTypeSwitch()
-{
-	// Cキーで攻撃パターンを切り替え（今のモードで使える攻撃パターンの中をループ）
-	if (!m_attackTypeKey.Update()) return;
-
-	const std::vector<int>& types = GetModeAttackTypes(m_battleMode);
-	int& index = m_modeAttackTypeIndex[static_cast<int>(m_battleMode)];
-	index = (index + 1) % static_cast<int>(types.size());
-
-	m_currentAttackType = std::clamp(types[index], 1, kAttackTypeNum);
-	s_currentAttackType = m_currentAttackType;
-
-	KdDebugGUI::Instance().AddLog
-	(
-		"[System] 攻撃タイプ切り替え: 0%d\n",
-		m_currentAttackType
-	);
-}
-
 void Player::SetBattleMode(BattleMode mode)
 {
 	m_battleMode = mode;
 
-	// 攻撃パターンを、そのモードで最後に選んでいたものにする
-	const std::vector<int>& types = GetModeAttackTypes(mode);
-	int& index = m_modeAttackTypeIndex[static_cast<int>(mode)];
-	index = std::clamp(index, 0, static_cast<int>(types.size()) - 1);
-	m_currentAttackType = std::clamp(types[index], 1, kAttackTypeNum);
+	// 左クリックの攻撃：オペレーターは攻撃01、パニッシャーは攻撃02
+	m_currentAttackType = (mode == BattleMode::Punisher) ? kPunisherAttackType : kOperatorAttackType;
 	s_currentAttackType = m_currentAttackType;
 
 	// 画面のモード表示を変える
@@ -1072,6 +1099,13 @@ void Player::UpdateModeSwitch()
 	// （キーの状態は毎フレーム更新する。倒れている時は切り替えない）
 	if (!m_modeKey.Update() || IsDead()) return;
 
+	// 攻撃05を使った後は、しばらくオペレーターに固定（切り替えられない）
+	if (m_modeLockTimer > 0)
+	{
+		KdDebugGUI::Instance().AddLog("[System] モード固定中（あと %.1f 秒）\n", m_modeLockTimer / 60.0f);
+		return;
+	}
+
 	bool toPunisher = (m_battleMode == BattleMode::Operator);
 	SetBattleMode(toPunisher ? BattleMode::Punisher : BattleMode::Operator);
 
@@ -1090,12 +1124,55 @@ void Player::AddAtbGage(float val)
 	m_atbGage = std::clamp(m_atbGage + val, 0.0f, kAtbBarMax * kAtbBarNum);
 }
 
-bool Player::UseAtbBar()
+int Player::TryStartAbility(AbilitySlot slot)
 {
-	if (m_atbGage < kAtbBarMax) return false;
+	int index = static_cast<int>(slot);
+	if (index < 0 || index >= static_cast<int>(AbilitySlot::Num)) return 0;
+	const AbilityInfo& info = kAbilityInfos[index];
 
-	m_atbGage -= kAtbBarMax;
-	return true;
+	// CT中は使えない
+	if (m_abilityCT[index] > 0)
+	{
+		KdDebugGUI::Instance().AddLog("[System] %s はCT中（あと %.1f 秒）\n", info.name, m_abilityCT[index] / 60.0f);
+		return 0;
+	}
+
+	// ATBゲージが足りなければ使えない
+	float cost = kAtbBarMax * info.atbCost;
+	if (m_atbGage < cost)
+	{
+		KdDebugGUI::Instance().AddLog("[System] %s にはATBゲージが %d 本必要です\n", info.name, info.atbCost);
+		return 0;
+	}
+
+	// ゲージを使い、CTを始める
+	m_atbGage -= cost;
+	m_abilityCT[index] = info.coolTime;
+
+	// 攻撃05の後は、しばらくオペレーターに固定する
+	if (slot == AbilitySlot::Slot2)
+	{
+		SetBattleMode(BattleMode::Operator);
+		m_modeLockTimer = kModeLockFrame;
+	}
+
+	EffectPlayer::Play(EffectName::AbilityStart, m_pos, 1.0f);
+	KdDebugGUI::Instance().AddLog("[System] アビリティ発動: %s\n", info.name);
+	return info.attackType;
+}
+
+void Player::UpdateAbilityTimers()
+{
+	for (int& ct : m_abilityCT)
+	{
+		if (ct > 0) ct--;
+	}
+	if (m_modeLockTimer > 0) m_modeLockTimer--;
+}
+
+bool Player::IsShiftDown() const
+{
+	return IsKeyDown(VK_SHIFT);
 }
 
 void Player::UpdateAtb()
@@ -1106,10 +1183,30 @@ void Player::UpdateAtb()
 		AddAtbGage(kAtbPassiveGain);
 	}
 
-	// UIへ「何本分たまっているか」を伝える（例：1.5 なら 1本目が満タン、2本目が半分）
+	// UIへ伝える
 	if (auto atbGage = m_wpAtbGage.lock())
 	{
+		// 何本分たまっているか（例：1.5 なら 1本目が満タン、2本目が半分）
 		atbGage->SetAtbValue(m_atbGage / kAtbBarMax);
+
+		// アビリティ：使えるか・CTの残りの割合
+		for (int i = 0; i < static_cast<int>(AbilitySlot::Num); ++i)
+		{
+			const AbilityInfo& info = kAbilityInfos[i];
+			bool canUse = (m_abilityCT[i] <= 0) && (m_atbGage >= kAtbBarMax * info.atbCost);
+			float ctRatio = static_cast<float>(m_abilityCT[i]) / static_cast<float>(info.coolTime);
+			atbGage->SetAbilityState(i, canUse, ctRatio, info.atbCost);
+		}
+
+		// モードの固定の残りの割合・ガード中か
+		atbGage->SetModeLockRatio(static_cast<float>(m_modeLockTimer) / static_cast<float>(kModeLockFrame));
+		atbGage->SetGuarding(m_isGuarding);
+
+		// WPゲージ（覚醒ゲージ）。覚醒中は残り時間を表示する
+		float wpRatio = m_isAwakening
+			? static_cast<float>(m_awakeningTimer) / static_cast<float>(kAwakeningFrame)
+			: m_awakeningGage / m_maxAwakeningGage;
+		atbGage->SetWpState(wpRatio, m_isAwakening);
 	}
 }
 
@@ -1122,7 +1219,7 @@ void Player::UpdateAwakeningInput()
 	}
 
 	// Gキーで覚醒発動！
-	if (IsKeyDown('G') && m_awakeningGage >= m_maxAwakeningGage && !m_isAwakening)
+	if (IsKeyDown('G') && m_awakeningGage >= m_maxAwakeningGage && !m_isAwakening && !IsDead())
 	{
 		m_isAwakening = true;
 		m_awakeningGage = 0.0f;
@@ -1144,8 +1241,9 @@ void Player::Release()
 
 void Player::ChangeState(const std::shared_ptr<PlayerState>& newState)
 {
-	// アビリティの攻撃中の印は、次のステートに入る時に消す（アビリティのステートが入る時にまた付ける）
+	// アビリティの攻撃中・ガード中の印は、次のステートに入る時に消す（そのステートが入る時にまた付ける）
 	m_isAbilityAttack = false;
+	m_isGuarding = false;
 
 	// ジャンプ用の設定（空中で腰が上がらないようにする・速く落ちる）も、ステートが変わったら元に戻す
 	SetAirPelvisMaxY(-1.0f);
@@ -1315,10 +1413,22 @@ bool Player::AttackOBB(const Math::Matrix& swordMatrix, bool isCritical, const s
 			AddAtbGage(gain);
 		}
 
+		// WPゲージもたまる（覚醒中はたまらない）
+		if (!m_isAwakening) AddAwakeningGage(kWpHitGain);
+
 		// 当たった位置にヒットエフェクト
 		// （敵は当たると少しの間無敵になるので、同じ敵に毎フレーム出続けることはない）
 		Math::Vector3 hitPos = retList.empty() ? obbMatrix.Translation() : retList.back().m_hitPos;
 		PlayHitEffect(hitEffectName, hitPos, isCritical);
+	}
+
+	// ヒットストップ（プレイヤーのすべての攻撃に、同じルールでかける）
+	// 普通 < クリティカル。パニッシャー・アビリティの重い攻撃は少し長く止める
+	if (isHit)
+	{
+		int frames = isCritical ? kCriticalHitStopFrame : kHitStopFrame;
+		if (m_battleMode == BattleMode::Punisher || m_isAbilityAttack) frames += kHeavyHitStopBonus;
+		HitStop::Request(frames, isCritical ? kCriticalHitShakePower : kHitShakePower);
 	}
 
 	return isHit;
@@ -1343,8 +1453,6 @@ bool Player::GetMoveInputDir(Math::Vector3& outDir) const
 
 bool Player::MoveProcess(bool moveByCode)
 {
-	UpdateAwakeningInput();
-
 	Math::Vector3 dir;
 	if (!GetMoveInputDir(dir)) return false;
 
@@ -1355,6 +1463,7 @@ bool Player::MoveProcess(bool moveByCode)
 	if (moveByCode)
 	{
 		float moveSpeed = (m_isAwakening ? kAwakeningMoveSpeed : kMoveSpeed) * GetModeMoveRate();
+		if (IsShiftDown()) moveSpeed *= kDashMoveRate;	// Shift を押している間はダッシュ
 		m_pos += dir * moveSpeed;
 	}
 	return true;
@@ -1378,8 +1487,23 @@ void Player::OnDamage(int damage, bool isCritical)
 	if (m_invincibleTimer > 0) return;
 	if (m_hp <= 0) return;
 
+	// ガード中：ダメージを減らし、のけぞらない
+	if (m_isGuarding)
+	{
+		m_hp -= std::max(static_cast<int>(std::round(damage * kGuardDamageRate)), 1);
+		m_invincibleTimer = kDamageInvincibleFrame;
+		if (!m_isAwakening) AddAwakeningGage(kWpGuardGain);
+		HitStop::Request(kGuardHitStopFrame, kGuardShakePower);
+		EffectPlayer::Play(EffectName::Guard, m_pos + Math::Vector3(0.0f, 1.0f, 0.0f), 1.0f);
+
+		if (m_hp <= 0) ChangeState(std::make_shared<PlayerStateDead>());
+		return;
+	}
+
 	m_hp -= damage;
 	m_invincibleTimer = kDamageInvincibleFrame;
+	if (!m_isAwakening) AddAwakeningGage(kWpDamageGain);
+	HitStop::Request(kDamageHitStopFrame, kDamageShakePower);
 
 	if (m_hp <= 0)
 	{

@@ -61,15 +61,18 @@ namespace
 	const std::string kJumpLoopAnimName		= "Combat_JumpLoop";
 	const std::string kJumpEndAnimName		= "Combat_JumpEnd";
 
-	// アビリティ（ATBゲージを1本使う技）
-	// モードごとに出す技（今ある攻撃アニメーションの中から、強そうなものを使っている）
-	const std::string kOperatorAbilityAnim	= "Attack_1_4";		// オペレーター：素早い連続斬り
-	const std::string kPunisherAbilityAnim	= "Attack_4_4";		// パニッシャー：重い一撃
-	constexpr float kAbilityDamageRate		= 2.5f;		// 普通の攻撃の何倍のダメージか
-	constexpr int	kAbilityHitStopFrame	= 4;		// 当たった時に止まるフレーム数（普通の攻撃は1）
-	constexpr float kAbilityAnimSpeed		= 1.0f;		// 再生速度
-	constexpr float kAbilityBlendFrame		= 5.0f;		// 前の動きから技へのブレンドフレーム数
-	constexpr float kAbilityEffectScale		= 1.0f;		// 発動エフェクトの大きさ
+	// アビリティ（1キー：攻撃04、2キー：攻撃05。使うゲージの量・CTは Player.cpp の kAbilityInfos）
+	// アビリティの攻撃は、ボタンを押し続けなくても最後の段まで自動で出る
+	constexpr float kAbilityDamageRate		= 1.5f;		// 普通の攻撃の何倍のダメージか
+
+	// ガード（止まっている時に Shift を押している間）
+	// ※ガード専用のアニメーションが無いので、待機のアニメーションをゆっくり再生している
+	const std::string kGuardAnimName		= "Combat_Idle";
+	constexpr float kGuardAnimSpeed			= 0.3f;
+	constexpr float kGuardBlendFrame		= 4.0f;
+
+	// ダッシュ（移動中に Shift を押している間）
+	constexpr float kDashSpeedRate			= 1.6f;		// 走る速さの何倍か
 
 	// 回避
 	constexpr float kEvadeAnimSpeed			= 1.8f;		// 回避の再生速度（移動距離は同じまま、素早く転がる）
@@ -82,12 +85,6 @@ namespace
 
 	// 着地
 	constexpr float kLandingCancelFrame		= 4.0f;		// 着地してからこのフレーム数がたったら、攻撃・回避・ジャンプに移れる
-
-	// ATBゲージが足りない時のお知らせ（ログに出す）
-	void LogAtbShortage()
-	{
-		KdDebugGUI::Instance().AddLog("[System] ATBゲージが足りません\n");
-	}
 }
 
 // 前方へ減速しながら移動する（回避用）
@@ -115,24 +112,32 @@ void PlayerState::UseRootMotion(Player* player)
 	player->SetRootMotionScale(1.0f);
 }
 
-bool PlayerState::TryUseAbility(Player* player)
+bool PlayerState::TryUseAbility(Player* player, AbilitySlot slot)
 {
-	// ATBゲージを1本使う（足りなければ出さない）
-	if (!player->UseAtbBar())
-	{
-		LogAtbShortage();
-		return false;
-	}
+	// ATBゲージとCTを確かめて、使えたら攻撃04・05を出す
+	int attackType = player->TryStartAbility(slot);
+	if (attackType <= 0) return false;
 
-	player->ChangeState(std::make_shared<PlayerStateAbility>());
+	player->ChangeState(std::make_shared<PlayerStateComboAttack>(attackType, 1, PlayerStateComboAttack::SubStepNone, true, true));
 	return true;
+}
+
+bool PlayerState::TryAbilityInput(Player* player)
+{
+	// 1キー・2キー（両方のキーの入力を毎フレーム確かめる）
+	bool slot1 = player->CheckAbilityInput(AbilitySlot::Slot1);
+	bool slot2 = player->CheckAbilityInput(AbilitySlot::Slot2);
+
+	if (slot1 && TryUseAbility(player, AbilitySlot::Slot1)) return true;
+	if (slot2 && TryUseAbility(player, AbilitySlot::Slot2)) return true;
+	return false;
 }
 
 // 待機・移動中に共通の入力によるステート遷移
 // 遷移した場合は true を返す
 bool PlayerState::TryCommonTransition(Player* player)
 {
-	// Shift：回避
+	// 右クリック：回避
 	// （パニッシャーの時は、オペレーターに戻ってから回避する。FF7リメイクのクラウドと同じ動き）
 	if (player->CheckEvadeInput())
 	{
@@ -151,11 +156,8 @@ bool PlayerState::TryCommonTransition(Player* player)
 		return true;
 	}
 
-	// 右クリック：ATBゲージを1本使ってアビリティ
-	if (player->CheckAbilityInput() && TryUseAbility(player))
-	{
-		return true;
-	}
+	// 1・2キー：ATBゲージを使ってアビリティ（攻撃04・05）
+	if (TryAbilityInput(player)) return true;
 
 	// 攻撃（剣は常に抜いているので、いつでも攻撃できる）
 	if (player->CheckAttackInput())
@@ -180,7 +182,40 @@ void PlayerStateIdle::Update(Player* player)
 
 	if (player->CheckMoveInput())
 	{
+		// 移動（Shift を押していればダッシュ）
 		player->ChangeState(std::make_shared<PlayerStateRun>());
+	}
+	else if (player->IsShiftDown())
+	{
+		// 止まっている時に Shift：ガード
+		player->ChangeState(std::make_shared<PlayerStateGuard>());
+	}
+}
+
+void PlayerStateGuard::ChangeState(Player* player)
+{
+	player->ChangeAnimation(kGuardAnimName, true, false, kGuardBlendFrame);
+	player->SetAnimationSpeed(kGuardAnimSpeed);
+	UseRootMotion(player);
+	player->SetGuarding(true);
+}
+
+void PlayerStateGuard::Update(Player* player)
+{
+	// ガード中の印（Player は毎フレーム消すので、付け直す）
+	player->SetGuarding(true);
+
+	// ガード中でも、攻撃・回避・ジャンプ・アビリティはすぐ出せる
+	if (TryCommonTransition(player)) return;
+
+	// 移動キーを押したらダッシュ、Shift を離したら待機へ
+	if (player->CheckMoveInput())
+	{
+		player->ChangeState(std::make_shared<PlayerStateRun>());
+	}
+	else if (!player->IsShiftDown())
+	{
+		player->ChangeState(std::make_shared<PlayerStateIdle>());
 	}
 }
 
@@ -210,6 +245,7 @@ void PlayerStateRun::Update(Player* player)
 		float speedRate = Player::s_runSpeedRate;
 		if (player->IsAwakening()) speedRate *= kAwakeningRunSpeedRate;	// 覚醒中はさらに速く
 		speedRate *= player->GetModeMoveRate();								// パニッシャーの時は遅く
+		if (player->IsShiftDown()) speedRate *= kDashSpeedRate;				// Shift を押している間はダッシュ
 
 		float animSpeed = 1.0f + (speedRate - 1.0f) * kRunAnimSpeedShare;
 		player->SetAnimationSpeed(animSpeed);
@@ -263,7 +299,7 @@ void PlayerStateComboAttack::ChangeToNextAttack(Player* player) const
 {
 	if (m_comboStep < kMaxComboStep)
 	{
-		player->ChangeState(std::make_shared<PlayerStateComboAttack>(m_comboType, m_comboStep + 1));
+		player->ChangeState(std::make_shared<PlayerStateComboAttack>(m_comboType, m_comboStep + 1, SubStepNone, false, m_isAbility));
 	}
 	else
 	{
@@ -366,6 +402,9 @@ void PlayerStateComboAttack::ChangeState(Player* player)
 
 	player->SetAnimationSpeed(kAttackAnimSpeed);
 
+	// アビリティの攻撃中は、当ててもATBゲージがたまらない
+	player->SetAbilityAttack(m_isAbility);
+
 	// マネージャーの変数を倍率としてセット。一部の攻撃はXZの座標移動を完全にロック
 	// アニメーションの踏み込みどおりに動く
 	// （倍率は 1.0。小さくすると足が地面を滑って見え、0にすると技の途中で剣を振る位置がずれる）
@@ -377,12 +416,13 @@ void PlayerStateComboAttack::Update(Player* player)
 	player->ExecJump(0.0f);
 
 	// マウスクリックされたら次の攻撃を「予約」する
-	if (player->CheckAttackInput())
+	// （アビリティの攻撃は、押さなくても最後の段まで自動で出す）
+	if (player->CheckAttackInput() || m_isAbility)
 	{
 		m_nextAttackReserved = true;
 	}
 
-	// Shift：攻撃の途中でも、回避でキャンセルできる（攻撃の出始めは除く）
+	// 右クリック：攻撃の途中でも、回避でキャンセルできる（攻撃の出始めは除く）
 	if (player->GetAnimTime() >= kAttackEvadeCancelFrame && player->CheckEvadeInput())
 	{
 		if (player->IsPunisherMode()) player->SetBattleMode(BattleMode::Operator);
@@ -390,20 +430,17 @@ void PlayerStateComboAttack::Update(Player* player)
 		return;
 	}
 
-	// 右クリックされたらアビリティを「予約」する（ATBゲージが1本以上ある時だけ）
-	if (player->CheckAbilityInput())
-	{
-		if (player->GetAtbBarCount() >= 1)	m_abilityReserved = true;
-		else								LogAtbShortage();
-	}
-	
+	// 1・2キーが押されたらアビリティを「予約」する（キャンセルできるフレームで出す）
+	if (player->CheckAbilityInput(AbilitySlot::Slot1)) m_reservedAbility = static_cast<int>(AbilitySlot::Slot1);
+	if (player->CheckAbilityInput(AbilitySlot::Slot2)) m_reservedAbility = static_cast<int>(AbilitySlot::Slot2);
+
 	// 攻撃タイプ04のLoopは一定時間でEndへ
 	if (IsSplitAttack() && m_subStep == SubStepLoop)
 	{
 		m_loopTimer++;
 		if (m_loopTimer >= kChargeLoopFrame)
 		{
-			player->ChangeState(std::make_shared<PlayerStateComboAttack>(4, 3, SubStepEnd, m_nextAttackReserved));
+			player->ChangeState(std::make_shared<PlayerStateComboAttack>(4, 3, SubStepEnd, m_nextAttackReserved, m_isAbility));
 			return;
 		}
 	}
@@ -422,15 +459,10 @@ void PlayerStateComboAttack::Update(Player* player)
 		if (!m_isHit)
 		{
 			// 当たったら、攻撃の種類・段数ごとのエフェクトをその位置に出す
-			bool hitR = player->AttackOBB(player->GetSwordMatrixR(), m_isCritical, GetHitEffectName());
-			bool hitL = player->AttackOBB(player->GetSwordMatrixL(), m_isCritical, GetHitEffectName());
-
-			// 右手か左手どちらかが敵に当たったらヒットストップ
-			if (hitR || hitL)
-			{
-				player->SetHitStopTimer(1);
-				//m_isHit = true;				// 「当てた」と記録する（もう判定しない）
-			}
+			// （ヒットストップは AttackOBB の中で、すべての攻撃に同じルールでかかる）
+			float damageRate = m_isAbility ? kAbilityDamageRate : 1.0f;
+			player->AttackOBB(player->GetSwordMatrixR(), m_isCritical, GetHitEffectName(), damageRate);
+			player->AttackOBB(player->GetSwordMatrixL(), m_isCritical, GetHitEffectName(), damageRate);
 		}
 
 		// 溜め攻撃のループ中はドリルのエフェクト
@@ -438,18 +470,21 @@ void PlayerStateComboAttack::Update(Player* player)
 	}
 
 	// アビリティの予約があり、キャンセル可能フレームを超えたら、コンボを止めてアビリティを出す
-	if (m_abilityReserved && animTime >= GetCancelFrame())
+	if (m_reservedAbility >= 0 && animTime >= GetCancelFrame())
 	{
-		m_abilityReserved = false;
-		if (TryUseAbility(player)) return;
+		AbilitySlot slot = static_cast<AbilitySlot>(m_reservedAbility);
+		m_reservedAbility = -1;
+		if (TryUseAbility(player, slot)) return;
 	}
 
 	// 予約があり、キャンセル可能フレームを超えたら次へ滑らかに移行
-	if (m_nextAttackReserved && animTime >= GetCancelFrame() && !player->IsAnimEnd())
+	// （アビリティの時は、溜め攻撃のドリルのループを最後まで見せる）
+	bool isAbilityChargeLoop = m_isAbility && IsSplitAttack() && m_subStep == SubStepLoop;
+	if (m_nextAttackReserved && !isAbilityChargeLoop && animTime >= GetCancelFrame() && !player->IsAnimEnd())
 	{
 		if (IsSplitAttack() && m_subStep == SubStepLoop)
 		{
-			player->ChangeState(std::make_shared<PlayerStateComboAttack>(4, 3, SubStepEnd, true));
+			player->ChangeState(std::make_shared<PlayerStateComboAttack>(4, 3, SubStepEnd, true, m_isAbility));
 			return;
 		}
 		if (m_comboStep < kMaxComboStep)
@@ -464,12 +499,12 @@ void PlayerStateComboAttack::Update(Player* player)
 	// 4_3_Start が最後まで終わったら、自動で Loop に繋ぐ
 	if (IsSplitAttack() && m_subStep == SubStepStart)
 	{
-		player->ChangeState(std::make_shared<PlayerStateComboAttack>(4, 3, SubStepLoop));
+		player->ChangeState(std::make_shared<PlayerStateComboAttack>(4, 3, SubStepLoop, false, m_isAbility));
 		return;
 	}
 
 	// 最後まで再生してからアビリティの予約を使う（キャンセルできない攻撃の時）
-	if (m_abilityReserved && TryUseAbility(player)) return;
+	if (m_reservedAbility >= 0 && TryUseAbility(player, static_cast<AbilitySlot>(m_reservedAbility))) return;
 
 	// 予約があれば次の段へ、なければIdleへ（4_3_End の次は 4_4）
 	if (m_nextAttackReserved)
@@ -522,52 +557,6 @@ void PlayerStateEvade::Update(Player* player)
 	}
 
 	if (player->IsAnimEnd()) {
-		player->ChangeState(std::make_shared<PlayerStateIdle>());
-	}
-}
-
-void PlayerStateAbility::ChangeState(Player* player)
-{
-	// アビリティの攻撃中は、当ててもATBゲージがたまらない
-	player->SetAbilityAttack(true);
-
-	m_isCritical = (KdRandom::GetInt(0, 99) < player->GetCritRate());
-
-	// モードごとの技を出す
-	const std::string& animName = player->IsPunisherMode() ? kPunisherAbilityAnim : kOperatorAbilityAnim;
-	player->ChangeAnimation(animName, false, true, kAbilityBlendFrame);
-	player->SetAnimationSpeed(kAbilityAnimSpeed);
-	UseRootMotion(player);
-
-	EffectPlayer::Play(EffectName::AbilityStart, player->GetPos(), kAbilityEffectScale);
-
-	KdDebugGUI::Instance().AddLog("[System] アビリティ発動: %s\n", animName.c_str());
-}
-
-void PlayerStateAbility::Update(Player* player)
-{
-	player->ExecJump(0.0f);
-
-	float animTime = player->GetAnimTime();
-
-	// 攻撃判定のフレームの間は、剣の軌跡を出して攻撃判定を行う
-	if (animTime >= kAttackHitStartFrame && animTime <= kAttackHitEndFrame)
-	{
-		player->AddSwordTrailPoints();
-
-		const std::string& hitEffect = player->IsPunisherMode() ? EffectName::ComboSlash4 : EffectName::ComboSlash1_4;
-		bool hitR = player->AttackOBB(player->GetSwordMatrixR(), m_isCritical, hitEffect, kAbilityDamageRate);
-		bool hitL = player->AttackOBB(player->GetSwordMatrixL(), m_isCritical, hitEffect, kAbilityDamageRate);
-
-		// 普通の攻撃より長く止めて、重い一撃に見せる
-		if (hitR || hitL)
-		{
-			player->SetHitStopTimer(kAbilityHitStopFrame);
-		}
-	}
-
-	if (player->IsAnimEnd())
-	{
 		player->ChangeState(std::make_shared<PlayerStateIdle>());
 	}
 }
@@ -626,9 +615,6 @@ void PlayerStateJump::Takeoff(Player* player)
 
 void PlayerStateJump::UpdateAirMove(Player* player)
 {
-	// 覚醒の入力も受け付ける
-	player->UpdateAwakeningInput();
-
 	Math::Vector3 inputDir;
 	if (player->GetMoveInputDir(inputDir))
 	{

@@ -2,6 +2,7 @@
 #include <memory>
 
 class Player;
+enum class AbilitySlot;		// Player.h で定義（1・2キーのアビリティ）
 
 // 基底クラス
 class PlayerState
@@ -28,8 +29,11 @@ protected:
 	// プレイヤーの動きはすべてこれを使う（倍率は 1.0 ＝ アニメーションと同じ距離）
 	static void UseRootMotion(Player* player);
 
-	// ATBゲージを1本使ってアビリティを出す（ゲージが足りなければ出さずに false）
-	static bool TryUseAbility(Player* player);
+	// ATBゲージを使ってアビリティ（攻撃04・05）を出す（ゲージが足りない・CT中なら出さずに false）
+	static bool TryUseAbility(Player* player, AbilitySlot slot);
+
+	// 1・2キーの入力を見て、押されていればアビリティを出す（出したら true）
+	static bool TryAbilityInput(Player* player);
 };
 
 // 派生クラス
@@ -48,6 +52,14 @@ public:
 
 };
 
+// ガード（止まっている時に Shift を押している間。受けるダメージが減り、のけぞらない）
+class PlayerStateGuard : public PlayerState
+{
+public:
+	void ChangeState(Player* player) override;
+	void Update(Player* player) override;
+};
+
 class PlayerStateComboAttack : public PlayerState
 {
 public:
@@ -64,18 +76,21 @@ public:
 	PlayerStateComboAttack() {}
 
 	// サブステート(subStep)はデフォルトで0。4-3の時だけ 1:Start, 2:Loop, 3:End として使う
+	// isAbility：アビリティ（1・2キー）で出した攻撃か（自動で最後の段まで出し、ダメージが上がる）
 	PlayerStateComboAttack
 	(
 		int comboType, 
 		int comboStep, 
 		int subStep = 0, 
-		bool reserved = false
+		bool reserved = false,
+		bool isAbility = false
 	)
 		: 
 		m_comboType(comboType), 
 		m_comboStep(comboStep), 
 		m_subStep(subStep), 
-		m_nextAttackReserved(reserved) 
+		m_nextAttackReserved(reserved),
+		m_isAbility(isAbility)
 	{}
 
 	void ChangeState(Player* player) override;
@@ -90,7 +105,8 @@ private:
 	int m_subStep = 0;
 	bool m_isCritical = false;
 	bool m_nextAttackReserved = false;
-	bool m_abilityReserved = false;		// 攻撃中に右クリックされた（キャンセルできるフレームでアビリティを出す）
+	bool m_isAbility = false;			// アビリティで出した攻撃か
+	int  m_reservedAbility = -1;		// 攻撃中に押されたアビリティ（AbilitySlot の番号。-1 は無し）
 
 	// エフェクト再生フラグ
 	bool m_isEffect = false;
@@ -131,18 +147,6 @@ public:
 	void ChangeState(Player* player) override;
 	void Update(Player* player) override;
 };
-
-// アビリティ（ATBゲージを1本使って出す強力な技）
-class PlayerStateAbility : public PlayerState
-{
-public:
-	void ChangeState(Player* player) override;
-	void Update(Player* player) override;
-
-private:
-	bool m_isCritical = false;
-};
-
 
 class PlayerStateJump : public PlayerState
 {

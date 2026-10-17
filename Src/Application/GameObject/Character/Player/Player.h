@@ -5,8 +5,16 @@
 // バトルモード（FF7リメイクのクラウドのように、Eキーで切り替える）
 enum class BattleMode
 {
-	Operator,	// オペレーターモード：素早く動ける。時間でもATBゲージがたまる
-	Punisher	// パニッシャーモード：動きは遅いが攻撃が重い。攻撃を当てるとATBゲージが多くたまる
+	Operator,	// オペレーターモード：素早く動ける。時間でもATBゲージがたまる（左クリックは攻撃01）
+	Punisher	// パニッシャーモード：動きは遅いが攻撃が重い。攻撃を当てるとATBゲージが多くたまる（左クリックは攻撃02）
+};
+
+// アビリティ（数字キーで出す技。ATBゲージを使い、使った後はCT（クールタイム）がある）
+enum class AbilitySlot
+{
+	Slot1 = 0,	// 1キー：攻撃04（ATBゲージ1本）
+	Slot2 = 1,	// 2キー：攻撃05（ATBゲージ2本。使った後しばらくオペレーターに固定）
+	Num
 };
 
 class TPSCamera;
@@ -43,8 +51,11 @@ public:
 	// （技の終わり際など、少し早めに押しても受け付けて、操作の反応を良くする）
 	bool CheckAttackInput()		{ return ConsumeInput(m_attackBuffer); }	// 左クリック（攻撃）
 	bool CheckJumpInput()		{ return ConsumeInput(m_jumpBuffer); }		// Space（ジャンプ）
-	bool CheckAbilityInput()	{ return ConsumeInput(m_abilityBuffer); }	// 右クリック（アビリティ）
-	bool CheckEvadeInput()		{ return ConsumeInput(m_evadeBuffer); }		// Shift（回避）
+	bool CheckEvadeInput()		{ return ConsumeInput(m_evadeBuffer); }		// 右クリック（回避）
+	bool CheckAbilityInput(AbilitySlot slot) { return ConsumeInput(m_abilityBuffer[static_cast<int>(slot)]); }	// 1・2キー（アビリティ）
+
+	// Shift を押している間（移動中はダッシュ、止まっている時はガード）
+	bool IsShiftDown() const;
 	// 入力方向へ向きを変え、moveByCode が true なら決まった速さで移動する
 	// （false の時は向きを変えるだけ。移動はルートモーションに任せる）
 	// 入力が無ければ false を返す
@@ -52,9 +63,6 @@ public:
 
 	// dir の方向へ向きを変える（1フレームに maxAngle 度まで）
 	void TurnToward(const Math::Vector3& dir, float maxAngle);
-
-	// 覚醒の入力（U：ゲージ満タン（デバッグ用）、G：発動）
-	void UpdateAwakeningInput();
 
 	// カメラの向きを基準にした入力方向（長さ1）を取得する（入力が無ければ false）
 	bool GetMoveInputDir(Math::Vector3& outDir) const;
@@ -78,10 +86,16 @@ public:
 	float GetAtbGage() const { return m_atbGage; }
 	int GetAtbBarCount() const { return static_cast<int>(m_atbGage / kAtbBarMax); }	// たまっている本数
 	void AddAtbGage(float val);
-	bool UseAtbBar();								// 1本使う（足りなければ false）
+
+	// アビリティを使う（ATBゲージとCTを確かめ、使えたらゲージを減らしてCTを始める）
+	// 使えたら、出す攻撃の種類（04・05）を返す。使えなければ 0
+	int TryStartAbility(AbilitySlot slot);
 
 	// アビリティの攻撃中か（アビリティの攻撃ではATBゲージはたまらない）
 	void SetAbilityAttack(bool isAbility) { m_isAbilityAttack = isAbility; }
+
+	// ガード中か（ガードのステートが毎フレーム true にする。受けるダメージが減り、のけぞらない）
+	void SetGuarding(bool isGuarding) { m_isGuarding = isGuarding; }
 
 	// 着地アニメーションで両足が接地しているフレーム
 	float GetLandingFrame(const std::string& animName) const;
@@ -125,8 +139,6 @@ public:
 	// 攻撃が当たった位置に、プレイヤーの攻撃の向きでヒットエフェクトを出す
 	void PlayHitEffect(const std::string& effectName, const Math::Vector3& hitPos, bool isCritical) const;
 
-	// ヒットストップ用タイマー
-	void SetHitStopTimer(int timer) { m_hitStopTimer = timer; }
 
 	// 被弾判定
 	int GetCritRate() const { return m_critRate; }
@@ -201,13 +213,15 @@ private:
 	// 覚醒中のオーラエフェクトを更新（覚醒中は再生し続け、終わったら止める）
 	void UpdateAwakeningEffect();
 
+	// 覚醒の入力（U：ゲージ満タン（デバッグ用）、G：発動）
+	void UpdateAwakeningInput();
+
 	// ボタンの先行入力を更新する（毎フレーム1回）
 	void UpdateInputBuffer();
 
 	// 先行入力が残っていれば消して true を返す
 	static bool ConsumeInput(int& bufferTimer);
 	void UpdateHpGage();
-	void UpdateAttackTypeSwitch();
 
 	// Eキーでバトルモードを切り替える
 	void UpdateModeSwitch();
@@ -215,8 +229,8 @@ private:
 	// ATBゲージを時間でためて、UIに伝える
 	void UpdateAtb();
 
-	// 今のモードで使える攻撃パターンの一覧
-	static const std::vector<int>& GetModeAttackTypes(BattleMode mode);
+	// アビリティのCT（クールタイム）とモードの固定時間を進める
+	void UpdateAbilityTimers();
 
 	// 剣の軌跡（1本分）
 	struct SwordTrail
@@ -326,11 +340,12 @@ private:
 	float							m_maxAwakeningGage = 100.0f;// 最大覚醒ゲージ
 	int								m_awakeningTimer = 0;		// 覚醒時間（フレーム）
 	int								m_currentAttackType = 1;	// 攻撃アニメーションの番号
-	int								m_hitStopTimer = 0;			// ヒットストップ用タイマー
 
 	// バトルモード・ATB
 	BattleMode						m_battleMode = BattleMode::Operator;
-	int								m_modeAttackTypeIndex[2] = { 0, 0 };	// モードごとに、今選んでいる攻撃パターン（一覧の何番目か）
+	int								m_modeLockTimer = 0;		// モードを切り替えられない残りフレーム（攻撃05の後）
+	int								m_abilityCT[static_cast<int>(AbilitySlot::Num)] = {};	// アビリティごとのCTの残りフレーム
+	bool							m_isGuarding = false;		// ガード中か
 	float							m_atbGage = 0.0f;			// ATBゲージ（0 ～ kAtbBarMax × kAtbBarNum）
 	bool							m_isAbilityAttack = false;	// アビリティの攻撃中か
 
@@ -339,16 +354,15 @@ private:
 
 	// 入力（押した瞬間の判定用）
 	InputHelper::KeyTrigger			m_attackKey{ VK_LBUTTON };
-	InputHelper::KeyTrigger			m_abilityKey{ VK_RBUTTON };
-	InputHelper::KeyTrigger			m_evadeKey{ VK_SHIFT };
+	InputHelper::KeyTrigger			m_evadeKey{ VK_RBUTTON };
+	InputHelper::KeyTrigger			m_abilityKeys[static_cast<int>(AbilitySlot::Num)] = { InputHelper::KeyTrigger{ '1' }, InputHelper::KeyTrigger{ '2' } };
 	InputHelper::KeyTrigger			m_modeKey{ 'E' };
 	InputHelper::KeyTrigger			m_jumpKey{ VK_SPACE };
-	InputHelper::KeyTrigger			m_attackTypeKey{ 'C' };
 
 	// 先行入力の残りフレーム（0 なら押されていない）
 	int								m_attackBuffer = 0;
 	int								m_jumpBuffer = 0;
-	int								m_abilityBuffer = 0;
+	int								m_abilityBuffer[static_cast<int>(AbilitySlot::Num)] = {};
 	int								m_evadeBuffer = 0;
 
 	BaseScene*						m_owner = nullptr;

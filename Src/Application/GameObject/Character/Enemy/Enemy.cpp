@@ -1,4 +1,5 @@
 ﻿#include "Enemy.h"
+#include "../../../Utility/HitStop.h"
 #include "../Player/Player.h"
 #include "../../../Scene/SceneManager.h"
 #include "EnemyState.h"
@@ -72,6 +73,13 @@ void Enemy::PostUpdate()
 
 void Enemy::Update()
 {
+	// ヒットストップ中は、アニメーションも移動も止める（プレイヤーと一緒に止まる）
+	if (HitStop::IsStopping())
+	{
+		UpdateWorldMatrix();
+		return;
+	}
+
 	BaseChara::Update();
 
 	UpdateInvincibleTimer();

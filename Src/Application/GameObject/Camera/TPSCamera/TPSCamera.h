@@ -12,4 +12,12 @@ public:
 	
 private:
 
+	// プレイヤーが左右に動いた時に、カメラもその方向へ付いていく
+	// （少しだけ横に回り込み、進む方向が見えるように注視点も少し先へずらす）
+	void UpdateSideFollow(const Math::Vector3& moveDelta);
+
+	// ヒットストップ中にカメラを揺らす
+	void ApplyHitShake();
+
+	Math::Vector3	m_lookAhead = Math::Vector3::Zero;	// 注視点を進む方向へずらす量（なめらかに変える）
 };

@@ -28,7 +28,8 @@ namespace EffectName
 	inline const std::string Evade				= "";					// 回避
 	inline const std::string Landing			= "";					// ジャンプの着地
 	inline const std::string ModeChange			= "";					// バトルモードの切り替え（Eキー）
-	inline const std::string AbilityStart		= "";					// アビリティ（右クリック）の発動
+	inline const std::string AbilityStart		= "";					// アビリティ（1・2キー）の発動
+	inline const std::string Guard				= "";					// 敵の攻撃をガードした
 }
 
 // ============================================================
