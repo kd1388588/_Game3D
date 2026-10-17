@@ -22,6 +22,7 @@ namespace EffectName
 
 	// 撃破
 	inline const std::string EnemyDeath			= "_boss_death.efkefc";	// 敵が倒れた
+	inline const std::string BossGroundSmash	= "";					// ボスの飛びかかり攻撃の着地
 
 	// プレイヤーの動作（ファイルが用意できたら設定する）
 	inline const std::string AwakeningAura		= "";					// 覚醒中のオーラ（覚醒中は繰り返し再生）

@@ -15,6 +15,16 @@ namespace
 
 	// 撃破エフェクトの大きさ（敵の体の大きさに掛ける）
 	constexpr float kDeathEffectScaleRate	= 0.5f;
+
+	// 飛びかかり攻撃（ボスだけ）
+	constexpr float kJumpAttackMinDist		= 5.0f;		// プレイヤーがこれより遠く、
+	constexpr float kJumpAttackMaxDist		= 14.0f;	// これより近い時に使う
+	constexpr int	kJumpAttackChance		= 2;		// 使える距離にいる時、1フレームに使う確率（％）
+	constexpr int	kMaxLeapFrame			= 180;		// 空中にいる時間の上限（地面が無い所へ飛んだ時のため）
+	constexpr float kJumpAttackBlendFrame	= 5.0f;
+	const std::string kJumpAttackStartAnim	= "JumpAttackStart";
+	const std::string kJumpAttackLoopAnim	= "JumpAttackLoop";
+	const std::string kJumpAttackEndAnim	= "JumpAttackEnd";
 }
 
 // ターゲットへの水平方向のベクトルを取得（ターゲットがいなければ false）
@@ -72,6 +82,14 @@ void EnemyStateChase::Update(Enemy* enemy)
 		return;
 	}
 
+	// ボス：少し離れている時は、ときどき飛びかかってくる
+	if (dist >= kJumpAttackMinDist && dist <= kJumpAttackMaxDist && enemy->CanJumpAttack()
+		&& KdRandom::GetInt(0, 99) < kJumpAttackChance)
+	{
+		enemy->ChangeState(std::make_shared<EnemyStateJumpAttack>());
+		return;
+	}
+
 	vecToTarget.Normalize();
 	enemy->SetPos(enemy->GetPos() + vecToTarget * kChaseSpeed);
 
@@ -110,6 +128,82 @@ void EnemyStateAttack::Update(Enemy* enemy)
 	if (enemy->IsAnimEnd())
 	{
 		enemy->ChangeState(std::make_shared<EnemyStateIdle>());
+	}
+}
+
+// ==========================================
+// 飛びかかり攻撃（ボス）
+// ==========================================
+void EnemyStateJumpAttack::ChangeState(Enemy* enemy)
+{
+	m_phase = Phase::Start;
+	m_airTimer = 0;
+
+	enemy->StartJumpAttackCooldown();
+	enemy->TurnToPlayer();
+	enemy->ChangeAnimation(kJumpAttackStartAnim, false, true, kJumpAttackBlendFrame);
+	enemy->SetAnimationSpeed(1.0f);
+	enemy->SetUseRootMotion(false);		// 移動はプログラムで放物線を描いて飛ぶ
+	enemy->SetSuperArmor(true);			// 攻撃の途中で殴られても止まらない
+}
+
+void EnemyStateJumpAttack::Update(Enemy* enemy)
+{
+	switch (m_phase)
+	{
+	case Phase::Start:
+		// 構えている間は、プレイヤーの方を向き続ける
+		enemy->TurnToPlayer();
+
+		// 構え終わったら、その時のプレイヤーの位置へ飛び上がる
+		if (enemy->IsAnimEnd())
+		{
+			if (auto target = enemy->GetTarget().lock())
+			{
+				enemy->StartLeap(target->GetPos());
+			}
+			else
+			{
+				enemy->StartLeap(enemy->GetPos());
+			}
+
+			if (enemy->HasAnimation(kJumpAttackLoopAnim))
+			{
+				enemy->ChangeAnimation(kJumpAttackLoopAnim, true, false, kJumpAttackBlendFrame);
+			}
+			m_phase = Phase::Air;
+		}
+		break;
+
+	case Phase::Air:
+		// 空中：プレイヤーの方へ飛んでいく
+		enemy->UpdateLeapMove();
+		m_airTimer++;
+
+		// 着地したら、周りを叩きつけて攻撃する
+		if (enemy->IsLeapLanded() || m_airTimer >= kMaxLeapFrame)
+		{
+			enemy->GroundSmash();
+
+			if (enemy->HasAnimation(kJumpAttackEndAnim))
+			{
+				enemy->ChangeAnimation(kJumpAttackEndAnim, false, true, 2.0f);
+				m_phase = Phase::End;
+			}
+			else
+			{
+				enemy->ChangeState(std::make_shared<EnemyStateIdle>());
+			}
+		}
+		break;
+
+	case Phase::End:
+		// 叩きつけた後のすき（アニメーションが終わるまで動かない。プレイヤーの反撃のチャンス）
+		if (enemy->IsAnimEnd())
+		{
+			enemy->ChangeState(std::make_shared<EnemyStateIdle>());
+		}
+		break;
 	}
 }
 

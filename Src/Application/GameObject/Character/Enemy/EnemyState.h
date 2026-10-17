@@ -42,6 +42,25 @@ private:
 	bool  m_isCritical = false;
 };
 
+// 飛びかかり攻撃（ボス）：構える → 飛び上がってプレイヤーへ飛ぶ → 着地で周りを攻撃 → すき
+class EnemyStateJumpAttack : public EnemyState
+{
+public:
+	void ChangeState(Enemy* enemy) override;
+	void Update(Enemy* enemy) override;
+
+private:
+	enum class Phase
+	{
+		Start,	// 構え（飛び上がる前）
+		Air,	// 空中
+		End,	// 着地・叩きつけ・すき
+	};
+
+	Phase	m_phase = Phase::Start;
+	int		m_airTimer = 0;		// 飛び上がってからのフレーム数
+};
+
 class EnemyStateDamage : public EnemyState
 {
 public:

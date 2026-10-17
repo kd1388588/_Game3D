@@ -35,6 +35,28 @@ public:
 
 	Math::Matrix GetRightArmMatrix() const;
 
+	// ---- 飛びかかり攻撃（ボスだけ） ----
+	// 使えるか（ボスで、CT（クールタイム）が終わっていて、アニメーションが読み込めている）
+	bool CanJumpAttack() const;
+
+	// 使った後のCTを始める
+	void StartJumpAttackCooldown();
+
+	// target へ向かって飛び上がる（放物線で飛び、空中にいる時間は高さから決まる）
+	void StartLeap(const Math::Vector3& target);
+
+	// 空中での移動（毎フレーム呼ぶ）
+	void UpdateLeapMove();
+
+	// 着地したか（一度落ち始めた後、地面に着いたら true）
+	bool IsLeapLanded() const;
+
+	// 着地の衝撃：周りの円の中にいるプレイヤーにダメージを与える
+	void GroundSmash();
+
+	// 攻撃中にのけぞらないようにする（ダメージは受ける）
+	void SetSuperArmor(bool isSuperArmor) { m_isSuperArmor = isSuperArmor; }
+
 	float GetBodyScale() const { return m_scale; }	// 体の大きさ（エフェクトの大きさ・高さに使う）
 
 	float GetSearchRange() const { return m_searchRange; }
@@ -58,4 +80,10 @@ private:
 	float							m_searchRange = 15.0f;	// プレイヤーに気づく距離
 	float							m_attackRange = 2.5f;	// 攻撃を開始する距離
 	int								m_critRate = 5;
+
+	// 飛びかかり攻撃
+	int								m_jumpAttackCT = 0;			// CTの残りフレーム
+	Math::Vector3					m_leapVelocity = Math::Vector3::Zero;	// 空中での水平方向の移動量（1フレーム）
+	bool							m_isLeapFalling = false;	// 飛び上がった後、落ち始めたか
+	bool							m_isSuperArmor = false;		// のけぞらない
 };

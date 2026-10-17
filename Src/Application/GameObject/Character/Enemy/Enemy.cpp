@@ -27,6 +27,24 @@ namespace
 	constexpr float	kHitEffectScale			= 1.0f;		// プレイヤーに攻撃が当たった時のエフェクトの大きさ
 
 	const std::string kModelDir = "Asset/Models/GameObject/Enemy/Monster2/";
+
+	// 飛びかかり攻撃（ボスだけ）
+	const std::string kJumpAttackStartAnim	= "JumpAttackStart";
+	constexpr int	kJumpAttackCoolTime		= 60 * 6;	// 一度使ったら6秒は使わない
+	constexpr float	kLeapJumpPower			= 0.22f;	// 飛び上がる強さ（高さ約2.4、空中にいる時間 約44フレーム）
+	constexpr float	kGravityPerFrame		= 0.01f;	// 重力（BaseChara と同じ値）
+	constexpr float	kMaxLeapDistance		= 14.0f;	// 飛べる距離の上限
+	constexpr float	kLeapLandOffset			= 1.5f;		// プレイヤーの少し手前に着地する（真上に落ちてめり込まないように）
+	constexpr float	kFallingGravity			= 0.03f;	// これを超えたら「落ち始めた」とみなす
+	constexpr float	kOnGroundGravity		= 0.011f;	// これ以下なら地面にいるとみなす
+
+	// 着地の衝撃
+	constexpr float	kSmashRadius			= 1.8f;		// 攻撃の範囲（体の大きさに掛ける）
+	constexpr float	kSmashHeight			= 2.0f;		// 上下にこれだけ離れていたら当たらない（ジャンプでかわせる）
+	constexpr int	kSmashDamage			= 20;		// のけぞるダメージ
+	constexpr int	kSmashHitStopFrame		= 4;		// 着地の時のヒットストップ（当たらなくても、地面が揺れる感じを出す）
+	constexpr float	kSmashShakePower		= 0.2f;
+	constexpr float	kSmashEffectScaleRate	= 1.0f;		// 着地のエフェクトの大きさ（体の大きさに掛ける）
 }
 
 void Enemy::Init()
@@ -42,7 +60,13 @@ void Enemy::Init()
 		{ "Idle",	kModelDir + "Animation/Idle/Idle/Idle.gltf" },
 		{ "Run",	kModelDir + "Animation/Move/Sprint_Biped_Fwd/Sprint_Biped_Fwd.gltf" },
 		{ "Attack",	kModelDir + "Animation/Attack/Attack_Melee_A/Attack_Melee_A.gltf" },
+		{ "Damage",	kModelDir + "Animation/Hit/Hit/HitReact_Front/HitReact_Front.gltf" },
 		{ "Dead",	kModelDir + "Animation/Hit/Death/Death_A.gltf" },
+
+		// 飛びかかり攻撃（ファイルが無い時は読み込まれず、この攻撃は使われない）
+		{ "JumpAttackStart",	kModelDir + "Animation/Special/Ability_GroundSmash_Start/Ability_GroundSmash_Start.gltf" },
+		{ "JumpAttackLoop",		kModelDir + "Animation/Special/Ability_GroundSmash_Loop/Ability_GroundSmash_Loop.gltf" },
+		{ "JumpAttackEnd",		kModelDir + "Animation/Special/Ability_GroundSmash_End/Ability_GroundSmash_End.gltf" },
 	});
 
 	// 種類ごとのパラメータ
@@ -93,6 +117,8 @@ void Enemy::Update()
 	}
 
 	UpdateInvincibleTimer();
+
+	if (m_jumpAttackCT > 0) m_jumpAttackCT--;
 
 	if (m_state)
 	{
@@ -154,6 +180,9 @@ void Enemy::PushAwayFromOtherEnemies()
 
 void Enemy::ChangeState(const std::shared_ptr<EnemyState>& newState)
 {
+	// のけぞらない状態は、その攻撃の間だけ（次のステートが必要なら付け直す）
+	m_isSuperArmor = false;
+
 	m_state = newState;
 	if (m_state)
 	{
@@ -231,6 +260,10 @@ void Enemy::OnDamage(int damage, bool isCritical)
 		isCritical ? "[HIT] 敵にクリティカル！ ダメージ: %d\n" : "[HIT] 敵に通常ダメージ！ ダメージ: %d\n",
 		damage
 	);
+
+	// 飛びかかり攻撃などの途中は、のけぞらない（ダメージだけ受ける）
+	if (m_isSuperArmor) return;
+
 	ChangeState(std::make_shared<EnemyStateDamage>());
 }
 
@@ -249,4 +282,68 @@ void Enemy::TurnToPlayer()
 		// モデルが逆向きなので180度回す
 		m_rotY = atan2(dir.x, dir.z) + DirectX::XM_PI;
 	}
+}
+
+bool Enemy::CanJumpAttack() const
+{
+	return m_isBoss && m_jumpAttackCT <= 0 && HasAnimation(kJumpAttackStartAnim);
+}
+
+void Enemy::StartJumpAttackCooldown()
+{
+	m_jumpAttackCT = kJumpAttackCoolTime;
+}
+
+void Enemy::StartLeap(const Math::Vector3& target)
+{
+	// プレイヤーの少し手前を着地点にする
+	Math::Vector3 toTarget = target - m_pos;
+	toTarget.y = 0.0f;
+	float dist = toTarget.Length();
+	if (dist > 0.0f) toTarget /= dist;
+	float leapDist = std::clamp(dist - kLeapLandOffset * m_scale * 0.5f, 0.0f, kMaxLeapDistance);
+
+	// 空中にいる時間（上がって下りるまで）＝ 2 × 飛び上がる強さ ÷ 重力
+	float airFrames = 2.0f * kLeapJumpPower / kGravityPerFrame;
+	m_leapVelocity = toTarget * (leapDist / airFrames);
+
+	m_gravity = -kLeapJumpPower;
+	m_isLeapFalling = false;
+}
+
+void Enemy::UpdateLeapMove()
+{
+	m_pos += m_leapVelocity * GameTime::GetScale();
+	if (m_gravity > kFallingGravity) m_isLeapFalling = true;
+}
+
+bool Enemy::IsLeapLanded() const
+{
+	return m_isLeapFalling && m_gravity >= 0.0f && m_gravity <= kOnGroundGravity;
+}
+
+void Enemy::GroundSmash()
+{
+	float radius = kSmashRadius * m_scale;
+
+	// 地面が揺れる感じを出す（当たらなくても）
+	HitStop::Request(kSmashHitStopFrame, kSmashShakePower);
+	EffectPlayer::Play(EffectName::BossGroundSmash, m_pos, kSmashEffectScaleRate * m_scale);
+
+	if (m_pDebugWire)
+	{
+		m_pDebugWire->AddDebugSphere(m_pos, radius, { 1.0f, 0.5f, 0.0f, 1.0f });
+	}
+
+	// 円の中にいるプレイヤーにダメージ（高く跳んでいればかわせる）
+	auto player = m_wpTarget.lock();
+	if (!player || player->IsInvincible() || !player->IsAlive()) return;
+
+	Math::Vector3 diff = player->GetPos() - m_pos;
+	float height = std::abs(diff.y);
+	diff.y = 0.0f;
+	if (diff.Length() > radius || height > kSmashHeight) return;
+
+	player->OnDamage(kSmashDamage, false);
+	EffectPlayer::Play(EffectName::HitPlayer, player->GetPos() + Math::Vector3(0.0f, 1.0f, 0.0f), kHitEffectScale);
 }
