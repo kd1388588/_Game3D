@@ -38,9 +38,13 @@ public:
 
 	// 入力関連
 	bool CheckMoveInput() const;
-	bool CheckAttackInput()	{ return m_attackKey.Update(); }
-	bool CheckJumpInput()	{ return m_jumpKey.Update(); }
-	bool CheckAbilityInput()	{ return m_abilityKey.Update(); }	// 右クリック（アビリティ）
+	// ボタンの入力（先行入力つき）
+	// 押してから kInputBufferFrame フレームの間は「押された」と答える（1回答えたら消える）
+	// （技の終わり際など、少し早めに押しても受け付けて、操作の反応を良くする）
+	bool CheckAttackInput()		{ return ConsumeInput(m_attackBuffer); }	// 左クリック（攻撃）
+	bool CheckJumpInput()		{ return ConsumeInput(m_jumpBuffer); }		// Space（ジャンプ）
+	bool CheckAbilityInput()	{ return ConsumeInput(m_abilityBuffer); }	// 右クリック（アビリティ）
+	bool CheckEvadeInput()		{ return ConsumeInput(m_evadeBuffer); }		// Shift（回避）
 	// 入力方向へ向きを変え、moveByCode が true なら決まった速さで移動する
 	// （false の時は向きを変えるだけ。移動はルートモーションに任せる）
 	// 入力が無ければ false を返す
@@ -196,6 +200,12 @@ private:
 
 	// 覚醒中のオーラエフェクトを更新（覚醒中は再生し続け、終わったら止める）
 	void UpdateAwakeningEffect();
+
+	// ボタンの先行入力を更新する（毎フレーム1回）
+	void UpdateInputBuffer();
+
+	// 先行入力が残っていれば消して true を返す
+	static bool ConsumeInput(int& bufferTimer);
 	void UpdateHpGage();
 	void UpdateAttackTypeSwitch();
 
@@ -330,9 +340,16 @@ private:
 	// 入力（押した瞬間の判定用）
 	InputHelper::KeyTrigger			m_attackKey{ VK_LBUTTON };
 	InputHelper::KeyTrigger			m_abilityKey{ VK_RBUTTON };
+	InputHelper::KeyTrigger			m_evadeKey{ VK_SHIFT };
 	InputHelper::KeyTrigger			m_modeKey{ 'E' };
 	InputHelper::KeyTrigger			m_jumpKey{ VK_SPACE };
 	InputHelper::KeyTrigger			m_attackTypeKey{ 'C' };
+
+	// 先行入力の残りフレーム（0 なら押されていない）
+	int								m_attackBuffer = 0;
+	int								m_jumpBuffer = 0;
+	int								m_abilityBuffer = 0;
+	int								m_evadeBuffer = 0;
 
 	BaseScene*						m_owner = nullptr;
 

@@ -41,7 +41,7 @@ namespace
 	constexpr float kLandingSlideDrag		= 0.75f;	// 着地した後、勢いを少しだけ残して止まる（1フレームごとに掛ける）
 
 	// 走り（ルートモーション）
-	constexpr float kRunBlendFrame			= 6.0f;		// 待機⇔走りのブレンドフレーム数
+	constexpr float kRunBlendFrame			= 4.0f;		// 待機⇔走りのブレンドフレーム数（小さいほど素早く切り替わる）
 	constexpr float kAwakeningRunSpeedRate	= 1.7f;		// 覚醒中は、普段の走る速さの何倍にするか
 	constexpr float kRunAnimSpeedShare		= 0.6f;		// 速くする分のうち、アニメーションの再生速度で上げる割合
 
@@ -70,6 +70,18 @@ namespace
 	constexpr float kAbilityAnimSpeed		= 1.0f;		// 再生速度
 	constexpr float kAbilityBlendFrame		= 5.0f;		// 前の動きから技へのブレンドフレーム数
 	constexpr float kAbilityEffectScale		= 1.0f;		// 発動エフェクトの大きさ
+
+	// 回避
+	constexpr float kEvadeAnimSpeed			= 1.8f;		// 回避の再生速度（移動距離は同じまま、素早く転がる）
+	constexpr float kEvadeCancelRate		= 0.55f;	// 回避のアニメーションのこの割合まで進んだら、次の行動（攻撃・回避・移動）に移れる
+	constexpr float kEvadeBlendFrame		= 3.0f;		// 前の動き→回避のブレンドフレーム数
+
+	// 攻撃
+	constexpr float kAttackAnimSpeed		= 1.15f;	// 攻撃の再生速度（少し速くして、もっさりしないようにする）
+	constexpr float kAttackEvadeCancelFrame	= 12.0f;	// 攻撃のこのフレーム以降なら、回避でキャンセルできる
+
+	// 着地
+	constexpr float kLandingCancelFrame		= 4.0f;		// 着地してからこのフレーム数がたったら、攻撃・回避・ジャンプに移れる
 
 	// ATBゲージが足りない時のお知らせ（ログに出す）
 	void LogAtbShortage()
@@ -122,7 +134,7 @@ bool PlayerState::TryCommonTransition(Player* player)
 {
 	// Shift：回避
 	// （パニッシャーの時は、オペレーターに戻ってから回避する。FF7リメイクのクラウドと同じ動き）
-	if (IsKeyDown(VK_SHIFT))
+	if (player->CheckEvadeInput())
 	{
 		if (player->IsPunisherMode())
 		{
@@ -132,8 +144,8 @@ bool PlayerState::TryCommonTransition(Player* player)
 		return true;
 	}
 
-	// ジャンプ
-	if (player->CheckJumpInput() && player->IsOnGround())
+	// ジャンプ（空中で押した入力は、着地するまで残しておく）
+	if (player->IsOnGround() && player->CheckJumpInput())
 	{
 		player->ChangeState(std::make_shared<PlayerStateJump>());
 		return true;
@@ -352,7 +364,7 @@ void PlayerStateComboAttack::ChangeState(Player* player)
 	bool isLoop = (IsSplitAttack() && m_subStep == SubStepLoop);
 	player->ChangeAnimation(GetAnimName(), isLoop, true, 5.0f);
 
-	player->SetAnimationSpeed(1.0f);
+	player->SetAnimationSpeed(kAttackAnimSpeed);
 
 	// マネージャーの変数を倍率としてセット。一部の攻撃はXZの座標移動を完全にロック
 	// アニメーションの踏み込みどおりに動く
@@ -368,6 +380,14 @@ void PlayerStateComboAttack::Update(Player* player)
 	if (player->CheckAttackInput())
 	{
 		m_nextAttackReserved = true;
+	}
+
+	// Shift：攻撃の途中でも、回避でキャンセルできる（攻撃の出始めは除く）
+	if (player->GetAnimTime() >= kAttackEvadeCancelFrame && player->CheckEvadeInput())
+	{
+		if (player->IsPunisherMode()) player->SetBattleMode(BattleMode::Operator);
+		player->ChangeState(std::make_shared<PlayerStateEvade>());
+		return;
 	}
 
 	// 右クリックされたらアビリティを「予約」する（ATBゲージが1本以上ある時だけ）
@@ -464,11 +484,19 @@ void PlayerStateComboAttack::Update(Player* player)
 
 void PlayerStateEvade::ChangeState(Player* player)
 {
-	player->ChangeAnimation("Evade", false);
+	// 移動キーを押していれば、その方向へすぐ向いてから転がる
+	// （前は今向いている方向にしか回避できず、思った方向へ逃げられなかった）
+	Math::Vector3 inputDir;
+	if (player->GetMoveInputDir(inputDir))
+	{
+		player->TurnToward(inputDir, 180.0f);
+	}
+
+	player->ChangeAnimation("Evade", false, true, kEvadeBlendFrame);
 	UseRootMotion(player);
 	EffectPlayer::Play(EffectName::Evade, player->GetPos(), kEvadeEffectScale);
 	//player->SetInvincibleTimer(10);
-	player->SetAnimationSpeed(1.55f);
+	player->SetAnimationSpeed(kEvadeAnimSpeed);
 }
 
 void PlayerStateEvade::Update(Player* player)
@@ -477,6 +505,20 @@ void PlayerStateEvade::Update(Player* player)
 	if (!player->CurrentAnimHasHorizontalMotion())
 	{
 		MoveForwardWithDecay(player, PlayerParamManager::Instance().m_evadeSpeed, kEvadeMoveFrame, false);
+	}
+
+	// 転がり終わり（起き上がる所）は、次の行動でキャンセルできる
+	float animLength = player->GetAnimLength();
+	bool canCancel = (animLength > 0.0f) && (player->GetAnimTime() >= animLength * kEvadeCancelRate);
+	if (canCancel)
+	{
+		if (TryCommonTransition(player)) return;
+
+		if (player->CheckMoveInput())
+		{
+			player->ChangeState(std::make_shared<PlayerStateRun>());
+			return;
+		}
 	}
 
 	if (player->IsAnimEnd()) {
@@ -684,6 +726,10 @@ void PlayerStateJump::Update(Player* player)
 		// 空中の勢いを少しだけ残して止まる（着地の瞬間にピタッと止まらないように）
 		m_airVelocity *= kLandingSlideDrag;
 		player->SetPos(player->GetPos() + m_airVelocity);
+
+		// 着地して少したったら、しゃがみ込みの途中でも攻撃・回避・ジャンプに移れる
+		m_landingTimer++;
+		if (m_landingTimer >= kLandingCancelFrame && TryCommonTransition(player)) return;
 
 		if (player->CheckMoveInput())
 		{

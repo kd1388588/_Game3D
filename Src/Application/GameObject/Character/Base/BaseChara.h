@@ -30,6 +30,7 @@ public:
 	float GetAnimTime() const { return m_animator.GetTime(); }
 	void SetAnimTime(float time) { m_animator.SetTime(time); m_prevMotionTime = -1.0f; }
 	bool IsAnimEnd() const { return m_animator.IsAnimationEnd(); }
+	float GetAnimLength() const { return m_currentAnim ? m_currentAnim->m_maxLength : 0.0f; }	// 再生中のアニメーションの長さ（フレーム）
 	bool HasAnimation(const std::string& animName) const;
 
 	// 指定した足の骨がすべて接地している最初のフレームを求める（見つからなければ0）

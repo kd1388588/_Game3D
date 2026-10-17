@@ -44,7 +44,7 @@ namespace
 	// 移動
 	constexpr float kMoveSpeed				= 0.15f;
 	constexpr float kAwakeningMoveSpeed		= 0.30f;	// 覚醒中は2倍のスピード
-	constexpr float kMaxTurnAngle			= 10.0f;	// 1フレームの最大旋回角度（度）
+	constexpr float kMaxTurnAngle			= 18.0f;	// 1フレームの最大旋回角度（度。大きいほど素早く向きを変える）
 	constexpr float kMinTurnAngle			= 0.1f;		// これ未満の角度差は旋回しない
 
 	// ステータス
@@ -54,6 +54,9 @@ namespace
 	constexpr int	kAttackDamage			= 10;
 	constexpr int	kCriticalAttackDamage	= 20;
 	constexpr int	kAttackTypeNum			= 5;		// 攻撃パターンの数
+
+	// 先行入力（ボタンを押してから、何フレームの間「押された」として受け付けるか。60フレーム = 1秒）
+	constexpr int	kInputBufferFrame		= 10;
 
 	// バトルモード（FF7リメイクのクラウド風）
 	// モードごとに使える攻撃パターン（Cキーでこの中を切り替える）
@@ -568,6 +571,9 @@ void Player::Init()
 
 void Player::Update()
 {
+	// ボタンの入力は、ヒットストップ中も受け付ける（止まっている間に押した入力を取りこぼさないように）
+	UpdateInputBuffer();
+
 	// ヒットストップ中はアニメーションも移動も止め、座標の更新（描画）だけ行う
 	if (m_hitStopTimer > 0)
 	{
@@ -613,6 +619,29 @@ void Player::Update()
 	UpdateAtb();
 
 	UpdateWorldMatrix();
+}
+
+void Player::UpdateInputBuffer()
+{
+	// 押した瞬間に残りフレームを入れ、押されていない間は1ずつ減らす
+	auto update = [](InputHelper::KeyTrigger& key, int& bufferTimer)
+	{
+		if (key.Update())			bufferTimer = kInputBufferFrame;
+		else if (bufferTimer > 0)	bufferTimer--;
+	};
+
+	update(m_attackKey, m_attackBuffer);
+	update(m_jumpKey, m_jumpBuffer);
+	update(m_abilityKey, m_abilityBuffer);
+	update(m_evadeKey, m_evadeBuffer);
+}
+
+bool Player::ConsumeInput(int& bufferTimer)
+{
+	if (bufferTimer <= 0) return false;
+
+	bufferTimer = 0;
+	return true;
 }
 
 int Player::FindNodeIndex(const std::string& name) const

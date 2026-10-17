@@ -173,6 +173,7 @@ private:
 
 	int  m_jumpPhase = JumpPhaseNone;
 	int  m_jumpCount = 0;
+	int  m_landingTimer = 0;				// 着地してからのフレーム数
 	bool m_isFalling = false;
 	bool m_isLandingAnimStarted = false;	// 着地アニメーションを開始済みか
 	bool m_isTakeoffDone = false;			// 実際に跳んだか（アニメーションの踏み切りまで待つ）
