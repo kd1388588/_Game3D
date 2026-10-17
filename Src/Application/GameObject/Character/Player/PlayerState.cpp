@@ -74,6 +74,9 @@ namespace
 	constexpr float kGuardBlendFrame		= 4.0f;		// ガードのアニメーションどうしのブレンドフレーム数
 	constexpr float kGuardStartAnimSpeed	= 1.5f;		// 構えるのは素早く（すぐ守れるように）
 	constexpr float kGuardEndCancelRate		= 0.3f;		// 構えを解くアニメーションがこの割合まで進んだら、次の行動に移れる
+	constexpr float kGuardWalkBlendFrame	= 6.0f;		// ガード歩きの向きが変わった時のブレンドフレーム数
+	constexpr float kGuardTurnAngle			= 12.0f;	// ガード中にカメラの方へ向きを変える速さ（度/フレーム）
+	const std::string kGuardBreakAnimName	= "GuardBreak";
 
 	// ダッシュ（移動中に Shift を押している間）
 	constexpr float kDashSpeedRate			= 1.6f;		// 走る速さの何倍か
@@ -166,9 +169,9 @@ void PlayerStateIdle::Update(Player* player)
 		// 移動（Shift を押していればダッシュ）
 		player->ChangeState(std::make_shared<PlayerStateRun>());
 	}
-	else if (player->IsShiftDown())
+	else if (player->IsShiftDown() && player->CanGuard())
 	{
-		// 止まっている時に Shift：ガード
+		// 止まっている時に Shift：ガード（構えた後は、移動キーでガードしたまま歩ける）
 		player->ChangeState(std::make_shared<PlayerStateGuard>());
 	}
 }
@@ -204,6 +207,9 @@ void PlayerStateGuard::ChangePhase(Player* player, Phase phase)
 		break;
 	}
 
+	// アニメーションの動きどおりに動かす（ガード歩きの間だけ、UpdateGuardMove で 0 にする）
+	player->SetRootMotionScale(1.0f);
+
 	// 構えを解いている時以外はガード中
 	player->SetGuarding(phase != Phase::End);
 }
@@ -214,7 +220,7 @@ void PlayerStateGuard::Update(Player* player)
 	if (m_phase == Phase::End)
 	{
 		// もう一度 Shift を押したら、すぐ構え直す
-		if (player->IsShiftDown() && !player->CheckMoveInput())
+		if (player->IsShiftDown() && player->CanGuard() && !player->CheckMoveInput())
 		{
 			ChangePhase(player, Phase::Start);
 			return;
@@ -245,13 +251,6 @@ void PlayerStateGuard::Update(Player* player)
 	// ガード中でも、攻撃・回避・ジャンプ・アビリティはすぐ出せる
 	if (TryCommonTransition(player)) return;
 
-	// 移動キーを押したらダッシュ
-	if (player->CheckMoveInput())
-	{
-		player->ChangeState(std::make_shared<PlayerStateRun>());
-		return;
-	}
-
 	switch (m_phase)
 	{
 	case Phase::Start:
@@ -263,11 +262,16 @@ void PlayerStateGuard::Update(Player* player)
 		break;
 
 	case Phase::Loop:
-		// Shift を離したら構えを解く
+		// Shift を離したら構えを解く（移動キーを押していれば、そのまま走り出す）
 		if (!player->IsShiftDown())
 		{
-			ChangePhase(player, Phase::End);
+			if (player->CheckMoveInput())	player->ChangeState(std::make_shared<PlayerStateRun>());
+			else							ChangePhase(player, Phase::End);
+			return;
 		}
+
+		// 構えたまま歩く・止まる
+		UpdateGuardMove(player);
 		break;
 
 	case Phase::Hit:
@@ -280,6 +284,52 @@ void PlayerStateGuard::Update(Player* player)
 
 	default:
 		break;
+	}
+}
+
+void PlayerStateGuard::UpdateGuardMove(Player* player)
+{
+	// カメラの方（敵がいる方）を向いたまま歩く
+	player->TurnTowardCameraForward(kGuardTurnAngle);
+
+	Math::Vector3 inputDir;
+	if (!player->GetMoveInputDir(inputDir))
+	{
+		// 止まっている：構えたままのアニメーション（アニメーションの動きどおり）
+		player->ChangeAnimation(kGuardLoopAnimName, true, false, kGuardWalkBlendFrame);
+		player->SetAnimationSpeed(1.0f);
+		player->SetRootMotionScale(1.0f);
+		return;
+	}
+
+	// 歩く方向に一番近い向きのアニメーションを選び、移動の速さに合わせて再生速度を変える
+	float moveSpeed = player->GetGuardMoveSpeed();
+	float animSpeed = 1.0f;
+	const std::string& animName = player->SelectGuardWalkAnim(inputDir, moveSpeed, animSpeed);
+	if (!animName.empty())
+	{
+		player->ChangeAnimation(animName, true, false, kGuardWalkBlendFrame);
+		player->SetAnimationSpeed(animSpeed);
+	}
+
+	// 移動は入力した方向へぴったり動かす（アニメーションの動きでは動かさない）
+	player->SetRootMotionScale(0.0f);
+	player->SetPos(player->GetPos() + inputDir * moveSpeed);
+}
+
+void PlayerStateGuardBreak::ChangeState(Player* player)
+{
+	player->ChangeAnimation(kGuardBreakAnimName, false, true, 2.0f);
+	player->SetAnimationSpeed(1.0f);
+	UseRootMotion(player);	// よろけて下がる動きは、アニメーションどおりに動かす
+}
+
+void PlayerStateGuardBreak::Update(Player* player)
+{
+	// よろけている間は何もできない
+	if (player->IsAnimEnd())
+	{
+		player->ChangeState(std::make_shared<PlayerStateIdle>());
 	}
 }
 

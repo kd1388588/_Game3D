@@ -100,6 +100,18 @@ public:
 	// ガード中か（ガードのステートが毎フレーム true にする。受けるダメージが減り、のけぞらない）
 	void SetGuarding(bool isGuarding) { m_isGuarding = isGuarding; }
 
+	// ガードできるか（崩された後しばらくはできない）
+	bool CanGuard() const { return m_guardBreakTimer <= 0; }
+
+	// ガードしながら歩く速さ（1フレームの移動量）
+	float GetGuardMoveSpeed() const;
+
+	// ガードしながら moveDir の方向へ歩く時のアニメーション名と、その再生速度を選ぶ
+	const std::string& SelectGuardWalkAnim(const Math::Vector3& moveDir, float moveSpeed, float& outAnimSpeed) const;
+
+	// カメラの向いている方へ向きを変える（ガード中は敵の方を向いたまま歩けるように）
+	void TurnTowardCameraForward(float maxAngle);
+
 	// 着地アニメーションで両足が接地しているフレーム
 	float GetLandingFrame(const std::string& animName) const;
 
@@ -247,8 +259,23 @@ private:
 	// ATBゲージを時間でためて、UIに伝える
 	void UpdateAtb();
 
-	// アビリティのCT（クールタイム）とモードの固定時間を進める
+	// アビリティのCT（クールタイム）・モードの固定時間・ガードの耐久値を進める
 	void UpdateAbilityTimers();
+
+	// アニメーションで1フレームに進む距離（pOutLocalDir を渡すと、キャラの向きから見た進む向きも受け取れる）
+	float CalcAnimTravelSpeed(const std::string& animName, Math::Vector3* pOutLocalDir = nullptr) const;
+
+	// ガード歩きのアニメーションの向きと速さを調べる（最初の1回）
+	void SetupGuardWalkAnims();
+
+	struct GuardWalkAnim
+	{
+		std::string		name;
+		Math::Vector3	localDir = { 0.0f, 0.0f, 1.0f };	// キャラの向きから見た進む向き（長さ1）
+		float			travelSpeed = 0.0f;					// 1フレームに進む距離（0 ならアニメーションに進む動きが無い）
+	};
+	std::vector<GuardWalkAnim>		m_guardWalkAnims;
+	float							m_runTravelSpeed = 0.0f;	// 走りのアニメーションで1フレームに進む距離
 
 	// 剣の軌跡（1本分）
 	struct SwordTrail
@@ -365,6 +392,9 @@ private:
 	int								m_modeLockTimer = 0;		// モードを切り替えられない残りフレーム（攻撃05の後）
 	int								m_abilityCT[static_cast<int>(AbilitySlot::Num)] = {};	// アビリティごとのCTの残りフレーム
 	bool							m_isGuarding = false;		// ガード中か
+	float							m_guardDurability = 100.0f;	// ガードの耐久値（0 になると崩される）
+	int								m_guardRegenDelay = 0;		// 耐久値が回復し始めるまでの残りフレーム
+	int								m_guardBreakTimer = 0;		// 崩された後、ガードできない残りフレーム
 	bool							m_isCommandOpen = false;	// ATBコマンドメニューを開いているか
 	int								m_commandCursor = 0;		// メニューで選んでいる技
 	float							m_atbGage = 0.0f;			// ATBゲージ（0 ～ kAtbBarMax × kAtbBarNum）

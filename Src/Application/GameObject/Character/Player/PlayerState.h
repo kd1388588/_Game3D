@@ -69,7 +69,19 @@ private:
 	// ガードの段階を変えて、その段階のアニメーションを再生する
 	void ChangePhase(Player* player, Phase phase);
 
+	// 構えたまま歩く（移動キーの方向へ、普段の半分くらいの速さで。向きはカメラの方を向いたまま）
+	// 移動キーを押していなければ、構えたまま止まる
+	void UpdateGuardMove(Player* player);
+
 	Phase m_phase = Phase::Start;
+};
+
+// ガードを崩された（よろけて、しばらくガードできない）
+class PlayerStateGuardBreak : public PlayerState
+{
+public:
+	void ChangeState(Player* player) override;
+	void Update(Player* player) override;
 };
 
 class PlayerStateComboAttack : public PlayerState

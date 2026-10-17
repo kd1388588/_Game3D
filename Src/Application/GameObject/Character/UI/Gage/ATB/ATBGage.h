@@ -37,6 +37,9 @@ public:
 	// ガード中か
 	void SetGuarding(bool isGuarding) { m_isGuarding = isGuarding; }
 
+	// ガードの耐久値（ratio：残りの割合）と、崩されているか
+	void SetGuardState(float ratio, bool isBroken) { m_guardRatio = ratio; m_isGuardBroken = isBroken; }
+
 private:
 
 	// ATBゲージ1本を描く（left：左端のX座標、ratio：たまっている割合 0～1）
@@ -67,6 +70,8 @@ private:
 	float					m_wpRatio = 0.0f;
 	bool					m_isAwakening = false;
 	bool					m_isGuarding = false;
+	float					m_guardRatio = 1.0f;
+	bool					m_isGuardBroken = false;
 	int						m_frame = 0;			// 経過フレーム（満タンのゲージを光らせる用）
 	int						m_modeFlashTimer = 0;	// モードが変わった時の演出の残りフレーム
 	std::vector<int>		m_barFlashTimers;		// ゲージがたまった瞬間に白く光らせる残りフレーム（1本ごと）
@@ -76,6 +81,7 @@ private:
 	std::shared_ptr<UIText>					m_operatorText = nullptr;
 	std::shared_ptr<UIText>					m_punisherText = nullptr;
 	std::shared_ptr<UIText>					m_guardText = nullptr;
+	std::shared_ptr<UIText>					m_breakText = nullptr;	// ガードを崩された時の「BREAK」
 	std::shared_ptr<UIText>					m_wpText = nullptr;
 	std::shared_ptr<UIText>					m_wpReadyText = nullptr;	// WPが満タンの時の「G：覚醒」
 	std::vector<std::shared_ptr<UIText>>	m_slotKeyTexts;				// アビリティの枠の「04」「05」

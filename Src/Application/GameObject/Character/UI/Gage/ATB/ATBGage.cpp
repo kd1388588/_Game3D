@@ -40,6 +40,14 @@ namespace
 	const Math::Color	kWpColor			= { 0.75f, 0.35f, 1.0f, 1.0f };		// WPゲージ
 	const Math::Color	kWpFullColor		= { 1.0f, 0.5f, 1.0f, 1.0f };		// WPゲージ（満タン・覚醒中）
 	const Math::Color	kGuardColor			= { 0.85f, 0.95f, 1.0f, 1.0f };		// GUARD の文字
+	const Math::Color	kBreakColor			= { 1.0f, 0.3f, 0.25f, 1.0f };		// BREAK の文字
+	const Math::Color	kGuardBarColor		= { 0.6f, 0.85f, 1.0f, 1.0f };		// ガードの耐久値
+	const Math::Color	kGuardBarLowColor	= { 1.0f, 0.4f, 0.3f, 1.0f };		// ガードの耐久値（残り少ない）
+	constexpr int		kGuardBarLeft		= -360;		// ガードの耐久値のバー（GUARD の文字の下）
+	constexpr int		kGuardBarWidth		= 70;
+	constexpr int		kGuardBarY			= -283;
+	constexpr int		kGuardBarHeight		= 4;
+	constexpr float		kGuardLowRatio		= 0.35f;	// これより少ないと赤くする
 
 	// 演出
 	constexpr int		kGlowCycle			= 60;		// 満タンのゲージが明るくなったり暗くなったりする周期（フレーム）
@@ -77,6 +85,11 @@ void ATBGage::Init()
 	m_guardText->SetText("GUARD", UIText::FontSize::Small);
 	m_guardText->SetColor(kGuardColor);
 	SetTextLeft(m_guardText, static_cast<float>(kGageLeft + 140), kModeTextY);
+
+	m_breakText = std::make_shared<UIText>();
+	m_breakText->SetText("BREAK", UIText::FontSize::Small);
+	m_breakText->SetColor(kBreakColor);
+	SetTextLeft(m_breakText, static_cast<float>(kGageLeft + 140), kModeTextY);
 
 	// WPゲージの文字（ゲージの左）と、満タンの時の案内（ゲージの右）
 	m_wpText = std::make_shared<UIText>();
@@ -294,11 +307,36 @@ void ATBGage::DrawSprite()
 		}
 	}
 
+	// ガードの耐久値（ガード中か、減っている時だけ表示する）
+	if (!m_isGuardBroken && (m_isGuarding || m_guardRatio < 1.0f))
+	{
+		constexpr int halfW = kGuardBarWidth / 2;
+		constexpr int halfH = kGuardBarHeight / 2;
+		int centerX = kGuardBarLeft + halfW;
+		spriteShader.DrawBox(centerX, kGuardBarY, halfW, halfH, &kBackColor, true);
+
+		int fillHalfW = static_cast<int>(kGuardBarWidth * std::clamp(m_guardRatio, 0.0f, 1.0f) * 0.5f);
+		if (fillHalfW > 0)
+		{
+			const Math::Color& color = (m_guardRatio < kGuardLowRatio) ? kGuardBarLowColor : kGuardBarColor;
+			spriteShader.DrawBox(kGuardBarLeft + fillHalfW, kGuardBarY, fillHalfW, halfH, &color, true);
+		}
+		spriteShader.DrawBox(centerX, kGuardBarY, halfW, halfH, &kFrameColor, false);
+	}
+
 	// 文字
 	if (m_isPunisher)	m_punisherText->DrawSprite();
 	else				m_operatorText->DrawSprite();
 
-	if (m_isGuarding) m_guardText->DrawSprite();
+	// ガードを崩されている間は BREAK（点滅）、ガード中は GUARD
+	if (m_isGuardBroken)
+	{
+		if ((m_frame / 8) % 2 == 0) m_breakText->DrawSprite();
+	}
+	else if (m_isGuarding)
+	{
+		m_guardText->DrawSprite();
+	}
 
 	m_wpText->DrawSprite();
 	if (m_wpRatio >= 1.0f && !m_isAwakening) m_wpReadyText->DrawSprite();

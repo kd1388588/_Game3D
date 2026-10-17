@@ -30,6 +30,7 @@ namespace EffectName
 	inline const std::string ModeChange			= "";					// バトルモードの切り替え（Eキー）
 	inline const std::string AbilityStart		= "";					// アビリティ（ATBコマンドで選んだ技）の発動
 	inline const std::string Guard				= "";					// 敵の攻撃をガードした
+	inline const std::string GuardBreak			= "";					// ガードを崩された
 }
 
 // ============================================================

@@ -66,7 +66,7 @@ namespace
 	// バトルモード（FF7リメイクのクラウド風）
 	constexpr int	kOperatorAttackType		= 1;		// オペレーターの左クリックの攻撃（攻撃01）
 	constexpr int	kPunisherAttackType		= 2;		// パニッシャーの左クリックの攻撃（攻撃02）
-	constexpr float kPunisherMoveRate		= 0.6f;		// パニッシャーの移動の速さ（オペレーターを1.0とした倍率）
+	constexpr float kPunisherMoveRate		= 0.7f;		// パニッシャーの移動の速さ（オペレーターを1.0とした倍率）
 	constexpr float kPunisherDamageRate		= 1.5f;		// パニッシャーのダメージの倍率
 
 	// ATBゲージのたまり方
@@ -107,6 +107,42 @@ namespace
 
 	// ガード
 	constexpr float	kGuardDamageRate		= 0.2f;		// ガード中に受けるダメージの倍率
+	constexpr float	kGuardMoveRate			= 0.5f;		// ガードしながら歩く速さ（普段の走る速さの何倍か）
+	constexpr float	kGuardWalkMinAnimSpeed	= 0.6f;		// ガード歩きのアニメーションの再生速度の範囲
+	constexpr float	kGuardWalkMaxAnimSpeed	= 1.8f;		// （移動の速さに合わせて変え、足が滑って見えないようにする）
+
+	// ガードの耐久値（攻撃を受け止めるたびに減り、0 になるとガードを崩される）
+	constexpr float	kGuardDurabilityMax		= 100.0f;
+	constexpr float	kGuardCostPerDamage		= 3.0f;		// 受け止めたダメージ × これだけ減る（ダメージ10なら30。4回で崩される）
+	constexpr float	kGuardCriticalCostRate	= 1.5f;		// クリティカルの攻撃は多く減る
+	constexpr int	kGuardRegenDelay		= 60;		// 最後に受け止めてから回復し始めるまでのフレーム数
+	constexpr float	kGuardRegenSpeed		= 0.8f;		// 1フレームに回復する量
+	constexpr int	kGuardBreakFrame		= 60 * 2;	// 崩された後、ガードできない時間（2秒。終わると耐久値は満タンに戻る）
+	constexpr int	kGuardBreakHitStopFrame	= 10;		// 崩された時のヒットストップ
+	constexpr float	kGuardBreakShakePower	= 0.15f;
+
+	// ガードしながら歩くアニメーション（Sequence2/03_Walk/03_Walk_Block の Loop）
+	// angle：キャラの向きから見て、どの方向へ歩くアニメーションか（度。右が＋）
+	//        ※実際の向きは、読み込んだ時にアニメーションの動きから求め直す（左右の取り違えを防ぐため）
+	struct GuardWalkAnimDef
+	{
+		const char*	name;
+		const char*	folder;
+		const char*	dir;
+		float		angle;
+	};
+	const GuardWalkAnimDef kGuardWalkAnimDefs[] =
+	{
+		{ "GuardWalk_F_0",		"01_Walk_Block_F_0",	"F_0",		0.0f },
+		{ "GuardWalk_F_L_45",	"02_Walk_BLock_F_L_45",	"F_L_45",	-45.0f },
+		{ "GuardWalk_F_R_45",	"03_Walk_BLock_F_R_45",	"F_R_45",	45.0f },
+		{ "GuardWalk_F_L_90",	"04_Walk_BLock_F_L_90",	"F_L_90",	-90.0f },
+		{ "GuardWalk_F_R_90",	"05_Walk_BLock_F_R_90",	"F_R_90",	90.0f },
+		{ "GuardWalk_B_180",	"06_Walk_Block_B_180",	"B_180",	180.0f },
+		{ "GuardWalk_B_L_45",	"07_Walk_Block_B_L_45",	"B_L_45",	-135.0f },
+		{ "GuardWalk_B_R_45",	"08_Walk_Block_B_R_45",	"B_R_45",	135.0f },
+	};
+	constexpr float	kMinWalkTravel			= 0.05f;	// アニメーションでこれ以上進んでいれば、その動きから向きを求める
 
 	// WPゲージ（ためると G キーで覚醒できる）
 	constexpr float	kWpHitGain				= 4.0f;		// 攻撃を当てた時にたまる量
@@ -212,8 +248,16 @@ std::vector<AnimLoadInfo> Player::CreateAnimList()
 		{ "GuardLoop",			kAnimDir + "08_Hit/14_Block/AS_Block_Loop_Seq/AS_Block_Loop_Seq.gltf" },
 		{ "GuardHit",			kAnimDir + "08_Hit/14_Block/AS_Block_Hit_Seq/AS_Block_Hit_Seq.gltf" },
 		{ "GuardEnd",			kAnimDir + "08_Hit/14_Block/AS_Block_End_Seq/AS_Block_End_Seq.gltf" },
+		{ "GuardBreak",			kAnimDir + "08_Hit/14_Block/AS_Block_Hit_Break_Seq/AS_Block_Hit_Break_Seq.gltf" },
 		{ "Death",				kAnimDir + "08_Hit/01_Hit/AS_Hit_Death_Seq/AS_Hit_Death_Seq.gltf" },
 	};
+
+	// ガードしながら歩くアニメーション（8方向）
+	for (const auto& def : kGuardWalkAnimDefs)
+	{
+		std::string fileName = std::string("AS_Walk_Block_Loop_") + def.dir + "_Seq";
+		animList.push_back({ def.name, kAnimDir + "03_Walk/03_Walk_Block/" + def.folder + "/" + fileName + "/" + fileName + ".gltf" });
+	}
 
 	// 攻撃アニメーション（Attack_タイプ_段数）
 	for (int type = 1; type <= kAttackTypeNum; ++type)
@@ -558,6 +602,9 @@ void Player::Init()
 			+ " 長さ " + std::to_string(it->second->m_maxLength)
 			+ " / 最低 " + std::to_string(minY) + " / 最高 " + std::to_string(maxY) + "\n").c_str());
 	}
+
+	// ガード歩き：アニメーションごとに、どの方向へどれくらいの速さで進むかを調べる
+	SetupGuardWalkAnims();
 
 	// 溜め攻撃（4-3）で、剣を地面に叩きつけるフレームを事前に計算（軌跡をそこまで出すため）
 	m_swordSlamFrame = CalcSwordLowestFrame(kSlamAnimName);
@@ -1312,6 +1359,126 @@ void Player::UpdateAbilityTimers()
 		if (ct > 0) ct--;
 	}
 	if (m_modeLockTimer > 0) m_modeLockTimer--;
+
+	// ガードの耐久値
+	if (m_guardBreakTimer > 0)
+	{
+		// 崩された後：時間がたったら、耐久値を満タンに戻してまたガードできるようにする
+		m_guardBreakTimer--;
+		if (m_guardBreakTimer <= 0) m_guardDurability = kGuardDurabilityMax;
+	}
+	else if (m_guardRegenDelay > 0)
+	{
+		m_guardRegenDelay--;
+	}
+	else
+	{
+		m_guardDurability = std::min(m_guardDurability + kGuardRegenSpeed, kGuardDurabilityMax);
+	}
+}
+
+float Player::CalcAnimTravelSpeed(const std::string& animName, Math::Vector3* pOutLocalDir) const
+{
+	auto it = m_animMap.find(animName);
+	if (it == m_animMap.end() || !it->second || it->second->m_maxLength <= 0.0f) return 0.0f;
+
+	// 最初と最後の腰の位置の差（モデルから見た向き）
+	Math::Vector3 move = SampleMotionPos(*it->second, it->second->m_maxLength) - SampleMotionPos(*it->second, 0.0f);
+	move.y = 0.0f;
+	float length = move.Length();
+
+	// キャラの向きから見た向きに直す（描画で180度回しているので、X・Zを反転する）
+	if (pOutLocalDir && length > 0.0f)
+	{
+		*pOutLocalDir = Math::Vector3(-move.x, 0.0f, -move.z) / length;
+	}
+
+	// 1フレーム（再生速度 1.0）あたりに進む距離
+	return length / it->second->m_maxLength;
+}
+
+void Player::SetupGuardWalkAnims()
+{
+	m_guardWalkAnims.clear();
+	for (const auto& def : kGuardWalkAnimDefs)
+	{
+		if (!HasAnimation(def.name)) continue;
+
+		GuardWalkAnim anim;
+		anim.name = def.name;
+
+		// 名前から決めた向き
+		float rad = DirectX::XMConvertToRadians(def.angle);
+		anim.localDir = { std::sin(rad), 0.0f, std::cos(rad) };
+
+		// アニメーションの動きから向きと速さを求める（進む動きが入っていれば、そちらを使う）
+		Math::Vector3 measuredDir;
+		float speed = CalcAnimTravelSpeed(def.name, &measuredDir);
+		if (speed * m_animMap[def.name]->m_maxLength >= kMinWalkTravel)
+		{
+			anim.localDir = measuredDir;
+			anim.travelSpeed = speed;
+		}
+		m_guardWalkAnims.push_back(anim);
+
+		OutputDebugStringA(("ガード歩き: " + anim.name + " 向き(" + std::to_string(anim.localDir.x) + ", "
+			+ std::to_string(anim.localDir.z) + ") 速さ " + std::to_string(anim.travelSpeed) + "\n").c_str());
+	}
+
+	// 普段の走る速さ（ガード歩きの速さの基準）
+	m_runTravelSpeed = CalcAnimTravelSpeed("Combat_Run");
+}
+
+float Player::GetGuardMoveSpeed() const
+{
+	// 普段の走る速さ（アニメーションの速さ × 走る速さの倍率 × モードの倍率）の半分
+	float runSpeed = (m_runTravelSpeed > 0.0f) ? m_runTravelSpeed * s_runSpeedRate : kMoveSpeed;
+	return runSpeed * GetModeMoveRate() * kGuardMoveRate;
+}
+
+const std::string& Player::SelectGuardWalkAnim(const Math::Vector3& moveDir, float moveSpeed, float& outAnimSpeed) const
+{
+	static const std::string kNone = "";
+	outAnimSpeed = 1.0f;
+	if (m_guardWalkAnims.empty()) return kNone;
+
+	// 進みたい方向を、キャラの向きから見た向きに直す（前：+Z、右：+X）
+	Math::Matrix rot = Math::Matrix::CreateRotationY(GetAngleRad());
+	Math::Vector3 forward = Math::Vector3::TransformNormal(Math::Vector3(0.0f, 0.0f, 1.0f), rot);
+	Math::Vector3 right = Math::Vector3::TransformNormal(Math::Vector3(1.0f, 0.0f, 0.0f), rot);
+	Math::Vector3 local = { moveDir.Dot(right), 0.0f, moveDir.Dot(forward) };
+
+	// 一番近い向きのアニメーションを選ぶ
+	const GuardWalkAnim* pBest = &m_guardWalkAnims[0];
+	float bestDot = -2.0f;
+	for (const auto& anim : m_guardWalkAnims)
+	{
+		float dot = local.Dot(anim.localDir);
+		if (dot > bestDot)
+		{
+			bestDot = dot;
+			pBest = &anim;
+		}
+	}
+
+	// 移動の速さに合わせて再生速度を変える（足が地面を滑って見えないように）
+	if (pBest->travelSpeed > 0.0f)
+	{
+		outAnimSpeed = std::clamp(moveSpeed / pBest->travelSpeed, kGuardWalkMinAnimSpeed, kGuardWalkMaxAnimSpeed);
+	}
+	return pBest->name;
+}
+
+void Player::TurnTowardCameraForward(float maxAngle)
+{
+	auto camera = m_camera.lock();
+	if (!camera) return;
+
+	Math::Vector3 forward = Math::Vector3::TransformNormal(Math::Vector3(0.0f, 0.0f, 1.0f), camera->GetRotationYMatrix());
+	forward.y = 0.0f;
+	if (forward.LengthSquared() <= 0.0f) return;
+	forward.Normalize();
+	TurnToward(forward, maxAngle);
 }
 
 bool Player::IsShiftDown() const
@@ -1345,6 +1512,7 @@ void Player::UpdateAtb()
 		// モードの固定の残りの割合・ガード中か
 		atbGage->SetModeLockRatio(static_cast<float>(m_modeLockTimer) / static_cast<float>(kModeLockFrame));
 		atbGage->SetGuarding(m_isGuarding);
+		atbGage->SetGuardState(m_guardDurability / kGuardDurabilityMax, m_guardBreakTimer > 0);
 
 		// ATBコマンドメニュー
 		if (auto commandMenu = m_wpCommandMenu.lock())
@@ -1650,12 +1818,32 @@ void Player::OnDamage(int damage, bool isCritical)
 		m_hp -= std::max(static_cast<int>(std::round(damage * kGuardDamageRate)), 1);
 		m_invincibleTimer = kDamageInvincibleFrame;
 		if (!m_isAwakening) AddAwakeningGage(kWpGuardGain);
-		HitStop::Request(kGuardHitStopFrame, kGuardShakePower);
 		EffectPlayer::Play(EffectName::Guard, m_pos + Math::Vector3(0.0f, 1.0f, 0.0f), 1.0f);
 
-		// 倒れていなければ、受け止めるアニメーションを再生する
-		if (m_hp <= 0)	ChangeState(std::make_shared<PlayerStateDead>());
-		else			ChangeState(std::make_shared<PlayerStateGuard>(PlayerStateGuard::Phase::Hit));
+		// ガードの耐久値を減らす（受けすぎると崩される）
+		float cost = damage * kGuardCostPerDamage * (isCritical ? kGuardCriticalCostRate : 1.0f);
+		m_guardDurability = std::max(m_guardDurability - cost, 0.0f);
+		m_guardRegenDelay = kGuardRegenDelay;
+
+		if (m_hp <= 0)
+		{
+			ChangeState(std::make_shared<PlayerStateDead>());
+		}
+		else if (m_guardDurability <= 0.0f)
+		{
+			// ガードを崩された：しばらくガードできず、よろける
+			m_guardBreakTimer = kGuardBreakFrame;
+			HitStop::Request(kGuardBreakHitStopFrame, kGuardBreakShakePower);
+			EffectPlayer::Play(EffectName::GuardBreak, m_pos + Math::Vector3(0.0f, 1.0f, 0.0f), 1.0f);
+			KdDebugGUI::Instance().AddLog("[System] ガードを崩された！\n");
+			ChangeState(std::make_shared<PlayerStateGuardBreak>());
+		}
+		else
+		{
+			// 受け止めるアニメーションを再生する
+			HitStop::Request(kGuardHitStopFrame, kGuardShakePower);
+			ChangeState(std::make_shared<PlayerStateGuard>(PlayerStateGuard::Phase::Hit));
+		}
 		return;
 	}
 
