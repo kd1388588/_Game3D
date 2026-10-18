@@ -1426,16 +1426,6 @@ void Player::UpdateAwakeningEffect()
 	}
 }
 
-Math::Matrix Player::CreateEffectMatrix(float forwardOffset, float height, float scale) const
-{
-	// m_angle の向きが前方（ローカル+Z）になる
-	Math::Matrix rot = Math::Matrix::CreateRotationY(GetAngleRad());
-	Math::Vector3 forward = Math::Vector3::TransformNormal(Math::Vector3(0.0f, 0.0f, 1.0f), rot);
-	Math::Vector3 pos = m_pos + forward * forwardOffset + Math::Vector3(0.0f, height, 0.0f);
-
-	return Math::Matrix::CreateScale(scale) * rot * Math::Matrix::CreateTranslation(pos);
-}
-
 void Player::UpdateHpGage()
 {
 	auto hpGage = m_wpHpGage.lock();
@@ -1845,25 +1835,6 @@ float Player::GetLandingFrame(const std::string& animName) const
 	return (it != m_landingFrames.end()) ? it->second : 0.0f;
 }
 
-void Player::ChangeAnimationLazy(const std::string& animName, bool isLoop, bool forceRestart, float blendFrame)
-{
-	// パスが登録されていれば、その場でロードしてマップに登録する
-	auto it = m_lazyAnimPaths.find(animName);
-	if (it != m_lazyAnimPaths.end())
-	{
-		KdModelWork tempModel;
-		tempModel.SetModelData(it->second);
-		if (auto anim = tempModel.GetAnimation(0))
-		{
-			SetAnimationData(animName, anim);
-			OutputDebugStringA(("遅延ロード完了: " + animName + "\n").c_str());
-		}
-	}
-
-	// 登録済みの通常のアニメーション変更を呼び出す
-	ChangeAnimation(animName, isLoop, forceRestart, blendFrame);
-}
-
 void Player::PlayHitEffect(const std::string& effectName, const Math::Vector3& hitPos, bool isCritical) const
 {
 	// 攻撃の種類ごとのエフェクトが無ければ、いつものヒットエフェクト
@@ -2047,26 +2018,6 @@ void Player::OnDamage(int damage, bool isCritical)
 	{
 		ChangeState(std::make_shared<PlayerStateDamage>());
 	}
-}
-
-Math::Vector3 Player::GetSwordTipPositionR() const
-{
-	return GetSwordPoint(m_swordWorldR, m_swordBladeTipY);
-}
-
-Math::Vector3 Player::GetSwordTipPositionL() const
-{
-	return GetSwordPoint(m_swordWorldL, m_swordBladeTipY);
-}
-
-Math::Vector3 Player::GetSwordBasePositionR() const
-{
-	return GetSwordPoint(m_swordWorldR, m_swordBladeBaseY);
-}
-
-Math::Vector3 Player::GetSwordBasePositionL() const
-{
-	return GetSwordPoint(m_swordWorldL, m_swordBladeBaseY);
 }
 
 Math::Vector3 Player::GetCameraTargetPos() const

@@ -120,19 +120,24 @@ void PlayerState::UseRootMotion(Player* player)
 	player->SetRootMotionScale(1.0f);
 }
 
+void PlayerState::StartEvade(Player* player)
+{
+	// パニッシャーの時は、オペレーターに戻ってから回避する（FF7リメイクのクラウドと同じ動き）
+	if (kEvadeReturnsToOperator && player->IsPunisherMode())
+	{
+		player->SetBattleMode(BattleMode::Operator);
+	}
+	player->ChangeState(std::make_shared<PlayerStateEvade>());
+}
+
 // 待機・移動中に共通の入力によるステート遷移
 // 遷移した場合は true を返す
 bool PlayerState::TryCommonTransition(Player* player)
 {
 	// 右クリック：回避
-	// （パニッシャーの時は、オペレーターに戻ってから回避する。FF7リメイクのクラウドと同じ動き）
 	if (player->CheckEvadeInput())
 	{
-		if (kEvadeReturnsToOperator && player->IsPunisherMode())
-		{
-			player->SetBattleMode(BattleMode::Operator);
-		}
-		player->ChangeState(std::make_shared<PlayerStateEvade>());
+		StartEvade(player);
 		return true;
 	}
 
@@ -535,8 +540,7 @@ void PlayerStateComboAttack::Update(Player* player)
 	// 右クリック：攻撃の途中でも、回避でキャンセルできる（攻撃の出始めは除く）
 	if (player->GetAnimTime() >= kAttackEvadeCancelFrame && player->CheckEvadeInput())
 	{
-		if (kEvadeReturnsToOperator && player->IsPunisherMode()) player->SetBattleMode(BattleMode::Operator);
-		player->ChangeState(std::make_shared<PlayerStateEvade>());
+		StartEvade(player);
 		return;
 	}
 
@@ -563,14 +567,12 @@ void PlayerStateComboAttack::Update(Player* player)
 	// 攻撃判定
 	if (animTime >= kAttackHitStartFrame && animTime <= kAttackHitEndFrame)
 	{
-		if (!m_isHit)
-		{
-			// 当たったら、攻撃の種類・段数ごとのエフェクトをその位置に出す
-			// （ヒットストップは AttackOBB の中で、すべての攻撃に同じルールでかかる）
-			float damageRate = m_isAbility ? kAbilityDamageRate : 1.0f;
-			player->AttackOBB(player->GetSwordMatrixR(), m_isCritical, GetHitEffectName(), damageRate);
-			player->AttackOBB(player->GetSwordMatrixL(), m_isCritical, GetHitEffectName(), damageRate);
-		}
+		// 当たったら、攻撃の種類・段数ごとのエフェクトをその位置に出す
+		// （ヒットストップは AttackOBB の中で、すべての攻撃に同じルールでかかる）
+		// （敵は当たると少しの間無敵になるので、毎フレーム判定しても何度も当たらない）
+		float damageRate = m_isAbility ? kAbilityDamageRate : 1.0f;
+		player->AttackOBB(player->GetSwordMatrixR(), m_isCritical, GetHitEffectName(), damageRate);
+		player->AttackOBB(player->GetSwordMatrixL(), m_isCritical, GetHitEffectName(), damageRate);
 	}
 
 	// 予約があり、キャンセル可能フレームを超えたら次へ滑らかに移行
@@ -676,7 +678,6 @@ void PlayerStateEvade::Update(Player* player)
 void PlayerStateJump::ChangeState(Player* player)
 {
 	m_jumpPhase = JumpPhaseAir;
-	m_jumpCount = 1;
 	m_isFalling = false;
 	m_isLandingAnimStarted = false;
 
@@ -780,15 +781,6 @@ void PlayerStateJump::Update(Player* player)
 		{
 			player->ChangeAnimation(kJumpLoopAnimName, true, false, kAirLoopBlendFrame);
 		}
-
-		//// 2段ジャンプの入力検知
-		//if (m_jumpCount < 2 && player->CheckJumpInput())
-		//{
-		//	m_jumpCount++;
-		//	player->ExecJump(0.2f); 
-		//	player->ChangeAnimation("JumpStart", false, true); 
-		//	m_isFalling = false;
-		//}
 
 		if (isFallingNow)
 		{

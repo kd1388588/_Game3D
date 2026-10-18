@@ -21,6 +21,9 @@ protected:
 	// 前方へ減速しながら移動する（回避用）
 	static void MoveForwardWithDecay(Player* player, float baseSpeed, float moveFrame, bool isFlat);
 
+	// 回避を始める（攻撃の途中から回避する時も、ここを通す）
+	static void StartEvade(Player* player);
+
 	// 待機・移動中に共通の入力によるステート遷移（遷移した場合は true）
 	static bool TryCommonTransition(Player* player);
 
@@ -130,7 +133,6 @@ private:
 	bool m_nextAttackReserved = false;
 	bool m_isAbility = false;			// アビリティで出した攻撃か
 
-	bool m_isHit = false;	// ※現在は常にfalse（多段ヒットさせるため）
 
 	int m_loopTimer = 0;
 
@@ -194,7 +196,6 @@ private:
 	void Takeoff(Player* player);
 
 	int  m_jumpPhase = JumpPhaseNone;
-	int  m_jumpCount = 0;
 	int  m_landingTimer = 0;				// 着地してからのフレーム数
 	bool m_isFalling = false;
 	bool m_isLandingAnimStarted = false;	// 着地アニメーションを開始済みか

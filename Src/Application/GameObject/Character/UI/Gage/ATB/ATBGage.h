@@ -42,6 +42,10 @@ public:
 
 private:
 
+	// 横に伸びるゲージを1本描く（背景・たまっている部分・枠。ATB・WP・ガードのゲージで共通）
+	// left：左端のX座標、centerY：中心の高さ、ratio：たまっている割合 0～1
+	static void DrawGaugeBar(int left, int centerY, int width, int height, float ratio, const Math::Color& fillColor);
+
 	// ATBゲージ1本を描く（left：左端のX座標、ratio：たまっている割合 0～1）
 	void DrawBar(int index, int left, float ratio) const;
 

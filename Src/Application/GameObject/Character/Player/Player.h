@@ -132,11 +132,8 @@ public:
 	// 溜め攻撃（4-3）の End で、剣が地面に叩きつけられる（一番低くなる）フレーム（無ければ -1）
 	float GetSwordSlamFrame() const { return m_swordSlamFrame; }
 
-	// 攻撃アニメーション
-	void ChangeAnimationLazy(const std::string& animName, bool isLoop = true, bool forceRestart = false, float blendFrame = 0.0f);
-	void RegisterAnimPath(const std::string& name, const std::string& path) { m_lazyAnimPaths[name] = path; }
+	// 左クリックで出す攻撃の種類（オペレーター：01、パニッシャー：02）
 	int GetCurrentAttackType() const { return m_currentAttackType; }
-	void SetCurrentAttackType(int type) { m_currentAttackType = type; }
 
 	const Math::Matrix& GetSwordMatrixR() const { return m_swordWorldR; }
 	const Math::Matrix& GetSwordMatrixL() const { return m_swordWorldL; }
@@ -167,12 +164,6 @@ public:
 	int GetCritRate() const { return m_critRate; }
 	void OnDamage(int damage, bool isCritical = false) override;
 
-	// 剣先座標取得
-	Math::Vector3 GetSwordTipPositionR() const;
-	Math::Vector3 GetSwordTipPositionL() const;
-	// 剣元座標取得
-	Math::Vector3 GetSwordBasePositionR() const;
-	Math::Vector3 GetSwordBasePositionL() const;
 
 	// 現在の剣の位置を左右の軌跡に追加する（攻撃中に毎フレーム呼ぶ）
 	void AddSwordTrailPoints();
@@ -181,10 +172,6 @@ public:
 
 	// 現在の向き（Y軸回転）をラジアンで取得
 	float GetAngleRad() const { return DirectX::XMConvertToRadians(m_angle); }
-
-	// プレイヤーの向きに合わせたエフェクト用の行列を作成
-	// forwardOffset：前方へずらす距離、height：足元からの高さ、scale：大きさ
-	Math::Matrix CreateEffectMatrix(float forwardOffset, float height, float scale) const;
 
 	// デバッグ用（KdDebugGUIから編集される）
 	// 武器所持位置
@@ -371,7 +358,6 @@ private:
 	bool							m_isTrailActive = false;			// 軌跡を描いている途中か
 	bool							m_isTrailAddedThisFrame = false;	// このフレームに軌跡を追加したか
 
-	std::unordered_map<std::string, std::string> m_lazyAnimPaths;
 	std::unordered_map<std::string, float>		 m_landingFrames;	// 着地アニメ名 → 両足が接地するフレーム
 	std::unordered_map<std::string, float>		 m_takeoffFrames;	// ジャンプ開始アニメ名 → 足が地面から離れるフレーム
 	float										 m_swordSlamFrame = -1.0f;	// 4-3 の End で剣を地面に叩きつけるフレーム

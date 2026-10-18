@@ -179,37 +179,43 @@ Math::Color ATBGage::GetGlowColor(const Math::Color& baseColor) const
 	return color;
 }
 
-void ATBGage::DrawBar(int index, int left, float ratio) const
+void ATBGage::DrawGaugeBar(int left, int centerY, int width, int height, float ratio, const Math::Color& fillColor)
 {
 	auto& spriteShader = KdShaderManager::Instance().m_spriteShader;
 
-	constexpr int halfW = kBarWidth / 2;
-	constexpr int halfH = kBarHeight / 2;
+	int halfW = width / 2;
+	int halfH = height / 2;
 	int centerX = left + halfW;
 
 	// 背景
-	spriteShader.DrawBox(centerX, kGageY, halfW, halfH, &kBackColor, true);
+	spriteShader.DrawBox(centerX, centerY, halfW, halfH, &kBackColor, true);
 
 	// たまっている部分（左から伸びる）
-	ratio = std::clamp(ratio, 0.0f, 1.0f);
-	int fillHalfW = static_cast<int>(kBarWidth * ratio * 0.5f);
+	int fillHalfW = static_cast<int>(width * std::clamp(ratio, 0.0f, 1.0f) * 0.5f);
 	if (fillHalfW > 0)
 	{
-		// 満タンのゲージは、明るくなったり暗くなったりして「使える」ことを知らせる
-		Math::Color color = (ratio >= 1.0f) ? GetGlowColor(kFullColor) : kFillColor;
-
-		// たまった瞬間は白っぽくする
-		if (m_barFlashTimers[index] > 0)
-		{
-			float t = static_cast<float>(m_barFlashTimers[index]) / kBarFlashFrame;
-			color = Math::Color::Lerp(color, Math::Color(1.0f, 1.0f, 1.0f, 1.0f), t);
-		}
-
-		spriteShader.DrawBox(left + fillHalfW, kGageY, fillHalfW, halfH, &color, true);
+		spriteShader.DrawBox(left + fillHalfW, centerY, fillHalfW, halfH, &fillColor, true);
 	}
 
 	// 枠
-	spriteShader.DrawBox(centerX, kGageY, halfW, halfH, &kFrameColor, false);
+	spriteShader.DrawBox(centerX, centerY, halfW, halfH, &kFrameColor, false);
+}
+
+void ATBGage::DrawBar(int index, int left, float ratio) const
+{
+	ratio = std::clamp(ratio, 0.0f, 1.0f);
+
+	// 満タンのゲージは、明るくなったり暗くなったりして「使える」ことを知らせる
+	Math::Color color = (ratio >= 1.0f) ? GetGlowColor(kFullColor) : kFillColor;
+
+	// たまった瞬間は白っぽくする
+	if (m_barFlashTimers[index] > 0)
+	{
+		float t = static_cast<float>(m_barFlashTimers[index]) / kBarFlashFrame;
+		color = Math::Color::Lerp(color, Math::Color(1.0f, 1.0f, 1.0f, 1.0f), t);
+	}
+
+	DrawGaugeBar(left, kGageY, kBarWidth, kBarHeight, ratio, color);
 }
 
 void ATBGage::DrawAbilitySlot(int index) const
@@ -255,24 +261,10 @@ void ATBGage::DrawAbilitySlot(int index) const
 
 void ATBGage::DrawWpBar() const
 {
-	auto& spriteShader = KdShaderManager::Instance().m_spriteShader;
-
-	constexpr int halfW = kWpWidth / 2;
-	constexpr int halfH = kWpHeight / 2;
-	int centerX = kGageLeft + halfW;
-
-	spriteShader.DrawBox(centerX, kWpY, halfW, halfH, &kBackColor, true);
-
-	float ratio = std::clamp(m_wpRatio, 0.0f, 1.0f);
-	int fillHalfW = static_cast<int>(kWpWidth * ratio * 0.5f);
-	if (fillHalfW > 0)
-	{
-		bool isFull = (ratio >= 1.0f) || m_isAwakening;
-		Math::Color color = isFull ? GetGlowColor(kWpFullColor) : kWpColor;
-		spriteShader.DrawBox(kGageLeft + fillHalfW, kWpY, fillHalfW, halfH, &color, true);
-	}
-
-	spriteShader.DrawBox(centerX, kWpY, halfW, halfH, &kFrameColor, false);
+	// 満タン・覚醒中は光らせる
+	bool isFull = (m_wpRatio >= 1.0f) || m_isAwakening;
+	Math::Color color = isFull ? GetGlowColor(kWpFullColor) : kWpColor;
+	DrawGaugeBar(kGageLeft, kWpY, kWpWidth, kWpHeight, m_wpRatio, color);
 }
 
 void ATBGage::DrawSprite()
@@ -310,18 +302,9 @@ void ATBGage::DrawSprite()
 	// ガードの耐久値（ガード中か、減っている時だけ表示する）
 	if (!m_isGuardBroken && (m_isGuarding || m_guardRatio < 1.0f))
 	{
-		constexpr int halfW = kGuardBarWidth / 2;
-		constexpr int halfH = kGuardBarHeight / 2;
-		int centerX = kGuardBarLeft + halfW;
-		spriteShader.DrawBox(centerX, kGuardBarY, halfW, halfH, &kBackColor, true);
-
-		int fillHalfW = static_cast<int>(kGuardBarWidth * std::clamp(m_guardRatio, 0.0f, 1.0f) * 0.5f);
-		if (fillHalfW > 0)
-		{
-			const Math::Color& color = (m_guardRatio < kGuardLowRatio) ? kGuardBarLowColor : kGuardBarColor;
-			spriteShader.DrawBox(kGuardBarLeft + fillHalfW, kGuardBarY, fillHalfW, halfH, &color, true);
-		}
-		spriteShader.DrawBox(centerX, kGuardBarY, halfW, halfH, &kFrameColor, false);
+		// 残り少ないと赤くする
+		const Math::Color& color = (m_guardRatio < kGuardLowRatio) ? kGuardBarLowColor : kGuardBarColor;
+		DrawGaugeBar(kGuardBarLeft, kGuardBarY, kGuardBarWidth, kGuardBarHeight, m_guardRatio, color);
 	}
 
 	// 文字
