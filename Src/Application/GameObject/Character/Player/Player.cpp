@@ -161,6 +161,14 @@ namespace
 	const Math::Vector3 kOperatorAuraColor	= { 0.3f, 0.7f, 1.6f };	// オペレーター：青
 	const Math::Vector3 kPunisherAuraColor	= { 1.6f, 0.6f, 0.15f };	// パニッシャー：オレンジ
 
+	// リムライト（体のふちを、今のモードの色でゆっくり点滅させる）
+	constexpr int	kRimLightCycleFrame		= 150;		// 点滅1回の長さ（60FPSで2.5秒）
+	constexpr float	kRimLightPowWide		= 2.0f;		// 一番明るい時の鋭さ（小さいほど広く光る）
+	constexpr float	kRimLightPowSharp		= 6.0f;		// 一番暗い時の鋭さ（大きいほどふちだけ細く光る）
+	constexpr float	kRimLightDarkRate		= 0.3f;		// 一番暗い時の色の明るさ（一番明るい時を1とする）
+	const Math::Vector3 kOperatorRimColor	= { 0.2f, 0.5f, 1.0f };		// オペレーター：青
+	const Math::Vector3 kPunisherRimColor	= { 1.0f, 0.3f, 0.05f };	// パニッシャー：オレンジ寄りの赤
+
 	// 接地判定に使う重力の上限（落下し始めの1フレーム分）
 	constexpr float kOnGroundGravityMax		= 0.011f;
 
@@ -770,6 +778,7 @@ void Player::Update()
 	UpdateLockOn();
 
 	if (m_modeAuraTimer > 0) m_modeAuraTimer--;
+	m_rimLightFrame = (m_rimLightFrame + 1) % kRimLightCycleFrame;
 
 	UpdateWorldMatrix();
 	UpdateLockOnMarker();
@@ -1211,22 +1220,17 @@ void Player::DrawLit()
 	shaderManager.ChangeRasterizerState(KdRasterizerState::CullNone);
 	shaderManager.ChangeBlendState(KdBlendState::Alpha);
 
-	// リムライト
-	static float limAlpha = 0.0f;
-	limAlpha += 0.01f;
-	if (limAlpha > 1.0f)
-	{
-		limAlpha = 1.0f;
-		limAlpha -= 0.01f;
-	}
-	else if (limAlpha < 0.0f)
-	{
-		limAlpha = 0.0f;
-		limAlpha += 0.01f;
-	}
+	// リムライト：オペレーターは青、パニッシャーはオレンジ
+	// 0 → 1 → 0 となめらかに変わる波で、光の広さと明るさを一緒に変えて点滅させる
+	// （DrawModel の後に自動で元に戻るので、体を描く直前に毎回設定する）
+	float rimPhase = static_cast<float>(m_rimLightFrame) / kRimLightCycleFrame;
+	float rimWave = (1.0f - std::cos(rimPhase * DirectX::XM_2PI)) * 0.5f;
+	float rimPow = kRimLightPowSharp + (kRimLightPowWide - kRimLightPowSharp) * rimWave;
+	float rimBright = kRimLightDarkRate + (1.0f - kRimLightDarkRate) * rimWave;
+	const Math::Vector3& rimColor = IsPunisherMode() ? kPunisherRimColor : kOperatorRimColor;
 
 	shader.SetLimLightEnable(true);
-	shader.SetLimLight({0.0f, 0.0f, 1.0f},limAlpha);
+	shader.SetLimLight(rimColor * rimBright, rimPow);
 
 	shader.DrawModel(*m_model, m_mWorld);
 

@@ -361,6 +361,7 @@ private:
 	std::weak_ptr<LockOnMarker>		m_wpLockOnMarker;
 	std::weak_ptr<Enemy>			m_wpLockTarget;			// ロックオン中の敵
 	int								m_modeAuraTimer = 0;	// モードを切り替えた時のオーラの残りフレーム
+	int								m_rimLightFrame = 0;	// リムライトの点滅の経過フレーム
 	std::weak_ptr<TPSCamera>		m_camera;
 	Math::Matrix					m_swordWorldR;
 	Math::Matrix					m_swordWorldL;

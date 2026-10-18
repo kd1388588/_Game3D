@@ -32,11 +32,11 @@ public:
 
 		Math::Vector3	DissolveEmissive = { 0.0f, 1.0f, 1.0f };
 
-		// 1018 リムライト追加
+		// リムライト
 		int LimLightEnable = 0;
 		Math::Vector3 limLightColor = { 1.0f,1.0f,1.0f };
 
-		float limLightAlpha = 1;
+		float limLightPow = 1;
 		float dummy[3] = { 0,0,0 };
 	};
 
@@ -67,7 +67,7 @@ public:
 	// 設定・取得
 	//================================================
 
-	// 1018 リムライト追加
+	// リムライト
 	void SetLimLightEnable(bool enable)
 	{
 		m_cb0_Obj.Work().LimLightEnable = enable ? 1 : 0;
@@ -76,7 +76,7 @@ public:
 	void SetLimLight(Math::Vector3 color, float pow = 1)
 	{
 		m_cb0_Obj.Work().limLightColor = color;
-		m_cb0_Obj.Work().limLightAlpha = pow;
+		m_cb0_Obj.Work().limLightPow = pow;
 		m_dirtyCBObj = true;
 	}
 

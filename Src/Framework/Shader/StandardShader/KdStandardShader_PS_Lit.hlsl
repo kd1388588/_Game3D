@@ -273,7 +273,21 @@ float4 main(VSOutput In) : SV_Target0
 	
 	totalBrightness = saturate( totalBrightness );
 	outColor *= totalBrightness;
-	
+
+	//------------------------------------------
+	// リムライト
+	//------------------------------------------
+	// カメラから見て横を向いている面（体のふち）ほど強く光らせる
+	// 明るさで暗くされないように、明度をかけた後に足す
+	if (g_LimLightEnable)
+	{
+		// 法線とカメラ方向が同じ向き：1(正面) ～ 0(ふち)
+		float limPow = saturate(dot(vCam, wN));
+		limPow = 1 - limPow;
+		// pow関数＝累乗してくれる関数（大きいほど、ふちだけが光る）
+		outColor += g_LimLightColor * pow(limPow, g_LimLightPow);
+	}
+
 	//------------------------------------------
 	// 出力
 	//------------------------------------------
