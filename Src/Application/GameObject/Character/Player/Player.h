@@ -235,7 +235,6 @@ private:
 	void UpdateLockOnMarker();
 
 	// バトルモードを切り替えた時に、体のまわりを光らせる（簡単なオーラ）
-	void DrawAura();
 
 	// ATBコマンドメニュー（F キーで開き、技を選ぶと自動で最後まで出す）
 	// 開いている間は true を返す
@@ -360,8 +359,8 @@ private:
 	std::weak_ptr<ATBCommandMenu>	m_wpCommandMenu;
 	std::weak_ptr<LockOnMarker>		m_wpLockOnMarker;
 	std::weak_ptr<Enemy>			m_wpLockTarget;			// ロックオン中の敵
-	int								m_modeAuraTimer = 0;	// モードを切り替えた時のオーラの残りフレーム
-	int								m_rimLightFrame = 0;	// リムライトの点滅の経過フレーム
+	bool							m_isLimLight = false;	// リムライトを光らせている途中か
+	float							m_limPow = 0.0f;		// リムライトの pow（大きいほどふちだけが光る）
 	std::weak_ptr<TPSCamera>		m_camera;
 	Math::Matrix					m_swordWorldR;
 	Math::Matrix					m_swordWorldL;

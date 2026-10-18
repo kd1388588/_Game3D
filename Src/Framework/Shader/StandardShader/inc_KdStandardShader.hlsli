@@ -13,9 +13,9 @@ cbuffer cbObject : register(b0)
 	float3 g_dissolveEmissive;	// 境界の色
 	
 	// リムライト
-	int		g_LimLightEnable;	// リムライト有効
-	float3	g_LimLightColor;	// リムライトの色
-	float	g_LimLightPow;		// リムライトの鋭さ（大きいほどふちだけが細く光る）
+	int		 g_LimLightEnable;
+	float3	 g_LimLightColor;
+	float	 g_LimLightPow;
 };
 
 // 定数バッファ(メッシュ単位)

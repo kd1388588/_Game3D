@@ -153,21 +153,11 @@ namespace
 	constexpr float	kLockOnLoseRange		= 20.0f;	// これより離れたらロックオンを外す
 	constexpr float	kLockOnMarkHeightRate	= 1.2f;		// マークを出す高さ（敵の体の大きさに掛ける）
 
-	// オーラ（バトルモードを切り替えた時）
-	constexpr int	kModeAuraFrame			= 40;		// モードを切り替えた時に光る長さ
-	constexpr int	kAuraLayerNum			= 3;		// 少しずつ大きくした体を何枚重ねるか
-	constexpr float	kAuraBaseScale			= 1.03f;	// 1枚目の大きさ
-	constexpr float	kAuraScaleStep			= 0.035f;	// 1枚ごとに大きくする量
-	const Math::Vector3 kOperatorAuraColor	= { 0.3f, 0.7f, 1.6f };	// オペレーター：青
-	const Math::Vector3 kPunisherAuraColor	= { 1.6f, 0.6f, 0.15f };	// パニッシャー：オレンジ
-
-	// リムライト（体のふちを、今のモードの色でゆっくり点滅させる）
-	constexpr int	kRimLightCycleFrame		= 150;		// 点滅1回の長さ（60FPSで2.5秒）
-	constexpr float	kRimLightPowWide		= 2.0f;		// 一番明るい時の鋭さ（小さいほど広く光る）
-	constexpr float	kRimLightPowSharp		= 6.0f;		// 一番暗い時の鋭さ（大きいほどふちだけ細く光る）
-	constexpr float	kRimLightDarkRate		= 0.3f;		// 一番暗い時の色の明るさ（一番明るい時を1とする）
-	const Math::Vector3 kOperatorRimColor	= { 0.2f, 0.5f, 1.0f };		// オペレーター：青
-	const Math::Vector3 kPunisherRimColor	= { 1.0f, 0.3f, 0.05f };	// パニッシャー：オレンジ寄りの赤
+	// リムライト（バトルモードを切り替えた時に1回だけ光らせる）
+	constexpr float	kLimPowSpeed			= 0.1f;		// 1フレームで pow を増やす量
+	constexpr float	kLimPowMax				= 10.0f;	// pow がここまで来たら消す（0.1ずつなので100フレーム）
+	const Math::Vector3 kOperatorLimColor	= { 0.0f, 0.5f, 1.0f };		// オペレーター：青
+	const Math::Vector3 kPunisherLimColor	= { 1.0f, 0.3f, 0.0f };		// パニッシャー：オレンジ
 
 	// 接地判定に使う重力の上限（落下し始めの1フレーム分）
 	constexpr float kOnGroundGravityMax		= 0.011f;
@@ -777,8 +767,15 @@ void Player::Update()
 	UpdateAtb();
 	UpdateLockOn();
 
-	if (m_modeAuraTimer > 0) m_modeAuraTimer--;
-	m_rimLightFrame = (m_rimLightFrame + 1) % kRimLightCycleFrame;
+	// リムライト：pow を少しずつ大きくする（体全体 → ふちだけ → 消える）
+	if (m_isLimLight)
+	{
+		m_limPow += kLimPowSpeed;
+		if (m_limPow > kLimPowMax)
+		{
+			m_isLimLight = false;
+		}
+	}
 
 	UpdateWorldMatrix();
 	UpdateLockOnMarker();
@@ -878,46 +875,6 @@ void Player::FaceLockTarget()
 	if (dir.LengthSquared() <= 0.0001f) return;
 	dir.Normalize();
 	TurnToward(dir, 180.0f);
-}
-
-void Player::DrawAura()
-{
-	if (!m_model) return;
-
-	// 光の強さと色：モードを切り替えた直後に光り、だんだん消える
-	if (m_modeAuraTimer <= 0) return;
-	float rate = static_cast<float>(m_modeAuraTimer) / kModeAuraFrame;
-	Math::Vector3 color = (IsPunisherMode() ? kPunisherAuraColor : kOperatorAuraColor) * rate;
-
-	// 腰を中心に少しずつ大きくした体を、裏側だけ光らせて重ねる
-	// （表を描かずに裏だけ描くと、体のふちだけが光って見える）
-	Math::Vector3 center = m_pos;
-	if (m_pelvisNode >= 0 && m_pelvisNode < static_cast<int>(m_model->GetNodes().size()))
-	{
-		center = Math::Vector3::Transform(m_model->GetNodes()[m_pelvisNode].m_worldTransform.Translation(), m_mWorld);
-	}
-
-	auto& shaderManager = KdShaderManager::Instance();
-	shaderManager.ChangeRasterizerState(KdRasterizerState::CullFront);
-	shaderManager.ChangeBlendState(KdBlendState::Add);
-	shaderManager.ChangeDepthStencilState(KdDepthStencilState::ZWriteDisable);
-
-	for (int i = 0; i < kAuraLayerNum; ++i)
-	{
-		float scale = kAuraBaseScale + kAuraScaleStep * i;
-		Math::Matrix auraMat = m_mWorld
-			* Math::Matrix::CreateTranslation(-center)
-			* Math::Matrix::CreateScale(scale)
-			* Math::Matrix::CreateTranslation(center);
-
-		// 外側ほど薄く（体の色は使わず、光の色だけで描く）
-		Math::Vector3 layerColor = color / static_cast<float>(i + 1);
-		shaderManager.m_StandardShader.DrawModel(*m_model, auraMat, Math::Color(0.0f, 0.0f, 0.0f, 1.0f), layerColor);
-	}
-
-	shaderManager.UndoDepthStencilState();
-	shaderManager.UndoBlendState();
-	shaderManager.UndoRasterizerState();
 }
 
 void Player::UpdateInputBuffer()
@@ -1187,9 +1144,6 @@ void Player::DrawEffect()
 {
 	auto& shaderManager = KdShaderManager::Instance();
 
-	// バトルモードを切り替えた時のオーラ
-	DrawAura();
-
 	// 軌跡は他のオブジェクトを描いた後に、加算合成・深度書き込みなしで描く
 	// （帯の暗い部分が後ろの物を隠さないように）
 	// 裏からも見えるようにカリングも切る
@@ -1221,16 +1175,11 @@ void Player::DrawLit()
 	shaderManager.ChangeBlendState(KdBlendState::Alpha);
 
 	// リムライト：オペレーターは青、パニッシャーはオレンジ
-	// 0 → 1 → 0 となめらかに変わる波で、光の広さと明るさを一緒に変えて点滅させる
-	// （DrawModel の後に自動で元に戻るので、体を描く直前に毎回設定する）
-	float rimPhase = static_cast<float>(m_rimLightFrame) / kRimLightCycleFrame;
-	float rimWave = (1.0f - std::cos(rimPhase * DirectX::XM_2PI)) * 0.5f;
-	float rimPow = kRimLightPowSharp + (kRimLightPowWide - kRimLightPowSharp) * rimWave;
-	float rimBright = kRimLightDarkRate + (1.0f - kRimLightDarkRate) * rimWave;
-	const Math::Vector3& rimColor = IsPunisherMode() ? kPunisherRimColor : kOperatorRimColor;
-
-	shader.SetLimLightEnable(true);
-	shader.SetLimLight(rimColor * rimBright, rimPow);
+	if (m_isLimLight)
+	{
+		shader.SetLimLightEnable(true);
+		shader.SetLimLight(IsPunisherMode() ? kPunisherLimColor : kOperatorLimColor, m_limPow);
+	}
 
 	shader.DrawModel(*m_model, m_mWorld);
 
@@ -1402,8 +1351,12 @@ void Player::UpdateHpGage()
 
 void Player::SetBattleMode(BattleMode mode)
 {
-	// モードが変わった時は、体を光らせて知らせる
-	if (mode != m_battleMode) m_modeAuraTimer = kModeAuraFrame;
+	// モードが変わった時は、リムライトで体を光らせて知らせる
+	if (mode != m_battleMode)
+	{
+		m_isLimLight = true;
+		m_limPow = 0.0f;
+	}
 
 	m_battleMode = mode;
 
