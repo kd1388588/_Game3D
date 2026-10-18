@@ -77,7 +77,7 @@ namespace
 
 	// 回避
 	constexpr float kEvadeAnimSpeed			= 1.8f;		// 回避の再生速度（移動距離は同じまま、素早く転がる）
-	constexpr float kEvadeCancelRate		= 0.55f;	// 回避のアニメーションのこの割合まで進んだら、次の行動（攻撃・回避・移動）に移れる
+	constexpr float kEvadeReturnMoveRate	= 0.8f;		// 回避のアニメーションのこの割合まで進んだら、移動キーで走りに戻る（キャンセルはできない）
 	constexpr float kEvadeBlendFrame		= 3.0f;		// 前の動き→回避のブレンドフレーム数
 
 	// 攻撃
@@ -654,18 +654,14 @@ void PlayerStateEvade::Update(Player* player)
 		MoveForwardWithDecay(player, PlayerParamManager::Instance().m_evadeSpeed, kEvadeMoveFrame, false);
 	}
 
-	// 転がり終わり（起き上がる所）は、次の行動でキャンセルできる
+	// 回避は途中でキャンセルできない（攻撃・ジャンプ・回避は受け付けない）
+	// 起き上がりの終わり際で移動キーが押されていれば、そのまま走りへなめらかにつなぐ
 	float animLength = player->GetAnimLength();
-	bool canCancel = (animLength > 0.0f) && (player->GetAnimTime() >= animLength * kEvadeCancelRate);
-	if (canCancel)
+	bool canReturnToMove = (animLength > 0.0f) && (player->GetAnimTime() >= animLength * kEvadeReturnMoveRate);
+	if (canReturnToMove && player->CheckMoveInput())
 	{
-		if (TryCommonTransition(player)) return;
-
-		if (player->CheckMoveInput())
-		{
-			player->ChangeState(std::make_shared<PlayerStateRun>());
-			return;
-		}
+		player->ChangeState(std::make_shared<PlayerStateRun>());
+		return;
 	}
 
 	if (player->IsAnimEnd()) {
