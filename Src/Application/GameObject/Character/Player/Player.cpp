@@ -146,7 +146,7 @@ namespace
 	constexpr float	kMinWalkTravel			= 0.05f;	// アニメーションでこれ以上進んでいれば、その動きから向きを求める
 
 	// ダッシュ
-	constexpr float	kDashMoveRate			= 1.6f;		// ダッシュ中の移動の速さの倍率
+	constexpr float	kDashMoveRate			= 1.25f;		// ダッシュ中の移動の速さの倍率
 
 	// ロックオン
 	constexpr float	kLockOnRange			= 15.0f;	// この距離の中で一番近い敵をロックオンする
@@ -1210,6 +1210,23 @@ void Player::DrawLit()
 
 	shaderManager.ChangeRasterizerState(KdRasterizerState::CullNone);
 	shaderManager.ChangeBlendState(KdBlendState::Alpha);
+
+	// リムライト
+	static float limAlpha = 0.0f;
+	limAlpha += 0.01f;
+	if (limAlpha > 1.0f)
+	{
+		limAlpha = 1.0f;
+		limAlpha -= 0.01f;
+	}
+	else if (limAlpha < 0.0f)
+	{
+		limAlpha = 0.0f;
+		limAlpha += 0.01f;
+	}
+
+	shader.SetLimLightEnable(true);
+	shader.SetLimLight({0.0f, 0.0f, 1.0f},limAlpha);
 
 	shader.DrawModel(*m_model, m_mWorld);
 

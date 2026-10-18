@@ -11,6 +11,11 @@ cbuffer cbObject : register(b0)
 	float g_dissolveValue;		// ディゾルブの閾値
 	float g_dissolveEdgeRange;	// ディゾルブの境界線の太さ
 	float3 g_dissolveEmissive;	// 境界の色
+	
+	// 1018 リムライト専用
+    int g_LimLightEnable;			// リムライト有効
+    float3 g_LimLightColor;			// リムライト色
+    float g_LimLightAlpha;			// リムライトの強さ
 };
 
 // 定数バッファ(メッシュ単位)
