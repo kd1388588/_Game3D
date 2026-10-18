@@ -18,6 +18,10 @@ public:
 	void OnDamage(int damage, bool isCritical = false) override;
 	void TurnToPlayer();
 
+	// プレイヤーの方へ少しずつ向きを変える（1フレームに maxRadPerFrame ラジアンまで）
+	void TurnToPlayerSmooth(float maxRadPerFrame);
+	static float GetAttackTurnSpeed();	// 攻撃の構えの間に向きを変える速さ
+
 	void SetBoss(bool isBoss) { m_isBoss = isBoss; }
 	bool IsBoss() const { return m_isBoss; }
 
@@ -35,8 +39,8 @@ public:
 
 	Math::Matrix GetRightArmMatrix() const;
 
-	// ---- 飛びかかり攻撃（ボスだけ） ----
-	// 使えるか（ボスで、CT（クールタイム）が終わっていて、アニメーションが読み込めている）
+	// ---- 飛びかかり攻撃 ----
+	// 使えるか（CT（クールタイム）が終わっていて、アニメーションが読み込めている）
 	bool CanJumpAttack() const;
 
 	// 使った後のCTを始める
@@ -93,6 +97,7 @@ private:
 
 	// 飛びかかり攻撃
 	int								m_jumpAttackCT = 0;			// CTの残りフレーム
+	int								m_jumpAttackCoolTime = 0;	// 使った後のCT（敵の種類ごと）
 	Math::Vector3					m_leapVelocity = Math::Vector3::Zero;	// 空中での水平方向の移動量（1フレーム）
 	bool							m_isLeapFalling = false;	// 飛び上がった後、落ち始めたか
 	bool							m_isSuperArmor = false;		// のけぞらない

@@ -117,15 +117,11 @@ public:
 		m_isAbility(isAbility)
 	{}
 
-	// 攻撃が終わったら、溜め攻撃のドリルのエフェクトを止める（残ったままにならないように）
-	~PlayerStateComboAttack() override;
-
 	void ChangeState(Player* player) override;
 	void Update(Player* player) override;
 
 private:
 
-	std::shared_ptr<KdEffekseerObject>	m_effect = nullptr;
 
 	int m_comboType = 1;
 	int m_comboStep = 1;
@@ -134,8 +130,6 @@ private:
 	bool m_nextAttackReserved = false;
 	bool m_isAbility = false;			// アビリティで出した攻撃か
 
-	// エフェクト再生フラグ
-	bool m_isEffect = false;
 	bool m_isHit = false;	// ※現在は常にfalse（多段ヒットさせるため）
 
 	int m_loopTimer = 0;
@@ -162,8 +156,6 @@ private:
 	// （普通の攻撃は攻撃判定のフレームの間。溜め攻撃は、振り始めから地面に叩きつけるまでずっと）
 	bool IsTrailFrame(const Player* player, float animTime) const;
 
-	// 溜め攻撃のループ中に、ドリルのエフェクトを再生する（斬撃のエフェクトは敵に当たった時に出す）
-	void PlaySlashEffect(Player* player);
 };
 
 // 回避

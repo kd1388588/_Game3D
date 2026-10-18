@@ -14,7 +14,6 @@ namespace EffectName
 	inline const std::string ComboSlash4		= "_Sword4.efkefc";		// 攻撃タイプ4
 	inline const std::string ComboSlash5_4		= "_Sword5-4.efkefc";	// 攻撃タイプ5の4段目
 	inline const std::string ComboSlashDefault	= "_Sword1.efkefc";		// 専用のエフェクトが無い攻撃
-	inline const std::string ChargeDrill		= "_drill.efkefc";		// 4-3（溜め攻撃）のループ中
 
 	// ヒット
 	inline const std::string HitEnemy			= "_Sword1.efkefc";		// プレイヤーの攻撃が敵に当たった

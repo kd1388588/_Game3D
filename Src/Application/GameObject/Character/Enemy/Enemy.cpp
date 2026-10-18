@@ -15,10 +15,18 @@ namespace
 		float	scale;
 		float	searchRange;	// プレイヤーに気づく距離
 		float	attackRange;	// 攻撃を開始する距離
+		int		jumpAttackCT;	// 飛びかかり攻撃を使った後、次に使えるまでのフレーム数
 	};
 
-	constexpr EnemyParam kBossParam		= { 150, 1.75f, 15.0f, 2.5f };	// ボス：遠くから気づき、リーチが長い
-	constexpr EnemyParam kNormalParam	= { 50,  1.25f, 8.0f,  1.2f };	// ザコ敵
+	constexpr EnemyParam kBossParam		= { 150, 1.75f, 15.0f, 2.5f, 60 * 6 };	// ボス：遠くから気づき、リーチが長い
+	constexpr EnemyParam kNormalParam	= { 50,  1.25f, 8.0f,  1.2f, 60 * 10 };	// ザコ敵（飛びかかり攻撃はたまに）
+
+	// 最初の飛びかかり攻撃までの時間（全員が同時に飛びかかってこないよう、ばらつかせる）
+	constexpr int	kFirstJumpAttackMinFrame	= 60 * 1;
+	constexpr int	kFirstJumpAttackMaxFrame	= 60 * 4;
+
+	// 攻撃の構えの間に、プレイヤーの方へ向きを変える速さ（ラジアン/フレーム）
+	constexpr float	kAttackTurnSpeed		= 0.12f;
 
 	constexpr int	kDamageInvincibleFrame	= 30;		// 被弾後の無敵時間
 	constexpr int	kAttackDamage			= 5;
@@ -30,7 +38,6 @@ namespace
 
 	// 飛びかかり攻撃（ボスだけ）
 	const std::string kJumpAttackStartAnim	= "JumpAttackStart";
-	constexpr int	kJumpAttackCoolTime		= 60 * 6;	// 一度使ったら6秒は使わない
 	constexpr float	kLeapJumpPower			= 0.3f;		// 飛び上がる強さ（上がるのに30フレーム、高さ約4.5）
 	constexpr float	kGravityPerFrame		= 0.01f;	// 重力（BaseChara と同じ値）
 	constexpr float	kLeapFallGravityRate	= 1.6f;		// 落ちる時の重力の倍率（勢いよく落ちて叩きつける）
@@ -73,6 +80,15 @@ void Enemy::Init()
 	// 種類ごとのパラメータ
 	const EnemyParam& param = m_isBoss ? kBossParam : kNormalParam;
 	SetHp(param.hp);
+	m_jumpAttackCoolTime = param.jumpAttackCT;
+	m_jumpAttackCT = KdRandom::GetInt(kFirstJumpAttackMinFrame, kFirstJumpAttackMaxFrame);
+
+	// 飛びかかり攻撃のアニメーションが読み込めたか（読み込めていないと、この攻撃は使われない）
+	if (!HasAnimation(kJumpAttackStartAnim))
+	{
+		OutputDebugStringA("【飛びかかり攻撃のアニメーションが読み込めていません】Monster2/Animation/Special/Ability_GroundSmash_Start を確認してください\n");
+		KdDebugGUI::Instance().AddLog("[Enemy] 飛びかかり攻撃のアニメーションが読み込めていません\n");
+	}
 	m_scale = param.scale;
 	m_searchRange = param.searchRange;
 	m_attackRange = param.attackRange;
@@ -290,12 +306,32 @@ void Enemy::TurnToPlayer()
 
 bool Enemy::CanJumpAttack() const
 {
-	return m_isBoss && m_jumpAttackCT <= 0 && HasAnimation(kJumpAttackStartAnim);
+	return m_jumpAttackCT <= 0 && HasAnimation(kJumpAttackStartAnim);
 }
 
 void Enemy::StartJumpAttackCooldown()
 {
-	m_jumpAttackCT = kJumpAttackCoolTime;
+	m_jumpAttackCT = m_jumpAttackCoolTime;
+}
+
+void Enemy::TurnToPlayerSmooth(float maxRadPerFrame)
+{
+	auto target = m_wpTarget.lock();
+	if (!target) return;
+
+	Math::Vector3 dir = target->GetPos() - m_pos;
+	dir.y = 0.0f;
+	if (dir.LengthSquared() <= 0.0f) return;
+
+	// 向きたい角度との差（-π ～ π）を、1フレームに maxRadPerFrame までだけ回す
+	float targetRot = std::atan2(dir.x, dir.z) + DirectX::XM_PI;
+	float diff = std::remainder(targetRot - m_rotY, DirectX::XM_2PI);
+	m_rotY += std::clamp(diff, -maxRadPerFrame, maxRadPerFrame);
+}
+
+float Enemy::GetAttackTurnSpeed()
+{
+	return kAttackTurnSpeed;
 }
 
 void Enemy::StartLeap(const Math::Vector3& target)

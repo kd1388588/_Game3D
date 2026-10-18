@@ -14,12 +14,15 @@ namespace
 	constexpr float kAttackHitEndFrame		= 45.0f;
 
 	// 撃破エフェクトの大きさ（敵の体の大きさに掛ける）
-	constexpr float kDeathEffectScaleRate	= 0.5f;
+	constexpr float kDeathEffectScaleRate	= 0.2f;
 
-	// 飛びかかり攻撃（ボスだけ）
-	constexpr float kJumpAttackMinDist		= 5.0f;		// プレイヤーがこれより遠く、
+	// 飛びかかり攻撃（ボスもザコも。使った後の CT は Enemy.cpp の敵の種類ごとのパラメータ）
+	constexpr float kJumpAttackMinDist		= 4.0f;		// プレイヤーがこれより遠く、
 	constexpr float kJumpAttackMaxDist		= 14.0f;	// これより近い時に使う
-	constexpr int	kJumpAttackChance		= 2;		// 使える距離にいる時、1フレームに使う確率（％）
+	constexpr int	kJumpAttackChance		= 3;		// 使える距離にいる時、1フレームに使う確率（％）
+
+	// 攻撃
+	constexpr float kAttackTurnEndFrame		= 12.0f;	// 攻撃のこのフレームまでは、プレイヤーの方へ向きを変える
 	constexpr int	kMaxLeapFrame			= 180;		// 空中にいる時間の上限（地面が無い所へ飛んだ時のため）
 	constexpr int	kMaxLandingPredictFrame	= 120;		// 着地予測を行う最大フレーム数
 	constexpr float kJumpAttackBlendFrame	= 5.0f;
@@ -49,6 +52,10 @@ bool EnemyState::GetFlatVecToTarget(Enemy* enemy, Math::Vector3& outVec)
 	return true;
 }
 
+// ※敵のアニメーションには、体を前へ進める動き（ルートモーション）を使わない
+//   （前の状態のまま残ると、追いかけている途中に変な方向へ進んでしまうため、
+//    どの状態でも必ず false にする。移動はプログラムで行う）
+
 void EnemyStateIdle::ChangeState(Enemy* enemy)
 {
 	enemy->ChangeAnimation("Idle", true, false, 5.0f);
@@ -70,8 +77,10 @@ void EnemyStateIdle::Update(Enemy* enemy)
 
 void EnemyStateChase::ChangeState(Enemy* enemy)
 {
-	enemy->ChangeAnimation("Run", true);
+	enemy->ChangeAnimation("Run", true, false, 5.0f);
 	enemy->SetAnimationSpeed(1.0f);
+	enemy->SetUseRootMotion(false);
+	enemy->TurnToPlayer();
 }
 
 void EnemyStateChase::Update(Enemy* enemy)
@@ -111,15 +120,22 @@ void EnemyStateAttack::ChangeState(Enemy* enemy)
 {
 	m_isCritical = false;
 
-	enemy->ChangeAnimation("Attack", false, true);
+	enemy->ChangeAnimation("Attack", false, true, 5.0f);
 	enemy->SetAnimationSpeed(1.0f);
-	enemy->SetUseRootMotion(true);
+	enemy->SetUseRootMotion(false);
 	enemy->TurnToPlayer();
 }
 
 void EnemyStateAttack::Update(Enemy* enemy)
 {
 	float animTime = enemy->GetAnimTime();
+
+	// 振りかぶっている間は、プレイヤーの方へ向きを変え続ける（振り下ろしてからは変えない）
+	// （前は攻撃を始めた瞬間の向きのままだったので、プレイヤーが動くと違う方向を殴っていた）
+	if (animTime < kAttackTurnEndFrame)
+	{
+		enemy->TurnToPlayerSmooth(Enemy::GetAttackTurnSpeed());
+	}
 
 	if (animTime >= kAttackHitStartFrame && animTime <= kAttackHitEndFrame)
 	{
@@ -258,8 +274,9 @@ void EnemyStateJumpAttack::Update(Enemy* enemy)
 // ==========================================
 void EnemyStateDamage::ChangeState(Enemy* enemy)
 {
-	enemy->ChangeAnimation("Damage", false, true);
+	enemy->ChangeAnimation("Damage", false, true, 3.0f);
 	enemy->SetAnimationSpeed(1.0f);
+	enemy->SetUseRootMotion(false);
 }
 
 void EnemyStateDamage::Update(Enemy* enemy)

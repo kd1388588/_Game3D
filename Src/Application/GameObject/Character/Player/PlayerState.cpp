@@ -45,11 +45,6 @@ namespace
 	constexpr float kAwakeningRunSpeedRate	= 1.7f;		// 覚醒中は、普段の走る速さの何倍にするか
 	constexpr float kRunAnimSpeedShare		= 0.6f;		// 速くする分のうち、アニメーションの再生速度で上げる割合
 
-	// 斬撃エフェクト（プレイヤーの前方・胸の高さあたりに出す）
-	constexpr float kSlashEffectForward		= 1.0f;		// 前方へずらす距離
-	constexpr float kSlashEffectHeight		= 1.0f;		// 足元からの高さ
-	constexpr float kSlashEffectScale		= 1.0f;		// 大きさ
-
 	// 回避・着地エフェクトの大きさ
 	constexpr float kEvadeEffectScale		= 1.0f;
 	constexpr float kLandingEffectScale		= 1.0f;
@@ -429,10 +424,10 @@ void PlayerStateComboAttack::ChangeToNextAttack(Player* player) const
 
 const std::string& PlayerStateComboAttack::GetSlashEffectName() const
 {
-	// 4-3（溜め攻撃）：ループ中はドリル、それ以外はタイプ4の斬撃
+	// 4-3（溜め攻撃）：タイプ4の斬撃
 	if (IsSplitAttack())
 	{
-		return (m_subStep == SubStepLoop) ? EffectName::ChargeDrill : EffectName::ComboSlash4;
+		return EffectName::ComboSlash4;
 	}
 
 	switch (m_comboType)
@@ -487,30 +482,7 @@ bool PlayerStateComboAttack::IsTrailFrame(const Player* player, float animTime) 
 
 const std::string& PlayerStateComboAttack::GetHitEffectName() const
 {
-	// 溜め攻撃のループ中はドリル（ループするエフェクト）なので、当たった時はタイプ4の斬撃にする
-	if (IsSplitAttack() && m_subStep == SubStepLoop)
-	{
-		return EffectName::ComboSlash4;
-	}
 	return GetSlashEffectName();
-}
-
-void PlayerStateComboAttack::PlaySlashEffect(Player* player)
-{
-	if (m_isEffect) return;
-
-	// 斬撃のエフェクトは敵に当たった時に出す（AttackOBB）
-	// ここでは溜め攻撃のループ中のドリルだけを、振っている間ずっと出す
-	if (!(IsSplitAttack() && m_subStep == SubStepLoop)) return;
-
-	m_effect = EffectPlayer::Play(GetSlashEffectName(),
-		player->CreateEffectMatrix(kSlashEffectForward, kSlashEffectHeight, kSlashEffectScale));
-	m_isEffect = true;
-}
-
-PlayerStateComboAttack::~PlayerStateComboAttack()
-{
-	EffectPlayer::Stop(m_effect);
 }
 
 void PlayerStateComboAttack::ChangeState(Player* player)
@@ -590,13 +562,10 @@ void PlayerStateComboAttack::Update(Player* player)
 			player->AttackOBB(player->GetSwordMatrixR(), m_isCritical, GetHitEffectName(), damageRate);
 			player->AttackOBB(player->GetSwordMatrixL(), m_isCritical, GetHitEffectName(), damageRate);
 		}
-
-		// 溜め攻撃のループ中はドリルのエフェクト
-		PlaySlashEffect(player);
 	}
 
 	// 予約があり、キャンセル可能フレームを超えたら次へ滑らかに移行
-	// （アビリティの時は、溜め攻撃のドリルのループを最後まで見せる）
+	// （アビリティの時は、溜め攻撃のループを最後まで見せる）
 	bool isAbilityChargeLoop = m_isAbility && IsSplitAttack() && m_subStep == SubStepLoop;
 	if (m_nextAttackReserved && !isAbilityChargeLoop && animTime >= GetCancelFrame() && !player->IsAnimEnd())
 	{
