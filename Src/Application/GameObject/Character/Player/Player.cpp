@@ -66,13 +66,21 @@ namespace
 	// バトルモード（FF7リメイクのクラウド風）
 	constexpr int	kOperatorAttackType		= 1;		// オペレーターの左クリックの攻撃（攻撃01）
 	constexpr int	kPunisherAttackType		= 2;		// パニッシャーの左クリックの攻撃（攻撃02）
-	constexpr float kPunisherMoveRate		= 0.7f;		// パニッシャーの移動の速さ（オペレーターを1.0とした倍率）
-	constexpr float kPunisherDamageRate		= 1.5f;		// パニッシャーのダメージの倍率
+	// モードの役割分担（両方を使い分けて戦うように、得意・不得意をはっきり分ける）
+	//   オペレーター：攻撃が速く、ゲージがよくたまる。そのかわり威力は低い
+	//   パニッシャー：攻撃が遅く、移動も遅い。ゲージはたまらない。そのかわり威力が高い
+	//   ATBの技（04・05）：モードに関係なく一番威力が高い（オペレーターでためて、技で大ダメージ）
+	constexpr float kOperatorDamageRate		= 0.6f;		// オペレーターのダメージの倍率
+	constexpr float kPunisherDamageRate		= 1.6f;		// パニッシャーのダメージの倍率
+	constexpr float kOperatorAttackSpeedRate = 1.2f;	// オペレーターの攻撃の再生速度の倍率
+	constexpr float kPunisherAttackSpeedRate = 0.9f;	// パニッシャーの攻撃の再生速度の倍率
+	constexpr float kPunisherMoveRate		= 0.6f;		// パニッシャーの移動の速さ（オペレーターを1.0とした倍率）
 
 	// ATBゲージのたまり方
 	constexpr float kAtbPassiveGain			= 0.1f;		// オペレーターの時、1フレームにたまる量（約17秒で1本）
 	constexpr float kAtbHitGain				= 12.0f;	// 攻撃を当てた時にたまる量
-	constexpr float kPunisherAtbHitRate		= 2.0f;		// パニッシャーの時、当てた時にたまる量の倍率
+	constexpr float kOperatorAtbHitRate		= 1.5f;		// オペレーターの時、当てた時にたまる量の倍率
+	// ※パニッシャーの時は、時間でも攻撃でもたまらない
 	constexpr float kAtbCriticalRate		= 1.5f;		// クリティカルの時、当てた時にたまる量の倍率
 
 	// ATBコマンドメニュー
@@ -1414,6 +1422,11 @@ float Player::GetModeMoveRate() const
 	return (m_battleMode == BattleMode::Punisher) ? kPunisherMoveRate : 1.0f;
 }
 
+float Player::GetModeAttackSpeedRate() const
+{
+	return (m_battleMode == BattleMode::Punisher) ? kPunisherAttackSpeedRate : kOperatorAttackSpeedRate;
+}
+
 void Player::UpdateModeSwitch()
 {
 	// Eキーが押されたら、オペレーター ⇔ パニッシャー を切り替える
@@ -1792,8 +1805,9 @@ bool Player::AttackOBB(const Math::Matrix& swordMatrix, bool isCritical, const s
 	}
 
 	bool isHit = false;
-	// ダメージ（パニッシャーは重い攻撃なので倍率をかける）
-	float modeRate = (m_battleMode == BattleMode::Punisher) ? kPunisherDamageRate : 1.0f;
+	// ダメージ（モードで倍率を変える。ATBの技はモードに関係なく、技の倍率だけを使う）
+	float modeRate = (m_battleMode == BattleMode::Punisher) ? kPunisherDamageRate : kOperatorDamageRate;
+	if (m_isAbilityAttack) modeRate = 1.0f;
 	int baseDamage = isCritical ? kCriticalAttackDamage : kAttackDamage;
 	int damage = static_cast<int>(std::round(baseDamage * modeRate * damageRate));
 
@@ -1814,11 +1828,10 @@ bool Player::AttackOBB(const Math::Matrix& swordMatrix, bool isCritical, const s
 		enemy->OnDamage(damage, isCritical);
 		isHit = true;
 
-		// 攻撃を当てるとATBゲージがたまる（パニッシャーは多くたまる。アビリティの攻撃ではたまらない）
-		if (!m_isAbilityAttack)
+		// 攻撃を当てるとATBゲージがたまる（オペレーターだけ。アビリティの攻撃ではたまらない）
+		if (!m_isAbilityAttack && m_battleMode == BattleMode::Operator)
 		{
-			float gain = kAtbHitGain;
-			if (m_battleMode == BattleMode::Punisher) gain *= kPunisherAtbHitRate;
+			float gain = kAtbHitGain * kOperatorAtbHitRate;
 			if (isCritical) gain *= kAtbCriticalRate;
 			AddAtbGage(gain);
 		}

@@ -90,6 +90,7 @@ public:
 	bool IsPunisherMode() const { return m_battleMode == BattleMode::Punisher; }
 	void SetBattleMode(BattleMode mode);			// モードを変える（攻撃パターンもそのモードのものに変わる）
 	float GetModeMoveRate() const;					// 今のモードの移動の速さの倍率
+	float GetModeAttackSpeedRate() const;			// 今のモードの攻撃の速さの倍率
 
 	// ATBゲージ（1本 = kAtbBarMax。kAtbBarNum 本までためられる）
 	static constexpr int	kAtbBarNum	= 2;

@@ -57,7 +57,7 @@ namespace
 
 	// アビリティ（ATBコマンドメニューで選ぶ攻撃04・05。使うゲージの量・CTは Player.cpp の kAbilityInfos）
 	// アビリティの攻撃は、ボタンを押さなくても最後の段まで自動で出る
-	constexpr float kAbilityDamageRate		= 1.5f;		// 普通の攻撃の何倍のダメージか
+	constexpr float kAbilityDamageRate		= 2.5f;		// 普通の攻撃（倍率1.0）の何倍のダメージか。モードの倍率はかからない
 
 	// ガード（止まっている時に Shift を押している間）
 	// アニメーション：Sequence2/08_Hit/14_Block の Block_Start / Loop / Hit / End
@@ -511,9 +511,11 @@ void PlayerStateComboAttack::ChangeState(Player* player)
 	// ロックオン中は、振り始める時に敵の方を向く（振っている途中は向きを変えない）
 	player->FaceLockTarget();
 
-	// 再生速度（05の3段目だけ少しゆっくり）
+	// 再生速度（05の3段目だけ少しゆっくり。普通の攻撃は、モードで速さを変える）
 	bool isSlowAttack = (m_comboType == 5 && m_comboStep == 3);
-	player->SetAnimationSpeed(isSlowAttack ? kAttack5_3AnimSpeed : kAttackAnimSpeed);
+	float animSpeed = isSlowAttack ? kAttack5_3AnimSpeed : kAttackAnimSpeed;
+	if (!m_isAbility) animSpeed *= player->GetModeAttackSpeedRate();
+	player->SetAnimationSpeed(animSpeed);
 
 	// アビリティの攻撃中は、当ててもATBゲージがたまらない
 	player->SetAbilityAttack(m_isAbility);
