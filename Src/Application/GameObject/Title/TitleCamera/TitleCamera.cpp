@@ -23,8 +23,7 @@ namespace
 	constexpr float	kHeightSpeed		= 0.0057f;	// 高さの揺れの速さ
 
 	// キャラクターを画面の右寄りに映すため、注視点を左にずらす量
-	// （左のメニューとキャラクターのエフェクトが重ならないよう、大きめにしている）
-	constexpr float	kFrameOffset		= 1.35f;
+	constexpr float	kFrameOffset		= 0.9f;
 }
 
 void TitleCamera::Init()

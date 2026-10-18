@@ -337,14 +337,21 @@ private:
 
 	// 剣の軌跡用のテクスチャを作成する
 	// （刃の先端ほど明るく、古い部分ほど暗くなるグラデーション。加算合成用）
-	static std::shared_ptr<KdTexture> CreateSwordTrailTexture();
+	static std::shared_ptr<KdTexture> CreateSwordTrailTexture(const Math::Vector3& trailColor);
+
+	// 軌跡の画像を読み込む（無い時は fallbackColor の色でプログラムから作る）
+	static std::shared_ptr<KdTexture> LoadSwordTrailTexture(const std::string& path, const Math::Vector3& fallbackColor);
+
+	// 軌跡の画像を、今のモードのものに切り替える
+	void ApplySwordTrailTexture();
 
 
 	std::shared_ptr<KdModelData>	m_swordModel = nullptr;
 	std::shared_ptr<PlayerState>	m_state = nullptr;
 	SwordTrail						m_swordTrailR;						// 右手の剣の軌跡
 	SwordTrail						m_swordTrailL;						// 左手の剣の軌跡
-	std::shared_ptr<KdTexture>		m_swordTrailTex = nullptr;			// 軌跡のテクスチャ
+	std::shared_ptr<KdTexture>		m_operatorTrailTex = nullptr;		// 軌跡の画像（オペレーター：青）
+	std::shared_ptr<KdTexture>		m_punisherTrailTex = nullptr;		// 軌跡の画像（パニッシャー：オレンジ）
 
 	bool							m_isTrailActive = false;			// 軌跡を描いている途中か
 	bool							m_isTrailAddedThisFrame = false;	// このフレームに軌跡を追加したか

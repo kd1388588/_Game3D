@@ -156,6 +156,7 @@ namespace
 	// リムライト（バトルモードを切り替えた時に1回だけ光らせる）
 	constexpr float	kLimPowSpeed			= 0.1f;		// 1フレームで pow を増やす量
 	constexpr float	kLimPowMax				= 10.0f;	// pow がここまで来たら消す（0.1ずつなので100フレーム）
+	constexpr float	kLimFadeStartRate		= 0.4f;		// 全体のこの割合を過ぎたら、色をだんだん暗くして消す
 	const Math::Vector3 kOperatorLimColor	= { 0.0f, 0.5f, 1.0f };		// オペレーター：青
 	const Math::Vector3 kPunisherLimColor	= { 1.0f, 0.3f, 0.0f };		// パニッシャー：オレンジ
 
@@ -181,8 +182,12 @@ namespace
 	// 軌跡テクスチャ（横：刃の先端→根元、縦：新しい→古い）
 	constexpr int	kSwordTrailTexWidth		= 64;
 	constexpr int	kSwordTrailTexHeight	= 256;
-	const Math::Vector3 kSwordTrailColor	= { 0.25f, 0.65f, 1.0f };	// 軌跡の色
+	const Math::Vector3 kOperatorTrailColor	= { 0.25f, 0.65f, 1.0f };	// オペレーターの軌跡の色（青）
+	const Math::Vector3 kPunisherTrailColor	= { 1.0f, 0.4f, 0.08f };	// パニッシャーの軌跡の色（オレンジ）
 	const Math::Vector3 kSwordTrailCoreColor = { 1.0f, 1.0f, 1.0f };	// 刃先付近の芯の色
+	// 軌跡の画像（Tools/MakeTrailTexture.py で作成。無い時は上の色からプログラムで作る）
+	const std::string kOperatorTrailTexPath	= "Asset/Textures/Trail/SwordTrail_Operator.png";
+	const std::string kPunisherTrailTexPath	= "Asset/Textures/Trail/SwordTrail_Punisher.png";
 	constexpr float kSwordTrailBaseBrightness = 0.15f;	// 刃の根元側の明るさ（先端を1.0とした割合）
 
 	// エフェクト
@@ -433,7 +438,29 @@ Math::Matrix Player::CreateTrailMatrix(const Math::Vector3& base, const Math::Ve
 	return trailMat;
 }
 
-std::shared_ptr<KdTexture> Player::CreateSwordTrailTexture()
+std::shared_ptr<KdTexture> Player::LoadSwordTrailTexture(const std::string& path, const Math::Vector3& fallbackColor)
+{
+	// 画像があればそれを使い、無ければ同じ見た目のものをプログラムで作る
+	auto tex = std::make_shared<KdTexture>();
+	if (tex->Load(path)) return tex;
+
+	OutputDebugStringA(("【軌跡の画像が無いので、プログラムで作ります】" + path + "\n").c_str());
+	return CreateSwordTrailTexture(fallbackColor);
+}
+
+void Player::ApplySwordTrailTexture()
+{
+	// 今のモードの画像に切り替える
+	const std::shared_ptr<KdTexture>& tex = IsPunisherMode() ? m_punisherTrailTex : m_operatorTrailTex;
+	if (!tex) return;
+
+	for (SwordTrail* pTrail : { &m_swordTrailR, &m_swordTrailL })
+	{
+		if (pTrail->polygon) pTrail->polygon->SetMaterial(tex);
+	}
+}
+
+std::shared_ptr<KdTexture> Player::CreateSwordTrailTexture(const Math::Vector3& trailColor)
 {
 	// 0～1の範囲で滑らかに補間する
 	auto smoothStep = [](float edge0, float edge1, float x)
@@ -464,7 +491,7 @@ std::shared_ptr<KdTexture> Player::CreateSwordTrailTexture()
 
 			// 先端付近の新しい部分は白っぽい芯にする
 			float core = std::pow(1.0f - u, 6.0f) * fadeOld;
-			Math::Vector3 color = Math::Vector3::Lerp(kSwordTrailColor, kSwordTrailCoreColor, core) * intensity;
+			Math::Vector3 color = Math::Vector3::Lerp(trailColor, kSwordTrailCoreColor, core) * intensity;
 
 			// 加算合成で描くので、透明度ではなく色の明るさで薄さを表現する
 			// （UnLitシェーダーのアルファテストで切られないよう、アルファは常に1）
@@ -626,12 +653,14 @@ void Player::Init()
 	ChangeAnimation("Combat_Idle", true);
 
 	// 剣の軌跡（左右）
-	m_swordTrailTex = CreateSwordTrailTexture();
+	// 画像はモードごとに用意しておき、モードを切り替えた時に差し替える
+	m_operatorTrailTex = LoadSwordTrailTexture(kOperatorTrailTexPath, kOperatorTrailColor);
+	m_punisherTrailTex = LoadSwordTrailTexture(kPunisherTrailTexPath, kPunisherTrailColor);
 	for (SwordTrail* pTrail : { &m_swordTrailR, &m_swordTrailL })
 	{
-		pTrail->polygon->SetMaterial(m_swordTrailTex);
 		pTrail->polygon->SetLength(kSwordTrailLength * kSwordTrailSubdivision);
 	}
+	ApplySwordTrailTexture();
 
 	m_pos = { 0, 0.0f, 0.5f };
 	m_prevFramePos = m_pos;
@@ -1177,8 +1206,14 @@ void Player::DrawLit()
 	// リムライト：オペレーターは青、パニッシャーはオレンジ
 	if (m_isLimLight)
 	{
+		// 後半は色もだんだん暗くして、最後に 0 へなめらかに消えるようにする
+		// （進み具合 0～1 を、始めと終わりがゆっくりになる曲線で 1 → 0 に変える）
+		float rate = std::clamp((m_limPow / kLimPowMax - kLimFadeStartRate) / (1.0f - kLimFadeStartRate), 0.0f, 1.0f);
+		float fade = 1.0f - rate * rate * (3.0f - 2.0f * rate);
+
+		const Math::Vector3& limColor = IsPunisherMode() ? kPunisherLimColor : kOperatorLimColor;
 		shader.SetLimLightEnable(true);
-		shader.SetLimLight(IsPunisherMode() ? kPunisherLimColor : kOperatorLimColor, m_limPow);
+		shader.SetLimLight(limColor * fade, m_limPow);
 	}
 
 	shader.DrawModel(*m_model, m_mWorld);
@@ -1363,6 +1398,9 @@ void Player::SetBattleMode(BattleMode mode)
 	// 左クリックの攻撃：オペレーターは攻撃01、パニッシャーは攻撃02
 	m_currentAttackType = (mode == BattleMode::Punisher) ? kPunisherAttackType : kOperatorAttackType;
 	s_currentAttackType = m_currentAttackType;
+
+	// 剣の軌跡の画像をモードの色に変える
+	ApplySwordTrailTexture();
 
 	// 画面のモード表示を変える
 	if (auto atbGage = m_wpAtbGage.lock())

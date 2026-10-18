@@ -12,13 +12,12 @@ namespace
 	const std::vector<std::string> kMenuNames	= { "START", "CONTROLS", "EXIT" };	// MenuItem の順番
 
 	// ===== 配置（画面中央が原点、上が+Y。キャラクターが右寄りに映るので左側にまとめる） =====
-	// （キャラクターから出るエフェクトとメニューが重ならないよう、少し左に寄せている）
-	const Math::Vector2	kLogoPos			= { -370.0f, 150.0f };
+	const Math::Vector2	kLogoPos			= { -290.0f, 150.0f };
 	constexpr float		kLogoScale			= 0.85f;
 	constexpr float		kLineY				= 72.0f;		// ロゴの下の光の線
 	constexpr float		kLineWidth			= 520.0f;
-	const Math::Vector2	kSubTitlePos		= { -370.0f, 40.0f };
-	constexpr float		kMenuX				= -370.0f;
+	const Math::Vector2	kSubTitlePos		= { -290.0f, 40.0f };
+	constexpr float		kMenuX				= -290.0f;
 	constexpr float		kMenuTopY			= -70.0f;
 	constexpr float		kMenuSpacing		= 62.0f;
 	constexpr float		kLetterBoxHeight	= 50.0f;		// 画面の上下の黒帯の太さ
