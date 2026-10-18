@@ -411,6 +411,15 @@ std::string PlayerStateComboAttack::GetAnimName() const
 
 void PlayerStateComboAttack::ChangeToNextAttack(Player* player) const
 {
+	// コンボの途中でバトルモードを切り替えた時は、今のモードの攻撃を1段目から出す
+	// （前は切り替える前の攻撃のまま続いたので、オペレーターでも攻撃02が出てしまっていた）
+	// ※アビリティ（ATBコマンド）の攻撃は、モードに関係なく最後まで出す
+	if (!m_isAbility && player->GetCurrentAttackType() != m_comboType)
+	{
+		player->ChangeState(std::make_shared<PlayerStateComboAttack>(player->GetCurrentAttackType(), 1));
+		return;
+	}
+
 	if (m_comboStep < kMaxComboStep)
 	{
 		player->ChangeState(std::make_shared<PlayerStateComboAttack>(m_comboType, m_comboStep + 1, SubStepNone, false, m_isAbility));
