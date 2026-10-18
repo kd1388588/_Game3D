@@ -49,7 +49,6 @@ namespace
 {
 	// 移動
 	constexpr float kMoveSpeed				= 0.15f;
-	constexpr float kAwakeningMoveSpeed		= 0.30f;	// 覚醒中は2倍のスピード
 	constexpr float kMaxTurnAngle			= 18.0f;	// 1フレームの最大旋回角度（度。大きいほど素早く向きを変える）
 	constexpr float kMinTurnAngle			= 0.1f;		// これ未満の角度差は旋回しない
 
@@ -146,11 +145,6 @@ namespace
 	};
 	constexpr float	kMinWalkTravel			= 0.05f;	// アニメーションでこれ以上進んでいれば、その動きから向きを求める
 
-	// WPゲージ（ためると G キーで覚醒できる）
-	constexpr float	kWpHitGain				= 4.0f;		// 攻撃を当てた時にたまる量
-	constexpr float	kWpDamageGain			= 8.0f;		// 攻撃を受けた時にたまる量
-	constexpr float	kWpGuardGain			= 6.0f;		// ガードした時にたまる量
-
 	// ダッシュ
 	constexpr float	kDashMoveRate			= 1.6f;		// ダッシュ中の移動の速さの倍率
 
@@ -159,20 +153,13 @@ namespace
 	constexpr float	kLockOnLoseRange		= 20.0f;	// これより離れたらロックオンを外す
 	constexpr float	kLockOnMarkHeightRate	= 1.2f;		// マークを出す高さ（敵の体の大きさに掛ける）
 
-	// オーラ（バトルモードを切り替えた時・覚醒中）
+	// オーラ（バトルモードを切り替えた時）
 	constexpr int	kModeAuraFrame			= 40;		// モードを切り替えた時に光る長さ
 	constexpr int	kAuraLayerNum			= 3;		// 少しずつ大きくした体を何枚重ねるか
 	constexpr float	kAuraBaseScale			= 1.03f;	// 1枚目の大きさ
 	constexpr float	kAuraScaleStep			= 0.035f;	// 1枚ごとに大きくする量
 	const Math::Vector3 kOperatorAuraColor	= { 0.3f, 0.7f, 1.6f };	// オペレーター：青
 	const Math::Vector3 kPunisherAuraColor	= { 1.6f, 0.6f, 0.15f };	// パニッシャー：オレンジ
-	const Math::Vector3 kAwakeningAuraColor	= { 1.4f, 1.1f, 0.3f };	// 覚醒：金色
-	constexpr float	kAwakeningAuraBase		= 0.55f;	// 覚醒中のオーラの明るさ（基本）
-	constexpr float	kAwakeningAuraPulse		= 0.25f;	// 覚醒中のオーラの明るさの揺れ
-
-	// 覚醒
-	constexpr int	kAwakeningFrame			= 60 * 15;	// 15秒間持続
-	constexpr float	kAwakeningHealRate		= 0.3f;		// HP3割回復
 
 	// 接地判定に使う重力の上限（落下し始めの1フレーム分）
 	constexpr float kOnGroundGravityMax		= 0.011f;
@@ -203,7 +190,6 @@ namespace
 	// エフェクト
 	constexpr float kHitEffectScale			= 0.5f;		// 攻撃が敵に当たった時のエフェクトの大きさ
 	constexpr float kCriticalHitEffectScale	= 1.0f;		// クリティカル時のエフェクトの大きさ
-	constexpr float kAwakeningEffectScale	= 1.0f;		// 覚醒オーラの大きさ
 
 	// カメラの注視点を腰の骨から下げる量
 	constexpr float kCameraTargetOffsetY	= -0.9f;
@@ -777,15 +763,12 @@ void Player::Update()
 	}
 
 	UpdateSwordTrails();
-	UpdateAwakening();
 	UpdateHpGage();
 	UpdateModeSwitch();
 	UpdateAbilityTimers();
 	UpdateAtb();
-	UpdateAwakeningInput();
 	UpdateLockOn();
 
-	m_auraFrame++;
 	if (m_modeAuraTimer > 0) m_modeAuraTimer--;
 
 	UpdateWorldMatrix();
@@ -892,19 +875,10 @@ void Player::DrawAura()
 {
 	if (!m_model) return;
 
-	// 光の強さと色：モードを切り替えた直後の光（だんだん消える）＋ 覚醒中の脈打つ光
-	Math::Vector3 color = Math::Vector3::Zero;
-	if (m_modeAuraTimer > 0)
-	{
-		float rate = static_cast<float>(m_modeAuraTimer) / kModeAuraFrame;
-		color += (IsPunisherMode() ? kPunisherAuraColor : kOperatorAuraColor) * rate;
-	}
-	if (m_isAwakening)
-	{
-		float rate = kAwakeningAuraBase + kAwakeningAuraPulse * std::sin(m_auraFrame * 0.15f);
-		color += kAwakeningAuraColor * rate;
-	}
-	if (color.LengthSquared() <= 0.0001f) return;
+	// 光の強さと色：モードを切り替えた直後に光り、だんだん消える
+	if (m_modeAuraTimer <= 0) return;
+	float rate = static_cast<float>(m_modeAuraTimer) / kModeAuraFrame;
+	Math::Vector3 color = (IsPunisherMode() ? kPunisherAuraColor : kOperatorAuraColor) * rate;
 
 	// 腰を中心に少しずつ大きくした体を、裏側だけ光らせて重ねる
 	// （表を描かずに裏だけ描くと、体のふちだけが光って見える）
@@ -1204,7 +1178,7 @@ void Player::DrawEffect()
 {
 	auto& shaderManager = KdShaderManager::Instance();
 
-	// バトルモードを切り替えた時・覚醒中のオーラ
+	// バトルモードを切り替えた時のオーラ
 	DrawAura();
 
 	// 軌跡は他のオブジェクトを描いた後に、加算合成・深度書き込みなしで描く
@@ -1393,36 +1367,6 @@ void Player::ShrinkSwordTrail(SwordTrail& trail)
 	{
 		if (!trail.polygon || trail.polygon->GetNumPoints() <= 0) break;
 		trail.polygon->DelPointBack();
-	}
-}
-
-void Player::UpdateAwakening()
-{
-	if (m_isAwakening)
-	{
-		m_awakeningTimer--;
-		if (m_awakeningTimer <= 0) m_isAwakening = false;
-	}
-
-	UpdateAwakeningEffect();
-}
-
-void Player::UpdateAwakeningEffect()
-{
-	if (!m_isAwakening)
-	{
-		EffectPlayer::Stop(m_awakeningEffect);
-		return;
-	}
-
-	// 再生が終わっていたら再生し直し、再生中はプレイヤーの位置に追従させる
-	if (!m_awakeningEffect || !m_awakeningEffect->IsPlaying())
-	{
-		m_awakeningEffect = EffectPlayer::Play(EffectName::AwakeningAura, m_pos, kAwakeningEffectScale);
-	}
-	else
-	{
-		m_awakeningEffect->SetPos(m_pos);
 	}
 }
 
@@ -1700,36 +1644,7 @@ void Player::UpdateAtb()
 				commandMenu->SetItemState(i, CanUseAbility(i), ctRatio, info.atbCost);
 			}
 		}
-
-		// WPゲージ（覚醒ゲージ）。覚醒中は残り時間を表示する
-		float wpRatio = m_isAwakening
-			? static_cast<float>(m_awakeningTimer) / static_cast<float>(kAwakeningFrame)
-			: m_awakeningGage / m_maxAwakeningGage;
-		atbGage->SetWpState(wpRatio, m_isAwakening);
 	}
-}
-
-void Player::UpdateAwakeningInput()
-{
-	// Uキーでゲージを満タンにする（デバッグ用）
-	if (IsKeyDown('U'))
-	{
-		m_awakeningGage = m_maxAwakeningGage;
-	}
-
-	// Gキーで覚醒発動！
-	if (IsKeyDown('G') && m_awakeningGage >= m_maxAwakeningGage && !m_isAwakening && !IsDead())
-	{
-		m_isAwakening = true;
-		m_awakeningGage = 0.0f;
-		m_awakeningTimer = kAwakeningFrame;
-		m_hp = std::min(m_hp + static_cast<int>(m_maxHp * kAwakeningHealRate), m_maxHp);
-	}
-}
-
-void Player::AddAwakeningGage(float val)
-{
-	m_awakeningGage = std::min(m_awakeningGage + val, m_maxAwakeningGage);
 }
 
 void Player::Release()
@@ -1896,8 +1811,6 @@ bool Player::AttackOBB(const Math::Matrix& swordMatrix, bool isCritical, const s
 			AddAtbGage(gain);
 		}
 
-		// WPゲージもたまる（覚醒中はたまらない）
-		if (!m_isAwakening) AddAwakeningGage(kWpHitGain);
 
 		// 当たった位置にヒットエフェクト
 		// （敵は当たると少しの間無敵になるので、同じ敵に毎フレーム出続けることはない）
@@ -1945,7 +1858,7 @@ bool Player::MoveProcess(bool moveByCode)
 	// 座標移動（ルートモーションで動く時は、ここでは動かさない）
 	if (moveByCode)
 	{
-		float moveSpeed = (m_isAwakening ? kAwakeningMoveSpeed : kMoveSpeed) * GetModeMoveRate();
+		float moveSpeed = kMoveSpeed * GetModeMoveRate();
 		if (IsShiftDown()) moveSpeed *= kDashMoveRate;	// Shift を押している間はダッシュ
 		m_pos += dir * moveSpeed;
 	}
@@ -1975,7 +1888,6 @@ void Player::OnDamage(int damage, bool isCritical)
 	{
 		m_hp -= std::max(static_cast<int>(std::round(damage * kGuardDamageRate)), 1);
 		m_invincibleTimer = kDamageInvincibleFrame;
-		if (!m_isAwakening) AddAwakeningGage(kWpGuardGain);
 		EffectPlayer::Play(EffectName::Guard, m_pos + Math::Vector3(0.0f, 1.0f, 0.0f), 1.0f);
 
 		// ガードの耐久値を減らす（受けすぎると崩される）
@@ -2007,7 +1919,6 @@ void Player::OnDamage(int damage, bool isCritical)
 
 	m_hp -= damage;
 	m_invincibleTimer = kDamageInvincibleFrame;
-	if (!m_isAwakening) AddAwakeningGage(kWpDamageGain);
 	HitStop::Request(kDamageHitStopFrame, kDamageShakePower);
 
 	if (m_hp <= 0)

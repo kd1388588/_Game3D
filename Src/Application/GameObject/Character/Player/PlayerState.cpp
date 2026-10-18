@@ -42,7 +42,6 @@ namespace
 
 	// 走り（ルートモーション）
 	constexpr float kRunBlendFrame			= 4.0f;		// 待機⇔走りのブレンドフレーム数（小さいほど素早く切り替わる）
-	constexpr float kAwakeningRunSpeedRate	= 1.7f;		// 覚醒中は、普段の走る速さの何倍にするか
 	constexpr float kRunAnimSpeedShare		= 0.6f;		// 速くする分のうち、アニメーションの再生速度で上げる割合
 
 	// 回避・着地エフェクトの大きさ
@@ -362,7 +361,6 @@ void PlayerStateRun::Update(Player* player)
 	if (isAnimMotion)
 	{
 		float speedRate = Player::s_runSpeedRate;
-		if (player->IsAwakening()) speedRate *= kAwakeningRunSpeedRate;	// 覚醒中はさらに速く
 		speedRate *= player->GetModeMoveRate();								// パニッシャーの時は遅く
 		if (player->IsShiftDown()) speedRate *= kDashSpeedRate;				// Shift を押している間はダッシュ
 

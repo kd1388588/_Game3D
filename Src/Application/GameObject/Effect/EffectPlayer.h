@@ -24,7 +24,6 @@ namespace EffectName
 	inline const std::string BossGroundSmash	= "";					// ボスの飛びかかり攻撃の着地
 
 	// プレイヤーの動作（ファイルが用意できたら設定する）
-	inline const std::string AwakeningAura		= "";					// 覚醒中のオーラ（覚醒中は繰り返し再生）
 	inline const std::string Evade				= "";					// 回避
 	inline const std::string Landing			= "";					// ジャンプの着地
 	inline const std::string ModeChange			= "";					// バトルモードの切り替え（Eキー）

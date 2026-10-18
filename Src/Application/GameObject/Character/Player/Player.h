@@ -141,8 +141,6 @@ public:
 	// ステータス関連
 	void SetInvincibleTimer(int timer) { m_invincibleTimer = timer; }	// 無敵時間を設定
 	void ExecJump(float power = 0.35f) { m_gravity = -power; }			// ジャンプを実行
-	void AddAwakeningGage(float val);									// 覚醒ゲージを加算
-	bool IsAwakening() const { return m_isAwakening; }					// 覚醒中かどうか
 	void Expire() { m_isExpired = true; }								// プレイヤーを消滅させる（ゲームオーバー用）
 
 	// デバッグ用
@@ -218,13 +216,8 @@ private:
 
 	// 指定したアニメーションで、剣先が一番低くなる（地面に叩きつける）フレームを求める（無ければ -1）
 	float CalcSwordLowestFrame(const std::string& animName) const;
-	void UpdateAwakening();
 
-	// 覚醒中のオーラエフェクトを更新（覚醒中は再生し続け、終わったら止める）
-	void UpdateAwakeningEffect();
 
-	// 覚醒の入力（U：ゲージ満タン（デバッグ用）、G：発動）
-	void UpdateAwakeningInput();
 
 	// ボタンの先行入力を更新する（毎フレーム1回）
 	void UpdateInputBuffer();
@@ -241,7 +234,7 @@ private:
 	// ロックオンのマークの位置を更新する
 	void UpdateLockOnMarker();
 
-	// バトルモードを切り替えた時・覚醒中に、体のまわりを光らせる（簡単なオーラ）
+	// バトルモードを切り替えた時に、体のまわりを光らせる（簡単なオーラ）
 	void DrawAura();
 
 	// ATBコマンドメニュー（F キーで開き、技を選ぶと自動で最後まで出す）
@@ -354,7 +347,6 @@ private:
 	SwordTrail						m_swordTrailL;						// 左手の剣の軌跡
 	std::shared_ptr<KdTexture>		m_swordTrailTex = nullptr;			// 軌跡のテクスチャ
 
-	std::shared_ptr<KdEffekseerObject>	m_awakeningEffect = nullptr;	// 覚醒中のオーラエフェクト
 	bool							m_isTrailActive = false;			// 軌跡を描いている途中か
 	bool							m_isTrailAddedThisFrame = false;	// このフレームに軌跡を追加したか
 
@@ -369,7 +361,6 @@ private:
 	std::weak_ptr<LockOnMarker>		m_wpLockOnMarker;
 	std::weak_ptr<Enemy>			m_wpLockTarget;			// ロックオン中の敵
 	int								m_modeAuraTimer = 0;	// モードを切り替えた時のオーラの残りフレーム
-	int								m_auraFrame = 0;		// オーラを揺らす用のフレーム数
 	std::weak_ptr<TPSCamera>		m_camera;
 	Math::Matrix					m_swordWorldR;
 	Math::Matrix					m_swordWorldL;
@@ -392,9 +383,6 @@ private:
 	// ステータス系
 	float							m_angle = 0;				// Y軸回転角度（度）
 	int								m_critRate = 10;			// クリティカル率（％）
-	float							m_awakeningGage = 0.0f;		// 覚醒ゲージ
-	float							m_maxAwakeningGage = 100.0f;// 最大覚醒ゲージ
-	int								m_awakeningTimer = 0;		// 覚醒時間（フレーム）
 	int								m_currentAttackType = 1;	// 攻撃アニメーションの番号
 
 	// バトルモード・ATB
@@ -411,7 +399,6 @@ private:
 	bool							m_isAbilityAttack = false;	// アビリティの攻撃中か
 
 	// フラグ関係
-	bool							m_isAwakening = false;		// 覚醒中かどうか
 
 	// 入力（押した瞬間の判定用）
 	InputHelper::KeyTrigger			m_attackKey{ VK_LBUTTON };

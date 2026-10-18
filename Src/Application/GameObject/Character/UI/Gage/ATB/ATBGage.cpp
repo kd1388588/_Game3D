@@ -21,10 +21,6 @@ namespace
 	constexpr int		kSlotHalfSize		= 17;
 	constexpr int		kSlotCostDotSize	= 2;		// 使うゲージの本数を表す点の大きさ（半分）
 
-	// WPゲージ（ATBゲージの下）
-	constexpr int		kWpY				= -339;
-	constexpr int		kWpWidth			= 200;
-	constexpr int		kWpHeight			= 6;
 
 	// 色
 	const Math::Color	kBackColor			= { 0.05f, 0.05f, 0.1f, 0.75f };	// 背景
@@ -37,8 +33,6 @@ namespace
 	const Math::Color	kSlotReadyColor		= { 1.0f, 0.85f, 0.3f, 1.0f };		// 使えるアビリティの枠
 	const Math::Color	kSlotDisableColor	= { 0.4f, 0.4f, 0.45f, 0.9f };		// 使えないアビリティの枠
 	const Math::Color	kSlotCTColor		= { 0.0f, 0.0f, 0.0f, 0.65f };		// CTの残り（上から暗くする）
-	const Math::Color	kWpColor			= { 0.75f, 0.35f, 1.0f, 1.0f };		// WPゲージ
-	const Math::Color	kWpFullColor		= { 1.0f, 0.5f, 1.0f, 1.0f };		// WPゲージ（満タン・覚醒中）
 	const Math::Color	kGuardColor			= { 0.85f, 0.95f, 1.0f, 1.0f };		// GUARD の文字
 	const Math::Color	kBreakColor			= { 1.0f, 0.3f, 0.25f, 1.0f };		// BREAK の文字
 	const Math::Color	kGuardBarColor		= { 0.6f, 0.85f, 1.0f, 1.0f };		// ガードの耐久値
@@ -90,17 +84,6 @@ void ATBGage::Init()
 	m_breakText->SetText("BREAK", UIText::FontSize::Small);
 	m_breakText->SetColor(kBreakColor);
 	SetTextLeft(m_breakText, static_cast<float>(kGageLeft + 140), kModeTextY);
-
-	// WPゲージの文字（ゲージの左）と、満タンの時の案内（ゲージの右）
-	m_wpText = std::make_shared<UIText>();
-	m_wpText->SetText("WP", UIText::FontSize::Small);
-	m_wpText->SetColor(kWpColor);
-	m_wpText->SetCenterPos({ static_cast<float>(kGageLeft) - m_wpText->GetSize().x * 0.5f - 6.0f, static_cast<float>(kWpY) });
-
-	m_wpReadyText = std::make_shared<UIText>();
-	m_wpReadyText->SetText("G：覚醒", UIText::FontSize::Small);
-	m_wpReadyText->SetColor(kWpFullColor);
-	SetTextLeft(m_wpReadyText, static_cast<float>(kGageLeft + kWpWidth + 8), static_cast<float>(kWpY));
 
 	// アビリティの枠の「04」「05」
 	const char* const slotNames[] = { "04", "05" };
@@ -259,14 +242,6 @@ void ATBGage::DrawAbilitySlot(int index) const
 	}
 }
 
-void ATBGage::DrawWpBar() const
-{
-	// 満タン・覚醒中は光らせる
-	bool isFull = (m_wpRatio >= 1.0f) || m_isAwakening;
-	Math::Color color = isFull ? GetGlowColor(kWpFullColor) : kWpColor;
-	DrawGaugeBar(kGageLeft, kWpY, kWpWidth, kWpHeight, m_wpRatio, color);
-}
-
 void ATBGage::DrawSprite()
 {
 	auto& spriteShader = KdShaderManager::Instance().m_spriteShader;
@@ -284,9 +259,6 @@ void ATBGage::DrawSprite()
 	{
 		DrawAbilitySlot(i);
 	}
-
-	// WPゲージ
-	DrawWpBar();
 
 	// モードの固定の残り時間（モードの文字の下に、赤い線が短くなっていく）
 	if (m_modeLockRatio > 0.0f)
@@ -321,8 +293,6 @@ void ATBGage::DrawSprite()
 		m_guardText->DrawSprite();
 	}
 
-	m_wpText->DrawSprite();
-	if (m_wpRatio >= 1.0f && !m_isAwakening) m_wpReadyText->DrawSprite();
 
 	for (const auto& text : m_slotKeyTexts)
 	{

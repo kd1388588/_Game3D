@@ -6,7 +6,6 @@ class UIText;
 // バトル用のゲージ表示（FF7リメイク風。HPゲージのまわりに並べる）
 // ・ATBゲージ（2本）：攻撃を当てたり時間がたつとたまる。アビリティで使う
 // ・アビリティ（攻撃04・05）：使えるか・CT（クールタイム）の残り・使うゲージの本数
-// ・WPゲージ：ためると G キーで覚醒できる（覚醒中は残り時間）
 // ・今のバトルモード（OPERATOR / PUNISHER）と、モードの固定の残り時間・ガード中の表示
 class ATBGage : public BaseGage
 {
@@ -31,8 +30,6 @@ public:
 	// canUse：今使えるか、ctRatio：CTの残りの割合（0～1）、cost：使うATBゲージの本数
 	void SetAbilityState(int index, bool canUse, float ctRatio, int cost);
 
-	// WPゲージ（ratio：たまっている割合。覚醒中は残り時間の割合）
-	void SetWpState(float ratio, bool isAwakening) { m_wpRatio = ratio; m_isAwakening = isAwakening; }
 
 	// ガード中か
 	void SetGuarding(bool isGuarding) { m_isGuarding = isGuarding; }
@@ -42,7 +39,7 @@ public:
 
 private:
 
-	// 横に伸びるゲージを1本描く（背景・たまっている部分・枠。ATB・WP・ガードのゲージで共通）
+	// 横に伸びるゲージを1本描く（背景・たまっている部分・枠。ATB・ガードのゲージで共通）
 	// left：左端のX座標、centerY：中心の高さ、ratio：たまっている割合 0～1
 	static void DrawGaugeBar(int left, int centerY, int width, int height, float ratio, const Math::Color& fillColor);
 
@@ -52,8 +49,6 @@ private:
 	// アビリティの枠を1つ描く
 	void DrawAbilitySlot(int index) const;
 
-	// WPゲージを描く
-	void DrawWpBar() const;
 
 	// 明るさを周期的に変えた色（満タンで光らせる用）
 	Math::Color GetGlowColor(const Math::Color& baseColor) const;
@@ -71,8 +66,6 @@ private:
 	bool					m_isPunisher = false;
 	bool					m_isModeSet = false;	// 一度でもモードを設定したか（最初の設定では目立たせない）
 	float					m_modeLockRatio = 0.0f;
-	float					m_wpRatio = 0.0f;
-	bool					m_isAwakening = false;
 	bool					m_isGuarding = false;
 	float					m_guardRatio = 1.0f;
 	bool					m_isGuardBroken = false;
@@ -86,7 +79,5 @@ private:
 	std::shared_ptr<UIText>					m_punisherText = nullptr;
 	std::shared_ptr<UIText>					m_guardText = nullptr;
 	std::shared_ptr<UIText>					m_breakText = nullptr;	// ガードを崩された時の「BREAK」
-	std::shared_ptr<UIText>					m_wpText = nullptr;
-	std::shared_ptr<UIText>					m_wpReadyText = nullptr;	// WPが満タンの時の「G：覚醒」
 	std::vector<std::shared_ptr<UIText>>	m_slotKeyTexts;				// アビリティの枠の「04」「05」
 };
