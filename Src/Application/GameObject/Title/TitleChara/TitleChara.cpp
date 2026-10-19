@@ -19,7 +19,6 @@ namespace
 	constexpr float	kAnimBlendFrame			= 6.0f;		// アニメーション切り替え時のブレンドフレーム数
 
 	// 斬撃エフェクト（PlayerStateComboAttack と同じ見た目になるように合わせる）
-	constexpr bool	kUseSlashEffect			= false;	// 攻撃のエフェクトを出すか（タイトルでは出さない。出す時は true）
 	constexpr float	kSlashEffectFrame		= 10.0f;	// 振り始めのフレーム
 	constexpr float	kSlashEffectForward		= 1.0f;		// 前方へずらす距離
 	constexpr float	kSlashEffectHeight		= 1.0f;		// 足元からの高さ
@@ -165,7 +164,7 @@ void TitleChara::UpdateShowcase()
 	}
 
 	// 攻撃：振り始めに斬撃エフェクト
-	if (kUseSlashEffect && !m_isEffectPlayed && GetAnimTime() >= kSlashEffectFrame)
+	if (!m_isEffectPlayed && GetAnimTime() >= kSlashEffectFrame)
 	{
 		PlaySlashEffect(step);
 		m_isEffectPlayed = true;
