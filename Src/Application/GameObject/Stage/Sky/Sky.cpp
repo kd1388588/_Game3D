@@ -11,7 +11,8 @@ void Sky::Init()
 
 void Sky::Update()
 {
-	m_mWorld = Math::Matrix::CreateScale(10.0f);
+	m_mWorld = Math::Matrix::CreateScale(10.0f)
+		* Math::Matrix::CreateTranslation(0.0f, -1.0f, 0.0f);
 }
 
 void Sky::DrawUnLit()

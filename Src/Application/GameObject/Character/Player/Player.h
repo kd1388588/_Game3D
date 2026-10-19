@@ -293,7 +293,7 @@ private:
 
 	// 軌跡を消す
 	void ClearSwordTrail(SwordTrail& trail);
-
+	
 	// 軌跡を古い方から1フレーム分短くする
 	void ShrinkSwordTrail(SwordTrail& trail);
 
