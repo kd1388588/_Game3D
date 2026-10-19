@@ -421,13 +421,24 @@ Player::BladeShape Player::CalcBladeShape(const KdModelData& modelData, const st
 
 Math::Matrix Player::CalcBladeMatrix(const BladeShape& shape) const
 {
-	if (!m_model || shape.nodeIndex < 0 || shape.nodeIndex >= static_cast<int>(m_model->GetNodes().size()))
+	if (!m_model) return Math::Matrix::Identity;
+	return CalcBladeMatrix(shape, *m_model, m_mWorld);
+}
+
+std::shared_ptr<KdTexture> Player::LoadOperatorTrailTexture()
+{
+	return LoadSwordTrailTexture(kOperatorTrailTexPath, kOperatorTrailColor);
+}
+
+Math::Matrix Player::CalcBladeMatrix(const BladeShape& shape, const KdModelWork& model, const Math::Matrix& mWorld)
+{
+	if (shape.nodeIndex < 0 || shape.nodeIndex >= static_cast<int>(model.GetNodes().size()))
 	{
 		return Math::Matrix::Identity;
 	}
 
 	// 剣のメッシュが今いる位置（モデルの中の位置 × キャラの位置）
-	Math::Matrix nodeMat = m_model->GetNodes()[shape.nodeIndex].m_worldTransform * m_mWorld;
+	Math::Matrix nodeMat = model.GetNodes()[shape.nodeIndex].m_worldTransform * mWorld;
 
 	Math::Vector3 hand = Math::Vector3::Transform(shape.localHand, nodeMat);
 	Math::Vector3 up = Math::Vector3::TransformNormal(shape.localDir, nodeMat);
