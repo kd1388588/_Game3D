@@ -79,8 +79,8 @@ namespace
 	constexpr float kPunisherMoveRate		= 0.6f;		// パニッシャーの移動の速さ（オペレーターを1.0とした倍率）
 
 	// ATBゲージのたまり方
-	constexpr float kAtbPassiveGain			= 0.1f;		// オペレーターの時、1フレームにたまる量（約17秒で1本）
-	constexpr float kAtbHitGain				= 6.0f;		// 攻撃を当てた時にたまる量（多段ヒットになったので、1回あたりは半分）
+	constexpr float kAtbPassiveGain			= 0.04f;	// オペレーターの時、1フレームにたまる量（約42秒で1本）
+	constexpr float kAtbHitGain				= 3.0f;		// 攻撃を当てた時にたまる量（オペレーターは ×1.5 で 4.5。約22ヒットで1本）
 	constexpr float kOperatorAtbHitRate		= 1.5f;		// オペレーターの時、当てた時にたまる量の倍率
 	// ※パニッシャーの時は、時間でも攻撃でもたまらない
 	constexpr float kAtbCriticalRate		= 1.5f;		// クリティカルの時、当てた時にたまる量の倍率
@@ -126,9 +126,9 @@ namespace
 	constexpr float	kGuardDurabilityMax		= 100.0f;
 	constexpr float	kGuardCostPerDamage		= 3.0f;		// 受け止めたダメージ × これだけ減る（ダメージ10なら30。4回で崩される）
 	constexpr float	kGuardCriticalCostRate	= 1.5f;		// クリティカルの攻撃は多く減る
-	constexpr int	kGuardRegenDelay		= 60;		// 最後に受け止めてから回復し始めるまでのフレーム数
-	constexpr float	kGuardRegenSpeed		= 0.8f;		// 1フレームに回復する量
-	constexpr int	kGuardBreakFrame		= 60 * 2;	// 崩された後、ガードできない時間（2秒。終わると耐久値は満タンに戻る）
+	constexpr int	kGuardRegenDelay		= 45;		// 最後に受け止めてから回復し始めるまでのフレーム数
+	constexpr float	kGuardRegenSpeed		= 0.4f;		// 1フレームに回復する量（0 から満タンまで約4秒）
+	constexpr int	kGuardBreakFrame		= 60 * 2;	// 崩された後、ガードできない時間（2秒。その間も耐久値は少しずつ回復する）
 	constexpr int	kGuardBreakHitStopFrame	= 10;		// 崩された時のヒットストップ
 	constexpr float	kGuardBreakShakePower	= 0.15f;
 
@@ -1508,9 +1508,10 @@ void Player::UpdateAbilityTimers()
 	// ガードの耐久値
 	if (m_guardBreakTimer > 0)
 	{
-		// 崩された後：時間がたったら、耐久値を満タンに戻してまたガードできるようにする
+		// 崩された後：ガードできない間も、耐久値は 0 から少しずつ回復する
+		// （一気に満タンに戻さず、ゲージがたまっていくのが見えるようにする）
 		m_guardBreakTimer--;
-		if (m_guardBreakTimer <= 0) m_guardDurability = kGuardDurabilityMax;
+		m_guardDurability = std::min(m_guardDurability + kGuardRegenSpeed, kGuardDurabilityMax);
 	}
 	else if (m_guardRegenDelay > 0)
 	{
