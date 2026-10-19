@@ -86,7 +86,9 @@ void GameScene::Init()
 	CreateObject<Ground>();
 	CreateObject<Sky>();
 	CreateObject<CathedralRuins>();
-	CreateObject<RuinedRoad>();
+	// 廃墟の参道は、大聖堂の廃墟のモデルと重なってしまうので、今は置かない
+	// （置く時はこの行を戻す。位置は RuinedRoad.cpp の kPosition で調整）
+	//CreateObject<RuinedRoad>();
 
 	// プレイヤー（Init内でHPゲージを追加するため、先にオーナーをセットする）
 	std::shared_ptr<Player> player = std::make_shared<Player>();

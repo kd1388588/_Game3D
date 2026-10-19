@@ -280,7 +280,7 @@ void Enemy::OnDamage(int damage, bool isCritical)
 		damage
 	);
 
-	// 飛びかかり攻撃などの途中は、のけぞらない（ダメージだけ受ける）
+	// 攻撃のアニメーション中（普通の攻撃・飛びかかり攻撃）は、のけぞらない（ダメージだけ受ける）
 	// （ただし、プレイヤーのATBコマンドの技を受けている時は、のけぞる）
 	if (m_isSuperArmor && m_stunTimer <= 0) return;
 
