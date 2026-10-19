@@ -306,7 +306,6 @@
     <ClInclude Include="Src\Application\Scene\GameOverScene\GameOverScene.h" />
     <ClInclude Include="Src\Application\Utility\InputHelper.h" />
     <ClInclude Include="Src\Application\Utility\HitStop.h" />
-    <ClInclude Include="Src\Application\Utility\SoundPlayer.h" />
     <ClInclude Include="Src\Application\Utility\GameTime.h" />
     <ClInclude Include="Src\Application\Utility\SpriteUtil.h" />
     <ClInclude Include="Src\Application\GameObject\Title\TitleChara\TitleChara.h" />
@@ -391,7 +390,6 @@
     <ClCompile Include="Src\Application\GameObject\UI\Text\UIText.cpp" />
     <ClCompile Include="Src\Application\GameObject\UI\Background\UIBackground.cpp" />
     <ClCompile Include="Src\Application\Utility\SpriteUtil.cpp" />
-    <ClCompile Include="Src\Application\Utility\SoundPlayer.cpp" />
     <ClCompile Include="Src\Application\GameObject\Title\TitleChara\TitleChara.cpp" />
     <ClCompile Include="Src\Application\GameObject\Title\TitleCamera\TitleCamera.cpp" />
     <ClCompile Include="Src\Application\GameObject\Title\TitleEmber\TitleEmber.cpp" />

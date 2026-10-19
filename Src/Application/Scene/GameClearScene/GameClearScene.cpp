@@ -1,5 +1,4 @@
 ﻿#include "GameClearScene.h"
-#include "../../Utility/SoundPlayer.h"
 #include "../SceneManager.h"
 
 #include "../../GameObject/UI/Text/UIText.h"
@@ -12,16 +11,12 @@ void GameClearScene::Event()
 	bool isClick = m_clickKey.Update();
 	if (isDecide || isClick)
 	{
-		SoundPlayer::PlaySE(SoundName::MenuDecide);
 		SceneManager::Instance().SetNextScene(SceneManager::SceneType::Title);
 	}
 }
 
 void GameClearScene::Init()
 {
-	// BGM
-	SoundPlayer::PlayBGM(SoundName::BgmClear, false);
-
 	// 背景（一番最初に追加して、一番奥に描く）
 	std::shared_ptr<UIBackground> background = std::make_shared<UIBackground>();
 	background->Load("Asset/Textures/UI/Result/GameClear.png");
@@ -34,7 +29,7 @@ void GameClearScene::Init()
 	m_objList.push_back(title);
 
 	std::shared_ptr<UIText> guide = std::make_shared<UIText>();
-	guide->SetText("CLICK TO TITLE", UIText::FontSize::LabelMedium);
+	guide->SetText("CLICK TO TITLE", UIText::FontSize::Medium);
 	guide->SetCenterPos({ 0.0f, -150.0f });
 	guide->SetBlink(true);
 	m_objList.push_back(guide);

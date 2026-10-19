@@ -12,10 +12,6 @@ public:
 		Medium,
 		Large,
 		Title,		// タイトルロゴ用（特大）
-
-		// 英数字だけの文字に使う（Y224。日本語は表示できない）
-		LabelSmall,
-		LabelMedium,
 	};
 
 	UIText() {}
@@ -24,7 +20,7 @@ public:
 	void Update() override;
 	void DrawSprite() override;
 
-	// 表示する文字列を設定（日本語は Small / Medium のみ。Large・Label・Title のフォントは英数字のみ）
+	// 表示する文字列を設定（日本語は Small / Medium / Large のみ。Title のフォントは英数字のみ）
 	void SetText(const std::string& text, FontSize size = FontSize::Medium);
 
 	// 文字列の中心の位置を設定（画面中央が原点、上が+Y）
@@ -42,9 +38,6 @@ public:
 	// 点滅させるかどうか
 	void SetBlink(bool isBlink) { m_isBlink = isBlink; m_blinkTimer = 0; }
 
-	// 文字の周りに暗いふちを付けるかどうか（最初は付ける）
-	void SetOutline(bool isOutline) { m_isOutline = isOutline; }
-
 private:
 
 	// 使うフォントをフォントマネージャーに登録する（最初の1回だけ）
@@ -58,6 +51,5 @@ private:
 	Math::Color						m_color = { 1.0f, 1.0f, 1.0f, 1.0f };
 	float							m_scale = 1.0f;
 	bool							m_isBlink = false;
-	bool							m_isOutline = true;
 	int								m_blinkTimer = 0;
 };

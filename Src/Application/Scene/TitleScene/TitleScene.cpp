@@ -1,5 +1,4 @@
 ﻿#include "TitleScene.h"
-#include "../../Utility/SoundPlayer.h"
 #include "../SceneManager.h"
 #include "../../main.h"
 
@@ -40,9 +39,6 @@ void TitleScene::Event()
 
 void TitleScene::Init()
 {
-	// BGM
-	SoundPlayer::PlayBGM(SoundName::BgmTitle, true);
-
 	// 背景（ゲーム画面と同じステージ）
 	CreateObject<Ground>();
 	CreateObject<Sky>();

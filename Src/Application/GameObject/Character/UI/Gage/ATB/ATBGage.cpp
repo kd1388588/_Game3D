@@ -65,23 +65,23 @@ void ATBGage::Init()
 
 	// モードの文字は2つとも作っておき、表示する方を切り替える
 	m_operatorText = std::make_shared<UIText>();
-	m_operatorText->SetText("OPERATOR", UIText::FontSize::LabelSmall);
+	m_operatorText->SetText("OPERATOR", UIText::FontSize::Small);
 	m_operatorText->SetColor(kOperatorColor);
 	SetTextLeft(m_operatorText, static_cast<float>(kGageLeft), kModeTextY);
 
 	m_punisherText = std::make_shared<UIText>();
-	m_punisherText->SetText("PUNISHER", UIText::FontSize::LabelSmall);
+	m_punisherText->SetText("PUNISHER", UIText::FontSize::Small);
 	m_punisherText->SetColor(kPunisherColor);
 	SetTextLeft(m_punisherText, static_cast<float>(kGageLeft), kModeTextY);
 
 	// ガード中（モードの文字の右）
 	m_guardText = std::make_shared<UIText>();
-	m_guardText->SetText("GUARD", UIText::FontSize::LabelSmall);
+	m_guardText->SetText("GUARD", UIText::FontSize::Small);
 	m_guardText->SetColor(kGuardColor);
 	SetTextLeft(m_guardText, static_cast<float>(kGageLeft + 140), kModeTextY);
 
 	m_breakText = std::make_shared<UIText>();
-	m_breakText->SetText("BREAK", UIText::FontSize::LabelSmall);
+	m_breakText->SetText("BREAK", UIText::FontSize::Small);
 	m_breakText->SetColor(kBreakColor);
 	SetTextLeft(m_breakText, static_cast<float>(kGageLeft + 140), kModeTextY);
 
@@ -90,7 +90,7 @@ void ATBGage::Init()
 	for (int i = 0; i < static_cast<int>(AbilitySlot::Num); ++i)
 	{
 		auto text = std::make_shared<UIText>();
-		text->SetText(slotNames[i], UIText::FontSize::LabelSmall);
+		text->SetText(slotNames[i], UIText::FontSize::Small);
 		text->SetCenterPos({ static_cast<float>(kSlotCenterX + kSlotSpace * i), static_cast<float>(kSlotCenterY - 2) });
 		m_slotKeyTexts.push_back(text);
 	}

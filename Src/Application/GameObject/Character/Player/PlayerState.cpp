@@ -1,5 +1,4 @@
 ﻿#include "PlayerState.h"
-#include "../../../Utility/SoundPlayer.h"
 #include "Player.h"
 #include "PlayerParamManager.h"
 
@@ -524,9 +523,6 @@ void PlayerStateComboAttack::ChangeState(Player* player)
 	// 新しい振りなので、前の振りで当たった記録を消す（もう一度当たれるようにする）
 	player->ResetAttackHits();
 
-	// 剣を振る音（溜め攻撃の Loop・End では鳴らさない）
-	if (m_subStep == SubStepNone || m_subStep == SubStepStart) SoundPlayer::PlaySE(SoundName::Slash, 0.6f);
-
 	// マネージャーの変数を倍率としてセット。一部の攻撃はXZの座標移動を完全にロック
 	// アニメーションの踏み込みどおりに動く
 	// （倍率は 1.0。小さくすると足が地面を滑って見え、0にすると技の途中で剣を振る位置がずれる）
@@ -651,7 +647,6 @@ void PlayerStateEvade::ChangeState(Player* player)
 	player->ChangeAnimation("Evade", false, true, kEvadeBlendFrame);
 	UseRootMotion(player);
 	EffectPlayer::Play(EffectName::Evade, player->GetPos(), kEvadeEffectScale);
-	SoundPlayer::PlaySE(SoundName::Evade);
 	//player->SetInvincibleTimer(10);
 	player->SetAnimationSpeed(kEvadeAnimSpeed);
 }
@@ -723,7 +718,6 @@ void PlayerStateJump::ChangeState(Player* player)
 void PlayerStateJump::Takeoff(Player* player)
 {
 	player->ExecJump(kJumpPower);
-	SoundPlayer::PlaySE(SoundName::Jump);
 	m_isTakeoffDone = true;
 
 	// ここから先は、アニメーションで腰が空中ループより高く上がる分を止める
@@ -807,7 +801,6 @@ void PlayerStateJump::Update(Player* player)
 
 			// 着地エフェクト（足元に出す）
 			EffectPlayer::Play(EffectName::Landing, player->GetPos(), kLandingEffectScale);
-			SoundPlayer::PlaySE(SoundName::Land);
 		}
 		else if (m_isFalling && !m_isLandingAnimStarted)
 		{

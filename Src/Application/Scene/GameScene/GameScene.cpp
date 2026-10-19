@@ -1,5 +1,4 @@
 ﻿#include "GameScene.h"
-#include "../../Utility/SoundPlayer.h"
 #include "../SceneManager.h"
 
 // Camera関連
@@ -86,9 +85,6 @@ int GameScene::GetAliveEnemyCount() const
 
 void GameScene::Init()
 {
-	// BGM
-	SoundPlayer::PlayBGM(SoundName::BgmBattle, true);
-
 	// ステージ
 	CreateObject<Ground>();
 	CreateObject<Sky>();

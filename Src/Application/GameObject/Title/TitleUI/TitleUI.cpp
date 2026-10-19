@@ -1,5 +1,4 @@
 ﻿#include "TitleUI.h"
-#include "../../../Utility/SoundPlayer.h"
 #include "../../../Utility/SpriteUtil.h"
 #include "../../../main.h"
 
@@ -110,13 +109,13 @@ void TitleUI::Init()
 	m_logo = CreateText(kLogoText, UIText::FontSize::Title);
 	m_logo->SetCenterPos(kLogoPos);
 
-	m_subTitle = CreateText(kSubTitleText, UIText::FontSize::LabelSmall);
+	m_subTitle = CreateText(kSubTitleText, UIText::FontSize::Small);
 	m_subTitle->SetCenterPos(kSubTitlePos);
 
 	// メニュー
 	for (size_t i = 0; i < kMenuNames.size(); ++i)
 	{
-		std::shared_ptr<UIText> text = CreateText(kMenuNames[i], UIText::FontSize::LabelMedium);
+		std::shared_ptr<UIText> text = CreateText(kMenuNames[i], UIText::FontSize::Medium);
 		text->SetCenterPos(GetMenuItemPos(static_cast<int>(i)));
 		m_menuTexts.push_back(text);
 	}
@@ -124,7 +123,7 @@ void TitleUI::Init()
 	m_cursorY = GetMenuItemPos(m_selectIndex).y;
 
 	// 操作案内（下の黒帯）
-	m_selectGuide = CreateText("W / S : SELECT        ENTER : DECIDE", UIText::FontSize::LabelSmall);
+	m_selectGuide = CreateText("W / S : SELECT        ENTER : DECIDE", UIText::FontSize::Small);
 	m_selectGuide->SetCenterPos({ 0.0f, kGuideY });
 	m_controlsGuide = CreateText("Enter / BackSpace：戻る", UIText::FontSize::Small);
 	m_controlsGuide->SetCenterPos({ 0.0f, kGuideY });
@@ -253,7 +252,6 @@ int TitleUI::GetHoveredMenuIndex(const Math::Vector2& mousePos) const
 void TitleUI::UpdateSelect()
 {
 	int itemNum = static_cast<int>(MenuItem::Num);
-	int prevSelect = m_selectIndex;
 
 	if (m_input.up)		{ m_selectIndex = (m_selectIndex + itemNum - 1) % itemNum; }
 	if (m_input.down)	{ m_selectIndex = (m_selectIndex + 1) % itemNum; }
@@ -269,9 +267,6 @@ void TitleUI::UpdateSelect()
 		if (isMouseMoved && hovered >= 0) m_selectIndex = hovered;
 		m_prevMousePos = mousePos;
 	}
-
-	// 選ぶ項目が変わったら音を鳴らす
-	if (m_selectIndex != prevSelect) SoundPlayer::PlaySE(SoundName::MenuSelect);
 
 	// クリックは、項目の上でクリックした時だけ決定する
 	if (m_input.click && hovered >= 0)
@@ -305,8 +300,6 @@ void TitleUI::UpdateDecided()
 
 void TitleUI::Decide(MenuItem item)
 {
-	SoundPlayer::PlaySE(SoundName::MenuDecide);
-
 	if (item == MenuItem::Controls)
 	{
 		ChangeState(State::Controls);
