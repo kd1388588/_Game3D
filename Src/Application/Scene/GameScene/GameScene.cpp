@@ -116,8 +116,8 @@ void GameScene::Init()
 		SpawnEnemy(pos, false, player);
 	}
 
-	// ボス
-	SpawnEnemy({ 7.5f, 15.0f, 75.0f }, true, player);
+	// ボス：大聖堂の奥（祭壇の手前）の真ん中に、上から降ってくる
+	SpawnEnemy({ 0.0f, 15.0f, 90.0f }, true, player);
 
 	// カメラ
 	std::shared_ptr<TPSCamera> camera = CreateObject<TPSCamera>();
