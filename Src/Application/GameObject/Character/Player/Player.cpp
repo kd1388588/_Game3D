@@ -158,6 +158,10 @@ namespace
 	// ダッシュ
 	constexpr float	kDashMoveRate			= 1.25f;		// ダッシュ中の移動の速さの倍率
 
+	// 敵との押し出し（敵の体を通り抜けて、反対側に回り込まないようにする）
+	constexpr float	kEnemyBodyRadiusRate	= 0.55f;	// 敵の体の半径（敵の大きさに掛ける。ザコ 0.7m・ボス 1.4m くらい）
+	constexpr float	kPlayerBodyRadius		= 0.4f;		// プレイヤーの体の半径
+
 	// ロックオン
 	constexpr float	kLockOnRange			= 15.0f;	// この距離の中で一番近い敵をロックオンする
 	constexpr float	kLockOnLoseRange		= 20.0f;	// これより離れたらロックオンを外す
@@ -1149,8 +1153,48 @@ void Player::ApplyAnimationMotion()
 	m_pos += move;
 }
 
+void Player::PushOutFromEnemies()
+{
+	// 前のフレームの位置（Update の最初で記録したもの）から今の位置までの動きで調べる
+	// （攻撃の踏み込みで1フレームに大きく動いても、敵の体を通り抜けないようにする）
+	Math::Vector3 prev = m_prevFramePos;
+	prev.y = 0.0f;
+
+	for (auto& obj : SceneManager::Instance().GetObjList())
+	{
+		auto enemy = std::dynamic_pointer_cast<Enemy>(obj);
+		if (!enemy || !enemy->IsAlive() || enemy->IsExpired()) continue;
+
+		Math::Vector3 center = enemy->GetPos();
+		center.y = 0.0f;
+		float radius = enemy->GetBodyScale() * kEnemyBodyRadiusRate + kPlayerBodyRadius;
+
+		Math::Vector3 cur = m_pos;
+		cur.y = 0.0f;
+
+		// 前の位置 → 今の位置 の線の上で、敵の中心に一番近い点
+		Math::Vector3 move = cur - prev;
+		float moveLenSq = move.LengthSquared();
+		float t = (moveLenSq > 0.0001f) ? std::clamp((center - prev).Dot(move) / moveLenSq, 0.0f, 1.0f) : 1.0f;
+		Math::Vector3 closest = prev + move * t;
+		if ((closest - center).LengthSquared() >= radius * radius) continue;
+
+		// 敵の体に入った・通り抜けた：前のフレームにいた側（敵の手前）へ押し戻す
+		Math::Vector3 dir = prev - center;
+		if (dir.LengthSquared() < 0.0001f) dir = cur - center;
+		if (dir.LengthSquared() < 0.0001f) dir = Math::Vector3(0.0f, 0.0f, -1.0f);
+		dir.Normalize();
+
+		m_pos.x = center.x + dir.x * radius;
+		m_pos.z = center.z + dir.z * radius;
+	}
+}
+
 void Player::PostUpdate()
 {
+	// 敵との押し出しを先にして、その後の壁の押し出し（BumpHit）で壁にめり込まないようにする
+	PushOutFromEnemies();
+
 	BaseChara::PostUpdate();
 	UpdateWeaponMatrix();
 	UpdateCameraTargetY();
