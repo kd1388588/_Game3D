@@ -25,8 +25,8 @@ namespace
 	constexpr float kAttackTurnEndFrame		= 12.0f;	// 攻撃のこのフレームまでは、プレイヤーの方へ向きを変える
 
 	// 攻撃の後のすき（この間は次の攻撃をしてこない。プレイヤーが反撃できる時間）
-	constexpr int	kAttackRecoverFrame		= 55;		// ザコ（約0.9秒）
-	constexpr int	kBossAttackRecoverFrame	= 40;		// ボス（約0.7秒）
+	constexpr int	kAttackRecoverFrame		= 50;		// ザコ（約0.9秒）
+	constexpr int	kBossAttackRecoverFrame	= 35;		// ボス（約0.7秒）
 	constexpr int	kAttackRecoverRandom	= 20;		// ばらつき（全員が同じリズムで攻撃してこないように）
 	constexpr int	kJumpAttackRecoverFrame	= 50;		// 飛びかかり攻撃の後
 	constexpr float	kRecoverTurnSpeed		= 0.05f;	// すきの間に、プレイヤーの方へ向きを変える速さ

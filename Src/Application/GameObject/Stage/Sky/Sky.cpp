@@ -12,7 +12,7 @@ void Sky::Init()
 namespace
 {
 	// 空の球の大きさ（球のモデルの半径は 10 なので、半径は 10 × kScale = 300）
-	constexpr float		kScale		= 30.0f;
+	constexpr float		kScale		= 15.0f;
 	constexpr float		kHeight		= -1.0f;	// 球の中心の高さ
 }
 

@@ -6,6 +6,7 @@ namespace
 
 	// 置く位置（石畳の上の面が y = 0.04 になるように作ってある。地面に埋まる・浮く時はここで調整）
 	const Math::Vector3	kPosition	= { 0.0f, 0.0f, 0.0f };
+	const Math::Vector3	kScale		= { 1.25f, 1.25f, 1.25f };
 }
 
 void RuinedRoad::Init()
@@ -28,5 +29,5 @@ void RuinedRoad::Init()
 		KdCollider::TypeGround | KdCollider::TypeBump
 	);
 
-	m_mWorld = Math::Matrix::CreateTranslation(kPosition);
+	m_mWorld = Math::Matrix::CreateScale(kScale) * Math::Matrix::CreateTranslation(kPosition);
 }

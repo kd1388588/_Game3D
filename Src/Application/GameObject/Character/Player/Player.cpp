@@ -159,7 +159,7 @@ namespace
 	constexpr float	kDashMoveRate			= 1.25f;		// ダッシュ中の移動の速さの倍率
 
 	// 敵との押し出し（敵の体を通り抜けて、反対側に回り込まないようにする）
-	constexpr float	kEnemyBodyRadiusRate	= 0.55f;	// 敵の体の半径（敵の大きさに掛ける。ザコ 0.7m・ボス 1.4m くらい）
+	constexpr float	kEnemyBodyRadiusRate	= 0.55f;	// 敵の体の半径（敵の大きさに掛ける。ザコ m・ボス 1.4m くらい）
 	constexpr float	kPlayerBodyRadius		= 0.4f;		// プレイヤーの体の半径
 
 	// ロックオン
