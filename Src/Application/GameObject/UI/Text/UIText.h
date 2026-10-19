@@ -24,7 +24,7 @@ public:
 	void Update() override;
 	void DrawSprite() override;
 
-	// 表示する文字列を設定（日本語は Small / Medium / Large のみ。Title のフォントは英数字のみ）
+	// 表示する文字列を設定（日本語は Small / Medium のみ。Large・Label・Title のフォントは英数字のみ）
 	void SetText(const std::string& text, FontSize size = FontSize::Medium);
 
 	// 文字列の中心の位置を設定（画面中央が原点、上が+Y）
