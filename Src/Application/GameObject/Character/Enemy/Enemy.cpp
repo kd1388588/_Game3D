@@ -139,6 +139,7 @@ void Enemy::Update()
 	UpdateInvincibleTimer();
 
 	if (m_jumpAttackCT > 0) m_jumpAttackCT--;
+	if (m_attackCT > 0) m_attackCT--;
 	if (m_stunTimer > 0) m_stunTimer--;
 
 	if (m_state)

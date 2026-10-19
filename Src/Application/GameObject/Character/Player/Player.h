@@ -100,6 +100,10 @@ public:
 	int GetAtbBarCount() const { return static_cast<int>(m_atbGage / kAtbBarMax); }	// たまっている本数
 	void AddAtbGage(float val);
 
+	// デバッグ用：ATBゲージを全部ためる・HPを満タンにする（倒れている時は何もしない）
+	void DebugFillAtb() { AddAtbGage(kAtbBarMax * kAtbBarNum); }
+	void DebugFillHp() { if (m_hp > 0) m_hp = m_maxHp; }
+
 	// アビリティを使う（ATBゲージとCTを確かめ、使えたらゲージを減らしてCTを始める）
 	// 使えたら、出す攻撃の種類（04・05）を返す。使えなければ 0
 	int TryStartAbility(AbilitySlot slot);

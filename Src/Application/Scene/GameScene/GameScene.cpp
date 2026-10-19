@@ -23,6 +23,10 @@ namespace
 	constexpr int kGameOverWaitFrame	= 60;	// 死亡モーション後、ゲームオーバー画面に移るまでのフレーム数
 	constexpr int kClearWaitFrame		= 90;	// 敵が全滅してから、クリア画面に移るまでのフレーム数
 
+	// デバッグキー（発表などで使わない時は false にする）
+	constexpr bool	kEnableDebugKeys	= true;
+	constexpr float	kDebugSpawnDistance	= 6.0f;		// F3 で敵を出す、プレイヤーの前方の距離
+
 	// ボスが待っている位置（大聖堂の広間の真ん中。広間は z=52～100。Tools/MakeStageModel.py の NAVE_START_Z / NAVE_END_Z）
 	const Math::Vector3 kBossPos		= { 0.0f, 0.0f, 76.0f };
 }
@@ -38,7 +42,45 @@ void GameScene::Event()
 		);
 	}
 
+	UpdateDebugKeys();
 	CheckGameEnd();
+}
+
+void GameScene::UpdateDebugKeys()
+{
+	// キーの状態は毎フレーム更新する（押した瞬間を正しく判定するため）
+	bool isAtb = m_debugAtbKey.Update();
+	bool isHp = m_debugHpKey.Update();
+	bool isSpawn = m_debugSpawnKey.Update();
+	if (!kEnableDebugKeys) return;
+
+	auto player = m_wpPlayer.lock();
+	if (!player) return;
+
+	// F1：ATBゲージ全開
+	if (isAtb)
+	{
+		player->DebugFillAtb();
+		KdDebugGUI::Instance().AddLog("[Debug] ATBゲージ全開\n");
+	}
+
+	// F2：HP全開
+	if (isHp)
+	{
+		player->DebugFillHp();
+		KdDebugGUI::Instance().AddLog("[Debug] HP全開\n");
+	}
+
+	// F3：プレイヤーの前方にザコ敵を出す
+	if (isSpawn)
+	{
+		Math::Matrix rot = Math::Matrix::CreateRotationY(player->GetAngleRad());
+		Math::Vector3 forward = Math::Vector3::TransformNormal(Math::Vector3(0.0f, 0.0f, 1.0f), rot);
+		Math::Vector3 pos = player->GetPos() + forward * kDebugSpawnDistance;
+		pos.y = player->GetPos().y;
+		SpawnEnemy(pos, false, player);
+		KdDebugGUI::Instance().AddLog("[Debug] 敵をスポーン\n");
+	}
 }
 
 void GameScene::CheckGameEnd()

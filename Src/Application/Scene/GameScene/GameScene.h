@@ -1,6 +1,7 @@
 ﻿#pragma once
 
 #include"../BaseScene/BaseScene.h"
+#include"../../Utility/InputHelper.h"
 
 class Player;
 
@@ -34,6 +35,12 @@ private:
 
 	// 生き残っている敵の数
 	int GetAliveEnemyCount() const;
+
+	// デバッグキー（F1：ATB全開、F2：HP全開、F3：敵をプレイヤーの前に出す）
+	void UpdateDebugKeys();
+	InputHelper::KeyTrigger	m_debugAtbKey{ VK_F1 };
+	InputHelper::KeyTrigger	m_debugHpKey{ VK_F2 };
+	InputHelper::KeyTrigger	m_debugSpawnKey{ VK_F3 };
 
 	std::weak_ptr<Player>	m_wpPlayer;
 	int						m_gameOverTimer = 0;	// プレイヤーが倒れてからの経過フレーム

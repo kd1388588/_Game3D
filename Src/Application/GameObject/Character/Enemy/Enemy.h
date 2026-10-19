@@ -46,6 +46,10 @@ public:
 	// 使った後のCTを始める
 	void StartJumpAttackCooldown();
 
+	// 普通の攻撃の後のすき（この間は追いかけるが、殴ってこない）
+	void SetAttackCooldown(int frame) { m_attackCT = frame; }
+	bool CanAttack() const { return m_attackCT <= 0; }
+
 	// target へ向かって飛び上がる（放物線で飛び、空中にいる時間は高さから決まる）
 	void StartLeap(const Math::Vector3& target);
 
@@ -97,6 +101,7 @@ private:
 
 	// 飛びかかり攻撃
 	int								m_jumpAttackCT = 0;			// CTの残りフレーム
+	int								m_attackCT = 0;				// 普通の攻撃をもう一度できるまでの残りフレーム
 	int								m_jumpAttackCoolTime = 0;	// 使った後のCT（敵の種類ごと）
 	Math::Vector3					m_leapVelocity = Math::Vector3::Zero;	// 空中での水平方向の移動量（1フレーム）
 	bool							m_isLeapFalling = false;	// 飛び上がった後、落ち始めたか
