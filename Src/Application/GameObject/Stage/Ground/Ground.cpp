@@ -8,7 +8,7 @@ void Ground::Init()
 		m_spModel->SetModelData("Asset/Models/GameObject/Stage/Ground/Ground.gltf");
 
 		Math::Matrix scaleMat = Math::Matrix::CreateScale(100);
-		Math::Matrix translationMat = Math::Matrix::CreateTranslation(0.0f, -1.0f, 0.0f);
+		Math::Matrix translationMat = Math::Matrix::CreateTranslation(0.0f, 0.0f, 0.0f);
 		m_mWorld = scaleMat * translationMat;
 
 		// モデルが読み込めなかった場合は当たり判定を登録しない（空のモデルで判定すると落ちるため）
