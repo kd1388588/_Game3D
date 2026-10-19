@@ -139,6 +139,9 @@
     <Filter Include="Src\Application\GameObject\Stage\Object\CathedralRuins">
       <UniqueIdentifier>{af380bc7-511a-475c-a07b-e7cbdbed160e}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Src\Application\GameObject\Stage\Object\RuinedRoad">
+      <UniqueIdentifier>{7d3f2a91-5c1e-4b8a-9e60-1018a2b4c6d8}</UniqueIdentifier>
+    </Filter>
     <Filter Include="Src\Application\GameObject\Stage\Object\Base">
       <UniqueIdentifier>{07bade0f-4c70-45f0-be56-c78ad260aa27}</UniqueIdentifier>
     </Filter>
@@ -411,6 +414,9 @@
     <ClInclude Include="Src\Application\GameObject\Stage\Object\CathedralRuins\CathedralRuins.h">
       <Filter>Src\Application\GameObject\Stage\Object\CathedralRuins</Filter>
     </ClInclude>
+    <ClInclude Include="Src\Application\GameObject\Stage\Object\RuinedRoad\RuinedRoad.h">
+      <Filter>Src\Application\GameObject\Stage\Object\RuinedRoad</Filter>
+    </ClInclude>
     <ClInclude Include="Src\Application\GameObject\Stage\Sky\Sky.h">
       <Filter>Src\Application\GameObject\Stage\Sky</Filter>
     </ClInclude>
@@ -643,6 +649,9 @@
     </ClCompile>
     <ClCompile Include="Src\Application\GameObject\Stage\Object\CathedralRuins\CathedralRuins.cpp">
       <Filter>Src\Application\GameObject\Stage\Object\CathedralRuins</Filter>
+    </ClCompile>
+    <ClCompile Include="Src\Application\GameObject\Stage\Object\RuinedRoad\RuinedRoad.cpp">
+      <Filter>Src\Application\GameObject\Stage\Object\RuinedRoad</Filter>
     </ClCompile>
     <ClCompile Include="Src\Application\GameObject\Stage\Sky\Sky.cpp">
       <Filter>Src\Application\GameObject\Stage\Sky</Filter>

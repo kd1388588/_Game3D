@@ -293,6 +293,7 @@
     <ClInclude Include="Src\Application\GameObject\Stage\Ground\Ground.h" />
     <ClInclude Include="Src\Application\GameObject\Stage\Object\Base\BaseStageObject.h" />
     <ClInclude Include="Src\Application\GameObject\Stage\Object\CathedralRuins\CathedralRuins.h" />
+    <ClInclude Include="Src\Application\GameObject\Stage\Object\RuinedRoad\RuinedRoad.h" />
     <ClInclude Include="Src\Application\GameObject\Stage\Sky\Sky.h" />
     <ClInclude Include="Src\Application\main.h" />
     <ClInclude Include="Src\Application\Scene\BaseScene\BaseScene.h" />
@@ -378,6 +379,7 @@
     <ClCompile Include="Src\Application\GameObject\Stage\Ground\Ground.cpp" />
     <ClCompile Include="Src\Application\GameObject\Stage\Object\Base\BaseStageObject.cpp" />
     <ClCompile Include="Src\Application\GameObject\Stage\Object\CathedralRuins\CathedralRuins.cpp" />
+    <ClCompile Include="Src\Application\GameObject\Stage\Object\RuinedRoad\RuinedRoad.cpp" />
     <ClCompile Include="Src\Application\GameObject\Stage\Sky\Sky.cpp" />
     <ClCompile Include="Src\Application\main.cpp" />
     <ClCompile Include="Src\Application\Scene\BaseScene\BaseScene.cpp" />

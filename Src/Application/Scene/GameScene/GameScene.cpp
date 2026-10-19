@@ -12,6 +12,7 @@
 #include "../../GameObject/Stage/Ground/Ground.h"
 #include "../../GameObject/Stage/Sky/Sky.h"
 #include "../../GameObject/Stage/Object/CathedralRuins/CathedralRuins.h"
+#include "../../GameObject/Stage/Object/RuinedRoad/RuinedRoad.h"
 
 // Effekseer関連
 #include "../../../Framework/Effekseer/KdEffekseerManager.h"
@@ -85,6 +86,7 @@ void GameScene::Init()
 	CreateObject<Ground>();
 	CreateObject<Sky>();
 	CreateObject<CathedralRuins>();
+	CreateObject<RuinedRoad>();
 
 	// プレイヤー（Init内でHPゲージを追加するため、先にオーナーをセットする）
 	std::shared_ptr<Player> player = std::make_shared<Player>();
