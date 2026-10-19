@@ -89,6 +89,7 @@ public:
 	BattleMode GetBattleMode() const { return m_battleMode; }
 	bool IsPunisherMode() const { return m_battleMode == BattleMode::Punisher; }
 	void SetBattleMode(BattleMode mode);			// モードを変える（攻撃パターンもそのモードのものに変わる）
+	float GetDashAnimSpeedRatio() const { return m_dashAnimSpeedRatio; }	// ダッシュのアニメーションが普段の走りの何倍速いか
 	float GetModeMoveRate() const;					// 今のモードの移動の速さの倍率
 	float GetModeAttackSpeedRate() const;			// 今のモードの攻撃の速さの倍率
 
@@ -283,6 +284,7 @@ private:
 	};
 	std::vector<GuardWalkAnim>		m_guardWalkAnims;
 	float							m_runTravelSpeed = 0.0f;	// 走りのアニメーションで1フレームに進む距離
+	float							m_dashAnimSpeedRatio = 1.0f;	// ダッシュの全力疾走のアニメーションが、普段の走りの何倍の速さで進むか
 
 	// 剣の軌跡（1本分）
 	struct SwordTrail

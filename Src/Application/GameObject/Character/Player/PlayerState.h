@@ -47,6 +47,19 @@ public:
 	void ChangeState(Player* player) override;
 	void Update(Player* player) override;
 
+private:
+	// ダッシュ（Shift を押しながら走る）の流れ
+	// 普段の走り → 走りながら納刀 → 剣を納めて全力で走る → （Shift を離したら）走りながら抜刀 → 普段の走り
+	enum class DashPhase
+	{
+		None,		// 普段の走り（剣を抜いている）
+		Sheathe,	// 走りながら納刀
+		Dash,		// 剣を納めて全力で走る
+		Draw,		// 走りながら抜刀
+	};
+	void ChangeDashPhase(Player* player, DashPhase phase);
+
+	DashPhase m_dashPhase = DashPhase::None;
 };
 
 // ガード（止まっている時に Shift を押している間。受けるダメージが減り、のけぞらない）

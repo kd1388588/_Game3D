@@ -51,6 +51,10 @@ namespace
 	// プレイヤーは常に剣を抜いているので、剣を持った（Combat_）アニメーションを使う
 	const std::string kIdleAnimName			= "Combat_Idle";
 	const std::string kRunAnimName			= "Combat_Run";
+	const std::string kRunSheatheAnimName	= "Run_Sheathe";	// 走りながら納刀
+	const std::string kDashAnimName			= "Dash_Run";		// 剣を納めて全力で走る
+	const std::string kRunDrawAnimName		= "Run_Draw";		// 走りながら抜刀
+	constexpr float kDashBlendFrame			= 6.0f;		// ダッシュの各アニメーションへのブレンドフレーム数
 	const std::string kJumpStartAnimName	= "Combat_JumpStart";
 	const std::string kJumpLoopAnimName		= "Combat_JumpLoop";
 	const std::string kJumpEndAnimName		= "Combat_JumpEnd";
@@ -339,6 +343,7 @@ void PlayerStateGuardBreak::Update(Player* player)
 
 void PlayerStateRun::ChangeState(Player* player)
 {
+	m_dashPhase = DashPhase::None;
 	player->ChangeAnimation(kRunAnimName, true, false, kRunBlendFrame);
 	player->SetAnimationSpeed(1.0f);
 
@@ -346,9 +351,43 @@ void PlayerStateRun::ChangeState(Player* player)
 	UseRootMotion(player);
 }
 
+void PlayerStateRun::ChangeDashPhase(Player* player, DashPhase phase)
+{
+	m_dashPhase = phase;
+	switch (phase)
+	{
+	case DashPhase::None:		player->ChangeAnimation(kRunAnimName, true, false, kDashBlendFrame);			break;
+	case DashPhase::Sheathe:	player->ChangeAnimation(kRunSheatheAnimName, false, true, kDashBlendFrame);	break;
+	case DashPhase::Dash:		player->ChangeAnimation(kDashAnimName, true, false, kDashBlendFrame);			break;
+	case DashPhase::Draw:		player->ChangeAnimation(kRunDrawAnimName, false, true, kDashBlendFrame);		break;
+	}
+}
+
 void PlayerStateRun::Update(Player* player)
 {
 	if (TryCommonTransition(player)) return;
+
+	// ダッシュのアニメーションの切り替え（アニメーションが無い時は、普段の走りのままダッシュする）
+	bool isDash = player->IsShiftDown();
+	if (player->HasAnimation(kDashAnimName))
+	{
+		switch (m_dashPhase)
+		{
+		case DashPhase::None:
+			if (isDash) ChangeDashPhase(player, player->HasAnimation(kRunSheatheAnimName) ? DashPhase::Sheathe : DashPhase::Dash);
+			break;
+		case DashPhase::Sheathe:
+			if (!isDash)					ChangeDashPhase(player, DashPhase::Draw);	// 納めている途中で離したら、抜き直す
+			else if (player->IsAnimEnd())	ChangeDashPhase(player, DashPhase::Dash);
+			break;
+		case DashPhase::Dash:
+			if (!isDash) ChangeDashPhase(player, player->HasAnimation(kRunDrawAnimName) ? DashPhase::Draw : DashPhase::None);
+			break;
+		case DashPhase::Draw:
+			if (player->IsAnimEnd()) ChangeDashPhase(player, DashPhase::None);
+			break;
+		}
+	}
 
 	// アニメーションに前へ進む動きがあれば、その動きで移動する
 	// （その場で足踏みするだけのアニメーションなら、プログラムで移動する）
@@ -362,7 +401,9 @@ void PlayerStateRun::Update(Player* player)
 	{
 		float speedRate = Player::s_runSpeedRate;
 		speedRate *= player->GetModeMoveRate();								// パニッシャーの時は遅く
-		if (player->IsShiftDown()) speedRate *= kDashSpeedRate;				// Shift を押している間はダッシュ
+		if (isDash) speedRate *= kDashSpeedRate;							// Shift を押している間はダッシュ
+		// 全力疾走のアニメーションは、それ自体が普段の走りより速いので、その分を割り引く
+		if (m_dashPhase == DashPhase::Dash) speedRate /= player->GetDashAnimSpeedRatio();
 
 		float animSpeed = 1.0f + (speedRate - 1.0f) * kRunAnimSpeedShare;
 		player->SetAnimationSpeed(animSpeed);
