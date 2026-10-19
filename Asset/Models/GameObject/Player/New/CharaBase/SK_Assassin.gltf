@@ -2280,7 +2280,13 @@
       "uri": "MI_Eyes_BaseColor.png"
     },
     {
+      "uri": "MI_Eyes_Normal.png"
+    },
+    {
       "uri": "MI_Eyebrow_BaseColor.png"
+    },
+    {
+      "uri": "MI_Eyebrow_Normal.png"
     },
     {
       "uri": "MI_Eyebrow_Occlusion.png"
@@ -2505,6 +2511,9 @@
         "metallicFactor": 0,
         "roughnessFactor": 0.0980392247
       },
+      "normalTexture": {
+        "index": 20
+      },
       "extensions": {
         "KHR_materials_specular": {
           "specularFactor": 0.298039228
@@ -2515,13 +2524,16 @@
       "name": "MI_Eyebrow",
       "pbrMetallicRoughness": {
         "baseColorTexture": {
-          "index": 20
+          "index": 21
         },
         "metallicFactor": 0.200000018,
         "roughnessFactor": 0.380392194
       },
+      "normalTexture": {
+        "index": 22
+      },
       "occlusionTexture": {
-        "index": 21
+        "index": 23
       },
       "alphaMode": "MASK",
       "alphaCutoff": 0.333299994,
@@ -2536,14 +2548,14 @@
       "name": "MI_Jacket",
       "pbrMetallicRoughness": {
         "baseColorTexture": {
-          "index": 22
+          "index": 24
         },
         "metallicRoughnessTexture": {
-          "index": 23
+          "index": 25
         }
       },
       "normalTexture": {
-        "index": 24
+        "index": 26
       },
       "alphaMode": "MASK",
       "alphaCutoff": 0.333299994,
@@ -2558,14 +2570,14 @@
       "name": "MI_Top",
       "pbrMetallicRoughness": {
         "baseColorTexture": {
-          "index": 25
+          "index": 27
         },
         "metallicRoughnessTexture": {
-          "index": 26
+          "index": 28
         }
       },
       "normalTexture": {
-        "index": 27
+        "index": 29
       },
       "alphaMode": "MASK",
       "alphaCutoff": 0.333299994,
@@ -2580,14 +2592,14 @@
       "name": "MI_CyberArm",
       "pbrMetallicRoughness": {
         "baseColorTexture": {
-          "index": 28
+          "index": 30
         },
         "metallicRoughnessTexture": {
-          "index": 29
+          "index": 31
         }
       },
       "normalTexture": {
-        "index": 30
+        "index": 32
       },
       "alphaMode": "MASK",
       "alphaCutoff": 0.333299994,
@@ -2602,14 +2614,14 @@
       "name": "MI_Pants_2",
       "pbrMetallicRoughness": {
         "baseColorTexture": {
-          "index": 31
+          "index": 33
         },
         "metallicRoughnessTexture": {
-          "index": 32
+          "index": 34
         }
       },
       "normalTexture": {
-        "index": 33
+        "index": 35
       },
       "alphaMode": "MASK",
       "alphaCutoff": 0.333299994,
@@ -2624,13 +2636,16 @@
       "name": "MI_Hair_1",
       "pbrMetallicRoughness": {
         "baseColorTexture": {
-          "index": 34
+          "index": 36
         },
         "metallicFactor": 0.200000018,
         "roughnessFactor": 0.380392194
       },
+      "normalTexture": {
+        "index": 37
+      },
       "occlusionTexture": {
-        "index": 35
+        "index": 38
       },
       "alphaMode": "MASK",
       "alphaCutoff": 0.333299994,
@@ -2645,13 +2660,13 @@
       "name": "MI_Mask",
       "pbrMetallicRoughness": {
         "baseColorTexture": {
-          "index": 36
+          "index": 39
         },
         "metallicFactor": 0,
         "roughnessFactor": 0.521568656
       },
       "normalTexture": {
-        "index": 37
+        "index": 40
       },
       "alphaMode": "MASK",
       "alphaCutoff": 0.333299994,
@@ -2666,14 +2681,14 @@
       "name": "MI_Blade",
       "pbrMetallicRoughness": {
         "baseColorTexture": {
-          "index": 38
+          "index": 41
         },
         "metallicRoughnessTexture": {
-          "index": 39
+          "index": 42
         }
       },
       "normalTexture": {
-        "index": 40
+        "index": 43
       },
       "alphaMode": "MASK",
       "alphaCutoff": 0.333299994,
@@ -4566,59 +4581,69 @@
       "source": 19
     },
     {
-      "name": "MI_Eyebrow_BaseColor",
+      "name": "MI_Eyes_Normal",
       "sampler": 0,
       "source": 20
     },
     {
-      "name": "MI_Eyebrow_Occlusion",
+      "name": "MI_Eyebrow_BaseColor",
       "sampler": 0,
       "source": 21
     },
     {
-      "name": "MI_Jacket_BaseColor",
+      "name": "MI_Eyebrow_Normal",
       "sampler": 0,
       "source": 22
     },
     {
-      "name": "MI_Jacket_MetallicRoughness",
+      "name": "MI_Eyebrow_Occlusion",
       "sampler": 0,
       "source": 23
     },
     {
-      "name": "MI_Jacket_Normal",
+      "name": "MI_Jacket_BaseColor",
       "sampler": 0,
       "source": 24
     },
     {
-      "name": "MI_Top_BaseColor",
+      "name": "MI_Jacket_MetallicRoughness",
       "sampler": 0,
       "source": 25
     },
     {
-      "name": "MI_Top_MetallicRoughness",
+      "name": "MI_Jacket_Normal",
       "sampler": 0,
       "source": 26
     },
     {
-      "name": "MI_Top_Normal",
+      "name": "MI_Top_BaseColor",
       "sampler": 0,
       "source": 27
     },
     {
-      "name": "MI_CyberArm_BaseColor",
+      "name": "MI_Top_MetallicRoughness",
       "sampler": 0,
       "source": 28
     },
     {
-      "name": "MI_CyberArm_MetallicRoughness",
+      "name": "MI_Top_Normal",
       "sampler": 0,
       "source": 29
     },
     {
-      "name": "MI_CyberArm_Normal",
+      "name": "MI_CyberArm_BaseColor",
       "sampler": 0,
       "source": 30
+    },
+    {
+      "name": "MI_CyberArm_MetallicRoughness",
+      "sampler": 0,
+      "source": 31
+    },
+    {
+      "name": "MI_CyberArm_Normal",
+      "sampler": 0,
+      "source": 32
     },
     {
       "name": "MI_Pants_2_BaseColor",
@@ -4628,7 +4653,7 @@
     {
       "name": "MI_Pants_2_MetallicRoughness",
       "sampler": 0,
-      "source": 31
+      "source": 33
     },
     {
       "name": "MI_Pants_2_Normal",
@@ -4638,37 +4663,42 @@
     {
       "name": "MI_Hair_1_BaseColor",
       "sampler": 0,
-      "source": 32
+      "source": 34
+    },
+    {
+      "name": "MI_Hair_1_Normal",
+      "sampler": 0,
+      "source": 22
     },
     {
       "name": "MI_Hair_1_Occlusion",
       "sampler": 0,
-      "source": 21
+      "source": 23
     },
     {
       "name": "MI_Mask_BaseColor",
       "sampler": 0,
-      "source": 33
+      "source": 35
     },
     {
       "name": "MI_Mask_Normal",
       "sampler": 0,
-      "source": 34
+      "source": 36
     },
     {
       "name": "MI_Blade_BaseColor",
       "sampler": 0,
-      "source": 35
+      "source": 37
     },
     {
       "name": "MI_Blade_MetallicRoughness",
       "sampler": 0,
-      "source": 36
+      "source": 38
     },
     {
       "name": "MI_Blade_Normal",
       "sampler": 0,
-      "source": 37
+      "source": 39
     }
   ],
   "extensionsUsed": [
