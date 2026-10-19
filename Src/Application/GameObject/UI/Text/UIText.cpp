@@ -8,10 +8,8 @@ namespace
 	const std::string	kFontName			= "Zen Kaku Gothic New";
 	const std::string	kFontPath			= "Asset/Font/ZenKakuGothicNew-Bold.ttf";
 
-	// 英数字だけのオリジナルフォント（Tools/MakeFont.py で作成。石に彫ったような角ばった文字）
-	// 見出し（大）と、英語だけの文字（LabelSmall / LabelMedium）に使う
-	const std::string	kLabelFontName		= "Braver Stone";
-	const std::string	kLabelFontPath		= "Asset/Font/BraverStone.ttf";
+	// 見出し（大）と、英語だけの文字（LabelSmall / LabelMedium）：Y224（英数字だけのフォント）
+	const std::string	kLabelFontName		= "Y224";
 	constexpr int		kFontNoLabelSmall	= 5;
 	constexpr int		kFontNoLabelMedium	= 6;
 
@@ -27,9 +25,12 @@ namespace
 	constexpr int		kFontHeightLarge	= 96;
 	constexpr int		kFontHeightTitle	= 100;
 
-	// タイトルロゴ用のフォント（Asset/Font に置いたフォントファイルを読み込んで使う）
-	const std::string	kTitleFontPath		= "Asset/Font/Y224.ttf";
-	const std::string	kTitleFontName		= "Y224";	// ファイル名ではなく、フォントの中に書かれている名前
+	// Y224 のフォントファイル（見出し・英語だけの文字に使う）
+	const std::string	kY224FontPath		= "Asset/Font/Y224.ttf";
+
+	// タイトルロゴ用：英数字だけのオリジナルフォント（Tools/MakeFont.py で作成。石に彫ったような角ばった文字）
+	const std::string	kTitleFontPath		= "Asset/Font/BraverStone.ttf";
+	const std::string	kTitleFontName		= "Braver Stone";	// ファイル名ではなく、フォントの中に書かれている名前
 
 	constexpr int		kBlinkCycle = 60;	// 点滅の周期（フレーム）
 }
@@ -41,7 +42,7 @@ void UIText::RegisterFonts()
 
 	// フォントファイルを読み込んでから登録する
 	// （ファイルが無い場合はWindowsが似たフォントで代用する）
-	for (const std::string* pPath : { &kFontPath, &kLabelFontPath, &kTitleFontPath })
+	for (const std::string* pPath : { &kFontPath, &kY224FontPath, &kTitleFontPath })
 	{
 		if (std::filesystem::exists(*pPath))
 		{
@@ -56,14 +57,15 @@ void UIText::RegisterFonts()
 	// 文字ごとに幅が違うフォントなので、文字幅は指定しない（指定すると、条件に合う別のフォントが選ばれてしまう）
 	KdFontManager::Instance().AddFont(kFontNoSmall, kFontName, kFontHeightSmall, SHIFTJIS_CHARSET, DEFAULT_PITCH | FF_DONTCARE);
 	KdFontManager::Instance().AddFont(kFontNoMedium, kFontName, kFontHeightMedium, SHIFTJIS_CHARSET, DEFAULT_PITCH | FF_DONTCARE);
-	// 見出しと英語だけの文字は、オリジナルフォント（日本語の文字が無いので、文字セットは指定しない）
+	// 見出しと英語だけの文字は Y224
+	// Y224 は Shift-JIS に対応しておらず、文字ごとに幅が違うフォントなので、
+	// 文字セット・文字幅を指定せずに「名前」を優先して探させる
+	// （指定したままだと、条件に合う別のフォントが選ばれてしまう）
 	KdFontManager::Instance().AddFont(kFontNoLarge, kLabelFontName, kFontHeightLarge, DEFAULT_CHARSET, DEFAULT_PITCH | FF_DONTCARE);
 	KdFontManager::Instance().AddFont(kFontNoLabelSmall, kLabelFontName, kFontHeightSmall, DEFAULT_CHARSET, DEFAULT_PITCH | FF_DONTCARE);
 	KdFontManager::Instance().AddFont(kFontNoLabelMedium, kLabelFontName, kFontHeightMedium, DEFAULT_CHARSET, DEFAULT_PITCH | FF_DONTCARE);
 
-	// Y224 は Shift-JIS に対応しておらず、文字ごとに幅が違うフォントなので、
-	// 文字セット・文字幅を指定せずに「名前」を優先して探させる
-	// （指定したままだと、条件に合う別のフォントが選ばれてしまう）
+	// タイトルロゴはオリジナルフォント（こちらも英数字だけなので、文字セットは指定しない）
 	KdFontManager::Instance().AddFont(kFontNoTitle, kTitleFontName, kFontHeightTitle, DEFAULT_CHARSET, DEFAULT_PITCH | FF_DONTCARE);
 	isRegistered = true;
 }

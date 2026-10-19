@@ -126,8 +126,8 @@ namespace
 	constexpr float	kGuardDurabilityMax		= 100.0f;
 	constexpr float	kGuardCostPerDamage		= 3.0f;		// 受け止めたダメージ × これだけ減る（ダメージ10なら30。4回で崩される）
 	constexpr float	kGuardCriticalCostRate	= 1.5f;		// クリティカルの攻撃は多く減る
-	constexpr int	kGuardRegenDelay		= 45;		// 最後に受け止めてから回復し始めるまでのフレーム数
-	constexpr float	kGuardRegenSpeed		= 0.4f;		// 1フレームに回復する量（0 から満タンまで約4秒）
+	constexpr int	kGuardRegenDelay		= 120;		// 最後に受け止めてから回復し始めるまでのフレーム数（2秒）
+	constexpr float	kGuardRegenSpeed		= 0.15f;	// 1フレームに回復する量（0 から満タンまで約11秒）
 	constexpr int	kGuardBreakFrame		= 60 * 2;	// 崩された後、ガードできない時間（2秒。その間も耐久値は少しずつ回復する）
 	constexpr int	kGuardBreakHitStopFrame	= 10;		// 崩された時のヒットストップ
 	constexpr float	kGuardBreakShakePower	= 0.15f;
