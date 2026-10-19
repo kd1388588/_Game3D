@@ -2,6 +2,7 @@
 #include "../../Character/Player/Player.h"
 #include "../../Character/Enemy/Enemy.h"
 #include "../../../Utility/HitStop.h"
+#include "../../../Scene/SceneManager.h"
 
 namespace
 {
@@ -16,6 +17,10 @@ namespace
 	constexpr float kLockOnFollowRate	= 0.12f;	// 敵の方へカメラを回す速さ（0～1）
 	constexpr float kLockOnPitch		= 12.0f;	// 少し上から見下ろす角度（度）
 	constexpr float kLockOnPitchRate	= 0.05f;
+
+	// めり込み防止
+	constexpr float kCameraWallMargin	= 0.3f;		// 壁からこれだけ手前にカメラを置く
+	constexpr float kCameraMinDistance	= 0.5f;		// キャラにこれ以上は近づけない
 }
 
 void TPSCamera::Init()
@@ -69,59 +74,39 @@ void TPSCamera::PostUpdate()
 
 
 
-	// ↓めり込み防止の為の座標補正計算↓
-	// ①当たり判定(レイ判定)用の情報作成
-	KdCollider::RayInfo rayInfo;
-	// レイの発射位置を設定
-	rayInfo.m_pos = GetPos();
-
-	// レイの発射方向を設定
-	rayInfo.m_dir = Math::Vector3::Down;
-	// レイの長さを設定
-	rayInfo.m_range = 1000.f;
+	// めり込み防止：注視点（キャラ）からカメラへレイを飛ばし、間に建物や地面があれば、その手前にカメラを寄せる
+	// （キャラから飛ばして一番手前の壁を使うので、壁が何枚あってもキャラが隠れない）
 	if (_spTarget)
 	{
-		Math::Vector3 _targetPos = _spTarget->GetPos();
-		_targetPos.y += 0.1f;
-		rayInfo.m_dir = _targetPos - GetPos();
-		rayInfo.m_range = rayInfo.m_dir.Length();
-		rayInfo.m_dir.Normalize();
-	}
-
-	// 当たり判定をしたいタイプを設定
-	rayInfo.m_type = KdCollider::TypeGround;
-
-	// ②HIT判定対象オブジェクトに総当たり
-	for (std::weak_ptr<KdGameObject> wpGameObj : m_wpHitObjectList)
-	{
-		std::shared_ptr<KdGameObject> spGameObj = wpGameObj.lock();
-		if (spGameObj)
+		Math::Vector3 start = _targetMat.Translation();
+		Math::Vector3 toCamera = GetPos() - start;
+		float distance = toCamera.Length();
+		if (distance > 0.001f)
 		{
-			std::list<KdCollider::CollisionResult> retRayList;
-			spGameObj->Intersects(rayInfo, &retRayList);
+			KdCollider::RayInfo rayInfo;
+			rayInfo.m_pos = start;
+			rayInfo.m_dir = toCamera / distance;
+			rayInfo.m_range = distance;
+			rayInfo.m_type = KdCollider::TypeGround;
 
-			// ③ 結果を使って座標を補完する
-			// レイに当たったリストから一番近いオブジェクトを検出
-			float maxOverLap = 0;
-			Math::Vector3 hitPos = {};
-			bool hit = false;
-			for (auto& ret : retRayList)
+			float nearest = distance;
+			for (auto& obj : SceneManager::Instance().GetObjList())
 			{
-				// レイを遮断しオーバーした長さが
-				// 一番長いものを探す
-				if (maxOverLap < ret.m_overlapDistance)
+				if (obj.get() == this || obj == _spTarget) continue;
+
+				std::list<KdCollider::CollisionResult> results;
+				if (!obj->Intersects(rayInfo, &results)) continue;
+
+				for (auto& ret : results)
 				{
-					maxOverLap = ret.m_overlapDistance;
-					hitPos = ret.m_hitPos;
-					hit = true;
+					nearest = std::min(nearest, (ret.m_hitPos - start).Length());
 				}
 			}
-			if (hit)
+
+			if (nearest < distance)
 			{
-				// 何かしらの障害物に当たっている
-				Math::Vector3 _hitPos = hitPos;
-				_hitPos += rayInfo.m_dir * 0.4f;
-				SetPos(_hitPos);
+				// 壁から少し手前（キャラ側）に置く
+				SetPos(start + rayInfo.m_dir * std::max(nearest - kCameraWallMargin, kCameraMinDistance));
 			}
 		}
 	}
