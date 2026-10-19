@@ -5,7 +5,7 @@
 // Stage関連（ゲーム画面と同じ背景）
 #include "../../GameObject/Stage/Ground/Ground.h"
 #include "../../GameObject/Stage/Sky/Sky.h"
-#include "../../GameObject/Stage/Object/CathedralRuins/CathedralRuins.h"
+#include "../../GameObject/Stage/Object/RuinedRoad/RuinedRoad.h"
 
 // タイトル画面の演出
 #include "../../GameObject/Title/TitleChara/TitleChara.h"
@@ -42,7 +42,7 @@ void TitleScene::Init()
 	// 背景（ゲーム画面と同じステージ）
 	CreateObject<Ground>();
 	CreateObject<Sky>();
-	CreateObject<CathedralRuins>();
+	CreateObject<RuinedRoad>();	// ゲームと同じステージ（廃墟の参道と崩れた大聖堂）
 
 	// 待機と連続攻撃を繰り返すキャラクター
 	std::shared_ptr<TitleChara> chara = CreateObject<TitleChara>();

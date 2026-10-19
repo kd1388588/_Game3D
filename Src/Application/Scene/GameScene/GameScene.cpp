@@ -89,7 +89,7 @@ void GameScene::Init()
 	CreateObject<Ground>();
 	CreateObject<Sky>();
 	// 廃墟の参道と崩れた大聖堂（Tools/MakeStageModel.py で作ったもの。壁や柱が厚く、すり抜けにくい）
-	// ※前の大聖堂の廃墟（CathedralRuins）と重なるので、そちらは置かない（タイトル画面では使っている）
+	// ※前の大聖堂の廃墟（CathedralRuins）と重なるので、そちらは置かない
 	//CreateObject<CathedralRuins>();
 	CreateObject<RuinedRoad>();
 

@@ -19,7 +19,7 @@ namespace
 	};
 
 	constexpr EnemyParam kBossParam		= { 250, 2.6f,  16.0f, 3.5f, 60 * 6 };	// ボス：ザコの2倍くらい大きく、遠くから気づき、リーチが長い
-	constexpr EnemyParam kNormalParam	= { 50,  1.25f, 8.0f,  1.2f, 60 * 10 };	// ザコ敵（飛びかかり攻撃はたまに）
+	constexpr EnemyParam kNormalParam	= { 50,  1.25f, 10.0f, 1.2f, 60 * 6 };	// ザコ敵（少し離れていると、ときどき飛びかかってくる）
 
 	// 最初の飛びかかり攻撃までの時間（全員が同時に飛びかかってこないよう、ばらつかせる）
 	constexpr int	kFirstJumpAttackMinFrame	= 60 * 1;

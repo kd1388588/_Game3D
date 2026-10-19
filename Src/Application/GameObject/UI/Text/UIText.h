@@ -38,6 +38,9 @@ public:
 	// 点滅させるかどうか
 	void SetBlink(bool isBlink) { m_isBlink = isBlink; m_blinkTimer = 0; }
 
+	// 文字の周りに暗いふちを付けるかどうか（最初は付ける）
+	void SetOutline(bool isOutline) { m_isOutline = isOutline; }
+
 private:
 
 	// 使うフォントをフォントマネージャーに登録する（最初の1回だけ）
@@ -51,5 +54,6 @@ private:
 	Math::Color						m_color = { 1.0f, 1.0f, 1.0f, 1.0f };
 	float							m_scale = 1.0f;
 	bool							m_isBlink = false;
+	bool							m_isOutline = true;
 	int								m_blinkTimer = 0;
 };

@@ -3,13 +3,17 @@
 namespace
 {
 	// フォント（KdFontManagerの登録番号。0番はデバッグ表示用に空けておく）
-	// 本文（小・中）：日本語も英語も書ける明朝体「Zen Old Mincho」（遺跡・ダークファンタジーの雰囲気に合わせる）
-	// 見出し（大）　：ローマの碑文のような英字のフォント「Cinzel」（GAME CLEAR / GAME OVER など英字だけ）
+	// 本文（小・中）：太くて読みやすいゴシック体「Zen Kaku Gothic New」（日本語も英語も書ける）
+	// 見出し（大）　：遺跡の雰囲気に合う明朝体「Zen Old Mincho」（GAME CLEAR / GAME OVER）
 	// ※どちらも SIL Open Font License（無料で使える。ライセンス文は Asset/Font/OFL_*.txt）
-	const std::string	kFontName			= "Zen Old Mincho";
-	const std::string	kFontPath			= "Asset/Font/ZenOldMincho-Bold.ttf";
-	const std::string	kHeadingFontName	= "Cinzel";
-	const std::string	kHeadingFontPath	= "Asset/Font/Cinzel.ttf";
+	const std::string	kFontName			= "Zen Kaku Gothic New";
+	const std::string	kFontPath			= "Asset/Font/ZenKakuGothicNew-Bold.ttf";
+	const std::string	kHeadingFontName	= "Zen Old Mincho";
+	const std::string	kHeadingFontPath	= "Asset/Font/ZenOldMincho-Bold.ttf";
+
+	// 文字のふち（背景が明るくても暗くても読めるように、文字の周りに暗いふちを付ける）
+	constexpr float		kOutlineWidth		= 2.0f;		// ふちの太さ（ピクセル）
+	const Math::Color	kOutlineColor		= { 0.0f, 0.0f, 0.0f, 0.85f };
 	constexpr int		kFontNoSmall		= 1;
 	constexpr int		kFontNoMedium		= 2;
 	constexpr int		kFontNoLarge		= 3;
@@ -48,8 +52,7 @@ void UIText::RegisterFonts()
 	// 文字ごとに幅が違うフォントなので、文字幅は指定しない（指定すると、条件に合う別のフォントが選ばれてしまう）
 	KdFontManager::Instance().AddFont(kFontNoSmall, kFontName, kFontHeightSmall, SHIFTJIS_CHARSET, DEFAULT_PITCH | FF_DONTCARE);
 	KdFontManager::Instance().AddFont(kFontNoMedium, kFontName, kFontHeightMedium, SHIFTJIS_CHARSET, DEFAULT_PITCH | FF_DONTCARE);
-	// Cinzel は日本語の文字が無いので、文字セットも指定しない
-	KdFontManager::Instance().AddFont(kFontNoLarge, kHeadingFontName, kFontHeightLarge, DEFAULT_CHARSET, DEFAULT_PITCH | FF_DONTCARE);
+	KdFontManager::Instance().AddFont(kFontNoLarge, kHeadingFontName, kFontHeightLarge, SHIFTJIS_CHARSET, DEFAULT_PITCH | FF_DONTCARE);
 
 	// Y224 は Shift-JIS に対応しておらず、文字ごとに幅が違うフォントなので、
 	// 文字セット・文字幅を指定せずに「名前」を優先して探させる
@@ -107,6 +110,23 @@ void UIText::DrawSprite()
 	auto& spriteShader = KdShaderManager::Instance().m_spriteShader;
 	spriteShader.SetMatrix(Math::Matrix::CreateScale(m_scale) *
 		Math::Matrix::CreateTranslation(m_centerPos.x, m_centerPos.y, 0.0f));
+
+	// ふち：同じ文字を暗い色で、上下左右・斜めに少しずらして先に描く
+	if (m_isOutline)
+	{
+		Math::Color outlineColor = kOutlineColor;
+		outlineColor.w *= m_color.w;
+		for (int y = -1; y <= 1; ++y)
+		{
+			for (int x = -1; x <= 1; ++x)
+			{
+				if (x == 0 && y == 0) continue;
+				Math::Vector2 offset = { x * kOutlineWidth, y * kOutlineWidth };
+				spriteShader.DrawUIFont(m_fontSprite, pos + offset, &outlineColor, 0);
+			}
+		}
+	}
+
 	spriteShader.DrawUIFont(m_fontSprite, pos, &m_color, 0);
 
 	// 他の描画に影響しないよう元に戻す
