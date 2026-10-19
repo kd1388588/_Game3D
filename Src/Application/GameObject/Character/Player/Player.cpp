@@ -56,8 +56,10 @@ namespace
 	constexpr int	kMaxHp = 100;
 	constexpr int	kDamageInvincibleFrame = 30;		// 被弾後の無敵時間
 	constexpr int	kHeavyDamage = 20;		// これ以上のダメージで仰け反る
-	constexpr int	kAttackDamage = 10;
-	constexpr int	kCriticalAttackDamage = 20;
+	// 二刀流なので、1振りで左右の剣がそれぞれ当たる（多段ヒット）。そのぶん1回のダメージは低め
+	constexpr int	kAttackDamage = 5;
+	constexpr int	kCriticalAttackDamage = 10;
+	constexpr int	kMultiHitInterval = 10;	// 同じ剣が同じ敵にもう一度当たれるまでのフレーム数（回転する攻撃などで何度も当たる）
 	constexpr int	kAttackTypeNum = 5;		// 攻撃パターンの数
 
 	// 先行入力（ボタンを押してから、何フレームの間「押された」として受け付けるか。60フレーム = 1秒）
@@ -78,7 +80,7 @@ namespace
 
 	// ATBゲージのたまり方
 	constexpr float kAtbPassiveGain			= 0.1f;		// オペレーターの時、1フレームにたまる量（約17秒で1本）
-	constexpr float kAtbHitGain				= 12.0f;	// 攻撃を当てた時にたまる量
+	constexpr float kAtbHitGain				= 6.0f;		// 攻撃を当てた時にたまる量（多段ヒットになったので、1回あたりは半分）
 	constexpr float kOperatorAtbHitRate		= 1.5f;		// オペレーターの時、当てた時にたまる量の倍率
 	// ※パニッシャーの時は、時間でも攻撃でもたまらない
 	constexpr float kAtbCriticalRate		= 1.5f;		// クリティカルの時、当てた時にたまる量の倍率
@@ -787,6 +789,7 @@ void Player::Update()
 	UpdateInvincibleTimer();
 
 	m_isTrailAddedThisFrame = false;
+	m_attackFrame++;
 
 	// ガード中の印は、ガードのステートが毎フレーム付け直す
 	// （敵の攻撃はこの後の敵の Update で当たるので、ステートの Update より前に消しておく）
@@ -1787,7 +1790,7 @@ void Player::PlayHitEffect(const std::string& effectName, const Math::Vector3& h
 	EffectPlayer::Play(name, mWorld);
 }
 
-bool Player::AttackOBB(const Math::Matrix& swordMatrix, bool isCritical, const std::string& hitEffectName, float damageRate)
+bool Player::AttackOBB(const Math::Matrix& swordMatrix, bool isCritical, const std::string& hitEffectName, float damageRate, int hand)
 {
 	// 刃の根元から先端までを囲む、Y軸方向に長い箱
 	float obbOffsetY = (m_swordBladeBaseY + m_swordBladeTipY) * 0.5f;
@@ -1820,6 +1823,12 @@ bool Player::AttackOBB(const Math::Matrix& swordMatrix, bool isCritical, const s
 		// （毎フレームヒット扱いになって、ヒットストップやエフェクトが連続しないように）
 		auto enemy = std::dynamic_pointer_cast<Enemy>(obj);
 		if (!enemy || enemy->IsInvincible() || !enemy->IsAlive()) continue;
+
+		// 同じ剣が同じ敵に当たってから、少しの間はもう当たらない（剣が触れている毎フレーム当たらないように）
+		// 右と左の剣は別々に数えるので、二刀流で1振りに2回当たる
+		auto& hitRecord = m_lastHitFrame[std::clamp(hand, 0, 1)];
+		if (auto it = hitRecord.find(enemy.get()); it != hitRecord.end() && m_attackFrame - it->second < kMultiHitInterval) continue;
+		hitRecord[enemy.get()] = m_attackFrame;
 
 		// ATBコマンドの技を受けている敵は、のけぞり続ける（その間は攻撃してこない）
 		if (m_isAbilityAttack) enemy->AddStun(kAbilityStunFrame);

@@ -153,7 +153,11 @@ public:
 	// ボックス（OBB）による攻撃判定
 	// 敵に当たったら、その位置に hitEffectName のエフェクトを出す（空ならいつものヒットエフェクト）
 	// damageRate：ダメージの倍率（アビリティなど）
-	bool AttackOBB(const Math::Matrix& swordMatrix, bool isCritical, const std::string& hitEffectName = "", float damageRate = 1.0f);
+	// hand：どちらの剣か（0：右、1：左）。剣ごとに当たりを数えるので、二刀流で1振りに2回当たる
+	bool AttackOBB(const Math::Matrix& swordMatrix, bool isCritical, const std::string& hitEffectName = "", float damageRate = 1.0f, int hand = 0);
+
+	// 攻撃の当たった記録を消す（新しい攻撃を振り始める時に呼ぶ）
+	void ResetAttackHits() { for (auto& record : m_lastHitFrame) record.clear(); }
 
 	// 攻撃が当たった位置に、プレイヤーの攻撃の向きでヒットエフェクトを出す
 	void PlayHitEffect(const std::string& effectName, const Math::Vector3& hitPos, bool isCritical) const;
@@ -367,6 +371,9 @@ private:
 	std::weak_ptr<ATBCommandMenu>	m_wpCommandMenu;
 	std::weak_ptr<LockOnMarker>		m_wpLockOnMarker;
 	std::weak_ptr<Enemy>			m_wpLockTarget;			// ロックオン中の敵
+	// 多段ヒット：剣ごと（右・左）に、敵ごとの最後に当たったフレームを覚えておく
+	std::unordered_map<const KdGameObject*, int>	m_lastHitFrame[2];
+	int												m_attackFrame = 0;	// 攻撃の当たりを数えるための経過フレーム（ヒットストップ中は進まない）
 	bool							m_isLimLight = false;	// リムライトを光らせている途中か
 	float							m_limPow = 0.0f;		// リムライトの pow（大きいほどふちだけが光る）
 	std::weak_ptr<TPSCamera>		m_camera;

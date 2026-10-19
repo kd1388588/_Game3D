@@ -520,6 +520,9 @@ void PlayerStateComboAttack::ChangeState(Player* player)
 	// アビリティの攻撃中は、当ててもATBゲージがたまらない
 	player->SetAbilityAttack(m_isAbility);
 
+	// 新しい振りなので、前の振りで当たった記録を消す（もう一度当たれるようにする）
+	player->ResetAttackHits();
+
 	// マネージャーの変数を倍率としてセット。一部の攻撃はXZの座標移動を完全にロック
 	// アニメーションの踏み込みどおりに動く
 	// （倍率は 1.0。小さくすると足が地面を滑って見え、0にすると技の途中で剣を振る位置がずれる）
@@ -569,10 +572,10 @@ void PlayerStateComboAttack::Update(Player* player)
 	{
 		// 当たったら、攻撃の種類・段数ごとのエフェクトをその位置に出す
 		// （ヒットストップは AttackOBB の中で、すべての攻撃に同じルールでかかる）
-		// （敵は当たると少しの間無敵になるので、毎フレーム判定しても何度も当たらない）
+		// （右と左の剣は別々に当たりを数える。同じ剣は少し間をあければ、もう一度当たる＝多段ヒット）
 		float damageRate = m_isAbility ? kAbilityDamageRate : 1.0f;
-		player->AttackOBB(player->GetSwordMatrixR(), m_isCritical, GetHitEffectName(), damageRate);
-		player->AttackOBB(player->GetSwordMatrixL(), m_isCritical, GetHitEffectName(), damageRate);
+		player->AttackOBB(player->GetSwordMatrixR(), m_isCritical, GetHitEffectName(), damageRate, 0);
+		player->AttackOBB(player->GetSwordMatrixL(), m_isCritical, GetHitEffectName(), damageRate, 1);
 	}
 
 	// 予約があり、キャンセル可能フレームを超えたら次へ滑らかに移行

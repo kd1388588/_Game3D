@@ -28,7 +28,10 @@ namespace
 	// 攻撃の構えの間に、プレイヤーの方へ向きを変える速さ（ラジアン/フレーム）
 	constexpr float	kAttackTurnSpeed		= 0.12f;
 
-	constexpr int	kDamageInvincibleFrame	= 30;		// 被弾後の無敵時間
+	// 被弾後の無敵時間（0：無し）
+	// ※プレイヤーの攻撃は、剣ごとに「同じ敵には少し間をあけてしか当たらない」ようにしているので、
+	//   敵の側では無敵にしない（無敵があると、二刀流の2本目や多段ヒットが当たらなくなる）
+	constexpr int	kDamageInvincibleFrame	= 0;
 	constexpr int	kAttackDamage			= 5;
 	constexpr int	kCriticalAttackDamage	= 10;
 	constexpr float	kPushStrength			= 0.1f;		// 敵同士の押し出しの強さ（毎フレームの割合）
