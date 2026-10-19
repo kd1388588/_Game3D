@@ -252,8 +252,8 @@ namespace
 }
 
 // 読み込むアニメーションのリストを作成
-// ※プレイヤーは基本的に剣を抜いているので、剣を納めている時のアニメーションは、ダッシュに使う3つ
-//   （走りながら納刀・剣を納めて全力で走る・走りながら抜刀）だけを読み込む（他のファイルは Asset フォルダに残してある）
+// ※プレイヤーは基本的に剣を抜いているので、剣を納めている時のアニメーションは、ダッシュに使うもの
+//   （走りながら納刀・剣を納めて全力で走る・急ブレーキ・立ったまま抜刀）だけを読み込む（他のファイルは Asset フォルダに残してある）
 std::vector<AnimLoadInfo> Player::CreateAnimList()
 {
 	std::vector<AnimLoadInfo> animList =
@@ -263,7 +263,8 @@ std::vector<AnimLoadInfo> Player::CreateAnimList()
 		{ "Combat_Run",			kAnimDir + "04_Run/02_Run_Combat/01_Run_Combat_F_0/AS_Run_Combat_F_0_Loop_Seq/AS_Run_Combat_F_0_Loop_Seq.gltf" },
 		{ "Run_Sheathe",		kAnimDir + "04_Run/04_Run_Combat_to_Run/AS_Run_Combat_to_Run_Seq/AS_Run_Combat_to_Run_Seq.gltf" },	// 走りながら納刀
 		{ "Dash_Run",			kAnimDir + "04_Run/01_Run/11_Run_Fast/AS_Run_Fast_Loop_Seq/AS_Run_Fast_Loop_Seq.gltf" },				// 剣を納めて全力で走る
-		{ "Run_Draw",			kAnimDir + "04_Run/03_Run_to_Run_Combat/AS_Run_to_Run_Combat_Seq/AS_Run_to_Run_Combat_Seq.gltf" },	// 走りながら抜刀
+		{ "Dash_Brake",			kAnimDir + "04_Run/01_Run/11_Run_Fast/AS_Run_Fast_End_Seq/AS_Run_Fast_End_Seq.gltf" },				// 全力疾走から急ブレーキ
+		{ "Idle_Draw",			kAnimDir + "01_Idle/01_Idle/AS_Idle_to_Idle_Combat_Seq/AS_Idle_to_Idle_Combat_Seq.gltf" },			// 立ったまま抜刀
 		{ "Combat_JumpStart",	kAnimDir + "05_Jump/02_Jump_Combat/AS_Jump_Combat_Start_0_Seq/AS_Jump_Combat_Start_0_Seq.gltf" },
 		{ "Combat_JumpLoop",	kAnimDir + "05_Jump/02_Jump_Combat/AS_Jump_Combat_Loop_0_Seq/AS_Jump_Combat_Loop_0_Seq.gltf" },
 		{ "Combat_JumpEnd",		kAnimDir + "05_Jump/02_Jump_Combat/AS_Jump_Combat_End_0_Seq/AS_Jump_Combat_End_0_Seq.gltf" },

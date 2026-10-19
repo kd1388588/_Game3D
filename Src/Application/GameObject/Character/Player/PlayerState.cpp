@@ -53,7 +53,10 @@ namespace
 	const std::string kRunAnimName			= "Combat_Run";
 	const std::string kRunSheatheAnimName	= "Run_Sheathe";	// 走りながら納刀
 	const std::string kDashAnimName			= "Dash_Run";		// 剣を納めて全力で走る
-	const std::string kRunDrawAnimName		= "Run_Draw";		// 走りながら抜刀
+	const std::string kDashBrakeAnimName	= "Dash_Brake";		// 全力疾走から急ブレーキ
+	const std::string kIdleDrawAnimName		= "Idle_Draw";		// 立ったまま抜刀
+	constexpr float kIdleDrawAnimSpeed		= 1.4f;		// 抜刀の再生速度（少し速くして、すぐ戦えるようにする）
+	constexpr float kIdleDrawCancelRate		= 0.6f;		// 抜刀のこの割合まで進んだら、移動で走り出せる
 	constexpr float kDashBlendFrame			= 6.0f;		// ダッシュの各アニメーションへのブレンドフレーム数
 	const std::string kJumpStartAnimName	= "Combat_JumpStart";
 	const std::string kJumpLoopAnimName		= "Combat_JumpLoop";
@@ -347,6 +350,12 @@ void PlayerStateRun::ChangeState(Player* player)
 	player->ChangeAnimation(kRunAnimName, true, false, kRunBlendFrame);
 	player->SetAnimationSpeed(1.0f);
 
+	// 急ブレーキの途中で走り出した時は、剣を納めたまま全力疾走から始める
+	if (m_startInDash && player->HasAnimation(kDashAnimName))
+	{
+		ChangeDashPhase(player, DashPhase::Dash);
+	}
+
 	// 走りのアニメーションの動きで前へ進む（足の動きと移動の速さが一致するので、足が地面を滑らない）
 	UseRootMotion(player);
 }
@@ -359,7 +368,6 @@ void PlayerStateRun::ChangeDashPhase(Player* player, DashPhase phase)
 	case DashPhase::None:		player->ChangeAnimation(kRunAnimName, true, false, kDashBlendFrame);			break;
 	case DashPhase::Sheathe:	player->ChangeAnimation(kRunSheatheAnimName, false, true, kDashBlendFrame);	break;
 	case DashPhase::Dash:		player->ChangeAnimation(kDashAnimName, true, false, kDashBlendFrame);			break;
-	case DashPhase::Draw:		player->ChangeAnimation(kRunDrawAnimName, false, true, kDashBlendFrame);		break;
 	}
 }
 
@@ -368,26 +376,22 @@ void PlayerStateRun::Update(Player* player)
 	if (TryCommonTransition(player)) return;
 
 	// ダッシュのアニメーションの切り替え（アニメーションが無い時は、普段の走りのままダッシュする）
-	bool isDash = player->IsShiftDown();
+	// 一度ダッシュを始めたら、Shift を離しても移動キーを離すまで全力で走り続ける
 	if (player->HasAnimation(kDashAnimName))
 	{
 		switch (m_dashPhase)
 		{
 		case DashPhase::None:
-			if (isDash) ChangeDashPhase(player, player->HasAnimation(kRunSheatheAnimName) ? DashPhase::Sheathe : DashPhase::Dash);
+			if (player->IsShiftDown()) ChangeDashPhase(player, player->HasAnimation(kRunSheatheAnimName) ? DashPhase::Sheathe : DashPhase::Dash);
 			break;
 		case DashPhase::Sheathe:
-			if (!isDash)					ChangeDashPhase(player, DashPhase::Draw);	// 納めている途中で離したら、抜き直す
-			else if (player->IsAnimEnd())	ChangeDashPhase(player, DashPhase::Dash);
+			if (player->IsAnimEnd()) ChangeDashPhase(player, DashPhase::Dash);
 			break;
 		case DashPhase::Dash:
-			if (!isDash) ChangeDashPhase(player, player->HasAnimation(kRunDrawAnimName) ? DashPhase::Draw : DashPhase::None);
-			break;
-		case DashPhase::Draw:
-			if (player->IsAnimEnd()) ChangeDashPhase(player, DashPhase::None);
 			break;
 		}
 	}
+	bool isDash = (m_dashPhase != DashPhase::None) || player->IsShiftDown();
 
 	// アニメーションに前へ進む動きがあれば、その動きで移動する
 	// （その場で足踏みするだけのアニメーションなら、プログラムで移動する）
@@ -413,7 +417,81 @@ void PlayerStateRun::Update(Player* player)
 	// アニメーションの動きで進む時は、入力方向へ向きを変えるだけ
 	if (!player->MoveProcess(!isAnimMotion))
 	{
-		player->ChangeState(std::make_shared<PlayerStateIdle>());
+		// 剣を納めて走っている時は、急ブレーキ → 抜刀 してから止まる
+		bool isSheathed = (m_dashPhase != DashPhase::None);
+		if (isSheathed && player->HasAnimation(kDashBrakeAnimName))
+		{
+			player->ChangeState(std::make_shared<PlayerStateDashStop>());
+		}
+		else
+		{
+			player->ChangeState(std::make_shared<PlayerStateIdle>());
+		}
+	}
+}
+
+void PlayerStateDashStop::ChangeState(Player* player)
+{
+	// 急ブレーキの滑る動きは、アニメーションの動きどおりに動かす
+	UseRootMotion(player);
+	ChangePhase(player, Phase::Brake);
+}
+
+void PlayerStateDashStop::ChangePhase(Player* player, Phase phase)
+{
+	m_phase = phase;
+	switch (phase)
+	{
+	case Phase::Brake:
+		player->ChangeAnimation(kDashBrakeAnimName, false, true, kDashBlendFrame);
+		player->SetAnimationSpeed(1.0f);
+		player->SetRootMotionScale(1.0f);
+		break;
+	case Phase::Draw:
+		player->ChangeAnimation(kIdleDrawAnimName, false, true, kDashBlendFrame);
+		player->SetAnimationSpeed(kIdleDrawAnimSpeed);
+		break;
+	}
+}
+
+void PlayerStateDashStop::Update(Player* player)
+{
+	// 回避・ジャンプ・攻撃はいつでもできる（攻撃は剣を抜きながら出す）
+	if (TryCommonTransition(player)) return;
+
+	switch (m_phase)
+	{
+	case Phase::Brake:
+		// ブレーキの途中でまた走り出したら、剣を納めたまま全力疾走に戻る
+		if (player->CheckMoveInput())
+		{
+			player->ChangeState(std::make_shared<PlayerStateRun>(true));
+			return;
+		}
+		if (player->IsAnimEnd())
+		{
+			// 抜刀のアニメーションが無い時は、そのまま待機へ
+			if (player->HasAnimation(kIdleDrawAnimName))	ChangePhase(player, Phase::Draw);
+			else											player->ChangeState(std::make_shared<PlayerStateIdle>());
+		}
+		break;
+
+	case Phase::Draw:
+	{
+		// 抜刀がある程度進んだら、移動で普段の走りに移れる
+		float animLength = player->GetAnimLength();
+		bool canMove = (animLength > 0.0f) && (player->GetAnimTime() >= animLength * kIdleDrawCancelRate);
+		if (canMove && player->CheckMoveInput())
+		{
+			player->ChangeState(std::make_shared<PlayerStateRun>());
+			return;
+		}
+		if (player->IsAnimEnd())
+		{
+			player->ChangeState(std::make_shared<PlayerStateIdle>());
+		}
+		break;
+	}
 	}
 }
 

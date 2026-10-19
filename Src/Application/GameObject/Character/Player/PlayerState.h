@@ -44,22 +44,44 @@ public:
 class PlayerStateRun : public PlayerState
 {
 public:
+	// isDash：最初から全力疾走で走る（急ブレーキの途中で、また走り出した時）
+	explicit PlayerStateRun(bool isDash = false) : m_startInDash(isDash) {}
+
 	void ChangeState(Player* player) override;
 	void Update(Player* player) override;
 
 private:
-	// ダッシュ（Shift を押しながら走る）の流れ
-	// 普段の走り → 走りながら納刀 → 剣を納めて全力で走る → （Shift を離したら）走りながら抜刀 → 普段の走り
+	// ダッシュの流れ
+	// Shift を押して走る → 走りながら納刀 → 剣を納めて全力で走る
+	// （Shift を離しても、移動キーを離すまで全力で走り続ける。止まったら PlayerStateDashStop へ）
 	enum class DashPhase
 	{
 		None,		// 普段の走り（剣を抜いている）
 		Sheathe,	// 走りながら納刀
 		Dash,		// 剣を納めて全力で走る
-		Draw,		// 走りながら抜刀
 	};
 	void ChangeDashPhase(Player* player, DashPhase phase);
 
-	DashPhase m_dashPhase = DashPhase::None;
+	bool		m_startInDash = false;
+	DashPhase	m_dashPhase = DashPhase::None;
+};
+
+// ダッシュから止まる：急ブレーキ（Brake）→ 立ったまま抜刀（Draw）→ 待機
+class PlayerStateDashStop : public PlayerState
+{
+public:
+	void ChangeState(Player* player) override;
+	void Update(Player* player) override;
+
+private:
+	enum class Phase
+	{
+		Brake,
+		Draw,
+	};
+	void ChangePhase(Player* player, Phase phase);
+
+	Phase m_phase = Phase::Brake;
 };
 
 // ガード（止まっている時に Shift を押している間。受けるダメージが減り、のけぞらない）
