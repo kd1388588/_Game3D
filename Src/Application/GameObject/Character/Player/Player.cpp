@@ -1186,17 +1186,35 @@ void Player::PushOutFromEnemies()
 
 		Math::Vector3 cur = m_pos;
 		cur.y = 0.0f;
+		Math::Vector3 toCur = cur - center;
+		Math::Vector3 toPrev = prev - center;
 
-		// 前の位置 → 今の位置 の線の上で、敵の中心に一番近い点
-		Math::Vector3 move = cur - prev;
-		float moveLenSq = move.LengthSquared();
-		float t = (moveLenSq > 0.0001f) ? std::clamp((center - prev).Dot(move) / moveLenSq, 0.0f, 1.0f) : 1.0f;
-		Math::Vector3 closest = prev + move * t;
-		if ((closest - center).LengthSquared() >= radius * radius) continue;
+		Math::Vector3 dir;
+		if (toCur.LengthSquared() < radius * radius)
+		{
+			// ① 今、敵の体の中にいる：今の位置から一番近い体の外へ押し出す
+			//    （横や後ろへ離れる動きはそのまま残るので、離れようとすれば離れられる）
+			//    ただし、敵の中心を越えて反対側へ行った時は、前にいた側へ戻す（回り込み防止）
+			dir = toCur;
+			if (toPrev.LengthSquared() > 0.0001f && toPrev.Dot(toCur) < 0.0f) dir = toPrev;
+		}
+		else
+		{
+			// ② 今は体の外：1フレームで体を飛び越えて、反対側に出ていないかだけ調べる
+			//    （前の位置が体の外で、今の位置との間の線が体の中を通り、前と今が敵の反対側にある時）
+			if (toPrev.LengthSquared() < radius * radius) continue;
+			if (toPrev.Dot(toCur) >= 0.0f) continue;
 
-		// 敵の体に入った・通り抜けた：前のフレームにいた側（敵の手前）へ押し戻す
-		Math::Vector3 dir = prev - center;
-		if (dir.LengthSquared() < 0.0001f) dir = cur - center;
+			Math::Vector3 move = cur - prev;
+			float moveLenSq = move.LengthSquared();
+			if (moveLenSq < 0.0001f) continue;
+			float t = std::clamp((center - prev).Dot(move) / moveLenSq, 0.0f, 1.0f);
+			Math::Vector3 closest = prev + move * t;
+			if ((closest - center).LengthSquared() >= radius * radius) continue;
+
+			dir = toPrev;
+		}
+
 		if (dir.LengthSquared() < 0.0001f) dir = Math::Vector3(0.0f, 0.0f, -1.0f);
 		dir.Normalize();
 
