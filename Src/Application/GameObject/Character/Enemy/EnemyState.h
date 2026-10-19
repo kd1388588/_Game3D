@@ -21,8 +21,14 @@ protected:
 class EnemyStateIdle : public EnemyState
 {
 public:
+	// waitFrame：このフレーム数の間は、プレイヤーが近くにいても動き出さない（攻撃の後のすき）
+	explicit EnemyStateIdle(int waitFrame = 0) : m_waitFrame(waitFrame) {}
+
 	void ChangeState(Enemy* enemy) override;
 	void Update(Enemy* enemy) override;
+
+private:
+	int m_waitFrame = 0;
 };
 
 class EnemyStateChase : public EnemyState

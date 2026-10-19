@@ -23,6 +23,13 @@ namespace
 
 	// 攻撃
 	constexpr float kAttackTurnEndFrame		= 12.0f;	// 攻撃のこのフレームまでは、プレイヤーの方へ向きを変える
+
+	// 攻撃の後のすき（この間は次の攻撃をしてこない。プレイヤーが反撃できる時間）
+	constexpr int	kAttackRecoverFrame		= 55;		// ザコ（約0.9秒）
+	constexpr int	kBossAttackRecoverFrame	= 40;		// ボス（約0.7秒）
+	constexpr int	kAttackRecoverRandom	= 20;		// ばらつき（全員が同じリズムで攻撃してこないように）
+	constexpr int	kJumpAttackRecoverFrame	= 50;		// 飛びかかり攻撃の後
+	constexpr float	kRecoverTurnSpeed		= 0.05f;	// すきの間に、プレイヤーの方へ向きを変える速さ
 	constexpr int	kMaxLeapFrame			= 180;		// 空中にいる時間の上限（地面が無い所へ飛んだ時のため）
 	constexpr int	kMaxLandingPredictFrame	= 120;		// 着地予測を行う最大フレーム数
 	constexpr float kJumpAttackBlendFrame	= 5.0f;
@@ -65,6 +72,14 @@ void EnemyStateIdle::ChangeState(Enemy* enemy)
 
 void EnemyStateIdle::Update(Enemy* enemy)
 {
+	// 攻撃の後のすき：プレイヤーの方をゆっくり向くだけで、動き出さない
+	if (m_waitFrame > 0)
+	{
+		m_waitFrame--;
+		enemy->TurnToPlayerSmooth(kRecoverTurnSpeed);
+		return;
+	}
+
 	Math::Vector3 vecToTarget;
 	if (!GetFlatVecToTarget(enemy, vecToTarget)) return;
 
@@ -158,7 +173,10 @@ void EnemyStateAttack::Update(Enemy* enemy)
 
 	if (enemy->IsAnimEnd())
 	{
-		enemy->ChangeState(std::make_shared<EnemyStateIdle>());
+		// 攻撃が終わったら、少しの間すきを作る（連続で殴ってこないように）
+		int recover = enemy->IsBoss() ? kBossAttackRecoverFrame : kAttackRecoverFrame;
+		recover += KdRandom::GetInt(0, kAttackRecoverRandom);
+		enemy->ChangeState(std::make_shared<EnemyStateIdle>(recover));
 	}
 }
 
@@ -267,7 +285,7 @@ void EnemyStateJumpAttack::Update(Enemy* enemy)
 		if (enemy->IsAnimEnd())
 		{
 			if (!m_isSmashDone) enemy->GroundSmash();
-			enemy->ChangeState(std::make_shared<EnemyStateIdle>());
+			enemy->ChangeState(std::make_shared<EnemyStateIdle>(kJumpAttackRecoverFrame));
 		}
 		break;
 	}
