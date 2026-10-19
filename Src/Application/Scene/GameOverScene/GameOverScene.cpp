@@ -1,4 +1,5 @@
 ﻿#include "GameOverScene.h"
+#include "../../Utility/SoundPlayer.h"
 #include "../SceneManager.h"
 
 #include "../../GameObject/UI/Text/UIText.h"
@@ -49,6 +50,7 @@ void GameOverScene::Event()
 	{
 		m_select = static_cast<Menu>(select);
 		UpdateMenuColor();
+		SoundPlayer::PlaySE(SoundName::MenuSelect);
 	}
 
 	if (isDecide)
@@ -59,6 +61,9 @@ void GameOverScene::Event()
 
 void GameOverScene::Init()
 {
+	// BGM
+	SoundPlayer::PlayBGM(SoundName::BgmGameOver, false);
+
 	// 背景（一番最初に追加して、一番奥に描く）
 	std::shared_ptr<UIBackground> background = std::make_shared<UIBackground>();
 	background->Load("Asset/Textures/UI/Result/GameOver.png");
@@ -113,6 +118,8 @@ void GameOverScene::UpdateMenuColor()
 
 void GameOverScene::Decide()
 {
+	SoundPlayer::PlaySE(SoundName::MenuDecide);
+
 	switch (m_select)
 	{
 	case Menu::Retry:

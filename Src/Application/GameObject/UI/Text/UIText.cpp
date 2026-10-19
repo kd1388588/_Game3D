@@ -28,9 +28,9 @@ namespace
 	// Y224 のフォントファイル（見出し・英語だけの文字に使う）
 	const std::string	kY224FontPath		= "Asset/Font/Y224.ttf";
 
-	// タイトルロゴ用：英数字だけのオリジナルフォント（Tools/MakeFont.py で作成。石に彫ったような角ばった文字）
-	const std::string	kTitleFontPath		= "Asset/Font/BraverStone.ttf";
-	const std::string	kTitleFontName		= "Braver Stone";	// ファイル名ではなく、フォントの中に書かれている名前
+	// タイトルロゴ用：Y224（見出しと同じフォント）
+	// ※Tools/MakeFont.py で作ったオリジナルフォント（Asset/Font/BraverStone.ttf）に戻す時は、ここを変える
+	const std::string	kTitleFontName		= "Y224";
 
 	constexpr int		kBlinkCycle = 60;	// 点滅の周期（フレーム）
 }
@@ -42,7 +42,7 @@ void UIText::RegisterFonts()
 
 	// フォントファイルを読み込んでから登録する
 	// （ファイルが無い場合はWindowsが似たフォントで代用する）
-	for (const std::string* pPath : { &kFontPath, &kY224FontPath, &kTitleFontPath })
+	for (const std::string* pPath : { &kFontPath, &kY224FontPath })
 	{
 		if (std::filesystem::exists(*pPath))
 		{
@@ -65,7 +65,7 @@ void UIText::RegisterFonts()
 	KdFontManager::Instance().AddFont(kFontNoLabelSmall, kLabelFontName, kFontHeightSmall, DEFAULT_CHARSET, DEFAULT_PITCH | FF_DONTCARE);
 	KdFontManager::Instance().AddFont(kFontNoLabelMedium, kLabelFontName, kFontHeightMedium, DEFAULT_CHARSET, DEFAULT_PITCH | FF_DONTCARE);
 
-	// タイトルロゴはオリジナルフォント（こちらも英数字だけなので、文字セットは指定しない）
+	// タイトルロゴも Y224
 	KdFontManager::Instance().AddFont(kFontNoTitle, kTitleFontName, kFontHeightTitle, DEFAULT_CHARSET, DEFAULT_PITCH | FF_DONTCARE);
 	isRegistered = true;
 }

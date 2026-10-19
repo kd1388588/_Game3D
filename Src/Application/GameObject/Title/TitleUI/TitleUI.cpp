@@ -1,4 +1,5 @@
 ﻿#include "TitleUI.h"
+#include "../../../Utility/SoundPlayer.h"
 #include "../../../Utility/SpriteUtil.h"
 #include "../../../main.h"
 
@@ -252,6 +253,7 @@ int TitleUI::GetHoveredMenuIndex(const Math::Vector2& mousePos) const
 void TitleUI::UpdateSelect()
 {
 	int itemNum = static_cast<int>(MenuItem::Num);
+	int prevSelect = m_selectIndex;
 
 	if (m_input.up)		{ m_selectIndex = (m_selectIndex + itemNum - 1) % itemNum; }
 	if (m_input.down)	{ m_selectIndex = (m_selectIndex + 1) % itemNum; }
@@ -267,6 +269,9 @@ void TitleUI::UpdateSelect()
 		if (isMouseMoved && hovered >= 0) m_selectIndex = hovered;
 		m_prevMousePos = mousePos;
 	}
+
+	// 選ぶ項目が変わったら音を鳴らす
+	if (m_selectIndex != prevSelect) SoundPlayer::PlaySE(SoundName::MenuSelect);
 
 	// クリックは、項目の上でクリックした時だけ決定する
 	if (m_input.click && hovered >= 0)
@@ -300,6 +305,8 @@ void TitleUI::UpdateDecided()
 
 void TitleUI::Decide(MenuItem item)
 {
+	SoundPlayer::PlaySE(SoundName::MenuDecide);
+
 	if (item == MenuItem::Controls)
 	{
 		ChangeState(State::Controls);

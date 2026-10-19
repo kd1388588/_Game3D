@@ -26,6 +26,7 @@
 // Utility
 #include "../../../Utility/HitStop.h"
 #include "../../../Utility/GameTime.h"
+#include "../../../Utility/SoundPlayer.h"
 
 // Scene
 #include "../../../Scene/SceneManager.h"
@@ -970,6 +971,7 @@ bool Player::UpdateCommandMenu()
 		if (toggle && !IsDead() && !m_isAbilityAttack)
 		{
 			OpenCommandMenu();
+			SoundPlayer::PlaySE(SoundName::MenuOpen);
 		}
 		return m_isCommandOpen;
 	}
@@ -985,6 +987,7 @@ bool Player::UpdateCommandMenu()
 	constexpr int itemNum = static_cast<int>(AbilitySlot::Num);
 	if (up || upArrow)		m_commandCursor = (m_commandCursor + itemNum - 1) % itemNum;
 	if (down || downArrow)	m_commandCursor = (m_commandCursor + 1) % itemNum;
+	if (up || upArrow || down || downArrow) SoundPlayer::PlaySE(SoundName::MenuSelect);
 
 	// メニューを開いている時に 1・2キーを押したら、その技をすぐ決定
 	for (int i = 0; i < itemNum; ++i)
@@ -1491,6 +1494,7 @@ void Player::UpdateModeSwitch()
 
 	// 切り替えた合図のエフェクト（足元）
 	EffectPlayer::Play(EffectName::ModeChange, m_pos, 1.0f);
+	SoundPlayer::PlaySE(SoundName::ModeChange);
 
 	KdDebugGUI::Instance().AddLog
 	(
@@ -1537,6 +1541,7 @@ int Player::TryStartAbility(AbilitySlot slot)
 	}
 
 	EffectPlayer::Play(EffectName::AbilityStart, m_pos, 1.0f);
+	SoundPlayer::PlaySE(SoundName::Ability);
 	KdDebugGUI::Instance().AddLog("[System] アビリティ発動: %s\n", info.name);
 	return info.attackType;
 }
@@ -1894,6 +1899,7 @@ bool Player::AttackOBB(const Math::Matrix& swordMatrix, bool isCritical, const s
 		// （敵は当たると少しの間無敵になるので、同じ敵に毎フレーム出続けることはない）
 		Math::Vector3 hitPos = retList.empty() ? obbMatrix.Translation() : retList.back().m_hitPos;
 		PlayHitEffect(hitEffectName, hitPos, isCritical);
+		SoundPlayer::PlaySE(isCritical ? SoundName::Critical : SoundName::Hit);
 	}
 
 	// ヒットストップ（プレイヤーのすべての攻撃に、同じルールでかける）
@@ -1967,6 +1973,7 @@ void Player::OnDamage(int damage, bool isCritical)
 		m_hp -= std::max(static_cast<int>(std::round(damage * kGuardDamageRate)), 1);
 		m_invincibleTimer = kDamageInvincibleFrame;
 		EffectPlayer::Play(EffectName::Guard, m_pos + Math::Vector3(0.0f, 1.0f, 0.0f), 1.0f);
+		SoundPlayer::PlaySE(SoundName::Guard);
 
 		// ガードの耐久値を減らす（受けすぎると崩される）
 		float cost = damage * kGuardCostPerDamage * (isCritical ? kGuardCriticalCostRate : 1.0f);
@@ -1983,6 +1990,7 @@ void Player::OnDamage(int damage, bool isCritical)
 			m_guardBreakTimer = kGuardBreakFrame;
 			HitStop::Request(kGuardBreakHitStopFrame, kGuardBreakShakePower);
 			EffectPlayer::Play(EffectName::GuardBreak, m_pos + Math::Vector3(0.0f, 1.0f, 0.0f), 1.0f);
+			SoundPlayer::PlaySE(SoundName::GuardBreak);
 			KdDebugGUI::Instance().AddLog("[System] ガードを崩された！\n");
 			ChangeState(std::make_shared<PlayerStateGuardBreak>());
 		}
@@ -1998,6 +2006,7 @@ void Player::OnDamage(int damage, bool isCritical)
 	m_hp -= damage;
 	m_invincibleTimer = kDamageInvincibleFrame;
 	HitStop::Request(kDamageHitStopFrame, kDamageShakePower);
+	SoundPlayer::PlaySE(SoundName::PlayerDamage);
 
 	if (m_hp <= 0)
 	{

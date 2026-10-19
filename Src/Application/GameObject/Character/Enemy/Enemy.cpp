@@ -1,4 +1,5 @@
 ﻿#include "Enemy.h"
+#include "../../../Utility/SoundPlayer.h"
 #include "../../../Utility/HitStop.h"
 #include "../../../Utility/GameTime.h"
 #include "../Player/Player.h"
@@ -384,6 +385,7 @@ void Enemy::GroundSmash()
 	// 地面が揺れる感じを出す（当たらなくても）
 	HitStop::Request(kSmashHitStopFrame, kSmashShakePower);
 	EffectPlayer::Play(EffectName::BossGroundSmash, m_pos, kSmashEffectScaleRate * m_scale);
+	SoundPlayer::PlaySE(SoundName::BossSmash);
 
 	if (m_pDebugWire)
 	{

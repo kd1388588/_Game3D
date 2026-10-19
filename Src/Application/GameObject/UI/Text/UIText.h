@@ -11,7 +11,7 @@ public:
 		Small,
 		Medium,
 		Large,
-		Title,		// タイトルロゴ用（特大。オリジナルフォント「Braver Stone」）
+		Title,		// タイトルロゴ用（特大）
 
 		// 英数字だけの文字に使う（Y224。日本語は表示できない）
 		LabelSmall,

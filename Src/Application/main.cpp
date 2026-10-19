@@ -52,6 +52,9 @@ void Application::KdPostUpdate()
 {
 	// 3DSoundListnerの行列を更新
 	KdAudioManager::Instance().SetListnerMatrix(KdShaderManager::Instance().GetCameraCB().mView.Invert());
+
+	// 鳴り終わった音を片付ける（呼ばないと、鳴らした音がたまっていく）
+	KdAudioManager::Instance().Update();
 }
 
 // ///// ///// ///// ///// ///// ///// ///// ///// ///// ///// ///// ///// ///// ///// /////

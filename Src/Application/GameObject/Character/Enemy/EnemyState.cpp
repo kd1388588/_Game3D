@@ -1,4 +1,5 @@
 ﻿#include "EnemyState.h"
+#include "../../../Utility/SoundPlayer.h"
 #include "Enemy.h"
 #include "../Player/Player.h"
 #include "../../../Scene/SceneManager.h"
@@ -319,6 +320,7 @@ void EnemyStateDead::ChangeState(Enemy* enemy)
 		* camRot
 		* Math::Matrix::CreateTranslation(effectPos);
 	EffectPlayer::Play(EffectName::EnemyDeath, effectMat);
+	SoundPlayer::PlaySE(SoundName::EnemyDeath);
 }
 
 void EnemyStateDead::Update(Enemy* enemy)

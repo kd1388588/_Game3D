@@ -345,6 +345,9 @@
     <ClInclude Include="Src\Application\Utility\HitStop.h">
       <Filter>Src\Application\Utility</Filter>
     </ClInclude>
+    <ClInclude Include="Src\Application\Utility\SoundPlayer.h">
+      <Filter>Src\Application\Utility</Filter>
+    </ClInclude>
     <ClInclude Include="Src\Application\Utility\GameTime.h">
       <Filter>Src\Application\Utility</Filter>
     </ClInclude>
@@ -594,6 +597,9 @@
       <Filter>Src\Application\Scene\TitleScene</Filter>
     </ClCompile>
     <ClCompile Include="Src\Application\Utility\SpriteUtil.cpp">
+      <Filter>Src\Application\Utility</Filter>
+    </ClCompile>
+    <ClCompile Include="Src\Application\Utility\SoundPlayer.cpp">
       <Filter>Src\Application\Utility</Filter>
     </ClCompile>
     <ClCompile Include="Src\Application\GameObject\Title\TitleChara\TitleChara.cpp">
