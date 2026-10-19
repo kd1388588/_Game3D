@@ -1,4 +1,5 @@
 ﻿#include "TitleScene.h"
+#include "../../GameObject/Effect/EffectPlayer.h"
 #include "../SceneManager.h"
 #include "../../main.h"
 
@@ -39,6 +40,9 @@ void TitleScene::Event()
 
 void TitleScene::Init()
 {
+	// タイトル画面では、エフェクシアのエフェクトを出さない（ゲーム画面に入ったら出す）
+	EffectPlayer::SetEnabled(false);
+
 	// 背景（ゲーム画面と同じステージ）
 	CreateObject<Ground>();
 	CreateObject<Sky>();

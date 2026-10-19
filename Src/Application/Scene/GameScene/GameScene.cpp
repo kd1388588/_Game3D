@@ -1,4 +1,5 @@
 ﻿#include "GameScene.h"
+#include "../../GameObject/Effect/EffectPlayer.h"
 #include "../SceneManager.h"
 
 // Camera関連
@@ -85,6 +86,9 @@ int GameScene::GetAliveEnemyCount() const
 
 void GameScene::Init()
 {
+	// エフェクトを出す（タイトル画面では止めているので、ここで戻す）
+	EffectPlayer::SetEnabled(true);
+
 	// ステージ
 	CreateObject<Ground>();
 	CreateObject<Sky>();
