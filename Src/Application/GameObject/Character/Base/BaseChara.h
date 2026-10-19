@@ -138,6 +138,10 @@ protected:
 
 	float							m_fallGravityRate = 1.0f;		// 落下中の重力の倍率
 
+	// 壁のすり抜け防止（前のフレームで押し出し済みの位置）
+	Math::Vector3					m_lastBumpPos = Math::Vector3::Zero;
+	bool							m_hasLastBumpPos = false;
+
 	std::unordered_map<std::string, std::shared_ptr<KdAnimationData>> m_animMap;
 	std::string						m_currentAnimName = "";
 	std::shared_ptr<KdAnimationData> m_currentAnim = nullptr;		// 再生中のアニメーション

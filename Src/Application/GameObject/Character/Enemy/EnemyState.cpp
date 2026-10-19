@@ -124,6 +124,10 @@ void EnemyStateAttack::ChangeState(Enemy* enemy)
 	enemy->SetAnimationSpeed(1.0f);
 	enemy->SetUseRootMotion(false);
 	enemy->TurnToPlayer();
+
+	// 攻撃のアニメーション中は、殴られてもひるまない（ダメージだけ受ける）
+	// 攻撃していない時（待機・追いかけ中など）は、殴られるとひるむ
+	enemy->SetSuperArmor(true);
 }
 
 void EnemyStateAttack::Update(Enemy* enemy)

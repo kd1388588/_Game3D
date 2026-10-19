@@ -23,8 +23,8 @@ void TPSCamera::Init()
 	// 親クラスの初期化呼び出し
 	CameraBase::Init();
 
-	// 注視点
-	m_mLocalPos = Math::Matrix::CreateTranslation(0, 1.0f, -4.0f);
+	// 注視点からのカメラの位置（少し引いて、周りの敵が見やすいようにする）
+	m_mLocalPos = Math::Matrix::CreateTranslation(0, 1.3f, -5.5f);
 
 	//SetCursorPos(m_FixMousePos.x, m_FixMousePos.y);
 }

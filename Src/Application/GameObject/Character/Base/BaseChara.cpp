@@ -25,9 +25,14 @@ namespace
 	constexpr float kSameScaleTolerance		= 0.01f;	// 体格比がこの範囲なら同じ骨格とみなす
 
 	// 押し出し判定
-	constexpr float kBumpCenterHeight		= 0.7f;
-	constexpr float kBumpRadius				= 0.3f;
+	// 体の高さの違う所に球を置いて調べる（腰だけだと、頭の高さの壁にめり込むため）
+	// ※一番下の球は足元から 0.4 より上だけを調べる（階段の段差で止まらないように）
+	constexpr float kBumpHeights[]			= { 0.75f, 1.3f };
+	constexpr float kBumpRadius				= 0.35f;
 	constexpr float kBumpIgnoreHitDirY		= 0.3f;		// これより上向きの衝突は床とみなして押し出さない
+	constexpr int	kBumpIterations			= 3;		// 押し出しを繰り返す回数（角で2つの壁に当たった時も抜けないように）
+	constexpr float kBumpRayHeight			= 0.9f;		// すり抜け防止のレイを飛ばす高さ
+	constexpr float kBumpTeleportDistance	= 5.0f;		// 1フレームでこれ以上動いたら、ワープとみなしてレイで調べない
 }
 
 template<class ShapeInfo>
@@ -444,23 +449,84 @@ int BaseChara::PredictLandingFrames(int maxFrames) const
 
 void BaseChara::BumpHit()
 {
-	Math::Vector3 center = m_pos;
-	center.y += kBumpCenterHeight;
-
-	KdCollider::SphereInfo sphere(KdCollider::TypeBump, center, kBumpRadius);
-
-	for (auto& ret : IntersectsOthers(sphere))
+	// ① すり抜け防止：前のフレームの位置から今の位置へレイを飛ばし、間に壁があれば壁の手前で止める
+	//    （回避やダッシュで1フレームに大きく動くと、球の押し出しだけでは壁の反対側へ抜けてしまうため）
+	if (m_hasLastBumpPos)
 	{
-		// 床のような上向きの衝突は無視
-		if (ret.m_hitDir.y > kBumpIgnoreHitDirY) continue;
+		Math::Vector3 move = m_pos - m_lastBumpPos;
+		move.y = 0.0f;
+		float moveLength = move.Length();
+		if (moveLength > 0.001f && moveLength < kBumpTeleportDistance)
+		{
+			Math::Vector3 dir = move / moveLength;
 
-		// 水平方向にだけ押し出す
-		Math::Vector3 pushDir = ret.m_hitDir;
-		pushDir.y = 0.0f;
-		pushDir.Normalize();
+			KdCollider::RayInfo ray;
+			ray.m_pos = { m_lastBumpPos.x, m_pos.y + kBumpRayHeight, m_lastBumpPos.z };
+			ray.m_dir = dir;
+			ray.m_range = moveLength + kBumpRadius;
+			ray.m_type = KdCollider::TypeBump;
 
-		m_pos += pushDir * ret.m_overlapDistance;
+			// 一番手前の壁
+			float nearest = ray.m_range;
+			for (auto& ret : IntersectsOthers(ray))
+			{
+				Math::Vector3 diff = ret.m_hitPos - ray.m_pos;
+				diff.y = 0.0f;
+				nearest = std::min(nearest, diff.Length());
+			}
+
+			// 壁から体の半径分だけ手前で止める
+			if (nearest < moveLength + kBumpRadius)
+			{
+				float allowed = std::max(nearest - kBumpRadius, 0.0f);
+				m_pos.x = m_lastBumpPos.x + dir.x * allowed;
+				m_pos.z = m_lastBumpPos.z + dir.z * allowed;
+			}
+		}
 	}
+
+	// ② 押し出し：体の高さの違う所に置いた球で、めり込んだ分だけ水平に押し出す
+	for (int i = 0; i < kBumpIterations; ++i)
+	{
+		bool isPushed = false;
+		for (float height : kBumpHeights)
+		{
+			Math::Vector3 center = m_pos;
+			center.y += height;
+
+			KdCollider::SphereInfo sphere(KdCollider::TypeBump, center, kBumpRadius);
+
+			// 一番深くめり込んでいる所だけを押し出す（同じ壁の三角形ごとに何度も押し出さないように）
+			float maxOverlap = 0.0f;
+			Math::Vector3 pushDir = Math::Vector3::Zero;
+			for (auto& ret : IntersectsOthers(sphere))
+			{
+				// 床のような上向きの衝突は無視
+				if (ret.m_hitDir.y > kBumpIgnoreHitDirY) continue;
+
+				Math::Vector3 dir = ret.m_hitDir;
+				dir.y = 0.0f;
+				if (dir.LengthSquared() <= 0.0f) continue;
+
+				if (ret.m_overlapDistance > maxOverlap)
+				{
+					maxOverlap = ret.m_overlapDistance;
+					dir.Normalize();
+					pushDir = dir;
+				}
+			}
+
+			if (maxOverlap > 0.0f)
+			{
+				m_pos += pushDir * maxOverlap;
+				isPushed = true;
+			}
+		}
+		if (!isPushed) break;
+	}
+
+	m_lastBumpPos = m_pos;
+	m_hasLastBumpPos = true;
 }
 
 void BaseChara::Release()
