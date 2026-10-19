@@ -1,6 +1,7 @@
 ﻿#include "TitleChara.h"
 
 #include "../../Effect/EffectPlayer.h"
+#include "../../../../Framework/Direct3D/Polygon/KdTrailPolygon.h"
 
 namespace
 {
@@ -23,6 +24,15 @@ namespace
 	constexpr float	kSlashEffectForward		= 1.0f;		// 前方へずらす距離
 	constexpr float	kSlashEffectHeight		= 1.0f;		// 足元からの高さ
 	constexpr float	kSlashEffectScale		= 1.0f;		// 大きさ
+
+	// 剣の軌跡（ゲーム中のプレイヤーと同じ見た目）
+	const std::vector<std::string> kBladeMeshNodeNamesR	= { "SM_Blade_R" };
+	const std::vector<std::string> kBladeMeshNodeNamesL	= { "SM_Blade_L" };
+	constexpr float	kBladeBaseOffset		= 0.1f;		// 手から刃の根元（つば）までの距離
+	constexpr UINT	kTrailLength			= 15;		// 軌跡を残すフレーム数
+	constexpr int	kTrailSubdivision		= 6;		// 1フレームの間を何分割して補間するか
+	constexpr float	kTrailStartFrame		= 8.0f;		// 攻撃のこのフレームから軌跡を出す
+	constexpr float	kTrailEndFrame			= 40.0f;	// 攻撃のこのフレームまで軌跡を出す
 
 	// カメラが注目する高さ（足元から）
 	constexpr float	kLookAtHeight			= 1.1f;
@@ -117,6 +127,20 @@ void TitleChara::Init()
 
 	m_pos = Math::Vector3::Zero;
 	UpdateWorldMatrix();
+
+	// 剣の軌跡：モデルの剣のメッシュから刃の形を求める（剣が無いモデルなら出さない）
+	if (m_model->GetData())
+	{
+		m_trailR.shape = Player::CalcBladeShape(*m_model->GetData(), kBladeMeshNodeNamesR);
+		m_trailL.shape = Player::CalcBladeShape(*m_model->GetData(), kBladeMeshNodeNamesL);
+	}
+	m_trailTex = Player::LoadOperatorTrailTexture();
+	for (SwordTrail* pTrail : { &m_trailR, &m_trailL })
+	{
+		pTrail->polygon = std::make_shared<KdTrailPolygon>();
+		pTrail->polygon->SetMaterial(m_trailTex);
+		pTrail->polygon->SetLength(kTrailLength * kTrailSubdivision);
+	}
 }
 
 void TitleChara::Update()
@@ -127,6 +151,91 @@ void TitleChara::Update()
 	BaseChara::Update();
 
 	UpdateWorldMatrix();
+	UpdateSwordTrails();
+}
+
+void TitleChara::UpdateSwordTrails()
+{
+	// 攻撃を振っている間だけ軌跡を足し、それ以外は古い所から消していく
+	bool isAttack = !m_showcase.empty() && m_showcase[m_stepIndex].attackType != 0;
+	float animTime = GetAnimTime();
+	bool isTrailFrame = isAttack && animTime >= kTrailStartFrame && animTime <= kTrailEndFrame;
+
+	for (SwordTrail* pTrail : { &m_trailR, &m_trailL })
+	{
+		if (isTrailFrame)	AddSwordTrailSample(*pTrail);
+		else				ShrinkSwordTrail(*pTrail);
+	}
+}
+
+void TitleChara::AddSwordTrailSample(SwordTrail& trail)
+{
+	if (!trail.polygon || !m_model || trail.shape.nodeIndex < 0) return;
+
+	Math::Matrix swordMat = Player::CalcBladeMatrix(trail.shape, *m_model, m_mWorld);
+	float baseY = std::min(kBladeBaseOffset, trail.shape.tipLength * 0.5f);
+	Math::Vector3 base = Player::GetSwordPoint(swordMat, baseY);
+	Math::Vector3 tip = Player::GetSwordPoint(swordMat, trail.shape.tipLength);
+
+	auto& baseHist = trail.baseHistory;
+	auto& tipHist = trail.tipHistory;
+	if (baseHist.empty())
+	{
+		trail.polygon->AddPoint(Player::CreateTrailMatrix(base, tip));
+	}
+	else
+	{
+		// 前のフレームとの間を曲線（Catmull-Rom）で補間して、なめらかな弧にする（Player と同じ）
+		Math::Vector3 base0 = (baseHist.size() >= 2) ? baseHist[1] : baseHist[0];
+		Math::Vector3 tip0 = (tipHist.size() >= 2) ? tipHist[1] : tipHist[0];
+		Math::Vector3 base1 = baseHist[0];
+		Math::Vector3 tip1 = tipHist[0];
+		Math::Vector3 base3 = base + (base - base1);
+		Math::Vector3 tip3 = tip + (tip - tip1);
+		for (int i = 1; i <= kTrailSubdivision; ++i)
+		{
+			float t = static_cast<float>(i) / kTrailSubdivision;
+			trail.polygon->AddPoint(Player::CreateTrailMatrix(
+				Math::Vector3::CatmullRom(base0, base1, base, base3, t),
+				Math::Vector3::CatmullRom(tip0, tip1, tip, tip3, t)));
+		}
+	}
+
+	baseHist.push_front(base);
+	tipHist.push_front(tip);
+	while (baseHist.size() > 2) baseHist.pop_back();
+	while (tipHist.size() > 2) tipHist.pop_back();
+}
+
+void TitleChara::ShrinkSwordTrail(SwordTrail& trail)
+{
+	// 振り終わったら履歴を消す（次の振りの軌跡とつながらないように）
+	trail.baseHistory.clear();
+	trail.tipHistory.clear();
+
+	for (int i = 0; i < kTrailSubdivision; ++i)
+	{
+		if (!trail.polygon || trail.polygon->GetNumPoints() <= 0) break;
+		trail.polygon->DelPointBack();
+	}
+}
+
+void TitleChara::DrawEffect()
+{
+	// 軌跡は加算合成・深度書き込みなしで描く（Player と同じ）
+	auto& shaderManager = KdShaderManager::Instance();
+	shaderManager.ChangeRasterizerState(KdRasterizerState::CullNone);
+	shaderManager.ChangeBlendState(KdBlendState::Add);
+	shaderManager.ChangeDepthStencilState(KdDepthStencilState::ZWriteDisable);
+
+	for (const SwordTrail* pTrail : { &m_trailR, &m_trailL })
+	{
+		if (pTrail->polygon) shaderManager.m_StandardShader.DrawPolygon(*pTrail->polygon);
+	}
+
+	shaderManager.UndoDepthStencilState();
+	shaderManager.UndoBlendState();
+	shaderManager.UndoRasterizerState();
 }
 
 void TitleChara::StartStep(size_t index)

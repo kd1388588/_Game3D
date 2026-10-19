@@ -316,6 +316,9 @@ private:
 	// 候補の名前を上から順に探し、最初に見つかったノードを返す（無ければ nullptr）
 	const KdModelWork::Node* FindFirstNode(const std::vector<std::string>& nodeNames) const;
 
+public:
+	// ===== 剣の形と軌跡の道具（タイトル画面のキャラクターからも使う） =====
+
 	// モデルに含まれる剣のメッシュから求めた、刃の向きと長さ（メッシュのノードから見た座標）
 	struct BladeShape
 	{
@@ -329,15 +332,8 @@ private:
 	// （候補の名前のメッシュが見つからなければ nodeIndex = -1 のまま返す）
 	static BladeShape CalcBladeShape(const KdModelData& modelData, const std::vector<std::string>& meshNodeNames);
 
-	// 刃の形から剣の行列を作る（原点：手、Y軸：刃先の方向。Y座標がそのまま手からの距離になる）
-	Math::Matrix CalcBladeMatrix(const BladeShape& shape) const;
-
-	// 読み込むアニメーションのリストを作成
-	static std::vector<AnimLoadInfo> CreateAnimList();
-
-	// GUIで調整した回転(度)・座標から、ノードに追従する行列を作成
-	static Math::Matrix CreateAttachMatrix(const Math::Vector3& rotDeg, const Math::Vector3& pos,
-		const Math::Matrix& nodeMat, const Math::Matrix& ownerMat);
+	// 刃の形から剣の行列を作る（モデルの行列・ワールド行列を渡す版。原点：手、Y軸：刃先の方向）
+	static Math::Matrix CalcBladeMatrix(const BladeShape& shape, const KdModelWork& model, const Math::Matrix& mWorld);
 
 	// 剣のローカルY軸（刃の方向）上の点をワールド座標に変換
 	static Math::Vector3 GetSwordPoint(const Math::Matrix& swordMat, float localY);
@@ -351,6 +347,21 @@ private:
 
 	// 軌跡の画像を読み込む（無い時は fallbackColor の色でプログラムから作る）
 	static std::shared_ptr<KdTexture> LoadSwordTrailTexture(const std::string& path, const Math::Vector3& fallbackColor);
+
+	// オペレーター（青）の軌跡の画像（タイトル画面のキャラクター用）
+	static std::shared_ptr<KdTexture> LoadOperatorTrailTexture();
+
+private:
+
+	// 刃の形から剣の行列を作る（原点：手、Y軸：刃先の方向。Y座標がそのまま手からの距離になる）
+	Math::Matrix CalcBladeMatrix(const BladeShape& shape) const;
+
+	// 読み込むアニメーションのリストを作成
+	static std::vector<AnimLoadInfo> CreateAnimList();
+
+	// GUIで調整した回転(度)・座標から、ノードに追従する行列を作成
+	static Math::Matrix CreateAttachMatrix(const Math::Vector3& rotDeg, const Math::Vector3& pos,
+		const Math::Matrix& nodeMat, const Math::Matrix& ownerMat);
 
 	// 軌跡の画像を、今のモードのものに切り替える
 	void ApplySwordTrailTexture();
