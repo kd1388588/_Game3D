@@ -85,10 +85,10 @@ void GameScene::Init()
 	// ステージ
 	CreateObject<Ground>();
 	CreateObject<Sky>();
-	CreateObject<CathedralRuins>();
-	// 廃墟の参道は、大聖堂の廃墟のモデルと重なってしまうので、今は置かない
-	// （置く時はこの行を戻す。位置は RuinedRoad.cpp の kPosition で調整）
-	//CreateObject<RuinedRoad>();
+	// 廃墟の参道と崩れた大聖堂（Tools/MakeStageModel.py で作ったもの。壁や柱が厚く、すり抜けにくい）
+	// ※前の大聖堂の廃墟（CathedralRuins）と重なるので、そちらは置かない（タイトル画面では使っている）
+	//CreateObject<CathedralRuins>();
+	CreateObject<RuinedRoad>();
 
 	// プレイヤー（Init内でHPゲージを追加するため、先にオーナーをセットする）
 	std::shared_ptr<Player> player = std::make_shared<Player>();

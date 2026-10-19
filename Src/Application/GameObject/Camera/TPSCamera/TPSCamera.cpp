@@ -21,6 +21,7 @@ namespace
 	// めり込み防止
 	constexpr float kCameraWallMargin	= 0.3f;		// 壁からこれだけ手前にカメラを置く
 	constexpr float kCameraMinDistance	= 0.5f;		// キャラにこれ以上は近づけない
+	constexpr float kCameraRayStartHeight = 1.3f;	// レイを飛ばし始める高さ（注視点から。カメラの高さと同じ）
 }
 
 void TPSCamera::Init()
@@ -78,7 +79,8 @@ void TPSCamera::PostUpdate()
 	// （キャラから飛ばして一番手前の壁を使うので、壁が何枚あってもキャラが隠れない）
 	if (_spTarget)
 	{
-		Math::Vector3 start = _targetMat.Translation();
+		// 注視点は足元に近い高さなので、そのままだと地面にすぐ当たってしまう。体の高さから飛ばす
+		Math::Vector3 start = _targetMat.Translation() + Math::Vector3(0.0f, kCameraRayStartHeight, 0.0f);
 		Math::Vector3 toCamera = GetPos() - start;
 		float distance = toCamera.Length();
 		if (distance > 0.001f)
