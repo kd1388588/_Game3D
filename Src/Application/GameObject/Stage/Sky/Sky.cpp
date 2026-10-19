@@ -11,17 +11,18 @@ void Sky::Init()
 
 namespace
 {
-	// 空の球の大きさと中心
-	// ステージ（スタート地点 z=-12 ～ 大聖堂の奥 z=105）が全部中に入るように、ステージの真ん中を中心にして大きくする
-	// （球のモデルの半径は 10 なので、半径は 10 × kScale = 250）
-	constexpr float		kScale		= 25.0f;
-	const Math::Vector3	kCenter		= { 0.0f, -1.0f, 45.0f };
+	// 空の球の大きさ（球のモデルの半径は 10 なので、半径は 10 × kScale = 300）
+	constexpr float		kScale		= 30.0f;
+	constexpr float		kHeight		= -1.0f;	// 球の中心の高さ
 }
 
 void Sky::Update()
 {
+	// 空はカメラに付いていく（どこまで歩いても、空の端が見えないようにする）
+	// 高さは固定にして、地平線の位置が上下に動かないようにする
+	Math::Vector3 camPos = KdShaderManager::Instance().GetCameraCB().CamPos;
 	m_mWorld = Math::Matrix::CreateScale(kScale)
-		* Math::Matrix::CreateTranslation(kCenter);
+		* Math::Matrix::CreateTranslation(camPos.x, kHeight, camPos.z);
 }
 
 void Sky::DrawUnLit()

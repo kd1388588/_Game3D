@@ -18,7 +18,7 @@ namespace
 		int		jumpAttackCT;	// 飛びかかり攻撃を使った後、次に使えるまでのフレーム数
 	};
 
-	constexpr EnemyParam kBossParam		= { 150, 1.75f, 15.0f, 2.5f, 60 * 6 };	// ボス：遠くから気づき、リーチが長い
+	constexpr EnemyParam kBossParam		= { 250, 2.6f,  16.0f, 3.5f, 60 * 6 };	// ボス：ザコの2倍くらい大きく、遠くから気づき、リーチが長い
 	constexpr EnemyParam kNormalParam	= { 50,  1.25f, 8.0f,  1.2f, 60 * 10 };	// ザコ敵（飛びかかり攻撃はたまに）
 
 	// 最初の飛びかかり攻撃までの時間（全員が同時に飛びかかってこないよう、ばらつかせる）

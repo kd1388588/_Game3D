@@ -311,7 +311,14 @@ void EnemyStateDead::ChangeState(Enemy* enemy)
 	// 撃破エフェクト（体の中心あたりに、体の大きさに合わせて出す）
 	float bodyScale = enemy->GetBodyScale();
 	Math::Vector3 effectPos = enemy->GetPos() + Math::Vector3(0.0f, bodyScale, 0.0f);
-	EffectPlayer::Play(EffectName::EnemyDeath, effectPos, bodyScale * kDeathEffectScaleRate);
+	// ビルボード：エフェクトの板がいつもカメラの方を向くように、カメラの向き（ビュー行列の逆）で回す
+	// （そのままだと、横から見た時に板が薄く見えてしまう）
+	Math::Matrix camRot = KdShaderManager::Instance().GetCameraCB().mView.Invert();
+	camRot.Translation(Math::Vector3::Zero);
+	Math::Matrix effectMat = Math::Matrix::CreateScale(bodyScale * kDeathEffectScaleRate)
+		* camRot
+		* Math::Matrix::CreateTranslation(effectPos);
+	EffectPlayer::Play(EffectName::EnemyDeath, effectMat);
 }
 
 void EnemyStateDead::Update(Enemy* enemy)

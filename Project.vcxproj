@@ -301,6 +301,7 @@
     <ClInclude Include="Src\Application\Scene\SceneManager.h" />
     <ClInclude Include="Src\Application\Scene\TitleScene\TitleScene.h" />
     <ClInclude Include="Src\Application\GameObject\UI\Text\UIText.h" />
+    <ClInclude Include="Src\Application\GameObject\UI\Background\UIBackground.h" />
     <ClInclude Include="Src\Application\Scene\GameClearScene\GameClearScene.h" />
     <ClInclude Include="Src\Application\Scene\GameOverScene\GameOverScene.h" />
     <ClInclude Include="Src\Application\Utility\InputHelper.h" />
@@ -387,6 +388,7 @@
     <ClCompile Include="Src\Application\Scene\SceneManager.cpp" />
     <ClCompile Include="Src\Application\Scene\TitleScene\TitleScene.cpp" />
     <ClCompile Include="Src\Application\GameObject\UI\Text\UIText.cpp" />
+    <ClCompile Include="Src\Application\GameObject\UI\Background\UIBackground.cpp" />
     <ClCompile Include="Src\Application\Utility\SpriteUtil.cpp" />
     <ClCompile Include="Src\Application\GameObject\Title\TitleChara\TitleChara.cpp" />
     <ClCompile Include="Src\Application\GameObject\Title\TitleCamera\TitleCamera.cpp" />

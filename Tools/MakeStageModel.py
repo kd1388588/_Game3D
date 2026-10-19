@@ -28,21 +28,24 @@ SEED = 1018
 # ===== 道の大きさ（メートル） =====
 ROAD_START_Z = -12.0		# 道の始まり（スタート地点の少し後ろ）
 ROAD_END_Z = 52.0			# 道の終わり（大聖堂の手前）
-ROAD_WIDTH = 12.0			# 石畳の幅
 ROAD_TOP_Y = 0.04			# 石畳の上の面の高さ
-PILLAR_X = 7.5				# 柱が並ぶ位置（道の中心からの距離）
+PILLAR_X = 11.0				# 柱が並ぶ位置（道の中心からの距離）
 PILLAR_STEP = 7.0			# 柱の間隔
-WALL_X = 11.0				# 石壁の位置
+WALL_X = 16.0				# 両わきの石壁の位置（石畳はこの壁まで敷きつめる＝道から落ちない）
+WALL_MIN_HEIGHT = 3.6		# 石壁の一番低い所（ジャンプの高さ 約3.1m より高くして、乗り越えられないようにする）
+ROAD_WIDTH = WALL_X * 2		# 石畳の幅
 GATE_Z = 46.0				# 門の位置
+GATE_HALF_WIDTH = 8.0		# 門の幅の半分
 
 # ===== 大聖堂（ボスの広間） =====
 NAVE_START_Z = 52.0			# 入口の壁の位置
-NAVE_END_Z = 96.0			# 奥の壁の位置（この先に半円の壁）
-NAVE_HALF_WIDTH = 15.0		# 広間の幅の半分
+NAVE_END_Z = 100.0			# 奥の壁の位置（この先に半円の壁）
+NAVE_HALF_WIDTH = 22.0		# 広間の幅の半分（大きなボスと戦えるように広くする）
 NAVE_WALL_THICK = 1.6		# 壁の厚さ
 NAVE_BAY = 6.0				# 柱と柱の間隔（窓1つ分）
-NAVE_PILLAR_X = 11.5		# 中の柱の位置（ボスの出てくる x=7.5 にかからないように）
-ENTRANCE_HALF_WIDTH = 5.0	# 入口の幅の半分
+NAVE_PILLAR_X = 16.0		# 中の柱の位置（真ん中で待つボスにかからないように）
+NAVE_WINDOW_BOTTOM = 4.0	# 窓の穴の下の高さ（ジャンプで窓に乗れないように高くする）
+ENTRANCE_HALF_WIDTH = 9.0	# 入口の幅の半分
 
 # ===== テクスチャ =====
 TEX_SIZE = 512
@@ -170,11 +173,6 @@ def build_road(mesh, rng):
 	while z < ROAD_END_Z - 1e-6:
 		x = -half
 		while x < half - 1e-6:
-			# 端のほうは欠けている（石が抜けている）
-			edge = abs(x + step / 2) / half
-			if edge > 0.75 and rng.random() < 0.35:
-				x += step
-				continue
 			sink = rng.uniform(-0.02, 0.0)
 			shade = rng.uniform(0.82, 1.0)
 			top = ROAD_TOP_Y + sink
@@ -216,27 +214,33 @@ def build_pillars(mesh, rng):
 
 
 def build_walls(mesh, rng):
-	"""柱の外側の、崩れた低い石壁（ところどころ途切れている）"""
+	"""道の両わきと後ろの石壁（すき間なく囲んで、道から落ちないようにする。上は崩れてギザギザ）"""
 	seg = 1.6
+	thick = 1.4
 	for side in (-1, 1):
-		z = ROAD_START_Z
-		while z < NAVE_START_Z - 1.0:
-			if rng.random() < 0.18:
-				z += seg * rng.randint(1, 3)	# 壁が崩れて無くなっている所
-				continue
-			h = rng.uniform(0.8, 2.6)
-			offsets = [rng.uniform(-0.5, 0.15) for _ in range(4)]
-			mesh.add_box((side * (WALL_X + rng.uniform(-0.15, 0.15)), h / 2, z + seg / 2), (0.9, h, seg),
-				STONE_TILE_METER, rot_y=rng.uniform(-0.04, 0.04), shade=rng.uniform(0.7, 0.9), bottom_shade=0.4,
-				top_offsets=offsets)
-			z += seg
+		z = ROAD_START_Z - thick
+		while z < NAVE_START_Z - 0.8:
+			z1 = min(z + seg, NAVE_START_Z - 0.8)
+			h = rng.uniform(WALL_MIN_HEIGHT + 0.4, WALL_MIN_HEIGHT + 1.8)
+			offsets = [rng.uniform(-0.4, 0.1) for _ in range(4)]
+			mesh.add_box((side * (WALL_X + thick / 2), h / 2, (z + z1) / 2), (thick, h, (z1 - z) + 0.05),
+				STONE_TILE_METER, shade=rng.uniform(0.7, 0.9), bottom_shade=0.4, top_offsets=offsets)
+			z = z1
+	# 後ろの壁（スタート地点の後ろ）
+	x = -WALL_X
+	while x < WALL_X - 1e-6:
+		h = rng.uniform(WALL_MIN_HEIGHT + 0.4, WALL_MIN_HEIGHT + 1.8)
+		offsets = [rng.uniform(-0.4, 0.1) for _ in range(4)]
+		mesh.add_box((x + seg / 2, h / 2, ROAD_START_Z - thick / 2), (seg + 0.05, h, thick), STONE_TILE_METER,
+			shade=rng.uniform(0.7, 0.9), bottom_shade=0.4, top_offsets=offsets)
+		x += seg
 
 
 def build_rubble(mesh, rng):
 	"""転がっている瓦礫（道の真ん中には置かない。戦闘のじゃまにならないように）"""
 	for _ in range(70):
 		side = rng.choice((-1, 1))
-		x = side * rng.uniform(ROAD_WIDTH / 2 - 0.5, WALL_X + 2.0)
+		x = side * rng.uniform(PILLAR_X + 1.2, WALL_X - 0.6)
 		z = rng.uniform(ROAD_START_Z, ROAD_END_Z)
 		s = rng.uniform(0.25, 0.9)
 		mesh.add_box((x, s * 0.35, z), (s * rng.uniform(0.8, 1.6), s * 0.7, s * rng.uniform(0.8, 1.4)), STONE_TILE_METER,
@@ -245,7 +249,7 @@ def build_rubble(mesh, rng):
 
 def build_gate(mesh, rng):
 	"""大聖堂の手前の、半分崩れたアーチの門"""
-	gx = ROAD_WIDTH / 2 + 0.6
+	gx = GATE_HALF_WIDTH
 	# 左右の太い柱（右はアーチの途中まで残り、左は途中で崩れている）
 	for side, h in ((-1, 5.5), (1, 9.0)):
 		mesh.add_box((side * gx, 0.5, GATE_Z), (2.6, 1.0, 2.6), STONE_TILE_METER, shade=0.85, bottom_shade=0.4)
@@ -284,7 +288,7 @@ def build_cathedral(road, stone, rng):
 	# 床（石畳）
 	step = 2.0
 	z = NAVE_START_Z
-	while z < NAVE_END_Z + 6.0 - 1e-6:
+	while z < NAVE_END_Z + hw * 0.6 + 1.0 - 1e-6:	# 奥の半円の壁の内側まで床を敷く
 		x = -hw
 		while x < hw - 1e-6:
 			shade = rng.uniform(0.75, 0.95)
@@ -314,14 +318,14 @@ def build_cathedral(road, stone, rng):
 			kind = rng.random()
 			if kind < 0.25:
 				# 崩れて低くなった壁（乗り越えられない高さは残す）
-				wall_piece(x0, x1, z + 0.8, z1 - 0.8, 0.0, rng.uniform(2.0, 3.0), broken=0.8)
+				wall_piece(x0, x1, z + 0.8, z1 - 0.8, 0.0, rng.uniform(WALL_MIN_HEIGHT + 0.6, WALL_MIN_HEIGHT + 1.5), broken=0.5)
 			else:
 				# 下の壁 → 窓の穴 → 上の壁（上は崩れていることがある）
-				wall_piece(x0, x1, z + 0.8, z1 - 0.8, 0.0, 3.0)
+				wall_piece(x0, x1, z + 0.8, z1 - 0.8, 0.0, NAVE_WINDOW_BOTTOM)
 				for zz in (z + 0.8, z1 - 1.6):	# 窓の両わきの細い壁
-					wall_piece(x0, x1, zz, zz + 0.8, 3.0, 7.0)
+					wall_piece(x0, x1, zz, zz + 0.8, NAVE_WINDOW_BOTTOM, 8.0)
 				if kind > 0.5:
-					wall_piece(x0, x1, z + 0.8, z1 - 0.8, 7.0, rng.uniform(8.5, 10.0), broken=1.2)
+					wall_piece(x0, x1, z + 0.8, z1 - 0.8, 8.0, rng.uniform(9.5, 11.0), broken=1.2)
 			z = z1
 
 	side_wall(-hw)

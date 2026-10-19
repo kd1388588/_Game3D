@@ -2,6 +2,7 @@
 #include "../SceneManager.h"
 
 #include "../../GameObject/UI/Text/UIText.h"
+#include "../../GameObject/UI/Background/UIBackground.h"
 
 namespace
 {
@@ -9,6 +10,8 @@ namespace
 	const Math::Color kUnselectColor	= { 0.5f, 0.5f, 0.5f, 1.0f };	// 選択していない項目の色
 	constexpr float kMenuTopY			= -80.0f;	// 一番上の項目の高さ
 	constexpr float kMenuSpaceY			= 70.0f;	// 項目の間隔
+	constexpr float kMenuHitMarginX		= 40.0f;	// マウスの当たり判定を、文字より少し広くする
+	constexpr float kMenuHitMarginY		= 12.0f;
 }
 
 void GameOverScene::Event()
@@ -17,12 +20,29 @@ void GameOverScene::Event()
 	bool isUp = m_upKey.Update() | m_upArrowKey.Update();
 	bool isDown = m_downKey.Update() | m_downArrowKey.Update();
 	bool isDecide = m_decideKey.Update();
+	bool isClick = m_clickKey.Update();
 
 	const int menuNum = static_cast<int>(Menu::Num);
 	int select = static_cast<int>(m_select);
 
 	if (isUp)	select = (select + menuNum - 1) % menuNum;
 	if (isDown)	select = (select + 1) % menuNum;
+
+	// マウス：動かした時に乗っている項目を選ぶ。クリックで決定
+	int hovered = -1;
+	Math::Vector2 mousePos;
+	if (InputHelper::GetMouseUIPos(mousePos))
+	{
+		hovered = GetHoveredMenu(mousePos);
+		bool isMouseMoved = (mousePos - m_prevMousePos).LengthSquared() > 1.0f;
+		if (isMouseMoved && hovered >= 0) select = hovered;
+		m_prevMousePos = mousePos;
+	}
+	if (isClick && hovered >= 0)
+	{
+		select = hovered;
+		isDecide = true;
+	}
 
 	if (select != static_cast<int>(m_select))
 	{
@@ -38,6 +58,11 @@ void GameOverScene::Event()
 
 void GameOverScene::Init()
 {
+	// 背景（一番最初に追加して、一番奥に描く）
+	std::shared_ptr<UIBackground> background = std::make_shared<UIBackground>();
+	background->Load("Asset/Textures/UI/Result/GameOver.png");
+	m_objList.push_back(background);
+
 	std::shared_ptr<UIText> title = std::make_shared<UIText>();
 	title->SetText("GAME OVER", UIText::FontSize::Large);
 	title->SetCenterPos({ 0.0f, 150.0f });
@@ -55,6 +80,23 @@ void GameOverScene::Init()
 	}
 
 	UpdateMenuColor();
+}
+
+int GameOverScene::GetHoveredMenu(const Math::Vector2& mousePos) const
+{
+	for (int i = 0; i < static_cast<int>(Menu::Num); ++i)
+	{
+		if (!m_menuTexts[i]) continue;
+
+		Math::Vector2 center = { 0.0f, kMenuTopY - kMenuSpaceY * i };
+		Math::Vector2 half = m_menuTexts[i]->GetSize() * 0.5f;
+		if (std::abs(mousePos.x - center.x) <= half.x + kMenuHitMarginX &&
+			std::abs(mousePos.y - center.y) <= half.y + kMenuHitMarginY)
+		{
+			return i;
+		}
+	}
+	return -1;
 }
 
 void GameOverScene::UpdateMenuColor()

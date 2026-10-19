@@ -85,6 +85,9 @@
     <Filter Include="Src\Application\GameObject\UI\Text">
       <UniqueIdentifier>{3ab3531c-51ed-4dd7-a5f1-2b22040c1673}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Src\Application\GameObject\UI\Background">
+      <UniqueIdentifier>{3b9c1e72-4a5d-4f8e-b2c6-1019d5e7a3f4}</UniqueIdentifier>
+    </Filter>
     <Filter Include="Src\Application\Scene\GameClearScene">
       <UniqueIdentifier>{b81c5f52-6692-45e0-b8b0-b0b9e2346f54}</UniqueIdentifier>
     </Filter>
@@ -363,6 +366,9 @@
     <ClInclude Include="Src\Application\GameObject\UI\Text\UIText.h">
       <Filter>Src\Application\GameObject\UI\Text</Filter>
     </ClInclude>
+    <ClInclude Include="Src\Application\GameObject\UI\Background\UIBackground.h">
+      <Filter>Src\Application\GameObject\UI\Background</Filter>
+    </ClInclude>
     <ClInclude Include="Src\Application\Scene\GameClearScene\GameClearScene.h">
       <Filter>Src\Application\Scene\GameClearScene</Filter>
     </ClInclude>
@@ -604,6 +610,9 @@
     </ClCompile>
     <ClCompile Include="Src\Application\GameObject\UI\Text\UIText.cpp">
       <Filter>Src\Application\GameObject\UI\Text</Filter>
+    </ClCompile>
+    <ClCompile Include="Src\Application\GameObject\UI\Background\UIBackground.cpp">
+      <Filter>Src\Application\GameObject\UI\Background</Filter>
     </ClCompile>
     <ClCompile Include="Src\Application\Scene\GameClearScene\GameClearScene.cpp">
       <Filter>Src\Application\Scene\GameClearScene</Filter>

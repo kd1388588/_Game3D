@@ -40,4 +40,9 @@ private :
 	InputHelper::KeyTrigger m_upArrowKey{ VK_UP };
 	InputHelper::KeyTrigger m_downArrowKey{ VK_DOWN };
 	InputHelper::KeyTrigger m_decideKey{ VK_RETURN };
+	InputHelper::KeyTrigger m_clickKey{ VK_LBUTTON };	// 左クリックで決定
+
+	// マウスが乗っている項目（無ければ -1）
+	int GetHoveredMenu(const Math::Vector2& mousePos) const;
+	Math::Vector2			m_prevMousePos = { -9999.0f, -9999.0f };
 };
