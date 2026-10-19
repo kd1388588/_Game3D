@@ -87,8 +87,11 @@ std::vector<TitleChara::ShowcaseStep> TitleChara::CreateShowcase()
 
 bool TitleChara::IsInPlaceAttack(int attackType, int attackStep)
 {
-	// PlayerStateComboAttack::IsRootMotionLocked() と同じ攻撃
-	return (attackType == 5 && (attackStep == 2 || attackStep == 3));
+	// PlayerStateComboAttack::IsRootMotionLocked() と同じ攻撃（5-2・5-3）に加えて、
+	// 3-3（右手の剣を軸に、体ごと円を描いて回る攻撃。腰が半径約1mの円を描いて元の位置に戻る）
+	// タイトルのキャラは移動しないので、腰を固定すると円の中心がずれて、剣で描く円が崩れてしまう
+	return (attackType == 5 && (attackStep == 2 || attackStep == 3))
+		|| (attackType == 3 && attackStep == 3);
 }
 
 const std::string& TitleChara::GetSlashEffectName(int attackType, int attackStep)
