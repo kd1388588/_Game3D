@@ -4,12 +4,16 @@ namespace
 {
 	// フォント（KdFontManagerの登録番号。0番はデバッグ表示用に空けておく）
 	// 本文（小・中）：太くて読みやすいゴシック体「Zen Kaku Gothic New」（日本語も英語も書ける）
-	// 見出し（大）　：遺跡の雰囲気に合う明朝体「Zen Old Mincho」（GAME CLEAR / GAME OVER）
-	// ※どちらも SIL Open Font License（無料で使える。ライセンス文は Asset/Font/OFL_*.txt）
+	// ※SIL Open Font License（無料で使える。ライセンス文は Asset/Font/OFL_ZenKakuGothicNew.txt）
 	const std::string	kFontName			= "Zen Kaku Gothic New";
 	const std::string	kFontPath			= "Asset/Font/ZenKakuGothicNew-Bold.ttf";
-	const std::string	kHeadingFontName	= "Zen Old Mincho";
-	const std::string	kHeadingFontPath	= "Asset/Font/ZenOldMincho-Bold.ttf";
+
+	// 英数字だけのオリジナルフォント（Tools/MakeFont.py で作成。石に彫ったような角ばった文字）
+	// 見出し（大）と、英語だけの文字（LabelSmall / LabelMedium）に使う
+	const std::string	kLabelFontName		= "Braver Stone";
+	const std::string	kLabelFontPath		= "Asset/Font/BraverStone.ttf";
+	constexpr int		kFontNoLabelSmall	= 5;
+	constexpr int		kFontNoLabelMedium	= 6;
 
 	// 文字のふち（背景が明るくても暗くても読めるように、文字の周りに暗いふちを付ける）
 	constexpr float		kOutlineWidth		= 2.0f;		// ふちの太さ（ピクセル）
@@ -37,7 +41,7 @@ void UIText::RegisterFonts()
 
 	// フォントファイルを読み込んでから登録する
 	// （ファイルが無い場合はWindowsが似たフォントで代用する）
-	for (const std::string* pPath : { &kFontPath, &kHeadingFontPath, &kTitleFontPath })
+	for (const std::string* pPath : { &kFontPath, &kLabelFontPath, &kTitleFontPath })
 	{
 		if (std::filesystem::exists(*pPath))
 		{
@@ -52,7 +56,10 @@ void UIText::RegisterFonts()
 	// 文字ごとに幅が違うフォントなので、文字幅は指定しない（指定すると、条件に合う別のフォントが選ばれてしまう）
 	KdFontManager::Instance().AddFont(kFontNoSmall, kFontName, kFontHeightSmall, SHIFTJIS_CHARSET, DEFAULT_PITCH | FF_DONTCARE);
 	KdFontManager::Instance().AddFont(kFontNoMedium, kFontName, kFontHeightMedium, SHIFTJIS_CHARSET, DEFAULT_PITCH | FF_DONTCARE);
-	KdFontManager::Instance().AddFont(kFontNoLarge, kHeadingFontName, kFontHeightLarge, SHIFTJIS_CHARSET, DEFAULT_PITCH | FF_DONTCARE);
+	// 見出しと英語だけの文字は、オリジナルフォント（日本語の文字が無いので、文字セットは指定しない）
+	KdFontManager::Instance().AddFont(kFontNoLarge, kLabelFontName, kFontHeightLarge, DEFAULT_CHARSET, DEFAULT_PITCH | FF_DONTCARE);
+	KdFontManager::Instance().AddFont(kFontNoLabelSmall, kLabelFontName, kFontHeightSmall, DEFAULT_CHARSET, DEFAULT_PITCH | FF_DONTCARE);
+	KdFontManager::Instance().AddFont(kFontNoLabelMedium, kLabelFontName, kFontHeightMedium, DEFAULT_CHARSET, DEFAULT_PITCH | FF_DONTCARE);
 
 	// Y224 は Shift-JIS に対応しておらず、文字ごとに幅が違うフォントなので、
 	// 文字セット・文字幅を指定せずに「名前」を優先して探させる
@@ -68,6 +75,8 @@ int UIText::GetFontNo(FontSize size)
 	case FontSize::Small:	return kFontNoSmall;
 	case FontSize::Large:	return kFontNoLarge;
 	case FontSize::Title:	return kFontNoTitle;
+	case FontSize::LabelSmall:	return kFontNoLabelSmall;
+	case FontSize::LabelMedium:	return kFontNoLabelMedium;
 	default:				return kFontNoMedium;
 	}
 }

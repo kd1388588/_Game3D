@@ -12,6 +12,10 @@ public:
 		Medium,
 		Large,
 		Title,		// タイトルロゴ用（特大）
+
+		// 英数字だけの文字に使う（オリジナルフォント「Braver Stone」。日本語は表示できない）
+		LabelSmall,
+		LabelMedium,
 	};
 
 	UIText() {}

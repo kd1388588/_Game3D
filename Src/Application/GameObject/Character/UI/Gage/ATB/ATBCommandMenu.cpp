@@ -59,7 +59,7 @@ void ATBCommandMenu::Init()
 		m_nameTexts.push_back(name);
 
 		auto cost = std::make_shared<UIText>();
-		cost->SetText("ATB x" + std::to_string(i + 1), UIText::FontSize::Small);
+		cost->SetText("ATB x" + std::to_string(i + 1), UIText::FontSize::LabelSmall);
 		cost->SetCenterPos({ kCostRightX - cost->GetSize().x * 0.5f, y });
 		m_costTexts.push_back(cost);
 	}
@@ -72,7 +72,7 @@ void ATBCommandMenu::SetItemState(int index, bool canUse, float ctRatio, int cos
 	// 使う本数が変わったら文字を作り直す
 	if (m_items[index].cost != cost && index < static_cast<int>(m_costTexts.size()))
 	{
-		m_costTexts[index]->SetText("ATB x" + std::to_string(cost), UIText::FontSize::Small);
+		m_costTexts[index]->SetText("ATB x" + std::to_string(cost), UIText::FontSize::LabelSmall);
 		m_costTexts[index]->SetCenterPos({ kCostRightX - m_costTexts[index]->GetSize().x * 0.5f, kFirstItemY - kItemSpacing * index });
 	}
 

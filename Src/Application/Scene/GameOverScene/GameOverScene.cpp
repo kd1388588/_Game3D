@@ -75,7 +75,7 @@ void GameOverScene::Init()
 	for (int i = 0; i < static_cast<int>(Menu::Num); ++i)
 	{
 		m_menuTexts[i] = std::make_shared<UIText>();
-		m_menuTexts[i]->SetText(menuNames[i], UIText::FontSize::Medium);
+		m_menuTexts[i]->SetText(menuNames[i], UIText::FontSize::LabelMedium);
 		m_menuTexts[i]->SetCenterPos({ 0.0f, kMenuTopY - kMenuSpaceY * i });
 		m_objList.push_back(m_menuTexts[i]);
 	}

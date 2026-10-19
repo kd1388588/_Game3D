@@ -109,13 +109,13 @@ void TitleUI::Init()
 	m_logo = CreateText(kLogoText, UIText::FontSize::Title);
 	m_logo->SetCenterPos(kLogoPos);
 
-	m_subTitle = CreateText(kSubTitleText, UIText::FontSize::Small);
+	m_subTitle = CreateText(kSubTitleText, UIText::FontSize::LabelSmall);
 	m_subTitle->SetCenterPos(kSubTitlePos);
 
 	// メニュー
 	for (size_t i = 0; i < kMenuNames.size(); ++i)
 	{
-		std::shared_ptr<UIText> text = CreateText(kMenuNames[i], UIText::FontSize::Medium);
+		std::shared_ptr<UIText> text = CreateText(kMenuNames[i], UIText::FontSize::LabelMedium);
 		text->SetCenterPos(GetMenuItemPos(static_cast<int>(i)));
 		m_menuTexts.push_back(text);
 	}
@@ -123,7 +123,7 @@ void TitleUI::Init()
 	m_cursorY = GetMenuItemPos(m_selectIndex).y;
 
 	// 操作案内（下の黒帯）
-	m_selectGuide = CreateText("W / S : SELECT        ENTER : DECIDE", UIText::FontSize::Small);
+	m_selectGuide = CreateText("W / S : SELECT        ENTER : DECIDE", UIText::FontSize::LabelSmall);
 	m_selectGuide->SetCenterPos({ 0.0f, kGuideY });
 	m_controlsGuide = CreateText("Enter / BackSpace：戻る", UIText::FontSize::Small);
 	m_controlsGuide->SetCenterPos({ 0.0f, kGuideY });
