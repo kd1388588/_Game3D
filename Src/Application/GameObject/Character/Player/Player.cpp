@@ -79,7 +79,7 @@ namespace
 	constexpr float kPunisherMoveRate		= 0.6f;		// パニッシャーの移動の速さ（オペレーターを1.0とした倍率）
 
 	// ATBゲージのたまり方
-	constexpr float kAtbPassiveGain			= 0.04f;	// オペレーターの時、1フレームにたまる量（約42秒で1本）
+	constexpr float kAtbPassiveGain			= 0.048f;	// オペレーターの時、1フレームにたまる量（約35秒で1本）
 	constexpr float kAtbHitGain				= 3.0f;		// 攻撃を当てた時にたまる量（オペレーターは ×1.5 で 4.5。約22ヒットで1本）
 	constexpr float kOperatorAtbHitRate		= 1.5f;		// オペレーターの時、当てた時にたまる量の倍率
 	// ※パニッシャーの時は、時間でも攻撃でもたまらない
@@ -106,14 +106,14 @@ namespace
 
 	// ヒットストップ（攻撃が当たった瞬間に止めるフレーム数と、カメラの揺れの強さ）
 	// ※プレイヤーの攻撃はすべて AttackOBB で、敵の攻撃は OnDamage で、ここの値を使う
-	constexpr int	kHitStopFrame			= 4;		// 普通の攻撃
-	constexpr int	kCriticalHitStopFrame	= 7;		// クリティカル
-	constexpr int	kHeavyHitStopBonus		= 2;		// パニッシャー・アビリティの時に足すフレーム数
+	constexpr int	kHitStopFrame			= 2;		// 普通の攻撃（多段ヒットで何度も止まるので短め）
+	constexpr int	kCriticalHitStopFrame	= 4;		// クリティカル
+	constexpr int	kHeavyHitStopBonus		= 1;		// パニッシャー・アビリティの時に足すフレーム数
 	constexpr float	kHitShakePower			= 0.04f;	// カメラの揺れ（普通）
 	constexpr float	kCriticalHitShakePower	= 0.08f;	// カメラの揺れ（クリティカル）
-	constexpr int	kDamageHitStopFrame		= 6;		// 敵の攻撃を受けた時
+	constexpr int	kDamageHitStopFrame		= 4;		// 敵の攻撃を受けた時
 	constexpr float	kDamageShakePower		= 0.1f;
-	constexpr int	kGuardHitStopFrame		= 4;		// 敵の攻撃をガードした時
+	constexpr int	kGuardHitStopFrame		= 3;		// 敵の攻撃をガードした時
 	constexpr float	kGuardShakePower		= 0.05f;
 
 	// ガード
