@@ -8,8 +8,8 @@ namespace
 	constexpr float kRootWarpThresholdSq	= 10000.0f;	// これ以上のルート移動はワープとみなして無視する
 
 	// 地面判定
-	constexpr float kGroundRayStartOffset	= 0.3f;		// レイの発射位置を足元からどれだけ上げるか
-	constexpr float kEnableStepHeight		= 0.2f;		// 乗り越えられる段差の高さ
+	constexpr float kGroundRayStartOffset	= 0.4f;		// レイの発射位置を足元からどれだけ上げるか（乗り越えられる段差より高くする）
+	constexpr float kEnableStepHeight		= 0.35f;	// 乗り越えられる段差の高さ（石畳と地面の段差・低い瓦礫はジャンプ無しで登れる）
 	constexpr float kGroundSearchRange		= 30.0f;	// 着地予測で地面を探す距離
 
 	// 足の接地判定

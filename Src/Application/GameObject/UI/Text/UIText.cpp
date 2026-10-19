@@ -3,7 +3,13 @@
 namespace
 {
 	// フォント（KdFontManagerの登録番号。0番はデバッグ表示用に空けておく）
-	const std::string	kFontName			= "Arial";
+	// 本文（小・中）：日本語も英語も書ける明朝体「Zen Old Mincho」（遺跡・ダークファンタジーの雰囲気に合わせる）
+	// 見出し（大）　：ローマの碑文のような英字のフォント「Cinzel」（GAME CLEAR / GAME OVER など英字だけ）
+	// ※どちらも SIL Open Font License（無料で使える。ライセンス文は Asset/Font/OFL_*.txt）
+	const std::string	kFontName			= "Zen Old Mincho";
+	const std::string	kFontPath			= "Asset/Font/ZenOldMincho-Bold.ttf";
+	const std::string	kHeadingFontName	= "Cinzel";
+	const std::string	kHeadingFontPath	= "Asset/Font/Cinzel.ttf";
 	constexpr int		kFontNoSmall		= 1;
 	constexpr int		kFontNoMedium		= 2;
 	constexpr int		kFontNoLarge		= 3;
@@ -25,20 +31,25 @@ void UIText::RegisterFonts()
 	static bool isRegistered = false;
 	if (isRegistered) return;
 
-	KdFontManager::Instance().AddFont(kFontNoSmall, kFontName, kFontHeightSmall);
-	KdFontManager::Instance().AddFont(kFontNoMedium, kFontName, kFontHeightMedium);
-	KdFontManager::Instance().AddFont(kFontNoLarge, kFontName, kFontHeightLarge);
-
-	// タイトルロゴ用：フォントファイルを読み込んでから登録する
+	// フォントファイルを読み込んでから登録する
 	// （ファイルが無い場合はWindowsが似たフォントで代用する）
-	if (std::filesystem::exists(kTitleFontPath))
+	for (const std::string* pPath : { &kFontPath, &kHeadingFontPath, &kTitleFontPath })
 	{
-		KdFontManager::Instance().AddFontResource(kTitleFontPath);
+		if (std::filesystem::exists(*pPath))
+		{
+			KdFontManager::Instance().AddFontResource(*pPath);
+		}
+		else
+		{
+			OutputDebugStringA(("【フォントファイルが見つかりません】: " + *pPath + "\n").c_str());
+		}
 	}
-	else
-	{
-		OutputDebugStringA(("【フォントファイルが見つかりません】: " + kTitleFontPath + "\n").c_str());
-	}
+
+	// 文字ごとに幅が違うフォントなので、文字幅は指定しない（指定すると、条件に合う別のフォントが選ばれてしまう）
+	KdFontManager::Instance().AddFont(kFontNoSmall, kFontName, kFontHeightSmall, SHIFTJIS_CHARSET, DEFAULT_PITCH | FF_DONTCARE);
+	KdFontManager::Instance().AddFont(kFontNoMedium, kFontName, kFontHeightMedium, SHIFTJIS_CHARSET, DEFAULT_PITCH | FF_DONTCARE);
+	// Cinzel は日本語の文字が無いので、文字セットも指定しない
+	KdFontManager::Instance().AddFont(kFontNoLarge, kHeadingFontName, kFontHeightLarge, DEFAULT_CHARSET, DEFAULT_PITCH | FF_DONTCARE);
 
 	// Y224 は Shift-JIS に対応しておらず、文字ごとに幅が違うフォントなので、
 	// 文字セット・文字幅を指定せずに「名前」を優先して探させる
