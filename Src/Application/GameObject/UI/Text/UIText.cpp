@@ -17,7 +17,7 @@ namespace
 	const std::string	kTitleFontPath		= "Asset/Font/Y224.ttf";
 	const std::string	kTitleFontName		= "Y224";	// ファイル名ではなく、フォントの中に書かれている名前
 
-	constexpr int		kBlinkCycle			= 60;	// 点滅の周期（フレーム）
+	constexpr int		kBlinkCycle = 60;	// 点滅の周期（フレーム）
 }
 
 void UIText::RegisterFonts()
@@ -96,7 +96,7 @@ void UIText::DrawSprite()
 	auto& spriteShader = KdShaderManager::Instance().m_spriteShader;
 	spriteShader.SetMatrix(Math::Matrix::CreateScale(m_scale) *
 		Math::Matrix::CreateTranslation(m_centerPos.x, m_centerPos.y, 0.0f));
-	spriteShader.DrawFont(m_fontSprite, pos, &m_color, 0);
+	spriteShader.DrawUIFont(m_fontSprite, pos, &m_color, 0);
 
 	// 他の描画に影響しないよう元に戻す
 	spriteShader.SetMatrix(Math::Matrix::Identity);

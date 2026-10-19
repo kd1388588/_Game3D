@@ -1,0 +1,25 @@
+フォルダー パスの一覧:  ボリューム Windows
+ボリューム シリアル番号は 9C72-C376 です
+C:\3DGAME_BRAVER\_GAME3D\ASSET\DATA\EFFECT
+│  _boss_death.efkefc
+│  _Claw2.efkefc
+│  _drill.efkefc
+│  _Sword1-1.efkefc
+│  _Sword1-2.efkefc
+│  _Sword1-3.efkefc
+│  _Sword1-4.efkefc
+│  _Sword1.efkefc
+│  _Sword4.efkefc
+│  _Sword5-4.efkefc
+│  
+└─Tex
+        Distortion2.png
+        ExperimentalNoise.png
+        impact2.png
+        Line01.png
+        Particle01.png
+        Particle02.png
+        Particle_Hard.png
+        Particle_Soft.png
+        sword_trail_preview.png
+        

@@ -1,0 +1,2029 @@
+フォルダー パスの一覧:  ボリューム Windows
+ボリューム シリアル番号は 9C72-C376 です
+C:\3DGAME_BRAVER\_GAME3D\ASSET\MODELS\GAMEOBJECT\PLAYER\NEW
+├─CharaBase
+│      MI_Belt_BaseColor.png
+│      MI_Belt_MetallicRoughness.png
+│      MI_Belt_Normal.png
+│      MI_Blade_BaseColor.png
+│      MI_Blade_MetallicRoughness.png
+│      MI_Blade_Normal.png
+│      MI_Body_BaseColor.png
+│      MI_Body_MetallicRoughness.png
+│      MI_Body_Normal.png
+│      MI_CyberArm_BaseColor.png
+│      MI_CyberArm_MetallicRoughness.png
+│      MI_CyberArm_Normal.png
+│      MI_Eyebrow_BaseColor.png
+│      MI_Eyebrow_Normal.png
+│      MI_Eyebrow_Occlusion.png
+│      MI_Eyes_BaseColor.png
+│      MI_Eyes_Normal.png
+│      MI_Face_BaseColor.png
+│      MI_Face_MetallicRoughness.png
+│      MI_Face_Normal.png
+│      MI_Hair_1_BaseColor.png
+│      MI_Jacket_BaseColor.png
+│      MI_Jacket_MetallicRoughness.png
+│      MI_Jacket_Normal.png
+│      MI_Knuckle_BaseColor.png
+│      MI_Knuckle_MetallicRoughness.png
+│      MI_Knuckle_Normal.png
+│      MI_Mask_BaseColor.png
+│      MI_Mask_Normal.png
+│      MI_Pants_1_BaseColor.png
+│      MI_Pants_1_MetallicRoughness.png
+│      MI_Pants_1_Normal.png
+│      MI_Pants_2_MetallicRoughness.png
+│      MI_Teeth_BaseColor.png
+│      MI_Teeth_Normal.png
+│      MI_Top_BaseColor.png
+│      MI_Top_MetallicRoughness.png
+│      MI_Top_Normal.png
+│      MI_Zipper_BaseColor.png
+│      MI_Zipper_Normal.png
+│      SK_Assassin.bin
+│      SK_Assassin.gltf
+│      
+└─Sequence2
+    ├─01_Idle
+    │  ├─01_Idle
+    │  │  ├─AS_Idle_Seq
+    │  │  │      AS_Idle_Seq.bin
+    │  │  │      AS_Idle_Seq.gltf
+    │  │  │      
+    │  │  └─AS_Idle_to_Idle_Combat_Seq
+    │  │          AS_Idle_to_Idle_Combat_Seq.bin
+    │  │          AS_Idle_to_Idle_Combat_Seq.gltf
+    │  │          
+    │  ├─02_Idle_Combat
+    │  │  ├─AS_Idle_Combat_Seq
+    │  │  │      AS_Idle_Combat_Seq.bin
+    │  │  │      AS_Idle_Combat_Seq.gltf
+    │  │  │      
+    │  │  └─AS_Idle_Combat_to_Idle_Seq
+    │  │          AS_Idle_Combat_to_Idle_Seq.bin
+    │  │          AS_Idle_Combat_to_Idle_Seq.gltf
+    │  │          
+    │  ├─03_Idle_Offset
+    │  │  ├─AS_Idle_0_Seq
+    │  │  │      AS_Idle_0_Seq.bin
+    │  │  │      AS_Idle_0_Seq.gltf
+    │  │  │      
+    │  │  ├─AS_Idle_Down_0_Seq
+    │  │  │      AS_Idle_Down_0_Seq.bin
+    │  │  │      AS_Idle_Down_0_Seq.gltf
+    │  │  │      
+    │  │  ├─AS_Idle_Down_L_Seq
+    │  │  │      AS_Idle_Down_L_Seq.bin
+    │  │  │      AS_Idle_Down_L_Seq.gltf
+    │  │  │      
+    │  │  ├─AS_Idle_Down_R_Seq
+    │  │  │      AS_Idle_Down_R_Seq.bin
+    │  │  │      AS_Idle_Down_R_Seq.gltf
+    │  │  │      
+    │  │  ├─AS_Idle_L_Seq
+    │  │  │      AS_Idle_L_Seq.bin
+    │  │  │      AS_Idle_L_Seq.gltf
+    │  │  │      
+    │  │  ├─AS_Idle_R_Seq
+    │  │  │      AS_Idle_R_Seq.bin
+    │  │  │      AS_Idle_R_Seq.gltf
+    │  │  │      
+    │  │  ├─AS_Idle_Up_0_Seq
+    │  │  │      AS_Idle_Up_0_Seq.bin
+    │  │  │      AS_Idle_Up_0_Seq.gltf
+    │  │  │      
+    │  │  ├─AS_Idle_Up_L_Seq
+    │  │  │      AS_Idle_Up_L_Seq.bin
+    │  │  │      AS_Idle_Up_L_Seq.gltf
+    │  │  │      
+    │  │  └─AS_Idle_Up_R_Seq
+    │  │          AS_Idle_Up_R_Seq.bin
+    │  │          AS_Idle_Up_R_Seq.gltf
+    │  │          
+    │  └─04_Idle_Combat_Offset
+    │      ├─AS_Idle_Combat_0_Seq
+    │      │      AS_Idle_Combat_0_Seq.bin
+    │      │      AS_Idle_Combat_0_Seq.gltf
+    │      │      
+    │      ├─AS_Idle_Combat_Down_0_Seq
+    │      │      AS_Idle_Combat_Down_0_Seq.bin
+    │      │      AS_Idle_Combat_Down_0_Seq.gltf
+    │      │      
+    │      ├─AS_Idle_Combat_Down_L_Seq
+    │      │      AS_Idle_Combat_Down_L_Seq.bin
+    │      │      AS_Idle_Combat_Down_L_Seq.gltf
+    │      │      
+    │      ├─AS_Idle_Combat_Down_R_Seq
+    │      │      AS_Idle_Combat_Down_R_Seq.bin
+    │      │      AS_Idle_Combat_Down_R_Seq.gltf
+    │      │      
+    │      ├─AS_Idle_Combat_L_Seq
+    │      │      AS_Idle_Combat_L_Seq.bin
+    │      │      AS_Idle_Combat_L_Seq.gltf
+    │      │      
+    │      ├─AS_Idle_Combat_R_Seq
+    │      │      AS_Idle_Combat_R_Seq.bin
+    │      │      AS_Idle_Combat_R_Seq.gltf
+    │      │      
+    │      ├─AS_Idle_Combat_Up_0_Seq
+    │      │      AS_Idle_Combat_Up_0_Seq.bin
+    │      │      AS_Idle_Combat_Up_0_Seq.gltf
+    │      │      
+    │      ├─AS_Idle_Combat_Up_L_Seq
+    │      │      AS_Idle_Combat_Up_L_Seq.bin
+    │      │      AS_Idle_Combat_Up_L_Seq.gltf
+    │      │      
+    │      └─AS_Idle_Combat_Up_R_Seq
+    │              AS_Idle_Combat_Up_R_Seq.bin
+    │              AS_Idle_Combat_Up_R_Seq.gltf
+    │              
+    ├─02_Attack
+    │  ├─01_Combo_Attack_01
+    │  │  ├─AS_Combo_Attack_01_01_Seq
+    │  │  │      AS_Combo_Attack_01_01_Seq.bin
+    │  │  │      AS_Combo_Attack_01_01_Seq.gltf
+    │  │  │      
+    │  │  ├─AS_Combo_Attack_01_02_Seq
+    │  │  │      AS_Combo_Attack_01_02_Seq.bin
+    │  │  │      AS_Combo_Attack_01_02_Seq.gltf
+    │  │  │      
+    │  │  ├─AS_Combo_Attack_01_03_Seq
+    │  │  │      AS_Combo_Attack_01_03_Seq.bin
+    │  │  │      AS_Combo_Attack_01_03_Seq.gltf
+    │  │  │      
+    │  │  ├─AS_Combo_Attack_01_04_Seq
+    │  │  │      AS_Combo_Attack_01_04_Seq.bin
+    │  │  │      AS_Combo_Attack_01_04_Seq.gltf
+    │  │  │      
+    │  │  └─AS_Combo_Attack_01_All_Seq
+    │  │          AS_Combo_Attack_01_All_Seq.bin
+    │  │          AS_Combo_Attack_01_All_Seq.gltf
+    │  │          
+    │  ├─02_Combo_Attack_02
+    │  │  ├─AS_Combo_Attack_02_01_Seq
+    │  │  │      AS_Combo_Attack_02_01_Seq.bin
+    │  │  │      AS_Combo_Attack_02_01_Seq.gltf
+    │  │  │      
+    │  │  ├─AS_Combo_Attack_02_02_Seq
+    │  │  │      AS_Combo_Attack_02_02_Seq.bin
+    │  │  │      AS_Combo_Attack_02_02_Seq.gltf
+    │  │  │      
+    │  │  ├─AS_Combo_Attack_02_03_RM_Seq
+    │  │  │      AS_Combo_Attack_02_03_RM_Seq.bin
+    │  │  │      AS_Combo_Attack_02_03_RM_Seq.gltf
+    │  │  │      
+    │  │  ├─AS_Combo_Attack_02_03_Seq
+    │  │  │      AS_Combo_Attack_02_03_Seq.bin
+    │  │  │      AS_Combo_Attack_02_03_Seq.gltf
+    │  │  │      
+    │  │  ├─AS_Combo_Attack_02_04_RM_Seq
+    │  │  │      AS_Combo_Attack_02_04_RM_Seq.bin
+    │  │  │      AS_Combo_Attack_02_04_RM_Seq.gltf
+    │  │  │      
+    │  │  ├─AS_Combo_Attack_02_04_Seq
+    │  │  │      AS_Combo_Attack_02_04_Seq.bin
+    │  │  │      AS_Combo_Attack_02_04_Seq.gltf
+    │  │  │      
+    │  │  └─AS_Combo_Attack_02_All_Seq
+    │  │          AS_Combo_Attack_02_All_Seq.bin
+    │  │          AS_Combo_Attack_02_All_Seq.gltf
+    │  │          
+    │  ├─03_Combo_Attack_03
+    │  │  ├─AS_Combo_Attack_03_01_Seq
+    │  │  │      AS_Combo_Attack_03_01_Seq.bin
+    │  │  │      AS_Combo_Attack_03_01_Seq.gltf
+    │  │  │      
+    │  │  ├─AS_Combo_Attack_03_02_Seq
+    │  │  │      AS_Combo_Attack_03_02_Seq.bin
+    │  │  │      AS_Combo_Attack_03_02_Seq.gltf
+    │  │  │      
+    │  │  ├─AS_Combo_Attack_03_03_Seq
+    │  │  │      AS_Combo_Attack_03_03_Seq.bin
+    │  │  │      AS_Combo_Attack_03_03_Seq.gltf
+    │  │  │      
+    │  │  ├─AS_Combo_Attack_03_04_Seq
+    │  │  │      AS_Combo_Attack_03_04_Seq.bin
+    │  │  │      AS_Combo_Attack_03_04_Seq.gltf
+    │  │  │      
+    │  │  └─AS_Combo_Attack_03_All_Seq
+    │  │          AS_Combo_Attack_03_All_Seq.bin
+    │  │          AS_Combo_Attack_03_All_Seq.gltf
+    │  │          
+    │  ├─04_Combo_Attack_04
+    │  │  ├─AS_Combo_Attack_04_01_Seq
+    │  │  │      AS_Combo_Attack_04_01_Seq.bin
+    │  │  │      AS_Combo_Attack_04_01_Seq.gltf
+    │  │  │      
+    │  │  ├─AS_Combo_Attack_04_02_Seq
+    │  │  │      AS_Combo_Attack_04_02_Seq.bin
+    │  │  │      AS_Combo_Attack_04_02_Seq.gltf
+    │  │  │      
+    │  │  ├─AS_Combo_Attack_04_03_End_Seq
+    │  │  │      AS_Combo_Attack_04_03_End_Seq.bin
+    │  │  │      AS_Combo_Attack_04_03_End_Seq.gltf
+    │  │  │      
+    │  │  ├─AS_Combo_Attack_04_03_Loop_Seq
+    │  │  │      AS_Combo_Attack_04_03_Loop_Seq.bin
+    │  │  │      AS_Combo_Attack_04_03_Loop_Seq.gltf
+    │  │  │      
+    │  │  ├─AS_Combo_Attack_04_03_Start_Seq
+    │  │  │      AS_Combo_Attack_04_03_Start_Seq.bin
+    │  │  │      AS_Combo_Attack_04_03_Start_Seq.gltf
+    │  │  │      
+    │  │  ├─AS_Combo_Attack_04_04_RM_Seq
+    │  │  │      AS_Combo_Attack_04_04_RM_Seq.bin
+    │  │  │      AS_Combo_Attack_04_04_RM_Seq.gltf
+    │  │  │      
+    │  │  ├─AS_Combo_Attack_04_04_Seq
+    │  │  │      AS_Combo_Attack_04_04_Seq.bin
+    │  │  │      AS_Combo_Attack_04_04_Seq.gltf
+    │  │  │      
+    │  │  └─AS_Combo_Attack_04_All_Seq
+    │  │          AS_Combo_Attack_04_All_Seq.bin
+    │  │          AS_Combo_Attack_04_All_Seq.gltf
+    │  │          
+    │  ├─05_Combo_Attack_05
+    │  │  ├─AS_Combo_Attack_05_01_Seq
+    │  │  │      AS_Combo_Attack_05_01_Seq.bin
+    │  │  │      AS_Combo_Attack_05_01_Seq.gltf
+    │  │  │      
+    │  │  ├─AS_Combo_Attack_05_02_Seq
+    │  │  │      AS_Combo_Attack_05_02_Seq.bin
+    │  │  │      AS_Combo_Attack_05_02_Seq.gltf
+    │  │  │      
+    │  │  ├─AS_Combo_Attack_05_03_Seq
+    │  │  │      AS_Combo_Attack_05_03_Seq.bin
+    │  │  │      AS_Combo_Attack_05_03_Seq.gltf
+    │  │  │      
+    │  │  ├─AS_Combo_Attack_05_04_Seq
+    │  │  │      AS_Combo_Attack_05_04_Seq.bin
+    │  │  │      AS_Combo_Attack_05_04_Seq.gltf
+    │  │  │      
+    │  │  └─AS_Combo_Attack_05_All_Seq
+    │  │          AS_Combo_Attack_05_All_Seq.bin
+    │  │          AS_Combo_Attack_05_All_Seq.gltf
+    │  │          
+    │  ├─06_Combo_Attack_Air
+    │  │  ├─AS_Combo_Attack_Air_01_Seq
+    │  │  │      AS_Combo_Attack_Air_01_Seq.bin
+    │  │  │      AS_Combo_Attack_Air_01_Seq.gltf
+    │  │  │      
+    │  │  ├─AS_Combo_Attack_Air_02_Seq
+    │  │  │      AS_Combo_Attack_Air_02_Seq.bin
+    │  │  │      AS_Combo_Attack_Air_02_Seq.gltf
+    │  │  │      
+    │  │  ├─AS_Combo_Attack_Air_03_Seq
+    │  │  │      AS_Combo_Attack_Air_03_Seq.bin
+    │  │  │      AS_Combo_Attack_Air_03_Seq.gltf
+    │  │  │      
+    │  │  ├─AS_Combo_Attack_Air_04_Seq
+    │  │  │      AS_Combo_Attack_Air_04_Seq.bin
+    │  │  │      AS_Combo_Attack_Air_04_Seq.gltf
+    │  │  │      
+    │  │  └─AS_Combo_Attack_Air_All_Seq
+    │  │          AS_Combo_Attack_Air_All_Seq.bin
+    │  │          AS_Combo_Attack_Air_All_Seq.gltf
+    │  │          
+    │  ├─07_Buff
+    │  │  ├─AS_Buff_Air_Seq
+    │  │  │      AS_Buff_Air_Seq.bin
+    │  │  │      AS_Buff_Air_Seq.gltf
+    │  │  │      
+    │  │  └─AS_Buff_Seq
+    │  │          AS_Buff_Seq.bin
+    │  │          AS_Buff_Seq.gltf
+    │  │          
+    │  ├─08_Attack_Speed
+    │  │  ├─01_Attack_Speed
+    │  │  │  ├─AS_Attack_Speed_All_Seq
+    │  │  │  │      AS_Attack_Speed_All_Seq.bin
+    │  │  │  │      AS_Attack_Speed_All_Seq.gltf
+    │  │  │  │      
+    │  │  │  ├─AS_Attack_Speed_End_Seq
+    │  │  │  │      AS_Attack_Speed_End_Seq.bin
+    │  │  │  │      AS_Attack_Speed_End_Seq.gltf
+    │  │  │  │      
+    │  │  │  ├─AS_Attack_Speed_Loop_Seq
+    │  │  │  │      AS_Attack_Speed_Loop_Seq.bin
+    │  │  │  │      AS_Attack_Speed_Loop_Seq.gltf
+    │  │  │  │      
+    │  │  │  └─AS_Attack_Speed_Start_Seq
+    │  │  │          AS_Attack_Speed_Start_Seq.bin
+    │  │  │          AS_Attack_Speed_Start_Seq.gltf
+    │  │  │          
+    │  │  └─02_Attack_Speed_Air
+    │  │      ├─AS_Attack_Speed_Air_All_Seq
+    │  │      │      AS_Attack_Speed_Air_All_Seq.bin
+    │  │      │      AS_Attack_Speed_Air_All_Seq.gltf
+    │  │      │      
+    │  │      ├─AS_Attack_Speed_Air_End_Seq
+    │  │      │      AS_Attack_Speed_Air_End_Seq.bin
+    │  │      │      AS_Attack_Speed_Air_End_Seq.gltf
+    │  │      │      
+    │  │      ├─AS_Attack_Speed_Air_Loop_Seq
+    │  │      │      AS_Attack_Speed_Air_Loop_Seq.bin
+    │  │      │      AS_Attack_Speed_Air_Loop_Seq.gltf
+    │  │      │      
+    │  │      └─AS_Attack_Speed_Air_Start_Seq
+    │  │              AS_Attack_Speed_Air_Start_Seq.bin
+    │  │              AS_Attack_Speed_Air_Start_Seq.gltf
+    │  │              
+    │  ├─09_Attack_Air_to_Floor_01
+    │  │  ├─AS_Attack_Air_to_Floor_01_End_Seq
+    │  │  │      AS_Attack_Air_to_Floor_01_End_Seq.bin
+    │  │  │      AS_Attack_Air_to_Floor_01_End_Seq.gltf
+    │  │  │      
+    │  │  ├─AS_Attack_Air_to_Floor_01_Loop_Seq
+    │  │  │      AS_Attack_Air_to_Floor_01_Loop_Seq.bin
+    │  │  │      AS_Attack_Air_to_Floor_01_Loop_Seq.gltf
+    │  │  │      
+    │  │  └─AS_Attack_Air_to_Floor_01_Start_Seq
+    │  │          AS_Attack_Air_to_Floor_01_Start_Seq.bin
+    │  │          AS_Attack_Air_to_Floor_01_Start_Seq.gltf
+    │  │          
+    │  ├─10_Attack_Air_to_Floor_02
+    │  │  ├─AS_Attack_Air_to_Floor_02_End_Seq
+    │  │  │      AS_Attack_Air_to_Floor_02_End_Seq.bin
+    │  │  │      AS_Attack_Air_to_Floor_02_End_Seq.gltf
+    │  │  │      
+    │  │  ├─AS_Attack_Air_to_Floor_02_Loop_Seq
+    │  │  │      AS_Attack_Air_to_Floor_02_Loop_Seq.bin
+    │  │  │      AS_Attack_Air_to_Floor_02_Loop_Seq.gltf
+    │  │  │      
+    │  │  └─AS_Attack_Air_to_Floor_02_Start_Seq
+    │  │          AS_Attack_Air_to_Floor_02_Start_Seq.bin
+    │  │          AS_Attack_Air_to_Floor_02_Start_Seq.gltf
+    │  │          
+    │  ├─11_Attack_Air_to_Floor_03
+    │  │  ├─AS_Attack_Air_to_Floor_03_End_Seq
+    │  │  │      AS_Attack_Air_to_Floor_03_End_Seq.bin
+    │  │  │      AS_Attack_Air_to_Floor_03_End_Seq.gltf
+    │  │  │      
+    │  │  ├─AS_Attack_Air_to_Floor_03_Loop_Seq
+    │  │  │      AS_Attack_Air_to_Floor_03_Loop_Seq.bin
+    │  │  │      AS_Attack_Air_to_Floor_03_Loop_Seq.gltf
+    │  │  │      
+    │  │  └─AS_Attack_Air_to_Floor_03_Start_Seq
+    │  │          AS_Attack_Air_to_Floor_03_Start_Seq.bin
+    │  │          AS_Attack_Air_to_Floor_03_Start_Seq.gltf
+    │  │          
+    │  ├─12_Attack_Up
+    │  │  ├─AS_Attack_Up_Air_To_Air_Seq
+    │  │  │      AS_Attack_Up_Air_To_Air_Seq.bin
+    │  │  │      AS_Attack_Up_Air_To_Air_Seq.gltf
+    │  │  │      
+    │  │  ├─AS_Attack_Up_Floor_To_Air_Seq
+    │  │  │      AS_Attack_Up_Floor_To_Air_Seq.bin
+    │  │  │      AS_Attack_Up_Floor_To_Air_Seq.gltf
+    │  │  │      
+    │  │  └─AS_Attack_Up_Seq
+    │  │          AS_Attack_Up_Seq.bin
+    │  │          AS_Attack_Up_Seq.gltf
+    │  │          
+    │  ├─13_Run_Attack
+    │  │  ├─AS_Run_Attack_01_Seq
+    │  │  │      AS_Run_Attack_01_Seq.bin
+    │  │  │      AS_Run_Attack_01_Seq.gltf
+    │  │  │      
+    │  │  └─AS_Run_Attack_02_Seq
+    │  │          AS_Run_Attack_02_Seq.bin
+    │  │          AS_Run_Attack_02_Seq.gltf
+    │  │          
+    │  ├─14_Parry_Counter_Attack
+    │  │  ├─AS_Parry_Counter_Attack_L_Seq
+    │  │  │      AS_Parry_Counter_Attack_L_Seq.bin
+    │  │  │      AS_Parry_Counter_Attack_L_Seq.gltf
+    │  │  │      
+    │  │  └─AS_Parry_Counter_Attack_R_Seq
+    │  │          AS_Parry_Counter_Attack_R_Seq.bin
+    │  │          AS_Parry_Counter_Attack_R_Seq.gltf
+    │  │          
+    │  ├─15_Dash_Air_Attack
+    │  │  ├─AS_Dash_Air_Attack_All_Seq
+    │  │  │      AS_Dash_Air_Attack_All_Seq.bin
+    │  │  │      AS_Dash_Air_Attack_All_Seq.gltf
+    │  │  │      
+    │  │  ├─AS_Dash_Air_Attack_End_Seq
+    │  │  │      AS_Dash_Air_Attack_End_Seq.bin
+    │  │  │      AS_Dash_Air_Attack_End_Seq.gltf
+    │  │  │      
+    │  │  ├─AS_Dash_Air_Attack_Loop_Seq
+    │  │  │      AS_Dash_Air_Attack_Loop_Seq.bin
+    │  │  │      AS_Dash_Air_Attack_Loop_Seq.gltf
+    │  │  │      
+    │  │  └─AS_Dash_Air_Attack_Start_Seq
+    │  │          AS_Dash_Air_Attack_Start_Seq.bin
+    │  │          AS_Dash_Air_Attack_Start_Seq.gltf
+    │  │          
+    │  └─16_Exeution
+    │      ├─01_Execution
+    │      │  ├─AS_Exeution_01_Seq
+    │      │  │      AS_Exeution_01_Seq.bin
+    │      │  │      AS_Exeution_01_Seq.gltf
+    │      │  │      
+    │      │  ├─AS_Exeution_02_Seq
+    │      │  │      AS_Exeution_02_Seq.bin
+    │      │  │      AS_Exeution_02_Seq.gltf
+    │      │  │      
+    │      │  └─AS_Exeution_03_Seq
+    │      │          AS_Exeution_03_Seq.bin
+    │      │          AS_Exeution_03_Seq.gltf
+    │      │          
+    │      └─02_Target
+    │          ├─AS_Exeution_Target_01_Seq
+    │          │      AS_Exeution_Target_01_Seq.bin
+    │          │      AS_Exeution_Target_01_Seq.gltf
+    │          │      
+    │          ├─AS_Exeution_Target_02_Seq
+    │          │      AS_Exeution_Target_02_Seq.bin
+    │          │      AS_Exeution_Target_02_Seq.gltf
+    │          │      
+    │          └─AS_Exeution_Target_03_Seq
+    │                  AS_Exeution_Target_03_Seq.bin
+    │                  AS_Exeution_Target_03_Seq.gltf
+    │                  
+    ├─03_Walk
+    │  ├─01_Walk
+    │  │  ├─01_Walk_F_0
+    │  │  │  ├─AS_Walk_End_F_0_Seq
+    │  │  │  │      AS_Walk_End_F_0_Seq.bin
+    │  │  │  │      AS_Walk_End_F_0_Seq.gltf
+    │  │  │  │      
+    │  │  │  ├─AS_Walk_Loop_F_0_Seq
+    │  │  │  │      AS_Walk_Loop_F_0_Seq.bin
+    │  │  │  │      AS_Walk_Loop_F_0_Seq.gltf
+    │  │  │  │      
+    │  │  │  └─AS_Walk_Start_F_0_Seq
+    │  │  │          AS_Walk_Start_F_0_Seq.bin
+    │  │  │          AS_Walk_Start_F_0_Seq.gltf
+    │  │  │          
+    │  │  ├─02_Walk_F_L_45
+    │  │  │  ├─AS_Walk_End_F_L_45_Seq
+    │  │  │  │      AS_Walk_End_F_L_45_Seq.bin
+    │  │  │  │      AS_Walk_End_F_L_45_Seq.gltf
+    │  │  │  │      
+    │  │  │  ├─AS_Walk_Loop_F_L_45_Seq
+    │  │  │  │      AS_Walk_Loop_F_L_45_Seq.bin
+    │  │  │  │      AS_Walk_Loop_F_L_45_Seq.gltf
+    │  │  │  │      
+    │  │  │  └─AS_Walk_Start_F_L_45_Seq
+    │  │  │          AS_Walk_Start_F_L_45_Seq.bin
+    │  │  │          AS_Walk_Start_F_L_45_Seq.gltf
+    │  │  │          
+    │  │  ├─03_Walk_F_R_45
+    │  │  │  ├─AS_Walk_End_F_R_45_Seq
+    │  │  │  │      AS_Walk_End_F_R_45_Seq.bin
+    │  │  │  │      AS_Walk_End_F_R_45_Seq.gltf
+    │  │  │  │      
+    │  │  │  ├─AS_Walk_Loop_F_R_45_Seq
+    │  │  │  │      AS_Walk_Loop_F_R_45_Seq.bin
+    │  │  │  │      AS_Walk_Loop_F_R_45_Seq.gltf
+    │  │  │  │      
+    │  │  │  └─AS_Walk_Start_F_R_45_Seq
+    │  │  │          AS_Walk_Start_F_R_45_Seq.bin
+    │  │  │          AS_Walk_Start_F_R_45_Seq.gltf
+    │  │  │          
+    │  │  ├─04_Walk_F_L_90
+    │  │  │  ├─AS_Walk_End_F_L_90_Seq
+    │  │  │  │      AS_Walk_End_F_L_90_Seq.bin
+    │  │  │  │      AS_Walk_End_F_L_90_Seq.gltf
+    │  │  │  │      
+    │  │  │  ├─AS_Walk_Loop_F_L_90_Seq
+    │  │  │  │      AS_Walk_Loop_F_L_90_Seq.bin
+    │  │  │  │      AS_Walk_Loop_F_L_90_Seq.gltf
+    │  │  │  │      
+    │  │  │  └─AS_Walk_Start_F_L_90_Seq
+    │  │  │          AS_Walk_Start_F_L_90_Seq.bin
+    │  │  │          AS_Walk_Start_F_L_90_Seq.gltf
+    │  │  │          
+    │  │  ├─05_Walk_F_R_90
+    │  │  │  ├─AS_Walk_End_F_R_90_Seq
+    │  │  │  │      AS_Walk_End_F_R_90_Seq.bin
+    │  │  │  │      AS_Walk_End_F_R_90_Seq.gltf
+    │  │  │  │      
+    │  │  │  ├─AS_Walk_Loop_F_R_90_Seq
+    │  │  │  │      AS_Walk_Loop_F_R_90_Seq.bin
+    │  │  │  │      AS_Walk_Loop_F_R_90_Seq.gltf
+    │  │  │  │      
+    │  │  │  └─AS_Walk_Start_F_R_90_Seq
+    │  │  │          AS_Walk_Start_F_R_90_Seq.bin
+    │  │  │          AS_Walk_Start_F_R_90_Seq.gltf
+    │  │  │          
+    │  │  ├─06_Walk_B_180
+    │  │  │  ├─AS_Walk_End_B_180_Seq
+    │  │  │  │      AS_Walk_End_B_180_Seq.bin
+    │  │  │  │      AS_Walk_End_B_180_Seq.gltf
+    │  │  │  │      
+    │  │  │  ├─AS_Walk_Loop_B_180_Seq
+    │  │  │  │      AS_Walk_Loop_B_180_Seq.bin
+    │  │  │  │      AS_Walk_Loop_B_180_Seq.gltf
+    │  │  │  │      
+    │  │  │  └─AS_Walk_Start_B_180_Seq
+    │  │  │          AS_Walk_Start_B_180_Seq.bin
+    │  │  │          AS_Walk_Start_B_180_Seq.gltf
+    │  │  │          
+    │  │  ├─07_Walk_B_L_45
+    │  │  │  ├─AS_Walk_End_B_L_45_Seq
+    │  │  │  │      AS_Walk_End_B_L_45_Seq.bin
+    │  │  │  │      AS_Walk_End_B_L_45_Seq.gltf
+    │  │  │  │      
+    │  │  │  ├─AS_Walk_Loop_B_L_45_Seq
+    │  │  │  │      AS_Walk_Loop_B_L_45_Seq.bin
+    │  │  │  │      AS_Walk_Loop_B_L_45_Seq.gltf
+    │  │  │  │      
+    │  │  │  └─AS_Walk_Start_B_L_45_Seq
+    │  │  │          AS_Walk_Start_B_L_45_Seq.bin
+    │  │  │          AS_Walk_Start_B_L_45_Seq.gltf
+    │  │  │          
+    │  │  ├─08_Walk_B_R_45
+    │  │  │  ├─AS_Walk_End_B_R_45_Seq
+    │  │  │  │      AS_Walk_End_B_R_45_Seq.bin
+    │  │  │  │      AS_Walk_End_B_R_45_Seq.gltf
+    │  │  │  │      
+    │  │  │  ├─AS_Walk_Loop_B_R_45_Seq
+    │  │  │  │      AS_Walk_Loop_B_R_45_Seq.bin
+    │  │  │  │      AS_Walk_Loop_B_R_45_Seq.gltf
+    │  │  │  │      
+    │  │  │  └─AS_Walk_Start_B_R_45_Seq
+    │  │  │          AS_Walk_Start_B_R_45_Seq.bin
+    │  │  │          AS_Walk_Start_B_R_45_Seq.gltf
+    │  │  │          
+    │  │  ├─09_Walk_B_L_90
+    │  │  │  ├─AS_Walk_End_B_L_90_Seq
+    │  │  │  │      AS_Walk_End_B_L_90_Seq.bin
+    │  │  │  │      AS_Walk_End_B_L_90_Seq.gltf
+    │  │  │  │      
+    │  │  │  ├─AS_Walk_Loop_B_L_90_Seq
+    │  │  │  │      AS_Walk_Loop_B_L_90_Seq.bin
+    │  │  │  │      AS_Walk_Loop_B_L_90_Seq.gltf
+    │  │  │  │      
+    │  │  │  └─AS_Walk_Start_B_L_90_Seq
+    │  │  │          AS_Walk_Start_B_L_90_Seq.bin
+    │  │  │          AS_Walk_Start_B_L_90_Seq.gltf
+    │  │  │          
+    │  │  └─10_Walk_B_R_90
+    │  │      ├─AS_Walk_End_B_R_90_Seq
+    │  │      │      AS_Walk_End_B_R_90_Seq.bin
+    │  │      │      AS_Walk_End_B_R_90_Seq.gltf
+    │  │      │      
+    │  │      ├─AS_Walk_Loop_B_R_90_Seq
+    │  │      │      AS_Walk_Loop_B_R_90_Seq.bin
+    │  │      │      AS_Walk_Loop_B_R_90_Seq.gltf
+    │  │      │      
+    │  │      └─AS_Walk_Start_B_R_90_Seq
+    │  │              AS_Walk_Start_B_R_90_Seq.bin
+    │  │              AS_Walk_Start_B_R_90_Seq.gltf
+    │  │              
+    │  ├─02_Walk_Combat
+    │  │  ├─01_Walk_Combat_F_0
+    │  │  │  ├─AS_Walk_Combat_End_F_0_Seq
+    │  │  │  │      AS_Walk_Combat_End_F_0_Seq.bin
+    │  │  │  │      AS_Walk_Combat_End_F_0_Seq.gltf
+    │  │  │  │      
+    │  │  │  ├─AS_Walk_Combat_Loop_F_0_Seq
+    │  │  │  │      AS_Walk_Combat_Loop_F_0_Seq.bin
+    │  │  │  │      AS_Walk_Combat_Loop_F_0_Seq.gltf
+    │  │  │  │      
+    │  │  │  └─AS_Walk_Combat_Start_F_0_Seq
+    │  │  │          AS_Walk_Combat_Start_F_0_Seq.bin
+    │  │  │          AS_Walk_Combat_Start_F_0_Seq.gltf
+    │  │  │          
+    │  │  ├─02_Walk_Combat_F_L_45
+    │  │  │  ├─AS_Walk_Combat_End_F_L45__Seq
+    │  │  │  │      AS_Walk_Combat_End_F_L45__Seq.bin
+    │  │  │  │      AS_Walk_Combat_End_F_L45__Seq.gltf
+    │  │  │  │      
+    │  │  │  ├─AS_Walk_Combat_Loop_F_L_45_Seq
+    │  │  │  │      AS_Walk_Combat_Loop_F_L_45_Seq.bin
+    │  │  │  │      AS_Walk_Combat_Loop_F_L_45_Seq.gltf
+    │  │  │  │      
+    │  │  │  └─AS_Walk_Combat_Start_F_L_45_Seq
+    │  │  │          AS_Walk_Combat_Start_F_L_45_Seq.bin
+    │  │  │          AS_Walk_Combat_Start_F_L_45_Seq.gltf
+    │  │  │          
+    │  │  ├─03_Walk_Combat_F_R_45
+    │  │  │  ├─AS_Walk_Combat_End_F_R_45_Seq
+    │  │  │  │      AS_Walk_Combat_End_F_R_45_Seq.bin
+    │  │  │  │      AS_Walk_Combat_End_F_R_45_Seq.gltf
+    │  │  │  │      
+    │  │  │  ├─AS_Walk_Combat_Loop_F_R_45_Seq
+    │  │  │  │      AS_Walk_Combat_Loop_F_R_45_Seq.bin
+    │  │  │  │      AS_Walk_Combat_Loop_F_R_45_Seq.gltf
+    │  │  │  │      
+    │  │  │  └─AS_Walk_Combat_Start_F_R_45_Seq
+    │  │  │          AS_Walk_Combat_Start_F_R_45_Seq.bin
+    │  │  │          AS_Walk_Combat_Start_F_R_45_Seq.gltf
+    │  │  │          
+    │  │  ├─04_Walk_Combat_F_L_90
+    │  │  │  ├─AS_Walk_Combat_End_F_L_90_Seq
+    │  │  │  │      AS_Walk_Combat_End_F_L_90_Seq.bin
+    │  │  │  │      AS_Walk_Combat_End_F_L_90_Seq.gltf
+    │  │  │  │      
+    │  │  │  ├─AS_Walk_Combat_Loop_F_L_90_Seq
+    │  │  │  │      AS_Walk_Combat_Loop_F_L_90_Seq.bin
+    │  │  │  │      AS_Walk_Combat_Loop_F_L_90_Seq.gltf
+    │  │  │  │      
+    │  │  │  └─AS_Walk_Combat_Start_F_L_90_Seq
+    │  │  │          AS_Walk_Combat_Start_F_L_90_Seq.bin
+    │  │  │          AS_Walk_Combat_Start_F_L_90_Seq.gltf
+    │  │  │          
+    │  │  ├─05_Walk_Combat_F_R_90
+    │  │  │  ├─AS_Walk_Combat_End_F_R_90_Seq
+    │  │  │  │      AS_Walk_Combat_End_F_R_90_Seq.bin
+    │  │  │  │      AS_Walk_Combat_End_F_R_90_Seq.gltf
+    │  │  │  │      
+    │  │  │  ├─AS_Walk_Combat_Loop_F_R_90_Seq
+    │  │  │  │      AS_Walk_Combat_Loop_F_R_90_Seq.bin
+    │  │  │  │      AS_Walk_Combat_Loop_F_R_90_Seq.gltf
+    │  │  │  │      
+    │  │  │  └─AS_Walk_Combat_Start_F_R_90_Seq
+    │  │  │          AS_Walk_Combat_Start_F_R_90_Seq.bin
+    │  │  │          AS_Walk_Combat_Start_F_R_90_Seq.gltf
+    │  │  │          
+    │  │  ├─06_Walk_Combat_B_180
+    │  │  │  ├─AS_Walk_Combat_End_B_180_Seq
+    │  │  │  │      AS_Walk_Combat_End_B_180_Seq.bin
+    │  │  │  │      AS_Walk_Combat_End_B_180_Seq.gltf
+    │  │  │  │      
+    │  │  │  ├─AS_Walk_Combat_Loop_B_180_Seq
+    │  │  │  │      AS_Walk_Combat_Loop_B_180_Seq.bin
+    │  │  │  │      AS_Walk_Combat_Loop_B_180_Seq.gltf
+    │  │  │  │      
+    │  │  │  └─AS_Walk_Combat_Start_B_180_Seq
+    │  │  │          AS_Walk_Combat_Start_B_180_Seq.bin
+    │  │  │          AS_Walk_Combat_Start_B_180_Seq.gltf
+    │  │  │          
+    │  │  ├─07_Walk_Combat_B_L_45
+    │  │  │  ├─AS_Walk_Combat_End_B_L_45_Seq
+    │  │  │  │      AS_Walk_Combat_End_B_L_45_Seq.bin
+    │  │  │  │      AS_Walk_Combat_End_B_L_45_Seq.gltf
+    │  │  │  │      
+    │  │  │  ├─AS_Walk_Combat_Loop_B_L_45_Seq
+    │  │  │  │      AS_Walk_Combat_Loop_B_L_45_Seq.bin
+    │  │  │  │      AS_Walk_Combat_Loop_B_L_45_Seq.gltf
+    │  │  │  │      
+    │  │  │  └─AS_Walk_Combat_Start_B_L_45_Seq
+    │  │  │          AS_Walk_Combat_Start_B_L_45_Seq.bin
+    │  │  │          AS_Walk_Combat_Start_B_L_45_Seq.gltf
+    │  │  │          
+    │  │  ├─08_Walk_Combat_B_R_45
+    │  │  │  ├─AS_Walk_Combat_End_B_R_45_Seq
+    │  │  │  │      AS_Walk_Combat_End_B_R_45_Seq.bin
+    │  │  │  │      AS_Walk_Combat_End_B_R_45_Seq.gltf
+    │  │  │  │      
+    │  │  │  ├─AS_Walk_Combat_Loop_B_R_45_Seq
+    │  │  │  │      AS_Walk_Combat_Loop_B_R_45_Seq.bin
+    │  │  │  │      AS_Walk_Combat_Loop_B_R_45_Seq.gltf
+    │  │  │  │      
+    │  │  │  └─AS_Walk_Combat_Start_B_R_45_Seq
+    │  │  │          AS_Walk_Combat_Start_B_R_45_Seq.bin
+    │  │  │          AS_Walk_Combat_Start_B_R_45_Seq.gltf
+    │  │  │          
+    │  │  ├─09_Walk_Combat_B_L_90
+    │  │  │  ├─AS_Walk_Combat_End_B_L_90_Seq
+    │  │  │  │      AS_Walk_Combat_End_B_L_90_Seq.bin
+    │  │  │  │      AS_Walk_Combat_End_B_L_90_Seq.gltf
+    │  │  │  │      
+    │  │  │  ├─AS_Walk_Combat_Loop_B_L_90_Seq
+    │  │  │  │      AS_Walk_Combat_Loop_B_L_90_Seq.bin
+    │  │  │  │      AS_Walk_Combat_Loop_B_L_90_Seq.gltf
+    │  │  │  │      
+    │  │  │  └─AS_Walk_Combat_Start_B_L_90_Seq
+    │  │  │          AS_Walk_Combat_Start_B_L_90_Seq.bin
+    │  │  │          AS_Walk_Combat_Start_B_L_90_Seq.gltf
+    │  │  │          
+    │  │  └─10_Walk_Combat_B_R_90
+    │  │      ├─AS_Walk_Combat_End_B_R_90_Seq
+    │  │      │      AS_Walk_Combat_End_B_R_90_Seq.bin
+    │  │      │      AS_Walk_Combat_End_B_R_90_Seq.gltf
+    │  │      │      
+    │  │      ├─AS_Walk_Combat_Loop_B_R_90_Seq
+    │  │      │      AS_Walk_Combat_Loop_B_R_90_Seq.bin
+    │  │      │      AS_Walk_Combat_Loop_B_R_90_Seq.gltf
+    │  │      │      
+    │  │      └─AS_Walk_Combat_Start_B_R_90_Seq
+    │  │              AS_Walk_Combat_Start_B_R_90_Seq.bin
+    │  │              AS_Walk_Combat_Start_B_R_90_Seq.gltf
+    │  │              
+    │  ├─03_Walk_Block
+    │  │  ├─01_Walk_Block_F_0
+    │  │  │  ├─AS_Walk_Block_End_F_0_Seq
+    │  │  │  │      AS_Walk_Block_End_F_0_Seq.bin
+    │  │  │  │      AS_Walk_Block_End_F_0_Seq.gltf
+    │  │  │  │      
+    │  │  │  ├─AS_Walk_Block_Loop_F_0_Seq
+    │  │  │  │      AS_Walk_Block_Loop_F_0_Seq.bin
+    │  │  │  │      AS_Walk_Block_Loop_F_0_Seq.gltf
+    │  │  │  │      
+    │  │  │  └─AS_Walk_Block_Start_F_0_Seq
+    │  │  │          AS_Walk_Block_Start_F_0_Seq.bin
+    │  │  │          AS_Walk_Block_Start_F_0_Seq.gltf
+    │  │  │          
+    │  │  ├─02_Walk_BLock_F_L_45
+    │  │  │  ├─AS_Walk_Block_End_F_L_45_Seq
+    │  │  │  │      AS_Walk_Block_End_F_L_45_Seq.bin
+    │  │  │  │      AS_Walk_Block_End_F_L_45_Seq.gltf
+    │  │  │  │      
+    │  │  │  ├─AS_Walk_Block_Loop_F_L_45_Seq
+    │  │  │  │      AS_Walk_Block_Loop_F_L_45_Seq.bin
+    │  │  │  │      AS_Walk_Block_Loop_F_L_45_Seq.gltf
+    │  │  │  │      
+    │  │  │  └─AS_Walk_Block_Start_F_L_45_Seq1
+    │  │  │          AS_Walk_Block_Start_F_L_45_Seq1.bin
+    │  │  │          AS_Walk_Block_Start_F_L_45_Seq1.gltf
+    │  │  │          
+    │  │  ├─03_Walk_BLock_F_R_45
+    │  │  │  ├─AS_Walk_Block_End_F_R_45_Seq
+    │  │  │  │      AS_Walk_Block_End_F_R_45_Seq.bin
+    │  │  │  │      AS_Walk_Block_End_F_R_45_Seq.gltf
+    │  │  │  │      
+    │  │  │  ├─AS_Walk_Block_Loop_F_R_45_Seq
+    │  │  │  │      AS_Walk_Block_Loop_F_R_45_Seq.bin
+    │  │  │  │      AS_Walk_Block_Loop_F_R_45_Seq.gltf
+    │  │  │  │      
+    │  │  │  └─AS_Walk_Block_Start_F_R_45_Seq
+    │  │  │          AS_Walk_Block_Start_F_R_45_Seq.bin
+    │  │  │          AS_Walk_Block_Start_F_R_45_Seq.gltf
+    │  │  │          
+    │  │  ├─04_Walk_BLock_F_L_90
+    │  │  │  ├─AS_Walk_Block_End_F_L_90_Seq
+    │  │  │  │      AS_Walk_Block_End_F_L_90_Seq.bin
+    │  │  │  │      AS_Walk_Block_End_F_L_90_Seq.gltf
+    │  │  │  │      
+    │  │  │  ├─AS_Walk_Block_Loop_F_L_90_Seq
+    │  │  │  │      AS_Walk_Block_Loop_F_L_90_Seq.bin
+    │  │  │  │      AS_Walk_Block_Loop_F_L_90_Seq.gltf
+    │  │  │  │      
+    │  │  │  └─AS_Walk_Block_Start_F_L_90_Seq
+    │  │  │          AS_Walk_Block_Start_F_L_90_Seq.bin
+    │  │  │          AS_Walk_Block_Start_F_L_90_Seq.gltf
+    │  │  │          
+    │  │  ├─05_Walk_BLock_F_R_90
+    │  │  │  ├─AS_Walk_Block_End_F_R_90_Seq
+    │  │  │  │      AS_Walk_Block_End_F_R_90_Seq.bin
+    │  │  │  │      AS_Walk_Block_End_F_R_90_Seq.gltf
+    │  │  │  │      
+    │  │  │  ├─AS_Walk_Block_Loop_F_R_90_Seq
+    │  │  │  │      AS_Walk_Block_Loop_F_R_90_Seq.bin
+    │  │  │  │      AS_Walk_Block_Loop_F_R_90_Seq.gltf
+    │  │  │  │      
+    │  │  │  └─AS_Walk_Block_Start_F_R_90_Seq
+    │  │  │          AS_Walk_Block_Start_F_R_90_Seq.bin
+    │  │  │          AS_Walk_Block_Start_F_R_90_Seq.gltf
+    │  │  │          
+    │  │  ├─06_Walk_Block_B_180
+    │  │  │  ├─AS_Walk_Block_End_B_180_Seq
+    │  │  │  │      AS_Walk_Block_End_B_180_Seq.bin
+    │  │  │  │      AS_Walk_Block_End_B_180_Seq.gltf
+    │  │  │  │      
+    │  │  │  ├─AS_Walk_Block_Loop_B_180_Seq
+    │  │  │  │      AS_Walk_Block_Loop_B_180_Seq.bin
+    │  │  │  │      AS_Walk_Block_Loop_B_180_Seq.gltf
+    │  │  │  │      
+    │  │  │  └─AS_Walk_Block_Start_B_180_Seq
+    │  │  │          AS_Walk_Block_Start_B_180_Seq.bin
+    │  │  │          AS_Walk_Block_Start_B_180_Seq.gltf
+    │  │  │          
+    │  │  ├─07_Walk_Block_B_L_45
+    │  │  │  ├─AS_Walk_Block_End_B_L_45_Seq
+    │  │  │  │      AS_Walk_Block_End_B_L_45_Seq.bin
+    │  │  │  │      AS_Walk_Block_End_B_L_45_Seq.gltf
+    │  │  │  │      
+    │  │  │  ├─AS_Walk_Block_Loop_B_L_45_Seq
+    │  │  │  │      AS_Walk_Block_Loop_B_L_45_Seq.bin
+    │  │  │  │      AS_Walk_Block_Loop_B_L_45_Seq.gltf
+    │  │  │  │      
+    │  │  │  └─AS_Walk_Block_Start_B_L_45_Seq
+    │  │  │          AS_Walk_Block_Start_B_L_45_Seq.bin
+    │  │  │          AS_Walk_Block_Start_B_L_45_Seq.gltf
+    │  │  │          
+    │  │  ├─08_Walk_Block_B_R_45
+    │  │  │  ├─AS_Walk_Block_End_B_R_45_Seq
+    │  │  │  │      AS_Walk_Block_End_B_R_45_Seq.bin
+    │  │  │  │      AS_Walk_Block_End_B_R_45_Seq.gltf
+    │  │  │  │      
+    │  │  │  ├─AS_Walk_Block_Loop_B_R_45_Seq
+    │  │  │  │      AS_Walk_Block_Loop_B_R_45_Seq.bin
+    │  │  │  │      AS_Walk_Block_Loop_B_R_45_Seq.gltf
+    │  │  │  │      
+    │  │  │  └─AS_Walk_Block_Start_B_R_45_Seq
+    │  │  │          AS_Walk_Block_Start_B_R_45_Seq.bin
+    │  │  │          AS_Walk_Block_Start_B_R_45_Seq.gltf
+    │  │  │          
+    │  │  ├─09_Walk_Block_B_L_90
+    │  │  │  ├─AS_Walk_Block_End_B_L_90_Seq
+    │  │  │  │      AS_Walk_Block_End_B_L_90_Seq.bin
+    │  │  │  │      AS_Walk_Block_End_B_L_90_Seq.gltf
+    │  │  │  │      
+    │  │  │  ├─AS_Walk_Block_Loop_B_L_90_Seq
+    │  │  │  │      AS_Walk_Block_Loop_B_L_90_Seq.bin
+    │  │  │  │      AS_Walk_Block_Loop_B_L_90_Seq.gltf
+    │  │  │  │      
+    │  │  │  └─AS_Walk_Block_Start_B_L_90_Seq
+    │  │  │          AS_Walk_Block_Start_B_L_90_Seq.bin
+    │  │  │          AS_Walk_Block_Start_B_L_90_Seq.gltf
+    │  │  │          
+    │  │  └─10_Walk_Block_B_R_90
+    │  │      ├─AS_Walk_Block_End_B_R_90_Seq
+    │  │      │      AS_Walk_Block_End_B_R_90_Seq.bin
+    │  │      │      AS_Walk_Block_End_B_R_90_Seq.gltf
+    │  │      │      
+    │  │      ├─AS_Walk_Block_Loop_B_R_90_Seq
+    │  │      │      AS_Walk_Block_Loop_B_R_90_Seq.bin
+    │  │      │      AS_Walk_Block_Loop_B_R_90_Seq.gltf
+    │  │      │      
+    │  │      └─AS_Walk_Block_Start_B_R_90_Seq
+    │  │              AS_Walk_Block_Start_B_R_90_Seq.bin
+    │  │              AS_Walk_Block_Start_B_R_90_Seq.gltf
+    │  │              
+    │  ├─04_Walk_to_Walk_Combat
+    │  │  └─AS_Walk_to_Walk_Combat_Seq
+    │  │          AS_Walk_to_Walk_Combat_Seq.bin
+    │  │          AS_Walk_to_Walk_Combat_Seq.gltf
+    │  │          
+    │  └─05_Walk_Combat_to_Walk
+    │      └─AS_Walk_Combat_to_Walk_Seq
+    │              AS_Walk_Combat_to_Walk_Seq.bin
+    │              AS_Walk_Combat_to_Walk_Seq.gltf
+    │              
+    ├─04_Run
+    │  ├─01_Run
+    │  │  ├─01_Run_F_0
+    │  │  │  ├─AS_Run_F_0_End_Seq
+    │  │  │  │      AS_Run_F_0_End_Seq.bin
+    │  │  │  │      AS_Run_F_0_End_Seq.gltf
+    │  │  │  │      
+    │  │  │  ├─AS_Run_F_0_Loop_Seq
+    │  │  │  │      AS_Run_F_0_Loop_Seq.bin
+    │  │  │  │      AS_Run_F_0_Loop_Seq.gltf
+    │  │  │  │      
+    │  │  │  └─AS_Run_F_0_Start_Seq
+    │  │  │          AS_Run_F_0_Start_Seq.bin
+    │  │  │          AS_Run_F_0_Start_Seq.gltf
+    │  │  │          
+    │  │  ├─02_Run_F_L_45
+    │  │  │  ├─AS_Run_F_L_45_End_Seq
+    │  │  │  │      AS_Run_F_L_45_End_Seq.bin
+    │  │  │  │      AS_Run_F_L_45_End_Seq.gltf
+    │  │  │  │      
+    │  │  │  ├─AS_Run_F_L_45_Loop_Seq
+    │  │  │  │      AS_Run_F_L_45_Loop_Seq.bin
+    │  │  │  │      AS_Run_F_L_45_Loop_Seq.gltf
+    │  │  │  │      
+    │  │  │  └─AS_Run_F_L_45_Start_Seq
+    │  │  │          AS_Run_F_L_45_Start_Seq.bin
+    │  │  │          AS_Run_F_L_45_Start_Seq.gltf
+    │  │  │          
+    │  │  ├─03_Run_F_R_45
+    │  │  │  ├─AS_Run_F_R_45_End_Seq
+    │  │  │  │      AS_Run_F_R_45_End_Seq.bin
+    │  │  │  │      AS_Run_F_R_45_End_Seq.gltf
+    │  │  │  │      
+    │  │  │  ├─AS_Run_F_R_45_Loop_Seq
+    │  │  │  │      AS_Run_F_R_45_Loop_Seq.bin
+    │  │  │  │      AS_Run_F_R_45_Loop_Seq.gltf
+    │  │  │  │      
+    │  │  │  └─AS_Run_F_R_45_Start_Seq
+    │  │  │          AS_Run_F_R_45_Start_Seq.bin
+    │  │  │          AS_Run_F_R_45_Start_Seq.gltf
+    │  │  │          
+    │  │  ├─04_Run_F_L_90
+    │  │  │  ├─AS_Run_F_L_90_End_Seq
+    │  │  │  │      AS_Run_F_L_90_End_Seq.bin
+    │  │  │  │      AS_Run_F_L_90_End_Seq.gltf
+    │  │  │  │      
+    │  │  │  ├─AS_Run_F_L_90_Loop_Seq
+    │  │  │  │      AS_Run_F_L_90_Loop_Seq.bin
+    │  │  │  │      AS_Run_F_L_90_Loop_Seq.gltf
+    │  │  │  │      
+    │  │  │  └─AS_Run_F_L_90_Start_Seq
+    │  │  │          AS_Run_F_L_90_Start_Seq.bin
+    │  │  │          AS_Run_F_L_90_Start_Seq.gltf
+    │  │  │          
+    │  │  ├─05_Run_F_R_90
+    │  │  │  ├─AS_Run_F_R_90_End_Seq
+    │  │  │  │      AS_Run_F_R_90_End_Seq.bin
+    │  │  │  │      AS_Run_F_R_90_End_Seq.gltf
+    │  │  │  │      
+    │  │  │  ├─AS_Run_F_R_90_Loop_Seq
+    │  │  │  │      AS_Run_F_R_90_Loop_Seq.bin
+    │  │  │  │      AS_Run_F_R_90_Loop_Seq.gltf
+    │  │  │  │      
+    │  │  │  └─AS_Run_F_R_90_Start_Seq
+    │  │  │          AS_Run_F_R_90_Start_Seq.bin
+    │  │  │          AS_Run_F_R_90_Start_Seq.gltf
+    │  │  │          
+    │  │  ├─06_Run_B_180
+    │  │  │  ├─AS_Run_B_180_End_Seq
+    │  │  │  │      AS_Run_B_180_End_Seq.bin
+    │  │  │  │      AS_Run_B_180_End_Seq.gltf
+    │  │  │  │      
+    │  │  │  ├─AS_Run_B_180_Loop_Seq
+    │  │  │  │      AS_Run_B_180_Loop_Seq.bin
+    │  │  │  │      AS_Run_B_180_Loop_Seq.gltf
+    │  │  │  │      
+    │  │  │  └─AS_Run_B_180_Start_Seq
+    │  │  │          AS_Run_B_180_Start_Seq.bin
+    │  │  │          AS_Run_B_180_Start_Seq.gltf
+    │  │  │          
+    │  │  ├─07_Run_B_L_45
+    │  │  │  ├─AS_Run_B_L_45_End_Seq
+    │  │  │  │      AS_Run_B_L_45_End_Seq.bin
+    │  │  │  │      AS_Run_B_L_45_End_Seq.gltf
+    │  │  │  │      
+    │  │  │  ├─AS_Run_B_L_45_Loop_Seq
+    │  │  │  │      AS_Run_B_L_45_Loop_Seq.bin
+    │  │  │  │      AS_Run_B_L_45_Loop_Seq.gltf
+    │  │  │  │      
+    │  │  │  └─AS_Run_B_L_45_Start_Seq
+    │  │  │          AS_Run_B_L_45_Start_Seq.bin
+    │  │  │          AS_Run_B_L_45_Start_Seq.gltf
+    │  │  │          
+    │  │  ├─08_Run_B_R_45
+    │  │  │  ├─AS_Run_B_R_45_End_Seq
+    │  │  │  │      AS_Run_B_R_45_End_Seq.bin
+    │  │  │  │      AS_Run_B_R_45_End_Seq.gltf
+    │  │  │  │      
+    │  │  │  ├─AS_Run_B_R_45_Loop_Seq
+    │  │  │  │      AS_Run_B_R_45_Loop_Seq.bin
+    │  │  │  │      AS_Run_B_R_45_Loop_Seq.gltf
+    │  │  │  │      
+    │  │  │  └─AS_Run_B_R_45_Start_Seq
+    │  │  │          AS_Run_B_R_45_Start_Seq.bin
+    │  │  │          AS_Run_B_R_45_Start_Seq.gltf
+    │  │  │          
+    │  │  ├─09_Run_B_L_90
+    │  │  │  ├─AS_Run_B_L_90_End_Seq
+    │  │  │  │      AS_Run_B_L_90_End_Seq.bin
+    │  │  │  │      AS_Run_B_L_90_End_Seq.gltf
+    │  │  │  │      
+    │  │  │  ├─AS_Run_B_L_90_Loop_Seq
+    │  │  │  │      AS_Run_B_L_90_Loop_Seq.bin
+    │  │  │  │      AS_Run_B_L_90_Loop_Seq.gltf
+    │  │  │  │      
+    │  │  │  └─AS_Run_B_L_90_Start_Seq
+    │  │  │          AS_Run_B_L_90_Start_Seq.bin
+    │  │  │          AS_Run_B_L_90_Start_Seq.gltf
+    │  │  │          
+    │  │  ├─10_Run_B_R_90
+    │  │  │  ├─AS_Run_B_R_90_End_Seq
+    │  │  │  │      AS_Run_B_R_90_End_Seq.bin
+    │  │  │  │      AS_Run_B_R_90_End_Seq.gltf
+    │  │  │  │      
+    │  │  │  ├─AS_Run_B_R_90_Loop_Seq
+    │  │  │  │      AS_Run_B_R_90_Loop_Seq.bin
+    │  │  │  │      AS_Run_B_R_90_Loop_Seq.gltf
+    │  │  │  │      
+    │  │  │  └─AS_Run_B_R_90_Start_Seq
+    │  │  │          AS_Run_B_R_90_Start_Seq.bin
+    │  │  │          AS_Run_B_R_90_Start_Seq.gltf
+    │  │  │          
+    │  │  └─11_Run_Fast
+    │  │      ├─AS_Run_Fast_End_Seq
+    │  │      │      AS_Run_Fast_End_Seq.bin
+    │  │      │      AS_Run_Fast_End_Seq.gltf
+    │  │      │      
+    │  │      ├─AS_Run_Fast_Lean_L_Loop_Seq
+    │  │      │      AS_Run_Fast_Lean_L_Loop_Seq.bin
+    │  │      │      AS_Run_Fast_Lean_L_Loop_Seq.gltf
+    │  │      │      
+    │  │      ├─AS_Run_Fast_Lean_R_Loop_Seq
+    │  │      │      AS_Run_Fast_Lean_R_Loop_Seq.bin
+    │  │      │      AS_Run_Fast_Lean_R_Loop_Seq.gltf
+    │  │      │      
+    │  │      ├─AS_Run_Fast_Loop_Seq
+    │  │      │      AS_Run_Fast_Loop_Seq.bin
+    │  │      │      AS_Run_Fast_Loop_Seq.gltf
+    │  │      │      
+    │  │      ├─AS_Run_Fast_Start_Seq
+    │  │      │      AS_Run_Fast_Start_Seq.bin
+    │  │      │      AS_Run_Fast_Start_Seq.gltf
+    │  │      │      
+    │  │      ├─AS_Run_Fast_Turn_L_Seq
+    │  │      │      AS_Run_Fast_Turn_L_Seq.bin
+    │  │      │      AS_Run_Fast_Turn_L_Seq.gltf
+    │  │      │      
+    │  │      ├─AS_Run_Fast_Turn_R_Seq
+    │  │      │      AS_Run_Fast_Turn_R_Seq.bin
+    │  │      │      AS_Run_Fast_Turn_R_Seq.gltf
+    │  │      │      
+    │  │      ├─AS_Run_Strat_Fast_B_L_Seq
+    │  │      │      AS_Run_Strat_Fast_B_L_Seq.bin
+    │  │      │      AS_Run_Strat_Fast_B_L_Seq.gltf
+    │  │      │      
+    │  │      ├─AS_Run_Strat_Fast_B_R_Seq
+    │  │      │      AS_Run_Strat_Fast_B_R_Seq.bin
+    │  │      │      AS_Run_Strat_Fast_B_R_Seq.gltf
+    │  │      │      
+    │  │      ├─AS_Run_Strat_Fast_L_Seq
+    │  │      │      AS_Run_Strat_Fast_L_Seq.bin
+    │  │      │      AS_Run_Strat_Fast_L_Seq.gltf
+    │  │      │      
+    │  │      └─AS_Run_Strat_Fast_R_Seq
+    │  │              AS_Run_Strat_Fast_R_Seq.bin
+    │  │              AS_Run_Strat_Fast_R_Seq.gltf
+    │  │              
+    │  ├─02_Run_Combat
+    │  │  ├─01_Run_Combat_F_0
+    │  │  │  ├─AS_Run_Combat_F_0_End_Seq
+    │  │  │  │      AS_Run_Combat_F_0_End_Seq.bin
+    │  │  │  │      AS_Run_Combat_F_0_End_Seq.gltf
+    │  │  │  │      
+    │  │  │  ├─AS_Run_Combat_F_0_Loop_Seq
+    │  │  │  │      AS_Run_Combat_F_0_Loop_Seq.bin
+    │  │  │  │      AS_Run_Combat_F_0_Loop_Seq.gltf
+    │  │  │  │      
+    │  │  │  └─AS_Run_Combat_F_0_Start_Seq
+    │  │  │          AS_Run_Combat_F_0_Start_Seq.bin
+    │  │  │          AS_Run_Combat_F_0_Start_Seq.gltf
+    │  │  │          
+    │  │  ├─02_Run_Combat_F_L_45
+    │  │  │  ├─AS_Run_Combat_F_L_45_End_Seq
+    │  │  │  │      AS_Run_Combat_F_L_45_End_Seq.bin
+    │  │  │  │      AS_Run_Combat_F_L_45_End_Seq.gltf
+    │  │  │  │      
+    │  │  │  ├─AS_Run_Combat_F_L_45_Loop_Seq
+    │  │  │  │      AS_Run_Combat_F_L_45_Loop_Seq.bin
+    │  │  │  │      AS_Run_Combat_F_L_45_Loop_Seq.gltf
+    │  │  │  │      
+    │  │  │  └─AS_Run_Combat_F_L_45_Start_Seq
+    │  │  │          AS_Run_Combat_F_L_45_Start_Seq.bin
+    │  │  │          AS_Run_Combat_F_L_45_Start_Seq.gltf
+    │  │  │          
+    │  │  ├─03_Run_Combat_F_R_45
+    │  │  │  ├─AS_Run_Combat_F_R_45_End_Seq
+    │  │  │  │      AS_Run_Combat_F_R_45_End_Seq.bin
+    │  │  │  │      AS_Run_Combat_F_R_45_End_Seq.gltf
+    │  │  │  │      
+    │  │  │  ├─AS_Run_Combat_F_R_45_Loop_Seq
+    │  │  │  │      AS_Run_Combat_F_R_45_Loop_Seq.bin
+    │  │  │  │      AS_Run_Combat_F_R_45_Loop_Seq.gltf
+    │  │  │  │      
+    │  │  │  └─AS_Run_Combat_F_R_45_Start_Seq
+    │  │  │          AS_Run_Combat_F_R_45_Start_Seq.bin
+    │  │  │          AS_Run_Combat_F_R_45_Start_Seq.gltf
+    │  │  │          
+    │  │  ├─04_Run_Combat_F_L_90
+    │  │  │  ├─AS_Run_Combat_F_L_90_End_Seq
+    │  │  │  │      AS_Run_Combat_F_L_90_End_Seq.bin
+    │  │  │  │      AS_Run_Combat_F_L_90_End_Seq.gltf
+    │  │  │  │      
+    │  │  │  ├─AS_Run_Combat_F_L_90_Loop_Seq
+    │  │  │  │      AS_Run_Combat_F_L_90_Loop_Seq.bin
+    │  │  │  │      AS_Run_Combat_F_L_90_Loop_Seq.gltf
+    │  │  │  │      
+    │  │  │  └─AS_Run_Combat_F_L_90_Start_Seq
+    │  │  │          AS_Run_Combat_F_L_90_Start_Seq.bin
+    │  │  │          AS_Run_Combat_F_L_90_Start_Seq.gltf
+    │  │  │          
+    │  │  ├─05_Run_Combat_F_R_90
+    │  │  │  ├─AS_Run_Combat_F_R_90_End_Seq
+    │  │  │  │      AS_Run_Combat_F_R_90_End_Seq.bin
+    │  │  │  │      AS_Run_Combat_F_R_90_End_Seq.gltf
+    │  │  │  │      
+    │  │  │  ├─AS_Run_Combat_F_R_90_Loop_Seq
+    │  │  │  │      AS_Run_Combat_F_R_90_Loop_Seq.bin
+    │  │  │  │      AS_Run_Combat_F_R_90_Loop_Seq.gltf
+    │  │  │  │      
+    │  │  │  └─AS_Run_Combat_F_R_90_Start_Seq
+    │  │  │          AS_Run_Combat_F_R_90_Start_Seq.bin
+    │  │  │          AS_Run_Combat_F_R_90_Start_Seq.gltf
+    │  │  │          
+    │  │  ├─06_Run_Combat_B_180
+    │  │  │  ├─AS_Run_Combat_B_180_End_Seq
+    │  │  │  │      AS_Run_Combat_B_180_End_Seq.bin
+    │  │  │  │      AS_Run_Combat_B_180_End_Seq.gltf
+    │  │  │  │      
+    │  │  │  ├─AS_Run_Combat_B_180_Loop_Seq
+    │  │  │  │      AS_Run_Combat_B_180_Loop_Seq.bin
+    │  │  │  │      AS_Run_Combat_B_180_Loop_Seq.gltf
+    │  │  │  │      
+    │  │  │  └─AS_Run_Combat_B_180_Start_Seq
+    │  │  │          AS_Run_Combat_B_180_Start_Seq.bin
+    │  │  │          AS_Run_Combat_B_180_Start_Seq.gltf
+    │  │  │          
+    │  │  ├─07_Run_Combat_B_L_45
+    │  │  │  ├─AS_Run_Combat_B_L_45_End_Seq
+    │  │  │  │      AS_Run_Combat_B_L_45_End_Seq.bin
+    │  │  │  │      AS_Run_Combat_B_L_45_End_Seq.gltf
+    │  │  │  │      
+    │  │  │  ├─AS_Run_Combat_B_L_45_Loop_Seq
+    │  │  │  │      AS_Run_Combat_B_L_45_Loop_Seq.bin
+    │  │  │  │      AS_Run_Combat_B_L_45_Loop_Seq.gltf
+    │  │  │  │      
+    │  │  │  └─AS_Run_Combat_B_L_45_Start_Seq
+    │  │  │          AS_Run_Combat_B_L_45_Start_Seq.bin
+    │  │  │          AS_Run_Combat_B_L_45_Start_Seq.gltf
+    │  │  │          
+    │  │  ├─08_Run_Combat_B_R_45
+    │  │  │  ├─AS_Run_Combat_B_R_45_End_Seq
+    │  │  │  │      AS_Run_Combat_B_R_45_End_Seq.bin
+    │  │  │  │      AS_Run_Combat_B_R_45_End_Seq.gltf
+    │  │  │  │      
+    │  │  │  ├─AS_Run_Combat_B_R_45_Loop_Seq
+    │  │  │  │      AS_Run_Combat_B_R_45_Loop_Seq.bin
+    │  │  │  │      AS_Run_Combat_B_R_45_Loop_Seq.gltf
+    │  │  │  │      
+    │  │  │  └─AS_Run_Combat_B_R_45_Start_Seq
+    │  │  │          AS_Run_Combat_B_R_45_Start_Seq.bin
+    │  │  │          AS_Run_Combat_B_R_45_Start_Seq.gltf
+    │  │  │          
+    │  │  ├─09_Run_Combat_B_L_90
+    │  │  │  ├─AS_Run_Combat_B_L_90_End_Seq
+    │  │  │  │      AS_Run_Combat_B_L_90_End_Seq.bin
+    │  │  │  │      AS_Run_Combat_B_L_90_End_Seq.gltf
+    │  │  │  │      
+    │  │  │  ├─AS_Run_Combat_B_L_90_Loop_Seq
+    │  │  │  │      AS_Run_Combat_B_L_90_Loop_Seq.bin
+    │  │  │  │      AS_Run_Combat_B_L_90_Loop_Seq.gltf
+    │  │  │  │      
+    │  │  │  └─AS_Run_Combat_B_L_90_Start_Seq
+    │  │  │          AS_Run_Combat_B_L_90_Start_Seq.bin
+    │  │  │          AS_Run_Combat_B_L_90_Start_Seq.gltf
+    │  │  │          
+    │  │  ├─10_Run_Combat_B_R_90
+    │  │  │  ├─AS_Run_Combat_B_R_90_End_Seq
+    │  │  │  │      AS_Run_Combat_B_R_90_End_Seq.bin
+    │  │  │  │      AS_Run_Combat_B_R_90_End_Seq.gltf
+    │  │  │  │      
+    │  │  │  ├─AS_Run_Combat_B_R_90_Loop_Seq
+    │  │  │  │      AS_Run_Combat_B_R_90_Loop_Seq.bin
+    │  │  │  │      AS_Run_Combat_B_R_90_Loop_Seq.gltf
+    │  │  │  │      
+    │  │  │  └─AS_Run_Combat_B_R_90_Start_Seq
+    │  │  │          AS_Run_Combat_B_R_90_Start_Seq.bin
+    │  │  │          AS_Run_Combat_B_R_90_Start_Seq.gltf
+    │  │  │          
+    │  │  └─11_Run_Combat_Fast
+    │  │      ├─AS_Run_Combat_Fast_End_Seq
+    │  │      │      AS_Run_Combat_Fast_End_Seq.bin
+    │  │      │      AS_Run_Combat_Fast_End_Seq.gltf
+    │  │      │      
+    │  │      ├─AS_Run_Combat_Fast_Lean_L_Loop_Seq
+    │  │      │      AS_Run_Combat_Fast_Lean_L_Loop_Seq.bin
+    │  │      │      AS_Run_Combat_Fast_Lean_L_Loop_Seq.gltf
+    │  │      │      
+    │  │      ├─AS_Run_Combat_Fast_Lean_R_Loop_Seq
+    │  │      │      AS_Run_Combat_Fast_Lean_R_Loop_Seq.bin
+    │  │      │      AS_Run_Combat_Fast_Lean_R_Loop_Seq.gltf
+    │  │      │      
+    │  │      ├─AS_Run_Combat_Fast_Loop_Seq
+    │  │      │      AS_Run_Combat_Fast_Loop_Seq.bin
+    │  │      │      AS_Run_Combat_Fast_Loop_Seq.gltf
+    │  │      │      
+    │  │      ├─AS_Run_Combat_Fast_Start_Seq
+    │  │      │      AS_Run_Combat_Fast_Start_Seq.bin
+    │  │      │      AS_Run_Combat_Fast_Start_Seq.gltf
+    │  │      │      
+    │  │      ├─AS_Run_Combat_Fast_Turn_L_Seq
+    │  │      │      AS_Run_Combat_Fast_Turn_L_Seq.bin
+    │  │      │      AS_Run_Combat_Fast_Turn_L_Seq.gltf
+    │  │      │      
+    │  │      ├─AS_Run_Combat_Fast_Turn_R_Seq
+    │  │      │      AS_Run_Combat_Fast_Turn_R_Seq.bin
+    │  │      │      AS_Run_Combat_Fast_Turn_R_Seq.gltf
+    │  │      │      
+    │  │      ├─AS_Run_Combat_Strat_Fast_B_L_Seq
+    │  │      │      AS_Run_Combat_Strat_Fast_B_L_Seq.bin
+    │  │      │      AS_Run_Combat_Strat_Fast_B_L_Seq.gltf
+    │  │      │      
+    │  │      ├─AS_Run_Combat_Strat_Fast_B_R_Seq
+    │  │      │      AS_Run_Combat_Strat_Fast_B_R_Seq.bin
+    │  │      │      AS_Run_Combat_Strat_Fast_B_R_Seq.gltf
+    │  │      │      
+    │  │      ├─AS_Run_Combat_Strat_Fast_L_Seq
+    │  │      │      AS_Run_Combat_Strat_Fast_L_Seq.bin
+    │  │      │      AS_Run_Combat_Strat_Fast_L_Seq.gltf
+    │  │      │      
+    │  │      └─AS_Run_Combat_Strat_Fast_R_Seq
+    │  │              AS_Run_Combat_Strat_Fast_R_Seq.bin
+    │  │              AS_Run_Combat_Strat_Fast_R_Seq.gltf
+    │  │              
+    │  ├─03_Run_to_Run_Combat
+    │  │  └─AS_Run_to_Run_Combat_Seq
+    │  │          AS_Run_to_Run_Combat_Seq.bin
+    │  │          AS_Run_to_Run_Combat_Seq.gltf
+    │  │          
+    │  └─04_Run_Combat_to_Run
+    │      └─AS_Run_Combat_to_Run_Seq
+    │              AS_Run_Combat_to_Run_Seq.bin
+    │              AS_Run_Combat_to_Run_Seq.gltf
+    │              
+    ├─05_Jump
+    │  ├─01_Jump
+    │  │  ├─AS_Jump_End_0_Seq
+    │  │  │      AS_Jump_End_0_Seq.bin
+    │  │  │      AS_Jump_End_0_Seq.gltf
+    │  │  │      
+    │  │  ├─AS_Jump_End_B_180_Seq
+    │  │  │      AS_Jump_End_B_180_Seq.bin
+    │  │  │      AS_Jump_End_B_180_Seq.gltf
+    │  │  │      
+    │  │  ├─AS_Jump_End_F_0_Seq
+    │  │  │      AS_Jump_End_F_0_Seq.bin
+    │  │  │      AS_Jump_End_F_0_Seq.gltf
+    │  │  │      
+    │  │  ├─AS_Jump_End_L_90_Seq
+    │  │  │      AS_Jump_End_L_90_Seq.bin
+    │  │  │      AS_Jump_End_L_90_Seq.gltf
+    │  │  │      
+    │  │  ├─AS_Jump_End_R_90_Seq
+    │  │  │      AS_Jump_End_R_90_Seq.bin
+    │  │  │      AS_Jump_End_R_90_Seq.gltf
+    │  │  │      
+    │  │  ├─AS_Jump_Loop_0_Seq
+    │  │  │      AS_Jump_Loop_0_Seq.bin
+    │  │  │      AS_Jump_Loop_0_Seq.gltf
+    │  │  │      
+    │  │  ├─AS_Jump_Start_0_Seq
+    │  │  │      AS_Jump_Start_0_Seq.bin
+    │  │  │      AS_Jump_Start_0_Seq.gltf
+    │  │  │      
+    │  │  ├─AS_Jump_Start_B_180_Seq
+    │  │  │      AS_Jump_Start_B_180_Seq.bin
+    │  │  │      AS_Jump_Start_B_180_Seq.gltf
+    │  │  │      
+    │  │  ├─AS_Jump_Start_F_0_Seq
+    │  │  │      AS_Jump_Start_F_0_Seq.bin
+    │  │  │      AS_Jump_Start_F_0_Seq.gltf
+    │  │  │      
+    │  │  ├─AS_Jump_Start_L_90_Seq
+    │  │  │      AS_Jump_Start_L_90_Seq.bin
+    │  │  │      AS_Jump_Start_L_90_Seq.gltf
+    │  │  │      
+    │  │  ├─AS_Jump_Start_R_90_Seq
+    │  │  │      AS_Jump_Start_R_90_Seq.bin
+    │  │  │      AS_Jump_Start_R_90_Seq.gltf
+    │  │  │      
+    │  │  ├─AS_Jump_to_Run_B_180_Seq
+    │  │  │      AS_Jump_to_Run_B_180_Seq.bin
+    │  │  │      AS_Jump_to_Run_B_180_Seq.gltf
+    │  │  │      
+    │  │  ├─AS_Jump_to_Run_Fast_Seq
+    │  │  │      AS_Jump_to_Run_Fast_Seq.bin
+    │  │  │      AS_Jump_to_Run_Fast_Seq.gltf
+    │  │  │      
+    │  │  ├─AS_Jump_to_Run_L_90_Seq
+    │  │  │      AS_Jump_to_Run_L_90_Seq.bin
+    │  │  │      AS_Jump_to_Run_L_90_Seq.gltf
+    │  │  │      
+    │  │  ├─AS_Jump_to_Run_R_90_Seq
+    │  │  │      AS_Jump_to_Run_R_90_Seq.bin
+    │  │  │      AS_Jump_to_Run_R_90_Seq.gltf
+    │  │  │      
+    │  │  └─AS_Jump_to_Run_Seq
+    │  │          AS_Jump_to_Run_Seq.bin
+    │  │          AS_Jump_to_Run_Seq.gltf
+    │  │          
+    │  ├─02_Jump_Combat
+    │  │  ├─AS_Jump_Combat_End_0_Seq
+    │  │  │      AS_Jump_Combat_End_0_Seq.bin
+    │  │  │      AS_Jump_Combat_End_0_Seq.gltf
+    │  │  │      
+    │  │  ├─AS_Jump_Combat_End_B_180_Seq
+    │  │  │      AS_Jump_Combat_End_B_180_Seq.bin
+    │  │  │      AS_Jump_Combat_End_B_180_Seq.gltf
+    │  │  │      
+    │  │  ├─AS_Jump_Combat_End_F_0_Seq
+    │  │  │      AS_Jump_Combat_End_F_0_Seq.bin
+    │  │  │      AS_Jump_Combat_End_F_0_Seq.gltf
+    │  │  │      
+    │  │  ├─AS_Jump_Combat_End_L_90_Seq
+    │  │  │      AS_Jump_Combat_End_L_90_Seq.bin
+    │  │  │      AS_Jump_Combat_End_L_90_Seq.gltf
+    │  │  │      
+    │  │  ├─AS_Jump_Combat_End_R_90_Seq
+    │  │  │      AS_Jump_Combat_End_R_90_Seq.bin
+    │  │  │      AS_Jump_Combat_End_R_90_Seq.gltf
+    │  │  │      
+    │  │  ├─AS_Jump_Combat_Loop_0_Seq
+    │  │  │      AS_Jump_Combat_Loop_0_Seq.bin
+    │  │  │      AS_Jump_Combat_Loop_0_Seq.gltf
+    │  │  │      
+    │  │  ├─AS_Jump_Combat_Start_0_Seq
+    │  │  │      AS_Jump_Combat_Start_0_Seq.bin
+    │  │  │      AS_Jump_Combat_Start_0_Seq.gltf
+    │  │  │      
+    │  │  ├─AS_Jump_Combat_Start_B_180_Seq
+    │  │  │      AS_Jump_Combat_Start_B_180_Seq.bin
+    │  │  │      AS_Jump_Combat_Start_B_180_Seq.gltf
+    │  │  │      
+    │  │  ├─AS_Jump_Combat_Start_F_0_Seq
+    │  │  │      AS_Jump_Combat_Start_F_0_Seq.bin
+    │  │  │      AS_Jump_Combat_Start_F_0_Seq.gltf
+    │  │  │      
+    │  │  ├─AS_Jump_Combat_Start_L_90_Seq
+    │  │  │      AS_Jump_Combat_Start_L_90_Seq.bin
+    │  │  │      AS_Jump_Combat_Start_L_90_Seq.gltf
+    │  │  │      
+    │  │  ├─AS_Jump_Combat_Start_R_90_Seq
+    │  │  │      AS_Jump_Combat_Start_R_90_Seq.bin
+    │  │  │      AS_Jump_Combat_Start_R_90_Seq.gltf
+    │  │  │      
+    │  │  ├─AS_Jump_Combat_to_Run_B_180_Seq
+    │  │  │      AS_Jump_Combat_to_Run_B_180_Seq.bin
+    │  │  │      AS_Jump_Combat_to_Run_B_180_Seq.gltf
+    │  │  │      
+    │  │  ├─AS_Jump_Combat_to_Run_Fast_Seq
+    │  │  │      AS_Jump_Combat_to_Run_Fast_Seq.bin
+    │  │  │      AS_Jump_Combat_to_Run_Fast_Seq.gltf
+    │  │  │      
+    │  │  ├─AS_Jump_Combat_to_Run_L_90_Seq
+    │  │  │      AS_Jump_Combat_to_Run_L_90_Seq.bin
+    │  │  │      AS_Jump_Combat_to_Run_L_90_Seq.gltf
+    │  │  │      
+    │  │  ├─AS_Jump_Combat_to_Run_R_90_Seq
+    │  │  │      AS_Jump_Combat_to_Run_R_90_Seq.bin
+    │  │  │      AS_Jump_Combat_to_Run_R_90_Seq.gltf
+    │  │  │      
+    │  │  └─AS_Jump_Combat_to_Run_Seq
+    │  │          AS_Jump_Combat_to_Run_Seq.bin
+    │  │          AS_Jump_Combat_to_Run_Seq.gltf
+    │  │          
+    │  ├─03_Double_Jump
+    │  │  ├─AS_Double_Jump_0_Seq
+    │  │  │      AS_Double_Jump_0_Seq.bin
+    │  │  │      AS_Double_Jump_0_Seq.gltf
+    │  │  │      
+    │  │  ├─AS_Double_Jump_B_180_Seq
+    │  │  │      AS_Double_Jump_B_180_Seq.bin
+    │  │  │      AS_Double_Jump_B_180_Seq.gltf
+    │  │  │      
+    │  │  ├─AS_Double_Jump_F_0_Seq
+    │  │  │      AS_Double_Jump_F_0_Seq.bin
+    │  │  │      AS_Double_Jump_F_0_Seq.gltf
+    │  │  │      
+    │  │  ├─AS_Double_Jump_L_90_Seq
+    │  │  │      AS_Double_Jump_L_90_Seq.bin
+    │  │  │      AS_Double_Jump_L_90_Seq.gltf
+    │  │  │      
+    │  │  └─AS_Double_Jump_R_90_Seq
+    │  │          AS_Double_Jump_R_90_Seq.bin
+    │  │          AS_Double_Jump_R_90_Seq.gltf
+    │  │          
+    │  └─04_Double_Jump_Combat
+    │      ├─AS_Double_Combat_Jump_B_180_Seq
+    │      │      AS_Double_Combat_Jump_B_180_Seq.bin
+    │      │      AS_Double_Combat_Jump_B_180_Seq.gltf
+    │      │      
+    │      ├─AS_Double_Combat_Jump_F_0_Seq
+    │      │      AS_Double_Combat_Jump_F_0_Seq.bin
+    │      │      AS_Double_Combat_Jump_F_0_Seq.gltf
+    │      │      
+    │      ├─AS_Double_Jump_Combat_0_Seq
+    │      │      AS_Double_Jump_Combat_0_Seq.bin
+    │      │      AS_Double_Jump_Combat_0_Seq.gltf
+    │      │      
+    │      ├─AS_Double_Jump_Combat_L_90_Seq
+    │      │      AS_Double_Jump_Combat_L_90_Seq.bin
+    │      │      AS_Double_Jump_Combat_L_90_Seq.gltf
+    │      │      
+    │      └─AS_Double_Jump_Combat_R_90_Seq
+    │              AS_Double_Jump_Combat_R_90_Seq.bin
+    │              AS_Double_Jump_Combat_R_90_Seq.gltf
+    │              
+    ├─06_Dodge
+    │  ├─01_Dodge
+    │  │  ├─AS_Dodge_B_180_Seq
+    │  │  │      AS_Dodge_B_180_Seq.bin
+    │  │  │      AS_Dodge_B_180_Seq.gltf
+    │  │  │      
+    │  │  ├─AS_Dodge_B_L_45_Seq
+    │  │  │      AS_Dodge_B_L_45_Seq.bin
+    │  │  │      AS_Dodge_B_L_45_Seq.gltf
+    │  │  │      
+    │  │  ├─AS_Dodge_B_R_45_Seq
+    │  │  │      AS_Dodge_B_R_45_Seq.bin
+    │  │  │      AS_Dodge_B_R_45_Seq.gltf
+    │  │  │      
+    │  │  ├─AS_Dodge_F_0_Seq
+    │  │  │      AS_Dodge_F_0_Seq.bin
+    │  │  │      AS_Dodge_F_0_Seq.gltf
+    │  │  │      
+    │  │  ├─AS_Dodge_F_L_45_Seq
+    │  │  │      AS_Dodge_F_L_45_Seq.bin
+    │  │  │      AS_Dodge_F_L_45_Seq.gltf
+    │  │  │      
+    │  │  ├─AS_Dodge_F_R_45_Seq
+    │  │  │      AS_Dodge_F_R_45_Seq.bin
+    │  │  │      AS_Dodge_F_R_45_Seq.gltf
+    │  │  │      
+    │  │  ├─AS_Dodge_L_90_Seq
+    │  │  │      AS_Dodge_L_90_Seq.bin
+    │  │  │      AS_Dodge_L_90_Seq.gltf
+    │  │  │      
+    │  │  └─AS_Dodge_R_90_Seq
+    │  │          AS_Dodge_R_90_Seq.bin
+    │  │          AS_Dodge_R_90_Seq.gltf
+    │  │          
+    │  ├─02_Dodge_Combat
+    │  │  ├─AS_Dodge_Combat_B_180_Seq
+    │  │  │      AS_Dodge_Combat_B_180_Seq.bin
+    │  │  │      AS_Dodge_Combat_B_180_Seq.gltf
+    │  │  │      
+    │  │  ├─AS_Dodge_Combat_B_L_45_Seq
+    │  │  │      AS_Dodge_Combat_B_L_45_Seq.bin
+    │  │  │      AS_Dodge_Combat_B_L_45_Seq.gltf
+    │  │  │      
+    │  │  ├─AS_Dodge_Combat_B_R_45_Seq
+    │  │  │      AS_Dodge_Combat_B_R_45_Seq.bin
+    │  │  │      AS_Dodge_Combat_B_R_45_Seq.gltf
+    │  │  │      
+    │  │  ├─AS_Dodge_Combat_F_0_Seq
+    │  │  │      AS_Dodge_Combat_F_0_Seq.bin
+    │  │  │      AS_Dodge_Combat_F_0_Seq.gltf
+    │  │  │      
+    │  │  ├─AS_Dodge_Combat_F_L_45_Seq
+    │  │  │      AS_Dodge_Combat_F_L_45_Seq.bin
+    │  │  │      AS_Dodge_Combat_F_L_45_Seq.gltf
+    │  │  │      
+    │  │  ├─AS_Dodge_Combat_F_R_45_Seq
+    │  │  │      AS_Dodge_Combat_F_R_45_Seq.bin
+    │  │  │      AS_Dodge_Combat_F_R_45_Seq.gltf
+    │  │  │      
+    │  │  ├─AS_Dodge_Combat_L_90_Seq
+    │  │  │      AS_Dodge_Combat_L_90_Seq.bin
+    │  │  │      AS_Dodge_Combat_L_90_Seq.gltf
+    │  │  │      
+    │  │  └─AS_Dodge_Combat_R_90_Seq
+    │  │          AS_Dodge_Combat_R_90_Seq.bin
+    │  │          AS_Dodge_Combat_R_90_Seq.gltf
+    │  │          
+    │  ├─03_Dodge_Air
+    │  │  ├─AS_Dodge_Air_B_180_Seq
+    │  │  │      AS_Dodge_Air_B_180_Seq.bin
+    │  │  │      AS_Dodge_Air_B_180_Seq.gltf
+    │  │  │      
+    │  │  ├─AS_Dodge_Air_B_L_45_Seq
+    │  │  │      AS_Dodge_Air_B_L_45_Seq.bin
+    │  │  │      AS_Dodge_Air_B_L_45_Seq.gltf
+    │  │  │      
+    │  │  ├─AS_Dodge_Air_B_R_45_Seq
+    │  │  │      AS_Dodge_Air_B_R_45_Seq.bin
+    │  │  │      AS_Dodge_Air_B_R_45_Seq.gltf
+    │  │  │      
+    │  │  ├─AS_Dodge_Air_F_0_Seq
+    │  │  │      AS_Dodge_Air_F_0_Seq.bin
+    │  │  │      AS_Dodge_Air_F_0_Seq.gltf
+    │  │  │      
+    │  │  ├─AS_Dodge_Air_F_L_45_Seq
+    │  │  │      AS_Dodge_Air_F_L_45_Seq.bin
+    │  │  │      AS_Dodge_Air_F_L_45_Seq.gltf
+    │  │  │      
+    │  │  ├─AS_Dodge_Air_F_R_45_Seq
+    │  │  │      AS_Dodge_Air_F_R_45_Seq.bin
+    │  │  │      AS_Dodge_Air_F_R_45_Seq.gltf
+    │  │  │      
+    │  │  ├─AS_Dodge_Air_L_90_Seq
+    │  │  │      AS_Dodge_Air_L_90_Seq.bin
+    │  │  │      AS_Dodge_Air_L_90_Seq.gltf
+    │  │  │      
+    │  │  └─AS_Dodge_Air_R_90_Seq
+    │  │          AS_Dodge_Air_R_90_Seq.bin
+    │  │          AS_Dodge_Air_R_90_Seq.gltf
+    │  │          
+    │  ├─04_Dodge_Air_Combat
+    │  │  ├─AS_Dodge_Air_Combat_B_180_Seq
+    │  │  │      AS_Dodge_Air_Combat_B_180_Seq.bin
+    │  │  │      AS_Dodge_Air_Combat_B_180_Seq.gltf
+    │  │  │      
+    │  │  ├─AS_Dodge_Air_Combat_B_L_45_Seq
+    │  │  │      AS_Dodge_Air_Combat_B_L_45_Seq.bin
+    │  │  │      AS_Dodge_Air_Combat_B_L_45_Seq.gltf
+    │  │  │      
+    │  │  ├─AS_Dodge_Air_Combat_B_R_45_Seq
+    │  │  │      AS_Dodge_Air_Combat_B_R_45_Seq.bin
+    │  │  │      AS_Dodge_Air_Combat_B_R_45_Seq.gltf
+    │  │  │      
+    │  │  ├─AS_Dodge_Air_Combat_F_0_Seq
+    │  │  │      AS_Dodge_Air_Combat_F_0_Seq.bin
+    │  │  │      AS_Dodge_Air_Combat_F_0_Seq.gltf
+    │  │  │      
+    │  │  ├─AS_Dodge_Air_Combat_F_L_45_Seq
+    │  │  │      AS_Dodge_Air_Combat_F_L_45_Seq.bin
+    │  │  │      AS_Dodge_Air_Combat_F_L_45_Seq.gltf
+    │  │  │      
+    │  │  ├─AS_Dodge_Air_Combat_F_R_45_Seq
+    │  │  │      AS_Dodge_Air_Combat_F_R_45_Seq.bin
+    │  │  │      AS_Dodge_Air_Combat_F_R_45_Seq.gltf
+    │  │  │      
+    │  │  ├─AS_Dodge_Air_Combat_L_90_Seq
+    │  │  │      AS_Dodge_Air_Combat_L_90_Seq.bin
+    │  │  │      AS_Dodge_Air_Combat_L_90_Seq.gltf
+    │  │  │      
+    │  │  └─AS_Dodge_Air_Combat_R_90_Seq
+    │  │          AS_Dodge_Air_Combat_R_90_Seq.bin
+    │  │          AS_Dodge_Air_Combat_R_90_Seq.gltf
+    │  │          
+    │  ├─05_Dodge_to_Run
+    │  │  ├─AS_Dodge_to_Run_B_180_Seq
+    │  │  │      AS_Dodge_to_Run_B_180_Seq.bin
+    │  │  │      AS_Dodge_to_Run_B_180_Seq.gltf
+    │  │  │      
+    │  │  ├─AS_Dodge_to_Run_B_L_45_Seq
+    │  │  │      AS_Dodge_to_Run_B_L_45_Seq.bin
+    │  │  │      AS_Dodge_to_Run_B_L_45_Seq.gltf
+    │  │  │      
+    │  │  ├─AS_Dodge_to_Run_B_R_45_Seq
+    │  │  │      AS_Dodge_to_Run_B_R_45_Seq.bin
+    │  │  │      AS_Dodge_to_Run_B_R_45_Seq.gltf
+    │  │  │      
+    │  │  ├─AS_Dodge_to_Run_Fast_F_0_Seq
+    │  │  │      AS_Dodge_to_Run_Fast_F_0_Seq.bin
+    │  │  │      AS_Dodge_to_Run_Fast_F_0_Seq.gltf
+    │  │  │      
+    │  │  ├─AS_Dodge_to_Run_F_0_Seq
+    │  │  │      AS_Dodge_to_Run_F_0_Seq.bin
+    │  │  │      AS_Dodge_to_Run_F_0_Seq.gltf
+    │  │  │      
+    │  │  ├─AS_Dodge_to_Run_F_L_45_Seq
+    │  │  │      AS_Dodge_to_Run_F_L_45_Seq.bin
+    │  │  │      AS_Dodge_to_Run_F_L_45_Seq.gltf
+    │  │  │      
+    │  │  ├─AS_Dodge_to_Run_F_R_45_Seq
+    │  │  │      AS_Dodge_to_Run_F_R_45_Seq.bin
+    │  │  │      AS_Dodge_to_Run_F_R_45_Seq.gltf
+    │  │  │      
+    │  │  ├─AS_Dodge_to_Run_L_90_Seq
+    │  │  │      AS_Dodge_to_Run_L_90_Seq.bin
+    │  │  │      AS_Dodge_to_Run_L_90_Seq.gltf
+    │  │  │      
+    │  │  └─AS_Dodge_to_Run_R_90_Seq
+    │  │          AS_Dodge_to_Run_R_90_Seq.bin
+    │  │          AS_Dodge_to_Run_R_90_Seq.gltf
+    │  │          
+    │  └─06_Dodge_Combat_to_Run
+    │      ├─AS_Dodge_to_Run_Combat_B_180_Seq
+    │      │      AS_Dodge_to_Run_Combat_B_180_Seq.bin
+    │      │      AS_Dodge_to_Run_Combat_B_180_Seq.gltf
+    │      │      
+    │      ├─AS_Dodge_to_Run_Combat_B_L_45_Seq
+    │      │      AS_Dodge_to_Run_Combat_B_L_45_Seq.bin
+    │      │      AS_Dodge_to_Run_Combat_B_L_45_Seq.gltf
+    │      │      
+    │      ├─AS_Dodge_to_Run_Combat_B_R_45_Seq
+    │      │      AS_Dodge_to_Run_Combat_B_R_45_Seq.bin
+    │      │      AS_Dodge_to_Run_Combat_B_R_45_Seq.gltf
+    │      │      
+    │      ├─AS_Dodge_to_Run_Combat_F_0_Seq
+    │      │      AS_Dodge_to_Run_Combat_F_0_Seq.bin
+    │      │      AS_Dodge_to_Run_Combat_F_0_Seq.gltf
+    │      │      
+    │      ├─AS_Dodge_to_Run_Combat_F_L_45_Seq
+    │      │      AS_Dodge_to_Run_Combat_F_L_45_Seq.bin
+    │      │      AS_Dodge_to_Run_Combat_F_L_45_Seq.gltf
+    │      │      
+    │      ├─AS_Dodge_to_Run_Combat_F_R_45_Seq
+    │      │      AS_Dodge_to_Run_Combat_F_R_45_Seq.bin
+    │      │      AS_Dodge_to_Run_Combat_F_R_45_Seq.gltf
+    │      │      
+    │      ├─AS_Dodge_to_Run_Combat_L_90_Seq
+    │      │      AS_Dodge_to_Run_Combat_L_90_Seq.bin
+    │      │      AS_Dodge_to_Run_Combat_L_90_Seq.gltf
+    │      │      
+    │      ├─AS_Dodge_to_Run_Combat_R_90_Seq
+    │      │      AS_Dodge_to_Run_Combat_R_90_Seq.bin
+    │      │      AS_Dodge_to_Run_Combat_R_90_Seq.gltf
+    │      │      
+    │      └─AS_Dodge_to_Run_Fast_Combat_F_0_Seq
+    │              AS_Dodge_to_Run_Fast_Combat_F_0_Seq.bin
+    │              AS_Dodge_to_Run_Fast_Combat_F_0_Seq.gltf
+    │              
+    ├─07_Roll
+    │  ├─01_Roll
+    │  │  ├─AS_Roll_B_180_Seq
+    │  │  │      AS_Roll_B_180_Seq.bin
+    │  │  │      AS_Roll_B_180_Seq.gltf
+    │  │  │      
+    │  │  ├─AS_Roll_B_L_45_Seq
+    │  │  │      AS_Roll_B_L_45_Seq.bin
+    │  │  │      AS_Roll_B_L_45_Seq.gltf
+    │  │  │      
+    │  │  ├─AS_Roll_B_R_45_Seq
+    │  │  │      AS_Roll_B_R_45_Seq.bin
+    │  │  │      AS_Roll_B_R_45_Seq.gltf
+    │  │  │      
+    │  │  ├─AS_Roll_F_0_Seq
+    │  │  │      AS_Roll_F_0_Seq.bin
+    │  │  │      AS_Roll_F_0_Seq.gltf
+    │  │  │      
+    │  │  ├─AS_Roll_F_L_45_Seq
+    │  │  │      AS_Roll_F_L_45_Seq.bin
+    │  │  │      AS_Roll_F_L_45_Seq.gltf
+    │  │  │      
+    │  │  ├─AS_Roll_F_R_45_Seq
+    │  │  │      AS_Roll_F_R_45_Seq.bin
+    │  │  │      AS_Roll_F_R_45_Seq.gltf
+    │  │  │      
+    │  │  ├─AS_Roll_L_90_Seq
+    │  │  │      AS_Roll_L_90_Seq.bin
+    │  │  │      AS_Roll_L_90_Seq.gltf
+    │  │  │      
+    │  │  └─AS_Roll_R_90_Seq
+    │  │          AS_Roll_R_90_Seq.bin
+    │  │          AS_Roll_R_90_Seq.gltf
+    │  │          
+    │  ├─02_Roll_Combat
+    │  │  ├─AS_Roll_Combat_B_180_Seq
+    │  │  │      AS_Roll_Combat_B_180_Seq.bin
+    │  │  │      AS_Roll_Combat_B_180_Seq.gltf
+    │  │  │      
+    │  │  ├─AS_Roll_Combat_B_L_45_Seq
+    │  │  │      AS_Roll_Combat_B_L_45_Seq.bin
+    │  │  │      AS_Roll_Combat_B_L_45_Seq.gltf
+    │  │  │      
+    │  │  ├─AS_Roll_Combat_B_R_45_Seq
+    │  │  │      AS_Roll_Combat_B_R_45_Seq.bin
+    │  │  │      AS_Roll_Combat_B_R_45_Seq.gltf
+    │  │  │      
+    │  │  ├─AS_Roll_Combat_F_0_Seq
+    │  │  │      AS_Roll_Combat_F_0_Seq.bin
+    │  │  │      AS_Roll_Combat_F_0_Seq.gltf
+    │  │  │      
+    │  │  ├─AS_Roll_Combat_F_L_45_Seq
+    │  │  │      AS_Roll_Combat_F_L_45_Seq.bin
+    │  │  │      AS_Roll_Combat_F_L_45_Seq.gltf
+    │  │  │      
+    │  │  ├─AS_Roll_Combat_F_R_45_Seq
+    │  │  │      AS_Roll_Combat_F_R_45_Seq.bin
+    │  │  │      AS_Roll_Combat_F_R_45_Seq.gltf
+    │  │  │      
+    │  │  ├─AS_Roll_Combat_L_90_Seq
+    │  │  │      AS_Roll_Combat_L_90_Seq.bin
+    │  │  │      AS_Roll_Combat_L_90_Seq.gltf
+    │  │  │      
+    │  │  └─AS_Roll_Combat_R_90_Seq
+    │  │          AS_Roll_Combat_R_90_Seq.bin
+    │  │          AS_Roll_Combat_R_90_Seq.gltf
+    │  │          
+    │  ├─03_Roll_to_Run
+    │  │  ├─AS_Roll_to_Run_B_180_Seq
+    │  │  │      AS_Roll_to_Run_B_180_Seq.bin
+    │  │  │      AS_Roll_to_Run_B_180_Seq.gltf
+    │  │  │      
+    │  │  ├─AS_Roll_to_Run_B_L_45_Seq
+    │  │  │      AS_Roll_to_Run_B_L_45_Seq.bin
+    │  │  │      AS_Roll_to_Run_B_L_45_Seq.gltf
+    │  │  │      
+    │  │  ├─AS_Roll_to_Run_B_R_45_Seq
+    │  │  │      AS_Roll_to_Run_B_R_45_Seq.bin
+    │  │  │      AS_Roll_to_Run_B_R_45_Seq.gltf
+    │  │  │      
+    │  │  ├─AS_Roll_to_Run_Fast_F_0_Seq
+    │  │  │      AS_Roll_to_Run_Fast_F_0_Seq.bin
+    │  │  │      AS_Roll_to_Run_Fast_F_0_Seq.gltf
+    │  │  │      
+    │  │  ├─AS_Roll_to_Run_F_0_Seq
+    │  │  │      AS_Roll_to_Run_F_0_Seq.bin
+    │  │  │      AS_Roll_to_Run_F_0_Seq.gltf
+    │  │  │      
+    │  │  ├─AS_Roll_to_Run_F_L_45_Seq
+    │  │  │      AS_Roll_to_Run_F_L_45_Seq.bin
+    │  │  │      AS_Roll_to_Run_F_L_45_Seq.gltf
+    │  │  │      
+    │  │  ├─AS_Roll_to_Run_F_R_45_Seq
+    │  │  │      AS_Roll_to_Run_F_R_45_Seq.bin
+    │  │  │      AS_Roll_to_Run_F_R_45_Seq.gltf
+    │  │  │      
+    │  │  ├─AS_Roll_to_Run_L_90_Seq
+    │  │  │      AS_Roll_to_Run_L_90_Seq.bin
+    │  │  │      AS_Roll_to_Run_L_90_Seq.gltf
+    │  │  │      
+    │  │  └─AS_Roll_to_Run_R_90_Seq
+    │  │          AS_Roll_to_Run_R_90_Seq.bin
+    │  │          AS_Roll_to_Run_R_90_Seq.gltf
+    │  │          
+    │  └─04_Roll_Combat_to_Run
+    │      ├─AS_Roll_to_Run_Combat_B_180_Seq
+    │      │      AS_Roll_to_Run_Combat_B_180_Seq.bin
+    │      │      AS_Roll_to_Run_Combat_B_180_Seq.gltf
+    │      │      
+    │      ├─AS_Roll_to_Run_Combat_B_L_45_Seq
+    │      │      AS_Roll_to_Run_Combat_B_L_45_Seq.bin
+    │      │      AS_Roll_to_Run_Combat_B_L_45_Seq.gltf
+    │      │      
+    │      ├─AS_Roll_to_Run_Combat_B_R_45_Seq
+    │      │      AS_Roll_to_Run_Combat_B_R_45_Seq.bin
+    │      │      AS_Roll_to_Run_Combat_B_R_45_Seq.gltf
+    │      │      
+    │      ├─AS_Roll_to_Run_Combat_Fast_F_0_Seq
+    │      │      AS_Roll_to_Run_Combat_Fast_F_0_Seq.bin
+    │      │      AS_Roll_to_Run_Combat_Fast_F_0_Seq.gltf
+    │      │      
+    │      ├─AS_Roll_to_Run_Combat_F_0_Seq
+    │      │      AS_Roll_to_Run_Combat_F_0_Seq.bin
+    │      │      AS_Roll_to_Run_Combat_F_0_Seq.gltf
+    │      │      
+    │      ├─AS_Roll_to_Run_Combat_F_L_45_Seq
+    │      │      AS_Roll_to_Run_Combat_F_L_45_Seq.bin
+    │      │      AS_Roll_to_Run_Combat_F_L_45_Seq.gltf
+    │      │      
+    │      ├─AS_Roll_to_Run_Combat_F_R_45_Seq
+    │      │      AS_Roll_to_Run_Combat_F_R_45_Seq.bin
+    │      │      AS_Roll_to_Run_Combat_F_R_45_Seq.gltf
+    │      │      
+    │      ├─AS_Roll_to_Run_Combat_L_90_Seq
+    │      │      AS_Roll_to_Run_Combat_L_90_Seq.bin
+    │      │      AS_Roll_to_Run_Combat_L_90_Seq.gltf
+    │      │      
+    │      └─AS_Roll_to_Run_Combat_R_90_Seq
+    │              AS_Roll_to_Run_Combat_R_90_Seq.bin
+    │              AS_Roll_to_Run_Combat_R_90_Seq.gltf
+    │              
+    ├─08_Hit
+    │  ├─01_Hit
+    │  │  ├─AS_Hit_B_Seq
+    │  │  │      AS_Hit_B_Seq.bin
+    │  │  │      AS_Hit_B_Seq.gltf
+    │  │  │      
+    │  │  ├─AS_Hit_Death_Seq
+    │  │  │      AS_Hit_Death_Seq.bin
+    │  │  │      AS_Hit_Death_Seq.gltf
+    │  │  │      
+    │  │  ├─AS_Hit_F_Seq
+    │  │  │      AS_Hit_F_Seq.bin
+    │  │  │      AS_Hit_F_Seq.gltf
+    │  │  │      
+    │  │  ├─AS_Hit_L_Seq
+    │  │  │      AS_Hit_L_Seq.bin
+    │  │  │      AS_Hit_L_Seq.gltf
+    │  │  │      
+    │  │  └─AS_Hit_R_Seq
+    │  │          AS_Hit_R_Seq.bin
+    │  │          AS_Hit_R_Seq.gltf
+    │  │          
+    │  ├─02_Hit_Combat
+    │  │  ├─AS_Hit_Combat_B_Seq
+    │  │  │      AS_Hit_Combat_B_Seq.bin
+    │  │  │      AS_Hit_Combat_B_Seq.gltf
+    │  │  │      
+    │  │  ├─AS_Hit_Combat_Death_Seq
+    │  │  │      AS_Hit_Combat_Death_Seq.bin
+    │  │  │      AS_Hit_Combat_Death_Seq.gltf
+    │  │  │      
+    │  │  ├─AS_Hit_Combat_F_Seq
+    │  │  │      AS_Hit_Combat_F_Seq.bin
+    │  │  │      AS_Hit_Combat_F_Seq.gltf
+    │  │  │      
+    │  │  ├─AS_Hit_Combat_L_Seq
+    │  │  │      AS_Hit_Combat_L_Seq.bin
+    │  │  │      AS_Hit_Combat_L_Seq.gltf
+    │  │  │      
+    │  │  └─AS_Hit_Combat_R_Seq
+    │  │          AS_Hit_Combat_R_Seq.bin
+    │  │          AS_Hit_Combat_R_Seq.gltf
+    │  │          
+    │  ├─03_Hit_Air
+    │  │  ├─AS_Hit_Air_B_Seq
+    │  │  │      AS_Hit_Air_B_Seq.bin
+    │  │  │      AS_Hit_Air_B_Seq.gltf
+    │  │  │      
+    │  │  ├─AS_Hit_Air_F_Seq
+    │  │  │      AS_Hit_Air_F_Seq.bin
+    │  │  │      AS_Hit_Air_F_Seq.gltf
+    │  │  │      
+    │  │  ├─AS_Hit_Air_L_Seq
+    │  │  │      AS_Hit_Air_L_Seq.bin
+    │  │  │      AS_Hit_Air_L_Seq.gltf
+    │  │  │      
+    │  │  └─AS_Hit_Air_R_Seq
+    │  │          AS_Hit_Air_R_Seq.bin
+    │  │          AS_Hit_Air_R_Seq.gltf
+    │  │          
+    │  ├─04_Hit_Combat_Air
+    │  │  ├─AS_Hit_Combat_Air_B_Seq
+    │  │  │      AS_Hit_Combat_Air_B_Seq.bin
+    │  │  │      AS_Hit_Combat_Air_B_Seq.gltf
+    │  │  │      
+    │  │  ├─AS_Hit_Combat_Air_F_Seq
+    │  │  │      AS_Hit_Combat_Air_F_Seq.bin
+    │  │  │      AS_Hit_Combat_Air_F_Seq.gltf
+    │  │  │      
+    │  │  ├─AS_Hit_Combat_Air_L_Seq
+    │  │  │      AS_Hit_Combat_Air_L_Seq.bin
+    │  │  │      AS_Hit_Combat_Air_L_Seq.gltf
+    │  │  │      
+    │  │  └─AS_Hit_Combat_Air_R_Seq
+    │  │          AS_Hit_Combat_Air_R_Seq.bin
+    │  │          AS_Hit_Combat_Air_R_Seq.gltf
+    │  │          
+    │  ├─05_Hit_Large
+    │  │  ├─AS_Hit_Large_B_Seq
+    │  │  │      AS_Hit_Large_B_Seq.bin
+    │  │  │      AS_Hit_Large_B_Seq.gltf
+    │  │  │      
+    │  │  ├─AS_Hit_Large_Death_Seq
+    │  │  │      AS_Hit_Large_Death_Seq.bin
+    │  │  │      AS_Hit_Large_Death_Seq.gltf
+    │  │  │      
+    │  │  ├─AS_Hit_Large_F_Seq
+    │  │  │      AS_Hit_Large_F_Seq.bin
+    │  │  │      AS_Hit_Large_F_Seq.gltf
+    │  │  │      
+    │  │  ├─AS_Hit_Large_L_Seq
+    │  │  │      AS_Hit_Large_L_Seq.bin
+    │  │  │      AS_Hit_Large_L_Seq.gltf
+    │  │  │      
+    │  │  └─AS_Hit_Large_R_Seq
+    │  │          AS_Hit_Large_R_Seq.bin
+    │  │          AS_Hit_Large_R_Seq.gltf
+    │  │          
+    │  ├─06_Hit_Large_Combat
+    │  │  ├─AS_Hit_Combat_Large_B_Seq
+    │  │  │      AS_Hit_Combat_Large_B_Seq.bin
+    │  │  │      AS_Hit_Combat_Large_B_Seq.gltf
+    │  │  │      
+    │  │  ├─AS_Hit_Combat_Large_Death_Seq
+    │  │  │      AS_Hit_Combat_Large_Death_Seq.bin
+    │  │  │      AS_Hit_Combat_Large_Death_Seq.gltf
+    │  │  │      
+    │  │  ├─AS_Hit_Combat_Large_F_Seq
+    │  │  │      AS_Hit_Combat_Large_F_Seq.bin
+    │  │  │      AS_Hit_Combat_Large_F_Seq.gltf
+    │  │  │      
+    │  │  ├─AS_Hit_Combat_Large_L_Seq
+    │  │  │      AS_Hit_Combat_Large_L_Seq.bin
+    │  │  │      AS_Hit_Combat_Large_L_Seq.gltf
+    │  │  │      
+    │  │  └─AS_Hit_Combat_Large_R_Seq
+    │  │          AS_Hit_Combat_Large_R_Seq.bin
+    │  │          AS_Hit_Combat_Large_R_Seq.gltf
+    │  │          
+    │  ├─07_Hit_Large_To_Air
+    │  │  └─AS_Hit_Large_To_Air_Seq
+    │  │          AS_Hit_Large_To_Air_Seq.bin
+    │  │          AS_Hit_Large_To_Air_Seq.gltf
+    │  │          
+    │  ├─08_Hit_Combat_Large_To_Air
+    │  │  └─AS_Hit_Combat_Large_To_Air_Seq
+    │  │          AS_Hit_Combat_Large_To_Air_Seq.bin
+    │  │          AS_Hit_Combat_Large_To_Air_Seq.gltf
+    │  │          
+    │  ├─09_Hit_Air_Large_To_Floor
+    │  │  ├─AS_Hit_Air_Large_To_Floor_End_Seq
+    │  │  │      AS_Hit_Air_Large_To_Floor_End_Seq.bin
+    │  │  │      AS_Hit_Air_Large_To_Floor_End_Seq.gltf
+    │  │  │      
+    │  │  ├─AS_Hit_Air_Large_To_Floor_Loop_Seq
+    │  │  │      AS_Hit_Air_Large_To_Floor_Loop_Seq.bin
+    │  │  │      AS_Hit_Air_Large_To_Floor_Loop_Seq.gltf
+    │  │  │      
+    │  │  └─AS_Hit_Air_Large_To_Floor_Start_Seq
+    │  │          AS_Hit_Air_Large_To_Floor_Start_Seq.bin
+    │  │          AS_Hit_Air_Large_To_Floor_Start_Seq.gltf
+    │  │          
+    │  ├─10_Hit_Combat_Air_Large_To_Floor
+    │  │  ├─AS_Hit_Combat_Air_Large_To_Floor_End_Seq
+    │  │  │      AS_Hit_Combat_Air_Large_To_Floor_End_Seq.bin
+    │  │  │      AS_Hit_Combat_Air_Large_To_Floor_End_Seq.gltf
+    │  │  │      
+    │  │  ├─AS_Hit_Combat_Air_Large_To_Floor_Loop_Seq
+    │  │  │      AS_Hit_Combat_Air_Large_To_Floor_Loop_Seq.bin
+    │  │  │      AS_Hit_Combat_Air_Large_To_Floor_Loop_Seq.gltf
+    │  │  │      
+    │  │  └─AS_Hit_Combat_Air_Large_To_Floor_Start_Seq
+    │  │          AS_Hit_Combat_Air_Large_To_Floor_Start_Seq.bin
+    │  │          AS_Hit_Combat_Air_Large_To_Floor_Start_Seq.gltf
+    │  │          
+    │  ├─11_Get_Up
+    │  │  ├─AS_Get_Up_B_Seq
+    │  │  │      AS_Get_Up_B_Seq.bin
+    │  │  │      AS_Get_Up_B_Seq.gltf
+    │  │  │      
+    │  │  ├─AS_Get_Up_Combat_B_Seq
+    │  │  │      AS_Get_Up_Combat_B_Seq.bin
+    │  │  │      AS_Get_Up_Combat_B_Seq.gltf
+    │  │  │      
+    │  │  ├─AS_Get_Up_Combat_F_Seq
+    │  │  │      AS_Get_Up_Combat_F_Seq.bin
+    │  │  │      AS_Get_Up_Combat_F_Seq.gltf
+    │  │  │      
+    │  │  └─AS_Get_Up_F_Seq
+    │  │          AS_Get_Up_F_Seq.bin
+    │  │          AS_Get_Up_F_Seq.gltf
+    │  │          
+    │  ├─12_Knock_Down
+    │  │  ├─AS_Knock_Down_Death_B_Seq
+    │  │  │      AS_Knock_Down_Death_B_Seq.bin
+    │  │  │      AS_Knock_Down_Death_B_Seq.gltf
+    │  │  │      
+    │  │  ├─AS_Knock_Down_Death_F_Seq
+    │  │  │      AS_Knock_Down_Death_F_Seq.bin
+    │  │  │      AS_Knock_Down_Death_F_Seq.gltf
+    │  │  │      
+    │  │  ├─AS_Knock_Down_End_Seq
+    │  │  │      AS_Knock_Down_End_Seq.bin
+    │  │  │      AS_Knock_Down_End_Seq.gltf
+    │  │  │      
+    │  │  ├─AS_Knock_Down_Loop_Seq
+    │  │  │      AS_Knock_Down_Loop_Seq.bin
+    │  │  │      AS_Knock_Down_Loop_Seq.gltf
+    │  │  │      
+    │  │  └─AS_Knock_Down_Start_Seq
+    │  │          AS_Knock_Down_Start_Seq.bin
+    │  │          AS_Knock_Down_Start_Seq.gltf
+    │  │          
+    │  ├─13_Knock_Down_Combat
+    │  │  ├─AS_Knock_Down_Combat_Death_B_Seq
+    │  │  │      AS_Knock_Down_Combat_Death_B_Seq.bin
+    │  │  │      AS_Knock_Down_Combat_Death_B_Seq.gltf
+    │  │  │      
+    │  │  ├─AS_Knock_Down_Combat_Death_F_Seq
+    │  │  │      AS_Knock_Down_Combat_Death_F_Seq.bin
+    │  │  │      AS_Knock_Down_Combat_Death_F_Seq.gltf
+    │  │  │      
+    │  │  ├─AS_Knock_Down_Combat_End_Seq
+    │  │  │      AS_Knock_Down_Combat_End_Seq.bin
+    │  │  │      AS_Knock_Down_Combat_End_Seq.gltf
+    │  │  │      
+    │  │  ├─AS_Knock_Down_Combat_Loop_Seq
+    │  │  │      AS_Knock_Down_Combat_Loop_Seq.bin
+    │  │  │      AS_Knock_Down_Combat_Loop_Seq.gltf
+    │  │  │      
+    │  │  └─AS_Knock_Down_Combat_Start_Seq
+    │  │          AS_Knock_Down_Combat_Start_Seq.bin
+    │  │          AS_Knock_Down_Combat_Start_Seq.gltf
+    │  │          
+    │  └─14_Block
+    │      ├─AS_Block_End_Seq
+    │      │      AS_Block_End_Seq.bin
+    │      │      AS_Block_End_Seq.gltf
+    │      │      
+    │      ├─AS_Block_Hit_Break_Seq
+    │      │      AS_Block_Hit_Break_Seq.bin
+    │      │      AS_Block_Hit_Break_Seq.gltf
+    │      │      
+    │      ├─AS_Block_Hit_Seq
+    │      │      AS_Block_Hit_Seq.bin
+    │      │      AS_Block_Hit_Seq.gltf
+    │      │      
+    │      ├─AS_Block_Loop_Seq
+    │      │      AS_Block_Loop_Seq.bin
+    │      │      AS_Block_Loop_Seq.gltf
+    │      │      
+    │      ├─AS_Block_Start_Seq
+    │      │      AS_Block_Start_Seq.bin
+    │      │      AS_Block_Start_Seq.gltf
+    │      │      
+    │      ├─AS_Parry_L_Seq
+    │      │      AS_Parry_L_Seq.bin
+    │      │      AS_Parry_L_Seq.gltf
+    │      │      
+    │      └─AS_Parry_R_Seq
+    │              AS_Parry_R_Seq.bin
+    │              AS_Parry_R_Seq.gltf
+    │              
+    └─09_Turn
+        ├─01_Turn
+        │  ├─AS_Turn_180_L_Seq
+        │  │      AS_Turn_180_L_Seq.bin
+        │  │      AS_Turn_180_L_Seq.gltf
+        │  │      
+        │  ├─AS_Turn_180_R_Seq
+        │  │      AS_Turn_180_R_Seq.bin
+        │  │      AS_Turn_180_R_Seq.gltf
+        │  │      
+        │  ├─AS_Turn_90_L_Seq
+        │  │      AS_Turn_90_L_Seq.bin
+        │  │      AS_Turn_90_L_Seq.gltf
+        │  │      
+        │  └─AS_Turn_90_R_Seq
+        │          AS_Turn_90_R_Seq.bin
+        │          AS_Turn_90_R_Seq.gltf
+        │          
+        ├─02_Turn_Combat
+        │  ├─AS_Turn_Combat_180_L_Seq
+        │  │      AS_Turn_Combat_180_L_Seq.bin
+        │  │      AS_Turn_Combat_180_L_Seq.gltf
+        │  │      
+        │  ├─AS_Turn_Combat_180_R_Seq
+        │  │      AS_Turn_Combat_180_R_Seq.bin
+        │  │      AS_Turn_Combat_180_R_Seq.gltf
+        │  │      
+        │  ├─AS_Turn_Combat_90_L_Seq
+        │  │      AS_Turn_Combat_90_L_Seq.bin
+        │  │      AS_Turn_Combat_90_L_Seq.gltf
+        │  │      
+        │  └─AS_Turn_Combat_90_R_Seq
+        │          AS_Turn_Combat_90_R_Seq.bin
+        │          AS_Turn_Combat_90_R_Seq.gltf
+        │          
+        └─03_Turn_Block
+            ├─AS_Turn_Block_180_L_Seq
+            │      AS_Turn_Block_180_L_Seq.bin
+            │      AS_Turn_Block_180_L_Seq.gltf
+            │      
+            ├─AS_Turn_Block_180_R_Seq
+            │      AS_Turn_Block_180_R_Seq.bin
+            │      AS_Turn_Block_180_R_Seq.gltf
+            │      
+            ├─AS_Turn_Block_90_L_Seq
+            │      AS_Turn_Block_90_L_Seq.bin
+            │      AS_Turn_Block_90_L_Seq.gltf
+            │      
+            └─AS_Turn_Block_90_R_Seq
+                    AS_Turn_Block_90_R_Seq.bin
+                    AS_Turn_Block_90_R_Seq.gltf
+                    

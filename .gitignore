@@ -6,6 +6,11 @@ Library/
 Project/
 x64/
 .vs/
+Asset/Models/
+Asset/**/*.zip
+Asset/**/*.blend
+Asset/**/*.blend1
+Asset/**/*.fbx
 
 #共通無視拡張子
 *.tlog
@@ -19,10 +24,7 @@ x64/
 *.db
 *.suo
 *.inc
-*.gltf
-*.png
-*.bin
-*.blend
+
 
 imgui.ini
 

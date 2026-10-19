@@ -1,0 +1,199 @@
+{
+	"asset":
+	{
+		"version": "2.0",
+		"generator": "Unreal Engine 5.8.1"
+	},
+	"scene": 0,
+	"accessors": [
+		{
+			"bufferView": 0,
+			"count": 9483,
+			"type": "SCALAR",
+			"componentType": 5123
+		},
+		{
+			"bufferView": 1,
+			"count": 5011,
+			"type": "VEC3",
+			"componentType": 5126,
+			"min": [
+				-0.0111594964,
+				-0.368174672,
+				-0.457245678
+			],
+			"max": [
+				0.00826918613,
+				0.0504156947,
+				0.0890725031
+			]
+		},
+		{
+			"bufferView": 2,
+			"count": 5011,
+			"type": "VEC3",
+			"componentType": 5126
+		},
+		{
+			"bufferView": 3,
+			"count": 5011,
+			"type": "VEC4",
+			"componentType": 5126
+		},
+		{
+			"bufferView": 4,
+			"count": 5011,
+			"type": "VEC2",
+			"componentType": 5126
+		},
+		{
+			"bufferView": 5,
+			"count": 5011,
+			"type": "VEC2",
+			"componentType": 5126
+		}
+	],
+	"buffers": [
+		{
+			"uri": "SM_Scabbard.bin",
+			"byteLength": 299584
+		}
+	],
+	"bufferViews": [
+		{
+			"buffer": 0,
+			"byteLength": 18966,
+			"target": 34963
+		},
+		{
+			"buffer": 0,
+			"byteLength": 60132,
+			"byteOffset": 18968,
+			"target": 34962
+		},
+		{
+			"buffer": 0,
+			"byteLength": 60132,
+			"byteOffset": 79100,
+			"target": 34962
+		},
+		{
+			"buffer": 0,
+			"byteLength": 80176,
+			"byteOffset": 139232,
+			"target": 34962
+		},
+		{
+			"buffer": 0,
+			"byteLength": 40088,
+			"byteOffset": 219408,
+			"target": 34962
+		},
+		{
+			"buffer": 0,
+			"byteLength": 40088,
+			"byteOffset": 259496,
+			"target": 34962
+		}
+	],
+	"images": [
+		{
+			"uri": "MI_Scabbard_BaseColor.png"
+		},
+		{
+			"uri": "MI_Scabbard_MetallicRoughness.png"
+		},
+		{
+			"uri": "MI_Scabbard_Normal.png"
+		}
+	],
+	"materials": [
+		{
+			"name": "MI_Scabbard",
+			"pbrMetallicRoughness":
+			{
+				"baseColorTexture":
+				{
+					"index": 0
+				},
+				"metallicRoughnessTexture":
+				{
+					"index": 1
+				}
+			},
+			"normalTexture":
+			{
+				"index": 2
+			},
+			"alphaMode": "MASK",
+			"alphaCutoff": 0.333299994,
+			"doubleSided": true,
+			"extensions":
+			{
+				"KHR_materials_specular":
+				{
+					"specularFactor": 0.498039246
+				}
+			}
+		}
+	],
+	"meshes": [
+		{
+			"name": "SM_Scabbard",
+			"primitives": [
+				{
+					"attributes":
+					{
+						"POSITION": 1,
+						"NORMAL": 2,
+						"TANGENT": 3,
+						"TEXCOORD_0": 4,
+						"TEXCOORD_1": 5
+					},
+					"indices": 0,
+					"material": 0
+				}
+			]
+		}
+	],
+	"nodes": [
+		{
+			"name": "SM_Scabbard",
+			"mesh": 0
+		}
+	],
+	"samplers": [
+		{
+			"minFilter": 9987,
+			"magFilter": 9729
+		}
+	],
+	"scenes": [
+		{
+			"name": "Lvl_ThirdPerson",
+			"nodes": [
+				0
+			]
+		}
+	],
+	"textures": [
+		{
+			"name": "MI_Scabbard_BaseColor",
+			"sampler": 0,
+			"source": 0
+		},
+		{
+			"name": "MI_Scabbard_MetallicRoughness",
+			"sampler": 0,
+			"source": 1
+		},
+		{
+			"name": "MI_Scabbard_Normal",
+			"sampler": 0,
+			"source": 2
+		}
+	],
+	"extensionsUsed": [
+		"KHR_materials_specular"
+	]
+}

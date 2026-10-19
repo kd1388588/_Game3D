@@ -1,6 +1,7 @@
 ﻿#pragma once
 
 #include"../BaseScene/BaseScene.h"
+#include"../../Utility/InputHelper.h"
 
 class TitleUI;
 

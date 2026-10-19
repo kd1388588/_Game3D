@@ -1,0 +1,162 @@
+{
+	"asset":
+	{
+		"version": "2.0",
+		"generator": "Unreal Engine 5.8.1"
+	},
+	"scene": 0,
+	"accessors": [
+		{
+			"bufferView": 0,
+			"count": 2730,
+			"type": "SCALAR",
+			"componentType": 5123
+		},
+		{
+			"bufferView": 1,
+			"count": 1018,
+			"type": "VEC3",
+			"componentType": 5126,
+			"min": [
+				-0.152789459,
+				-0.283056378,
+				-0.0291064344
+			],
+			"max": [
+				0.127564356,
+				1.23208857,
+				0.0291064344
+			]
+		},
+		{
+			"bufferView": 2,
+			"count": 1018,
+			"type": "VEC3",
+			"componentType": 5126
+		},
+		{
+			"bufferView": 3,
+			"count": 1018,
+			"type": "VEC4",
+			"componentType": 5126
+		},
+		{
+			"bufferView": 4,
+			"count": 1018,
+			"type": "VEC2",
+			"componentType": 5126
+		},
+		{
+			"bufferView": 5,
+			"count": 1018,
+			"type": "VEC2",
+			"componentType": 5126
+		}
+	],
+	"buffers": [
+		{
+			"uri": "sword.bin",
+			"byteLength": 62468
+		}
+	],
+	"bufferViews": [
+		{
+			"buffer": 0,
+			"byteLength": 5460,
+			"target": 34963
+		},
+		{
+			"buffer": 0,
+			"byteLength": 12216,
+			"byteOffset": 5460,
+			"target": 34962
+		},
+		{
+			"buffer": 0,
+			"byteLength": 12216,
+			"byteOffset": 17676,
+			"target": 34962
+		},
+		{
+			"buffer": 0,
+			"byteLength": 16288,
+			"byteOffset": 29892,
+			"target": 34962
+		},
+		{
+			"buffer": 0,
+			"byteLength": 8144,
+			"byteOffset": 46180,
+			"target": 34962
+		},
+		{
+			"buffer": 0,
+			"byteLength": 8144,
+			"byteOffset": 54324,
+			"target": 34962
+		}
+	],
+	"images": [
+		{
+			"uri": "M_Sword_BaseColor.png"
+		}
+	],
+	"materials": [
+		{
+			"name": "M_Sword",
+			"pbrMetallicRoughness":
+			{
+				"baseColorTexture":
+				{
+					"index": 0
+				},
+				"metallicFactor": 0,
+				"roughnessFactor": 0.5
+			}
+		}
+	],
+	"meshes": [
+		{
+			"name": "sword",
+			"primitives": [
+				{
+					"attributes":
+					{
+						"POSITION": 1,
+						"NORMAL": 2,
+						"TANGENT": 3,
+						"TEXCOORD_0": 4,
+						"TEXCOORD_1": 5
+					},
+					"indices": 0,
+					"material": 0
+				}
+			]
+		}
+	],
+	"nodes": [
+		{
+			"mesh": 0
+		}
+	],
+	"samplers": [
+		{
+			"minFilter": 9987,
+			"magFilter": 9729
+		}
+	],
+	"scenes": [
+		{
+			"nodes": [
+				0
+			]
+		}
+	],
+	"textures": [
+		{
+			"name": "M_Sword_BaseColor",
+			"sampler": 0,
+			"source": 0
+		}
+	]
+}

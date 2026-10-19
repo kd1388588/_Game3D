@@ -1,0 +1,199 @@
+{
+	"asset":
+	{
+		"version": "2.0",
+		"generator": "Unreal Engine 5.8.1"
+	},
+	"scene": 0,
+	"accessors": [
+		{
+			"bufferView": 0,
+			"count": 10695,
+			"type": "SCALAR",
+			"componentType": 5123
+		},
+		{
+			"bufferView": 1,
+			"count": 4619,
+			"type": "VEC3",
+			"componentType": 5126,
+			"min": [
+				-0.0119257066,
+				-0.400113255,
+				-0.53758806
+			],
+			"max": [
+				0.0119257234,
+				0.155849412,
+				0.187324837
+			]
+		},
+		{
+			"bufferView": 2,
+			"count": 4619,
+			"type": "VEC3",
+			"componentType": 5126
+		},
+		{
+			"bufferView": 3,
+			"count": 4619,
+			"type": "VEC4",
+			"componentType": 5126
+		},
+		{
+			"bufferView": 4,
+			"count": 4619,
+			"type": "VEC2",
+			"componentType": 5126
+		},
+		{
+			"bufferView": 5,
+			"count": 4619,
+			"type": "VEC2",
+			"componentType": 5126
+		}
+	],
+	"buffers": [
+		{
+			"uri": "SM_Blade.bin",
+			"byteLength": 280056
+		}
+	],
+	"bufferViews": [
+		{
+			"buffer": 0,
+			"byteLength": 21390,
+			"target": 34963
+		},
+		{
+			"buffer": 0,
+			"byteLength": 55428,
+			"byteOffset": 21392,
+			"target": 34962
+		},
+		{
+			"buffer": 0,
+			"byteLength": 55428,
+			"byteOffset": 76820,
+			"target": 34962
+		},
+		{
+			"buffer": 0,
+			"byteLength": 73904,
+			"byteOffset": 132248,
+			"target": 34962
+		},
+		{
+			"buffer": 0,
+			"byteLength": 36952,
+			"byteOffset": 206152,
+			"target": 34962
+		},
+		{
+			"buffer": 0,
+			"byteLength": 36952,
+			"byteOffset": 243104,
+			"target": 34962
+		}
+	],
+	"images": [
+		{
+			"uri": "MI_Blade_BaseColor.png"
+		},
+		{
+			"uri": "MI_Blade_MetallicRoughness.png"
+		},
+		{
+			"uri": "MI_Blade_Normal.png"
+		}
+	],
+	"materials": [
+		{
+			"name": "MI_Blade",
+			"pbrMetallicRoughness":
+			{
+				"baseColorTexture":
+				{
+					"index": 0
+				},
+				"metallicRoughnessTexture":
+				{
+					"index": 1
+				}
+			},
+			"normalTexture":
+			{
+				"index": 2
+			},
+			"alphaMode": "MASK",
+			"alphaCutoff": 0.333299994,
+			"doubleSided": true,
+			"extensions":
+			{
+				"KHR_materials_specular":
+				{
+					"specularFactor": 0.498039246
+				}
+			}
+		}
+	],
+	"meshes": [
+		{
+			"name": "SM_Blade",
+			"primitives": [
+				{
+					"attributes":
+					{
+						"POSITION": 1,
+						"NORMAL": 2,
+						"TANGENT": 3,
+						"TEXCOORD_0": 4,
+						"TEXCOORD_1": 5
+					},
+					"indices": 0,
+					"material": 0
+				}
+			]
+		}
+	],
+	"nodes": [
+		{
+			"name": "SM_Blade",
+			"mesh": 0
+		}
+	],
+	"samplers": [
+		{
+			"minFilter": 9987,
+			"magFilter": 9729
+		}
+	],
+	"scenes": [
+		{
+			"name": "Lvl_ThirdPerson",
+			"nodes": [
+				0
+			]
+		}
+	],
+	"textures": [
+		{
+			"name": "MI_Blade_BaseColor",
+			"sampler": 0,
+			"source": 0
+		},
+		{
+			"name": "MI_Blade_MetallicRoughness",
+			"sampler": 0,
+			"source": 1
+		},
+		{
+			"name": "MI_Blade_Normal",
+			"sampler": 0,
+			"source": 2
+		}
+	],
+	"extensionsUsed": [
+		"KHR_materials_specular"
+	]
+}

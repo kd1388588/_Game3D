@@ -138,6 +138,9 @@ public:
 	// フォント描画（作成済みのフォントテクスチャを描画する。UITextから使用するためpublicに変更）
 	void DrawFont(std::shared_ptr<KdFontSprite>& fontSprite, const Math::Vector2& Pos, const Math::Color* color, const int antiAliasingFlag);
 
+	// フォント描画（作成済みのフォントテクスチャを描画する。UITextから使用するためpublicに変更）
+	void DrawUIFont(std::shared_ptr<KdFontSprite>& fontSprite, const Math::Vector2& Pos, const Math::Color* color, const int antiAliasingFlag);
+
 private:
 
 	ID3D11VertexShader*		m_VS = nullptr;				// 頂点シェーダー

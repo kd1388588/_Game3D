@@ -53,12 +53,12 @@ namespace
 	constexpr float kMinTurnAngle			= 0.1f;		// これ未満の角度差は旋回しない
 
 	// ステータス
-	constexpr int	kMaxHp					= 100;
-	constexpr int	kDamageInvincibleFrame	= 30;		// 被弾後の無敵時間
-	constexpr int	kHeavyDamage			= 20;		// これ以上のダメージで仰け反る
-	constexpr int	kAttackDamage			= 10;
-	constexpr int	kCriticalAttackDamage	= 20;
-	constexpr int	kAttackTypeNum			= 5;		// 攻撃パターンの数
+	constexpr int	kMaxHp = 100;
+	constexpr int	kDamageInvincibleFrame = 30;		// 被弾後の無敵時間
+	constexpr int	kHeavyDamage = 20;		// これ以上のダメージで仰け反る
+	constexpr int	kAttackDamage = 10;
+	constexpr int	kCriticalAttackDamage = 20;
+	constexpr int	kAttackTypeNum = 5;		// 攻撃パターンの数
 
 	// 先行入力（ボタンを押してから、何フレームの間「押された」として受け付けるか。60フレーム = 1秒）
 	constexpr int	kInputBufferFrame		= 10;
@@ -169,7 +169,7 @@ namespace
 	const Math::Vector3 kPunisherLimColor	= { 1.0f, 0.3f, 0.0f };		// パニッシャー：オレンジ
 
 	// 接地判定に使う重力の上限（落下し始めの1フレーム分）
-	constexpr float kOnGroundGravityMax		= 0.011f;
+	constexpr float kOnGroundGravityMax = 0.011f;
 
 	// 剣の刃の位置（剣のローカルY軸上。攻撃判定の箱と同じ範囲）
 	// ※別ファイルの剣を持たせる場合に使う。モデルに剣が含まれている場合はメッシュから自動で求める
@@ -1174,8 +1174,7 @@ void Player::UpdateCameraTargetY()
 }
 
 void Player::GenerateDepthMapFromLight()
-{
-}
+{}
 
 void Player::DrawEffect()
 {

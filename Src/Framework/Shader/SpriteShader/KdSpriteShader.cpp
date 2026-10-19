@@ -498,3 +498,76 @@ void KdSpriteShader::DrawFont(const Math::Vector2& Pos, const Math::Color* color
 
 	DrawFont(fontSprite, Pos, color, 0);
 }
+
+void KdSpriteShader::DrawUIFont(std::shared_ptr<KdFontSprite>& fontSprite, const Math::Vector2& Pos, const Math::Color* color, const int antiAliasingFlag)
+{
+	if (fontSprite == nullptr)					return;
+	if (fontSprite->GetTexList().size() == 0)	return;
+
+	// もし開始していない場合は開始する(最後にEnd())
+	bool bBgn = m_isBegin;
+	if (!bBgn)Begin();
+
+	// 白テクスチャ
+	KdDirect3D::Instance().WorkDevContext()->PSSetShaderResources(0, 1, KdDirect3D::Instance().GetWhiteTex()->WorkSRViewAddress());
+
+	// 色
+	if (color) {
+		m_cb0.Work().Color = *color;
+	}
+	m_cb0.Write();
+
+	// フォントの高さ
+	float _moveY = (float)fontSprite->GetTexList()[0]->FontTex->GetInfo().Height;
+
+	// 全ての文字テクスチャを描画する
+	float			_moveX = 0;
+	Math::Vector2	_pos = Pos;
+	for (auto& data : fontSprite->GetTexList())
+	{
+		// 改行文字の場合は、X,Y座標を操作
+		if (data->Code == '\n')
+		{
+			_pos.x -= _moveX;
+			_pos.y -= _moveY;
+			_moveX = 0;
+		}
+		// その他の文字
+		else {
+			// テクスチャをセット
+			KdDirect3D::Instance().WorkDevContext()->PSSetShaderResources(0, 1, data->FontTex->WorkSRViewAddress());
+
+			// UV
+			Math::Vector2 uvMin = { 0, 0 };
+			Math::Vector2 uvMax = { 1, 1 };
+
+			// 頂点作成
+			float imageW = (float)data->FontTex->GetInfo().Width;
+			float imageH = (float)data->FontTex->GetInfo().Height;
+			float x1 = (float)_pos.x;
+			float y1 = (float)_pos.y;
+			float x2 = (float)(x1 + imageW);
+			float y2 = (float)(y1 + imageH);
+
+			Vertex vertex[] = {
+				{ {x1, y1, 0},	{uvMin.x, uvMax.y} },
+				{ {x1, y2, 0},	{uvMin.x, uvMin.y} },
+				{ {x2, y1, 0},	{uvMax.x, uvMax.y} },
+				{ {x2, y2, 0},	{uvMax.x, uvMin.y} }
+			};
+			// 描画
+			KdDirect3D::Instance().DrawVertices(D3D_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP, 4, vertex, sizeof(Vertex));
+
+			// 次の文字のため、X座標を進める
+			_pos.x += data->FontTex->GetInfo().Width;
+			_moveX += data->FontTex->GetInfo().Width;
+		}
+	}
+
+	// セットしたテクスチャを解除しておく
+	ID3D11ShaderResourceView* srv = nullptr;
+	KdDirect3D::Instance().WorkDevContext()->PSSetShaderResources(0, 1, &srv);
+
+	// この関数でBeginした場合は、Endしておく
+	if (!bBgn)End();
+}

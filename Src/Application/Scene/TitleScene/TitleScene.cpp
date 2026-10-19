@@ -16,6 +16,8 @@
 // Effekseer関連
 #include "../../../Framework/Effekseer/KdEffekseerManager.h"
 
+#include "../../GameObject/UI/Text/UIText.h"
+
 void TitleScene::Event()
 {
 	auto ui = m_wpUI.lock();
