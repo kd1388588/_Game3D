@@ -4,6 +4,7 @@
 std::shared_ptr<KdEffekseerObject> EffectPlayer::Play(const std::string& fileName, const Math::Vector3& pos,
 	float scale, float speed)
 {
+	if (!s_isEnabled) return nullptr;
 	if (!Exists(fileName)) return nullptr;
 
 	return KdEffekseerManager::GetInstance().Play(fileName, pos, scale, speed, false).lock();

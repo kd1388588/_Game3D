@@ -54,7 +54,12 @@ public:
 	// 全てのエフェクトを止める（シーン切り替え時など）
 	static void StopAll();
 
+	// エフェクトを出すかどうか（false の間は Play しても何も出ない。タイトル画面で使う）
+	static void SetEnabled(bool isEnabled) { s_isEnabled = isEnabled; }
+
 private:
+
+	static inline bool s_isEnabled = true;
 
 	// エフェクトファイルが存在するか（無い場合は1度だけログを出す）
 	static bool Exists(const std::string& fileName);
