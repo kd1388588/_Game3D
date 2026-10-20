@@ -181,7 +181,6 @@ def project(nodes, end_frame):
 SOFT = "Tex/Particle_Soft.png"	# ふちがぼやけた丸
 SPARK = "Tex/Particle02.png"		# 光の粒
 LINE = "Tex/Line01.png"			# 細長い光
-IMPACT = "Tex/impact2.png"		# 衝撃の輪
 SHIELD = "Tex/ShieldHex.png"		# 丸い光の盾（Tools/MakeShieldTexture.py）
 SHARD = "Tex/ShieldShard.png"		# 盾のかけら（Tools/MakeShieldTexture.py）
 FIXED = 2						# 板の向き：固定（ノードの向きのまま。盾をプレイヤーの前に立てる）
@@ -258,14 +257,6 @@ def ability_start():
 			renderer(texture=SOFT, fade_out=12),
 			sprite(color=(255, 240, 200, 230), color_end=(255, 200, 120, 0)),
 		),
-		node("Impact",
-			common(life=14),
-			location_fixed(y=1.0),
-			rotation_random_z(),
-			scale_single_easing(0.5, 3.5, start_speed=30, end_speed=-30),
-			renderer(texture=IMPACT, fade_out=8),
-			sprite(color=gold),
-		),
 		node("Pillar",
 			common(life=26, count=10, gen_time=0.5),
 			location_pva(pos=((0, 0.7), (1.2, 0.2), (0, 0.7))),
@@ -305,12 +296,12 @@ def guard():
 					sprite(color=(170, 225, 255, 210), billboard=FIXED),
 				),
 				# 受け止めた所の波紋
+				# （輪っかは盾と同じ向き＝XY平面に立つ）
 				node("Ripple",
 					common(life=12),
 					location_fixed(z=0.01),
-					scale_single_easing(0.1, 0.7, start_speed=30, end_speed=-30),
-					renderer(texture=IMPACT, fade_out=8),
-					sprite(color=(200, 235, 255, 255), billboard=FIXED),
+					renderer(fade_out=8),
+					ring(outer=(0.05, 0.45), inner=(0.0, 0.38), color=(200, 235, 255, 255)),
 				),
 			],
 		),
@@ -357,11 +348,11 @@ def guard_break():
 			],
 		),
 		# 割れた瞬間の光
-		node("BreakFlash",
-			common(life=14, offset=BREAK_FRAME),
-			scale_single_easing(0.6, 2.6, start_speed=30, end_speed=-30),
-			renderer(texture=IMPACT, fade_out=10),
-			sprite(color=(255, 200, 180, 255), color_end=red, billboard=FIXED),
+		# （盾と同じ向きに、赤い輪が広がる）
+		node("BreakRing",
+			common(life=16, offset=BREAK_FRAME),
+			renderer(fade_out=10),
+			ring(outer=(0.6, 2.2), inner=(0.4, 1.9), color=red),
 		),
 		node("Glow",
 			common(life=16, offset=BREAK_FRAME),
