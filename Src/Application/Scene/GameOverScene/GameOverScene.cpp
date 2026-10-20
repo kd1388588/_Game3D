@@ -1,4 +1,5 @@
 ﻿#include "GameOverScene.h"
+#include "../../GameObject/UI/Heading/UIHeading.h"
 #include "../SceneManager.h"
 
 #include "../../GameObject/UI/Text/UIText.h"
@@ -63,8 +64,9 @@ void GameOverScene::Init()
 	background->Load("Asset/Textures/UI/Result/GameOver.png");
 	m_objList.push_back(background);
 
-	std::shared_ptr<UIText> title = std::make_shared<UIText>();
-	title->SetText("GAME OVER", UIText::FontSize::Large);
+	// 見出し（Windows の文字の描画だと「M」が欠けるので、画像にした文字を出す）
+	std::shared_ptr<UIHeading> title = std::make_shared<UIHeading>();
+	title->Load("Asset/Textures/UI/Result/Heading_GameOver.png");
 	title->SetCenterPos({ 0.0f, 150.0f });
 	title->SetColor({ 0.9f, 0.15f, 0.15f, 1.0f });
 	m_objList.push_back(title);

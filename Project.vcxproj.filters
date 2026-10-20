@@ -85,6 +85,9 @@
     <Filter Include="Src\Application\GameObject\UI\ControlsGuide">
       <UniqueIdentifier>{f1b901e1-2e04-4201-8a79-1c295557d1ea}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Src\Application\GameObject\UI\Heading">
+      <UniqueIdentifier>{a7736057-1ac0-49d0-8782-d85f3999c93d}</UniqueIdentifier>
+    </Filter>
     <Filter Include="Src\Application\GameObject\UI\Text">
       <UniqueIdentifier>{3ab3531c-51ed-4dd7-a5f1-2b22040c1673}</UniqueIdentifier>
     </Filter>
@@ -375,6 +378,9 @@
     <ClInclude Include="Src\Application\GameObject\UI\ControlsGuide\ControlsGuide.h">
       <Filter>Src\Application\GameObject\UI\ControlsGuide</Filter>
     </ClInclude>
+    <ClInclude Include="Src\Application\GameObject\UI\Heading\UIHeading.h">
+      <Filter>Src\Application\GameObject\UI\Heading</Filter>
+    </ClInclude>
     <ClInclude Include="Src\Application\GameObject\UI\Text\UIText.h">
       <Filter>Src\Application\GameObject\UI\Text</Filter>
     </ClInclude>
@@ -625,6 +631,9 @@
     </ClCompile>
     <ClCompile Include="Src\Application\GameObject\UI\ControlsGuide\ControlsGuide.cpp">
       <Filter>Src\Application\GameObject\UI\ControlsGuide</Filter>
+    </ClCompile>
+    <ClCompile Include="Src\Application\GameObject\UI\Heading\UIHeading.cpp">
+      <Filter>Src\Application\GameObject\UI\Heading</Filter>
     </ClCompile>
     <ClCompile Include="Src\Application\GameObject\UI\Text\UIText.cpp">
       <Filter>Src\Application\GameObject\UI\Text</Filter>

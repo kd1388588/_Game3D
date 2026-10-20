@@ -302,6 +302,7 @@
     <ClInclude Include="Src\Application\Scene\SceneManager.h" />
     <ClInclude Include="Src\Application\Scene\TitleScene\TitleScene.h" />
     <ClInclude Include="Src\Application\GameObject\UI\ControlsGuide\ControlsGuide.h" />
+    <ClInclude Include="Src\Application\GameObject\UI\Heading\UIHeading.h" />
     <ClInclude Include="Src\Application\GameObject\UI\Text\UIText.h" />
     <ClInclude Include="Src\Application\GameObject\UI\Background\UIBackground.h" />
     <ClInclude Include="Src\Application\Scene\GameClearScene\GameClearScene.h" />
@@ -392,6 +393,7 @@
     <ClCompile Include="Src\Application\Scene\SceneManager.cpp" />
     <ClCompile Include="Src\Application\Scene\TitleScene\TitleScene.cpp" />
     <ClCompile Include="Src\Application\GameObject\UI\ControlsGuide\ControlsGuide.cpp" />
+    <ClCompile Include="Src\Application\GameObject\UI\Heading\UIHeading.cpp" />
     <ClCompile Include="Src\Application\GameObject\UI\Text\UIText.cpp" />
     <ClCompile Include="Src\Application\GameObject\UI\Background\UIBackground.cpp" />
     <ClCompile Include="Src\Application\Utility\SpriteUtil.cpp" />
