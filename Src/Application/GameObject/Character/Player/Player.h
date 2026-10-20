@@ -157,15 +157,19 @@ public:
 
 	// ボックス（OBB）による攻撃判定
 	// 敵に当たったら、その位置に剣を振った向きの斬撃のヒットエフェクトを出す
+	// finisherEffectName：決めの攻撃の専用エフェクト（空なら出さない。1振りに1回だけ出す）
 	// damageRate：ダメージの倍率（アビリティなど）
 	// hand：どちらの剣か（0：右、1：左）。剣ごとに当たりを数えるので、二刀流で1振りに2回当たる
-	bool AttackOBB(const Math::Matrix& swordMatrix, bool isCritical, float damageRate = 1.0f, int hand = 0);
+	bool AttackOBB(const Math::Matrix& swordMatrix, bool isCritical, const std::string& finisherEffectName = "", float damageRate = 1.0f, int hand = 0);
 
 	// 攻撃の当たった記録を消す（新しい攻撃を振り始める時に呼ぶ）
-	void ResetAttackHits() { for (auto& record : m_lastHitFrame) record.clear(); }
+	void ResetAttackHits() { for (auto& record : m_lastHitFrame) record.clear(); m_isFinisherEffectPlayed = false; }
 
 	// 攻撃が当たった位置に、剣先が動いた向きの斬撃のヒットエフェクトを1つ出す（1ヒットに1つ）
 	void PlayHitEffect(const Math::Matrix& swordMatrix, int hand, const Math::Vector3& hitPos, bool isCritical) const;
+
+	// 決めの攻撃（1-4・4・5-4 など）の専用エフェクトを出す（1振りに1回だけ）
+	void PlayFinisherEffect(const std::string& effectName, const Math::Vector3& hitPos, bool isCritical);
 
 
 	// 被弾判定
@@ -399,6 +403,7 @@ private:
 	std::weak_ptr<Enemy>			m_wpLockTarget;			// ロックオン中の敵
 	// 多段ヒット：剣ごと（右・左）に、敵ごとの最後に当たったフレームを覚えておく
 	std::unordered_map<const KdGameObject*, int>	m_lastHitFrame[2];
+	bool											m_isFinisherEffectPlayed = false;	// 今の1振りで、決めの攻撃のエフェクトを出したか
 	int												m_attackFrame = 0;	// 攻撃の当たりを数えるための経過フレーム（ヒットストップ中は進まない）
 	bool							m_isLimLight = false;	// リムライトを光らせている途中か
 	float							m_limPow = 0.0f;		// リムライトの pow（大きいほどふちだけが光る）

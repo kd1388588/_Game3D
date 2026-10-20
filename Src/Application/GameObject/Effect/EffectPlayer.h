@@ -3,8 +3,9 @@
 // ============================================================
 // 使用するエフェクトのファイル名（Asset/Data/Effect/ からの相対パス）
 // 空文字 "" にしたもの・ファイルが無いものは再生されない（ファイルが用意できたら書き換える）
-// ModeChange / AbilityStart / Guard / GuardBreak / HitSlash / HitPlayer / EnemyDeath は Tools/MakeEffekseerProjects.py で作った .efkproj を
+// ModeChange / AbilityStart / Guard / GuardBreak は Tools/MakeEffekseerProjects.py で作った .efkproj を
 // Effekseer エディタで .efkefc に保存して使う
+// _Claw2 / _boss_death は Tools/AdjustExistingEffects.py で数を減らした・短くした .efkproj を作れる
 // ============================================================
 namespace EffectName
 {
@@ -18,11 +19,11 @@ namespace EffectName
 	inline const std::string ComboSlashDefault	= "_Sword1.efkefc";		// 専用のエフェクトが無い攻撃
 
 	// ヒット
-	inline const std::string HitEnemy			= "HitSlash.efkefc";	// プレイヤーの攻撃が敵に当たった（剣を振った向きに1本の斬撃）
-	inline const std::string HitPlayer			= "HitPlayer.efkefc";	// 敵の攻撃がプレイヤーに当たった（小さな赤い爪あと）
+	inline const std::string HitEnemy			= "_Sword1-1.efkefc";	// プレイヤーの攻撃が敵に当たった（斬撃1本。剣を振った向きに回して出す）
+	inline const std::string HitPlayer			= "_Claw2.efkefc";		// 敵の攻撃がプレイヤーに当たった
 
 	// 撃破
-	inline const std::string EnemyDeath			= "EnemyDeath.efkefc";	// 敵が倒れた（小さくまとまった黒紫の光）
+	inline const std::string EnemyDeath			= "_boss_death.efkefc";	// 敵が倒れた
 	inline const std::string BossGroundSmash	= "";					// ボスの飛びかかり攻撃の着地
 
 	// プレイヤーの動作（ファイルが用意できたら設定する）

@@ -553,6 +553,20 @@ void PlayerStateComboAttack::ChangeToNextAttack(Player* player) const
 	}
 }
 
+const std::string& PlayerStateComboAttack::GetFinisherEffectName() const
+{
+	static const std::string kNone = "";
+
+	// 4-3（溜め攻撃）・攻撃タイプ4：タイプ4の斬撃
+	if (IsSplitAttack() || m_comboType == 4) return EffectName::ComboSlash4;
+
+	// 攻撃タイプ1・5の4段目（しめの一撃）
+	if (m_comboType == 1 && m_comboStep == 4) return EffectName::ComboSlash1_4;
+	if (m_comboType == 5 && m_comboStep == 4) return EffectName::ComboSlash5_4;
+
+	return kNone;
+}
+
 bool PlayerStateComboAttack::IsTrailFrame(const Player* player, float animTime) const
 {
 	// 溜め攻撃（4-3）：Start の振り始めから、End で剣を地面に叩きつけるまで、途切れずに出す
@@ -652,8 +666,8 @@ void PlayerStateComboAttack::Update(Player* player)
 		// （ヒットストップは AttackOBB の中で、すべての攻撃に同じルールでかかる）
 		// （右と左の剣は別々に当たりを数える。同じ剣は少し間をあければ、もう一度当たる＝多段ヒット）
 		float damageRate = m_isAbility ? kAbilityDamageRate : 1.0f;
-		player->AttackOBB(player->GetSwordMatrixR(), m_isCritical, damageRate, 0);
-		player->AttackOBB(player->GetSwordMatrixL(), m_isCritical, damageRate, 1);
+		player->AttackOBB(player->GetSwordMatrixR(), m_isCritical, GetFinisherEffectName(), damageRate, 0);
+		player->AttackOBB(player->GetSwordMatrixL(), m_isCritical, GetFinisherEffectName(), damageRate, 1);
 	}
 
 	// 予約があり、キャンセル可能フレームを超えたら次へ滑らかに移行

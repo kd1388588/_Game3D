@@ -14,7 +14,7 @@ namespace
 	constexpr float kAttackHitEndFrame		= 45.0f;
 
 	// 撃破エフェクトの大きさ（敵の体の大きさに掛ける）
-	constexpr float kDeathEffectScaleRate	= 0.8f;		// EnemyDeath は大きさ 1 で普通の敵に合うように作ってある
+	constexpr float kDeathEffectScaleRate	= 0.15f;
 
 	// 飛びかかり攻撃（ボスもザコも。使った後の CT は Enemy.cpp の敵の種類ごとのパラメータ）
 	constexpr float kJumpAttackMinDist		= 4.0f;		// プレイヤーがこれより遠く、

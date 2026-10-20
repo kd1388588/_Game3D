@@ -223,8 +223,10 @@ namespace
 	constexpr float kSwordTrailBaseBrightness = 0.15f;	// 刃の根元側の明るさ（先端を1.0とした割合）
 
 	// エフェクト
-	constexpr float kHitEffectScale			= 1.0f;		// 攻撃が敵に当たった時のエフェクトの大きさ（HitSlash：1本の斬撃）
-	constexpr float kCriticalHitEffectScale	= 1.4f;		// クリティカル時のエフェクトの大きさ
+	constexpr float kHitEffectScale			= 0.35f;	// 攻撃が敵に当たった時のエフェクト（斬撃1本）の大きさ
+	constexpr float kCriticalHitEffectScale	= 0.5f;		// クリティカル時のエフェクトの大きさ
+	constexpr float kHitSlashBaseAngle		= -70.0f;	// _Sword1-1 の斬撃の、エフェクトの中での傾き（Angle ノードの Z 回転）
+	constexpr float kFinisherEffectScaleRate	= 1.4f;		// 決めの攻撃の専用エフェクトの大きさ（斬撃1本の大きさに掛ける。前と同じ 0.5 くらい）
 
 	// カメラの注視点を腰の骨から下げる量
 	constexpr float kCameraTargetOffsetY	= -0.9f;
@@ -1962,22 +1964,38 @@ void Player::PlayHitEffect(const Math::Matrix& swordMatrix, int hand, const Math
 		}
 	}
 
-	// クリティカルは大きく、モードの色をかける（白く作ってあるエフェクト）
+	// 剣を振った向きを、画面の上の角度にする（右が 0度、上が 90度）
+	float slashAngle = DirectX::XMConvertToRadians(90.0f);	// 分からない時は縦
+	Math::Matrix camRot = KdShaderManager::Instance().GetCameraCB().mView.Invert();
+	float dx = slashDir.Dot(camRot.Right());
+	float dy = slashDir.Dot(camRot.Up());
+	if (dx * dx + dy * dy > 0.000001f) slashAngle = std::atan2(dy, dx);
+
+	// _Sword1-1 の斬撃は、カメラを向いた縦長の板を Z で傾けたもの（エフェクトの中で kHitSlashBaseAngle 度傾いている）
+	// 板の縦（長い方）が slashAngle を向くように、足りない分だけ Z で回して出す
+	float rotZ = slashAngle - DirectX::XMConvertToRadians(90.0f + kHitSlashBaseAngle);
 	float scale = isCritical ? kCriticalHitEffectScale : kHitEffectScale;
-	std::shared_ptr<KdEffekseerObject> effect = EffectPlayer::PlayFacingCamera(EffectName::HitEnemy, hitPos, scale, slashDir);
-	if (effect)
-	{
-		const Math::Vector3& color = IsPunisherMode() ? kPunisherLimColor : kOperatorLimColor;
-		float whiteRate = isCritical ? 0.7f : 0.4f;		// クリティカルは白っぽく光らせる
-		effect->SetColor({
-			color.x + (1.0f - color.x) * whiteRate,
-			color.y + (1.0f - color.y) * whiteRate,
-			color.z + (1.0f - color.z) * whiteRate,
-			1.0f });
-	}
+	Math::Matrix mWorld = Math::Matrix::CreateScale(scale)
+		* Math::Matrix::CreateRotationZ(rotZ)
+		* Math::Matrix::CreateTranslation(hitPos);
+	EffectPlayer::Play(EffectName::HitEnemy, mWorld);
 }
 
-bool Player::AttackOBB(const Math::Matrix& swordMatrix, bool isCritical, float damageRate, int hand)
+void Player::PlayFinisherEffect(const std::string& effectName, const Math::Vector3& hitPos, bool isCritical)
+{
+	// 1振りに1回だけ（二刀流で2回当たっても、多段ヒットしても、決めのエフェクトは1つ）
+	if (effectName.empty() || m_isFinisherEffectPlayed) return;
+	m_isFinisherEffectPlayed = true;
+
+	// プレイヤーの攻撃の向きに合わせ、当たった位置に出す
+	float scale = (isCritical ? kCriticalHitEffectScale : kHitEffectScale) * kFinisherEffectScaleRate;
+	Math::Matrix mWorld = Math::Matrix::CreateScale(scale)
+		* Math::Matrix::CreateRotationY(GetAngleRad())
+		* Math::Matrix::CreateTranslation(hitPos);
+	EffectPlayer::Play(effectName, mWorld);
+}
+
+bool Player::AttackOBB(const Math::Matrix& swordMatrix, bool isCritical, const std::string& finisherEffectName, float damageRate, int hand)
 {
 	// 刃の根元から先端までを囲む、Y軸方向に長い箱
 	float obbOffsetY = (m_swordBladeBaseY + m_swordBladeTipY) * 0.5f;
@@ -2036,6 +2054,7 @@ bool Player::AttackOBB(const Math::Matrix& swordMatrix, bool isCritical, float d
 		// （敵は当たると少しの間無敵になるので、同じ敵に毎フレーム出続けることはない）
 		Math::Vector3 hitPos = retList.empty() ? obbMatrix.Translation() : retList.back().m_hitPos;
 		PlayHitEffect(swordMatrix, hand, hitPos, isCritical);
+		PlayFinisherEffect(finisherEffectName, hitPos, isCritical);
 	}
 
 	// ヒットストップ（プレイヤーのすべての攻撃に、同じルールでかける）

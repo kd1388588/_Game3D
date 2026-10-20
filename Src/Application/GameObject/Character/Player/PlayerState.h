@@ -183,6 +183,9 @@ private:
 	// 次の段の攻撃へ移行（5段目以降はIdleへ）
 	void ChangeToNextAttack(Player* player) const;
 
+	// 決めの攻撃の専用エフェクトの名前（無い攻撃は空。普通の攻撃は、当たるたびに斬撃1本だけ出る）
+	const std::string& GetFinisherEffectName() const;
+
 	// 今のフレームに剣の軌跡を出すか
 	// （普通の攻撃は攻撃判定のフレームの間。溜め攻撃は、振り始めから地面に叩きつけるまでずっと）
 	bool IsTrailFrame(const Player* player, float animTime) const;
