@@ -7,7 +7,7 @@ void Ground::Init()
 		m_spModel = std::make_shared<KdModelWork>();
 		m_spModel->SetModelData("Asset/Models/GameObject/Stage/Ground/Ground.gltf");
 
-		Math::Matrix scaleMat = Math::Matrix::CreateScale(100);
+		Math::Matrix scaleMat = Math::Matrix::CreateScale(150);
 		Math::Matrix translationMat = Math::Matrix::CreateTranslation(0.0f, 0.0f, 0.0f);
 		m_mWorld = scaleMat * translationMat;
 
