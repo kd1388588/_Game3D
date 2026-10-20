@@ -8,7 +8,7 @@ namespace
 	// ※どちらも SIL Open Font License（無料で使える。ライセンス文は Asset/Font/OFL_*.txt）
 	const std::string	kFontName			= "Zen Old Mincho";
 	const std::string	kFontPath			= "Asset/Font/ZenOldMincho-Bold.ttf";
-	// ※元の Cinzel.ttf は可変フォントで、Windows の文字の描画では「M」などの輪郭が重なる所が欠けて表示される
+	// ※元の Cinzel.ttf（Tools/FontSource に置いてある）は可変フォントで、Windows の文字の描画では「M」などの輪郭が重なる所が欠けて表示される
 	//   そこで Tools/MakeHeadingFont.py で、太さを決めて輪郭の重なりをまとめた CinzelStatic.ttf を作って使う
 	const std::string	kHeadingFontName	= "Cinzel Static";
 	const std::string	kHeadingFontPath	= "Asset/Font/CinzelStatic.ttf";
@@ -57,7 +57,35 @@ void UIText::RegisterFonts()
 	// 文字セット・文字幅を指定せずに「名前」を優先して探させる
 	// （指定したままだと、条件に合う別のフォントが選ばれてしまう）
 	KdFontManager::Instance().AddFont(kFontNoTitle, kTitleFontName, kFontHeightTitle, DEFAULT_CHARSET, DEFAULT_PITCH | FF_DONTCARE);
+
+	// フォントが名前で見つかったか確かめる（見つからないと、Windows が別のフォントで代用してしまう）
+	CheckFontFace(kFontName);
+	CheckFontFace(kHeadingFontName);
+	CheckFontFace(kTitleFontName);
+
 	isRegistered = true;
+}
+
+void UIText::CheckFontFace(const std::string& fontName)
+{
+	// そのフォント名で作ったフォントを選び、実際に選ばれたフォントの名前を聞く
+	HDC hdc = CreateCompatibleDC(nullptr);
+	HFONT hFont = CreateFontA(-40, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET,
+		OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, ANTIALIASED_QUALITY, DEFAULT_PITCH | FF_DONTCARE, fontName.c_str());
+	HGDIOBJ hOld = SelectObject(hdc, hFont);
+
+	char face[LF_FACESIZE] = {};
+	GetTextFaceA(hdc, LF_FACESIZE, face);
+
+	SelectObject(hdc, hOld);
+	DeleteObject(hFont);
+	DeleteDC(hdc);
+
+	std::string message = (fontName == face)
+		? "[Font] OK: " + fontName + "\n"
+		: "[Font] 【見つかりません】" + fontName + " → " + face + " で代用されています（Asset/Font を確認）\n";
+	OutputDebugStringA(message.c_str());
+	KdDebugGUI::Instance().AddLog("%s", message.c_str());
 }
 
 int UIText::GetFontNo(FontSize size)

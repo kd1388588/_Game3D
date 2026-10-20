@@ -43,6 +43,9 @@ private:
 	// 使うフォントをフォントマネージャーに登録する（最初の1回だけ）
 	static void RegisterFonts();
 
+	// フォント名で探して、見つかったかを出力に書く（見つからないと別のフォントで代用されるため）
+	static void CheckFontFace(const std::string& fontName);
+
 	// 文字の大きさに対応するフォント番号を取得
 	static int GetFontNo(FontSize size);
 

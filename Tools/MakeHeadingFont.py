@@ -3,7 +3,7 @@
 #   → Asset/Font/CinzelStatic.ttf（フォント名「Cinzel Static」）ができる
 # 必要なもの：pip install fonttools skia-pathops
 #
-# 元の Asset/Font/Cinzel.ttf は「可変フォント」（太さを自由に変えられる形式）で、
+# 元の Tools/FontSource/Cinzel.ttf は「可変フォント」（太さを自由に変えられる形式）で、
 # 文字の輪郭が重なったまま作られている。Windows の文字の描画（GDI）はこの形式が苦手で、
 # 「M」などの輪郭が重なる所が、しま模様に欠けて表示されてしまう。
 # そこで、太さを1つに決めた普通のフォント（静的フォント）にして、重なった輪郭を1つにまとめる。
@@ -19,7 +19,7 @@ FAMILY = "Cinzel Static"		# 新しいフォントの名前（UIText.cpp の kHea
 
 def main():
 	root = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")
-	src = os.path.join(root, "Asset", "Font", "Cinzel.ttf")
+	src = os.path.join(root, "Tools", "FontSource", "Cinzel.ttf")	# 元の可変フォント（ゲームでは使わないので Asset には置かない）
 	dst = os.path.join(root, "Asset", "Font", "CinzelStatic.ttf")
 
 	font = TTFont(src)
