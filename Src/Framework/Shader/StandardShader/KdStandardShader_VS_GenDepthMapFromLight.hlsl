@@ -9,8 +9,27 @@ VSOutputGenShadow main(
 	float2 uv : TEXCOORD0,		// テクスチャUV座標
 	float4 color : COLOR,		// 頂点カラー
 	float3 normal : NORMAL,		// 法線
-	float3 tangent : TANGENT)	// 接線
+	float3 tangent : TANGENT,	// 接線
+	uint4 skinIndex : SKININDEX,	// スキンメッシュのボーンインデックス（VS_Lit と同じ）
+	float4 skinWeight : SKINWEIGHT	// ボーンの影響度（VS_Lit と同じ）
+)
 {
+	// スキニング（VS_Lit と同じ処理。これが無いと、影がアニメーションせずに最初の姿勢のまま残る）---------------->
+	if (g_IsSkinMeshObj)
+	{
+		// 行列を合成
+		row_major float4x4 mBones = 0; // 行列を0埋め
+		[unroll]
+		for (int i = 0; i < 4; i++)
+		{
+			mBones += g_mBones[skinIndex[i]] * skinWeight[i];
+		}
+
+		// 座標に適用
+		pos = mul(pos, mBones);
+	}
+	// <----------------スキニング
+
 	VSOutputGenShadow Out;
 	
 	// キャラクターの座標変換 : ローカル座標系 -> ワールド座標系へ変換
