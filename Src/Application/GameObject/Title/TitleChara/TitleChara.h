@@ -15,6 +15,7 @@ public:
 	void Init()			override;
 	void Update()		override;
 	void DrawLit()		override;
+	void GenerateDepthMapFromLight() override;	// 影
 	void DrawEffect()	override;
 
 	// カメラが注目する位置（胸のあたり）

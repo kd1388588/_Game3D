@@ -29,6 +29,9 @@ void Sky::DrawUnLit()
 {
 	if (m_spModel)
 	{
-		KdShaderManager::Instance().m_StandardShader.DrawModel(*m_spModel, m_mWorld);
+		// 空にはフォグをかけない（遠くにあるので、かけると空全体がフォグの色になる）
+		auto& shader = KdShaderManager::Instance().m_StandardShader;
+		shader.SetFogEnable(false);
+		shader.DrawModel(*m_spModel, m_mWorld);
 	}
 }

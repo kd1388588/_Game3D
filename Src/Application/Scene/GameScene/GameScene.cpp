@@ -1,6 +1,7 @@
 ﻿#include "GameScene.h"
 #include "../../GameObject/Effect/EffectPlayer.h"
 #include "../SceneManager.h"
+#include "../../Utility/StageEnvironment.h"
 
 // Camera関連
 #include "../../GameObject/Camera/TPSCamera/TPSCamera.h"
@@ -44,6 +45,12 @@ void GameScene::Event()
 		(
 			SceneManager::SceneType::Title
 		);
+	}
+
+	// 影はプレイヤーのまわりに作る（カメラのまわりだと、カメラを引いた時にプレイヤーの影が範囲から外れる）
+	if (auto player = m_wpPlayer.lock())
+	{
+		StageEnvironment::SetShadowCenter(player->GetPos());
 	}
 
 	UpdateDebugKeys();
@@ -150,6 +157,9 @@ void GameScene::Init()
 {
 	// エフェクトを出す（タイトル画面では止めているので、ここで戻す）
 	EffectPlayer::SetEnabled(true);
+
+	// 光・フォグ・影
+	StageEnvironment::Apply();
 
 	// ステージ
 	CreateObject<Ground>();

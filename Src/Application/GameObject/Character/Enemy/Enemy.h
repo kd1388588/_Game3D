@@ -14,6 +14,7 @@ public:
 	void PostUpdate() override;
 	void Update() override;
 	void DrawLit() override;
+	void GenerateDepthMapFromLight() override;	// 影
 
 	void OnDamage(int damage, bool isCritical = false) override;
 	void TurnToPlayer();

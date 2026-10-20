@@ -168,6 +168,15 @@ void Enemy::Update()
 	}
 }
 
+void Enemy::GenerateDepthMapFromLight()
+{
+	// 影：DrawLit と同じモデルを、光から見た深度に描く
+	if (m_model)
+	{
+		KdShaderManager::Instance().m_StandardShader.DrawModel(*m_model, m_mWorld);
+	}
+}
+
 void Enemy::DrawLit()
 {
 	if (m_model)

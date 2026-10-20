@@ -324,6 +324,13 @@ void TitleChara::DrawLit()
 	shaderManager.UndoRasterizerState();
 }
 
+void TitleChara::GenerateDepthMapFromLight()
+{
+	// 影：DrawLit と同じモデル（スキンメッシュ）を、光から見た深度に描く
+	if (!m_model) return;
+	KdShaderManager::Instance().m_StandardShader.DrawModel(*m_model, m_mWorld);
+}
+
 Math::Vector3 TitleChara::GetLookAtPos() const
 {
 	return m_pos + Math::Vector3(0.0f, kLookAtHeight, 0.0f);

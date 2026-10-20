@@ -8,6 +8,7 @@ public:
 	~BaseStageObject()override {}
 	void Init()override;
 	void DrawLit()override;
+	void GenerateDepthMapFromLight()override;	// 影（柱や壁の影を落とす）
 
 protected:
 

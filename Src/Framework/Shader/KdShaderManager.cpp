@@ -452,10 +452,11 @@ void KdShaderManager::WriteCBDirectionalLight(const Math::Vector3& dir, const Ma
 // ///// ///// ///// ///// ///// ///// ///// ///// ///// ///// ///// ///// ///// ///// /////
 // 影生成エリアのデータをGPUに転送
 // ///// ///// ///// ///// ///// ///// ///// ///// ///// ///// ///// ///// ///// ///// /////
-void KdShaderManager::WriteCBShadowArea(const Math::Matrix& proj, float dirLightHeight)
+void KdShaderManager::WriteCBShadowArea(const Math::Matrix& proj, float dirLightHeight, const Math::Vector3* pCenter)
 {
+	// 影を作る範囲の中心：指定があればその位置（プレイヤーなど）、無ければカメラの位置
 	Math::Vector3 lightDir = m_cb9_Light.Get().DirLight_Dir;
-	Math::Vector3 lightPos = m_cb7_Camera.Get().CamPos;
+	Math::Vector3 lightPos = pCenter ? *pCenter : m_cb7_Camera.Get().CamPos;
 	Math::Vector3 upVec = (lightDir == Math::Vector3::Up) ? Math::Vector3::Right : Math::Vector3::Up ;
 
 	Math::Matrix shadowVP = DirectX::XMMatrixLookAtLH(lightPos - lightDir * dirLightHeight, lightPos, upVec);

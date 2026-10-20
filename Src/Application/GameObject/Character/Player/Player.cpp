@@ -1294,7 +1294,18 @@ void Player::UpdateCameraTargetY()
 }
 
 void Player::GenerateDepthMapFromLight()
-{}
+{
+	// 影：DrawLit と同じように体（スキンメッシュ）と剣を、光から見た深度に描く
+	if (!m_model) return;
+
+	auto& shader = KdShaderManager::Instance().m_StandardShader;
+	shader.DrawModel(*m_model, m_mWorld);
+	if (m_swordModel)
+	{
+		shader.DrawModel(*m_swordModel, m_swordWorldR);
+		shader.DrawModel(*m_swordModel, m_swordWorldL);
+	}
+}
 
 void Player::DrawEffect()
 {

@@ -50,6 +50,10 @@ public:
 	// 平行光の影生成用の射影行列設定：エリアを指定 x:幅 y:奥行
 	void SetDirLightShadowArea(const Math::Vector2& lightingArea, float dirLightHeight);
 
+	// 影を作る範囲の中心を設定（設定しない時はカメラの位置）
+	void SetShadowCenter(const Math::Vector3& center) { m_shadowCenter = center; m_useShadowCenter = true; }
+	void ClearShadowCenter() { m_useShadowCenter = false; }
+
 	// 平行光の方向と色を設定
 	void SetDirLight(const Math::Vector3& dir, const Math::Vector3& col);
 
@@ -79,6 +83,10 @@ private:
 	Math::Matrix m_shadowProj;
 	// 平行光源の高さ(実際には存在しない影生成用の仮の位置)
 	float		m_dirLightHeight = 0.0f;
+
+	// 影を作る範囲の中心（m_useShadowCenter が false の時はカメラの位置）
+	Math::Vector3	m_shadowCenter = Math::Vector3::Zero;
+	bool			m_useShadowCenter = false;
 
 	// 変更があるかを判定するフラグ
 	bool m_dirtyLightAmb = true;

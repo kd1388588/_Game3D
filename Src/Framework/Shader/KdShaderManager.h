@@ -195,7 +195,7 @@ public:
 
 	void WriteCBAmbientLight(const Math::Vector4& col);
 	void WriteCBDirectionalLight(const Math::Vector3& dir, const Math::Vector3& col);
-	void WriteCBShadowArea(const Math::Matrix& proj, float dirLightHeight);
+	void WriteCBShadowArea(const Math::Matrix& proj, float dirLightHeight, const Math::Vector3* pCenter = nullptr);
 	void WriteCBPointLight(const std::list<PointLight>& pointLights);
 
 	//==========================

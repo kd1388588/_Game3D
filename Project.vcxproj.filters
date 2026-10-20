@@ -348,6 +348,9 @@
     <ClInclude Include="Src\Application\Utility\InputHelper.h">
       <Filter>Src\Application\Utility</Filter>
     </ClInclude>
+    <ClInclude Include="Src\Application\Utility\StageEnvironment.h">
+      <Filter>Src\Application\Utility</Filter>
+    </ClInclude>
     <ClInclude Include="Src\Application\Utility\HitStop.h">
       <Filter>Src\Application\Utility</Filter>
     </ClInclude>

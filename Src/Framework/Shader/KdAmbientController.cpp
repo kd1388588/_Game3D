@@ -176,7 +176,7 @@ void KdAmbientController::WriteLightParams()
 	}
 
 	// 影描画エリアの更新
-	KdShaderManager::Instance().WriteCBShadowArea(m_shadowProj, m_dirLightHeight);
+	KdShaderManager::Instance().WriteCBShadowArea(m_shadowProj, m_dirLightHeight, m_useShadowCenter ? &m_shadowCenter : nullptr);
 }
 
 // ///// ///// ///// ///// ///// ///// ///// ///// ///// ///// ///// ///// ///// ///// /////

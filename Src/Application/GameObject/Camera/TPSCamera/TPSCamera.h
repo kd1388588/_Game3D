@@ -22,5 +22,10 @@ private:
 	// ヒットストップ中にカメラを揺らす
 	void ApplyHitShake();
 
+	// マウスホイールでカメラの距離を変える
+	void UpdateZoom();
+
 	Math::Vector3	m_lookAhead = Math::Vector3::Zero;	// 注視点を進む方向へずらす量（なめらかに変える）
+	float			m_distance = 5.5f;					// 注視点からカメラまでの距離（なめらかに変える）
+	float			m_targetDistance = 5.5f;			// ホイールで決めた距離
 };
