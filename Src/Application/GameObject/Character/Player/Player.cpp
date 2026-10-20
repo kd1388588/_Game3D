@@ -57,8 +57,8 @@ namespace
 	constexpr int	kDamageInvincibleFrame = 30;		// 被弾後の無敵時間
 	constexpr int	kHeavyDamage = 20;		// これ以上のダメージで仰け反る
 	// 二刀流なので、1振りで左右の剣がそれぞれ当たる（多段ヒット）。そのぶん1回のダメージは低め
-	constexpr int	kAttackDamage = 5;
-	constexpr int	kCriticalAttackDamage = 10;
+	constexpr int	kAttackDamage = 3;
+	constexpr int	kCriticalAttackDamage = 5;
 	constexpr int	kMultiHitInterval = 10;	// 同じ剣が同じ敵にもう一度当たれるまでのフレーム数（回転する攻撃などで何度も当たる）
 	constexpr int	kAttackTypeNum = 5;		// 攻撃パターンの数
 
@@ -176,8 +176,8 @@ namespace
 	const Math::Vector3 kPunisherLimColor	= { 1.0f, 0.3f, 0.0f };		// パニッシャー：オレンジ
 
 	// いつもの薄いリムライト（モードを切り替えた時の光とは別に、体全体のふちを今のモードの色で薄く光らせておく）
-	constexpr float		kBaseLimBright		= 0.35f;		// 明るさ（モードの色にかける）
-	constexpr float		kBaseLimPow			= 2.5f;			// 鋭さ（大きいほどふちだけが光る）
+	constexpr float		kBaseLimBright		= 0.2f;		// 明るさ（モードの色にかける）
+	constexpr float		kBaseLimPow			= 3.0f;			// 鋭さ（大きいほどふちだけが光る）
 
 	// ガードの盾のエフェクトを出す位置（体の前）
 	constexpr float	kGuardEffectHeight		= 1.0f;		// 高さ
