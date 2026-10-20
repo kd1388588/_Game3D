@@ -15,9 +15,9 @@ namespace EffectName
 	inline const std::string ComboSlash1_3		= "_Sword1-3.efkefc";	// 攻撃タイプ1の3段目
 	inline const std::string ComboSlash1_4		= "_Sword1-4.efkefc";	// 攻撃タイプ1の4段目
 	inline const std::string ComboSlash4		= "_Sword4.efkefc";		// 攻撃タイプ4
-	inline const std::string ComboSlash5_1		= "_Sword5-1.efkefc";	// 攻撃タイプ5の1段目（斬撃1本。向きはゲーム側で回す）
-	inline const std::string ComboSlash5_2		= "_Sword5-2.efkefc";	// 攻撃タイプ5の2段目（同上）
-	inline const std::string ComboSlash5_3		= "_Sword5-3.efkefc";	// 攻撃タイプ5の3段目（同上）
+	inline const std::string ComboSlash5_1		= "_Sword5-1.efkefc";	// 攻撃タイプ5の1段目のヒット（_Sword5 の斬撃1本。剣を振った向きに回して出す）
+	inline const std::string ComboSlash5_2		= "_Sword5-2.efkefc";	// 攻撃タイプ5の2段目のヒット（_Sword5 の斬撃が回転しながら弧を描く）
+	inline const std::string ComboSlash5_3		= "_Sword5.efkefc";		// 攻撃タイプ5の3段目のヒット（_Sword5 そのまま。4本の斬撃）
 	inline const std::string ComboSlash5_4		= "_Sword5-4.efkefc";	// 攻撃タイプ5の4段目
 	inline const std::string ComboSlashDefault	= "_Sword1.efkefc";		// 専用のエフェクトが無い攻撃
 
@@ -58,6 +58,10 @@ public:
 	// screenDir：エフェクトの X 軸を、画面の上でこの向き（ワールドの向き）に合わせる。ゼロなら回さない
 	static std::shared_ptr<KdEffekseerObject> PlayFacingCamera(const std::string& fileName, const Math::Vector3& pos,
 		float scale = 1.0f, const Math::Vector3& screenDir = Math::Vector3::Zero);
+
+	// カメラの方を向けて、画面の上で rotZ（ラジアン。反時計回り）だけ回してエフェクトを1回再生する
+	static std::shared_ptr<KdEffekseerObject> PlayFacingCameraRotZ(const std::string& fileName, const Math::Vector3& pos,
+		float scale, float rotZ);
 
 	// 再生中のエフェクトを止めて、ポインタを空にする
 	static void Stop(std::shared_ptr<KdEffekseerObject>& effect);

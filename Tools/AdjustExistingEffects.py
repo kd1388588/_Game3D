@@ -1,6 +1,7 @@
 # 今使っているエフェクト（.efkefc）を調整して、同じ名前の .efkproj を作るスクリプト
-# 使い方：python Tools/AdjustExistingEffects.py
-#   → Asset/Data/Effect/ に _boss_death.efkproj などができる
+# 使い方：python Tools/AdjustExistingEffects.py          （_Sword5-1・_Sword5-2 を作る）
+#         python Tools/AdjustExistingEffects.py claw     （_Claw2 だけ作り直す。boss_death・sword5_1・sword5_2 も選べる）
+#   → Asset/Data/Effect/ に .efkproj ができる
 #   → Effekseer エディタで開いて「名前を付けて保存」で同じ名前の .efkefc に上書きする
 #
 # .efkefc の中には、エディタ用のデータ（EDIT。圧縮した XML のようなもの）が入っているので、
@@ -161,40 +162,78 @@ def adjust_boss_death():
 
 
 def adjust_claw():
-	"""敵の攻撃が当たった：粒・稲妻・放射の線・ゆがみの数を減らして、見通しを良くする"""
+	"""敵の攻撃が当たった：粒・稲妻・放射の線の数（元は 100）を 15 にして、見通しを良くする
+	（何度流しても同じ結果になるように、減らす割合ではなく数を決めて書き換える）"""
 	root = load("_Claw2")
-	scale_generation(root, 0.15, 8, threshold=5)
+	for n in nodes(root):
+		if n.findtext("DrawingValues/Type") in ("3", "6"):
+			continue
+		v = n.find("CommonValues/MaxGeneration/Value")
+		if v is not None and int(v.text) >= 50:
+			v.text = "15"
 	save("_Claw2", root)
 
 
-def split_sword5():
-	"""攻撃パターン05の 1～3段目用に、_Sword5（＝_Sword1 と同じ中身）の4本の斬撃を1本ずつに分ける
-	元は Nluu～Nluu4 の4本が 0・8・16・24 フレーム目に、Z で -20・20・-70・70 度傾いて出る。
-	分けた斬撃は傾き 0（下から上へまっすぐ）・すぐ出るようにして、
-	いつ・どの向きに出すかはゲーム側（PlayerState.cpp の kAttack5SlashEvents）で、アニメーションに合わせて決める"""
-	src = "_Sword5" if os.path.exists(os.path.join(EFFECT_DIR, "_Sword5.efkefc")) else "_Sword1"
-	for step, slash_name in enumerate(("Nluu", "Nluu2", "Nluu3"), start=1):
-		root = load(src)
-		sword_null = find_node(root, "SwordNull")
-		children = sword_null.find("Children")
-		for c in list(children):
-			if c.findtext("Name") != slash_name:
-				children.remove(c)
-		slash = find_node(root, slash_name)
-		common = slash.find("CommonValues")
-		offset = common.find("GenerationTimeOffset")
-		if offset is not None:
-			common.remove(offset)
-		child(slash, "RotationValues", "Fixed", "Rotation", "Z").text = "0"
-		child(root, "StartFrame").text = "0"
-		child(root, "EndFrame").text = "45"
-		save(f"_Sword5-{step}", root)
+def sword5_slash(slash_name):
+	"""_Sword5 の4本の斬撃（Nluu～Nluu4）から1本だけ取り出す（傾き 0・すぐ出る。向きはゲーム側で回す）
+	元は 0・8・16・24 フレーム目に、Z で -20・20・-70・70 度傾いて出る"""
+	root = load("_Sword5")
+	children = find_node(root, "SwordNull").find("Children")
+	for c in list(children):
+		if c.findtext("Name") != slash_name:
+			children.remove(c)
+	slash = find_node(root, slash_name)
+	common = slash.find("CommonValues")
+	offset = common.find("GenerationTimeOffset")
+	if offset is not None:
+		common.remove(offset)
+	child(slash, "RotationValues", "Fixed", "Rotation", "Z").text = "0"
+	child(root, "StartFrame").text = "0"
+	child(root, "EndFrame").text = "45"
+	return root, slash
+
+
+def make_sword5_1():
+	"""05_01（2連撃）のヒット：_Sword5 の斬撃1本。当たるたびに、剣を振った向きに回して出す"""
+	root, _ = sword5_slash("Nluu")
+	save("_Sword5-1", root)
+
+
+def make_sword5_2():
+	"""05_02（投げた剣が回転する多段攻撃）のヒット：_Sword5 の斬撃を、回転しながら弧を描くようにする
+	（向きはばらばら、1フレームに 24度ずつ回る。何度も当たるので、飛び散る線などは少なめにする）"""
+	root, slash = sword5_slash("Nluu2")
+	rot = slash.find("RotationValues")
+	for tag in ("Type", "PVA"):
+		e = rot.find(tag)
+		if e is not None:
+			rot.remove(e)
+	child(rot, "Type").text = "1"
+	pva = child(rot, "PVA")
+	set_range(pva, ("Rotation", "Z"), 0)
+	child(pva, "Rotation", "Z", "Max").text = "180"
+	child(pva, "Rotation", "Z", "Min").text = "-180"
+	set_range(pva, ("Velocity", "Z"), 24)
+	scale_generation(root, 0.3, 4, threshold=5)
+	save("_Sword5-2", root)
+
+
+ADJUSTS = {
+	"boss_death": adjust_boss_death,
+	"claw": adjust_claw,
+	"sword5_1": make_sword5_1,
+	"sword5_2": make_sword5_2,
+}
 
 
 def main():
-	adjust_boss_death()
-	adjust_claw()
-	split_sword5()
+	# 引数で作るものを選べる（例：python Tools/AdjustExistingEffects.py claw）。無ければ _Sword5 の分だけ
+	# ※_boss_death・_Claw2 は、もうエディタで調整して .efkefc に保存してあるので、
+	#   流すとエディタでの調整が .efkproj から消える。作り直したい時だけ引数で指定する
+	import sys
+	names = sys.argv[1:] or ["sword5_1", "sword5_2"]
+	for name in names:
+		ADJUSTS[name]()
 
 
 if __name__ == "__main__":

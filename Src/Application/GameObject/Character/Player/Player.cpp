@@ -226,9 +226,8 @@ namespace
 	constexpr float kHitEffectScale			= 0.35f;	// 攻撃が敵に当たった時のエフェクト（斬撃1本）の大きさ
 	constexpr float kCriticalHitEffectScale	= 0.5f;		// クリティカル時のエフェクトの大きさ
 	constexpr float kHitSlashBaseAngle		= -70.0f;	// _Sword1-1 の斬撃の、エフェクトの中での傾き（Angle ノードの Z 回転）
-	constexpr float kSwingSlashScale		= 0.3f;		// 攻撃パターン05の 1～3段目の斬撃の大きさ
-	constexpr float kSwingSlashHeight		= 1.1f;		// その高さ
-	constexpr float kSwingSlashForward		= 0.6f;		// 体からの距離
+	constexpr float kSword5SlashScale		= 0.22f;	// 05の1段目のヒット（_Sword5 の斬撃1本）の大きさ
+	constexpr float kSword5SpinScale		= 0.15f;	// 05の2段目のヒット（回転する斬撃）の大きさ
 	constexpr float kFinisherEffectScaleRate	= 1.4f;		// 決めの攻撃の専用エフェクトの大きさ（斬撃1本の大きさに掛ける。前と同じ 0.5 くらい）
 
 	// カメラの注視点を腰の骨から下げる量
@@ -1951,7 +1950,7 @@ float Player::GetLandingFrame(const std::string& animName) const
 	return (it != m_landingFrames.end()) ? it->second : 0.0f;
 }
 
-void Player::PlayHitEffect(const Math::Matrix& swordMatrix, int hand, const Math::Vector3& hitPos, bool isCritical) const
+float Player::CalcScreenSlashAngle(const Math::Matrix& swordMatrix, int hand) const
 {
 	// 剣を振った向き：今の剣先と、軌跡に残っている前のフレームの剣先の差
 	Math::Vector3 slashDir = Math::Vector3::Zero;
@@ -1967,36 +1966,49 @@ void Player::PlayHitEffect(const Math::Matrix& swordMatrix, int hand, const Math
 		}
 	}
 
-	// 剣を振った向きを、画面の上の角度にする（右が 0度、上が 90度）
-	float slashAngle = DirectX::XMConvertToRadians(90.0f);	// 分からない時は縦
+	// 画面の右・上の向きに分けて角度にする（分からない時は縦）
 	Math::Matrix camRot = KdShaderManager::Instance().GetCameraCB().mView.Invert();
 	float dx = slashDir.Dot(camRot.Right());
 	float dy = slashDir.Dot(camRot.Up());
-	if (dx * dx + dy * dy > 0.000001f) slashAngle = std::atan2(dy, dx);
-
-	// _Sword1-1 の斬撃は、カメラを向いた縦長の板を Z で傾けたもの（エフェクトの中で kHitSlashBaseAngle 度傾いている）
-	// 板の縦（長い方）が slashAngle を向くように、足りない分だけ Z で回して出す
-	float rotZ = slashAngle - DirectX::XMConvertToRadians(90.0f + kHitSlashBaseAngle);
-	float scale = isCritical ? kCriticalHitEffectScale : kHitEffectScale;
-	Math::Matrix mWorld = Math::Matrix::CreateScale(scale)
-		* Math::Matrix::CreateRotationZ(rotZ)
-		* Math::Matrix::CreateTranslation(hitPos);
-	EffectPlayer::Play(EffectName::HitEnemy, mWorld);
+	if (dx * dx + dy * dy <= 0.000001f) return DirectX::XM_PIDIV2;
+	return std::atan2(dy, dx);
 }
 
-void Player::PlaySwingSlashEffect(const std::string& effectName, float screenAngleDeg)
+void Player::PlayHitEffect(HitEffectType hitEffectType, const Math::Matrix& swordMatrix, int hand, const Math::Vector3& hitPos, bool isCritical) const
 {
-	// 体の前（胸の高さ）に、プレイヤーの向きで出す（エフェクトの XY 平面が、後ろから見た画面になる）
-	Math::Matrix rotY = Math::Matrix::CreateRotationY(GetAngleRad());
-	Math::Vector3 forward = Math::Vector3::TransformNormal(Math::Vector3(0.0f, 0.0f, 1.0f), rotY);
-	Math::Vector3 pos = m_pos + Math::Vector3(0.0f, kSwingSlashHeight, 0.0f) + forward * kSwingSlashForward;
+	switch (hitEffectType)
+	{
+	case HitEffectType::Slash:
+	{
+		// _Sword1-1 の斬撃は、カメラを向いた縦長の板を Z で傾けたもの（エフェクトの中で kHitSlashBaseAngle 度傾いている）
+		// 板の縦（長い方）が剣を振った向きになるように、足りない分だけ Z で回して出す
+		float rotZ = CalcScreenSlashAngle(swordMatrix, hand) - DirectX::XMConvertToRadians(90.0f + kHitSlashBaseAngle);
+		float scale = isCritical ? kCriticalHitEffectScale : kHitEffectScale;
+		Math::Matrix mWorld = Math::Matrix::CreateScale(scale)
+			* Math::Matrix::CreateRotationZ(rotZ)
+			* Math::Matrix::CreateTranslation(hitPos);
+		EffectPlayer::Play(EffectName::HitEnemy, mWorld);
+		break;
+	}
 
-	// 斬撃はエフェクトの中で +Y（上）に進むので、90度引いた分だけ回すと screenAngleDeg の向きに進む
-	Math::Matrix mWorld = Math::Matrix::CreateScale(kSwingSlashScale)
-		* Math::Matrix::CreateRotationZ(DirectX::XMConvertToRadians(screenAngleDeg - 90.0f))
-		* rotY
-		* Math::Matrix::CreateTranslation(pos);
-	EffectPlayer::Play(effectName, mWorld, GetAnimationSpeed());
+	case HitEffectType::Sword5Slash:
+	{
+		// _Sword5 の斬撃はエフェクトの中で +Y（上）に進むので、90度引いた分だけ回すと、剣を振った向きに進む
+		// （カメラの方を向けて出すので、エフェクトの XY 平面がそのまま画面になる）
+		float angle = CalcScreenSlashAngle(swordMatrix, hand) - DirectX::XM_PIDIV2;
+		float scale = kSword5SlashScale * (isCritical ? kCriticalHitEffectScale / kHitEffectScale : 1.0f);
+		EffectPlayer::PlayFacingCameraRotZ(EffectName::ComboSlash5_1, hitPos, scale, angle);
+		break;
+	}
+
+	case HitEffectType::Sword5Spin:
+		// 回転する斬撃（向きはエフェクトの中でばらばらにしてある）
+		EffectPlayer::PlayFacingCamera(EffectName::ComboSlash5_2, hitPos, kSword5SpinScale);
+		break;
+
+	default:
+		break;
+	}
 }
 
 void Player::PlayFinisherEffect(const std::string& effectName, const Math::Vector3& hitPos, bool isCritical)
@@ -2013,7 +2025,7 @@ void Player::PlayFinisherEffect(const std::string& effectName, const Math::Vecto
 	EffectPlayer::Play(effectName, mWorld);
 }
 
-bool Player::AttackOBB(const Math::Matrix& swordMatrix, bool isCritical, const std::string& finisherEffectName, float damageRate, int hand)
+bool Player::AttackOBB(const Math::Matrix& swordMatrix, bool isCritical, HitEffectType hitEffectType, const std::string& finisherEffectName, float damageRate, int hand)
 {
 	// 刃の根元から先端までを囲む、Y軸方向に長い箱
 	float obbOffsetY = (m_swordBladeBaseY + m_swordBladeTipY) * 0.5f;
@@ -2071,7 +2083,7 @@ bool Player::AttackOBB(const Math::Matrix& swordMatrix, bool isCritical, const s
 		// 当たった位置にヒットエフェクト
 		// （敵は当たると少しの間無敵になるので、同じ敵に毎フレーム出続けることはない）
 		Math::Vector3 hitPos = retList.empty() ? obbMatrix.Translation() : retList.back().m_hitPos;
-		PlayHitEffect(swordMatrix, hand, hitPos, isCritical);
+		PlayHitEffect(hitEffectType, swordMatrix, hand, hitPos, isCritical);
 		PlayFinisherEffect(finisherEffectName, hitPos, isCritical);
 	}
 

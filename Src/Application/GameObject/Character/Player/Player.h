@@ -17,6 +17,15 @@ enum class AbilitySlot
 	Num
 };
 
+// 攻撃が当たるたびに出すヒットエフェクトの種類
+enum class HitEffectType
+{
+	None,			// 出さない
+	Slash,			// いつもの斬撃1本（_Sword1-1）。剣を振った向きに回す
+	Sword5Slash,	// 05の1段目：_Sword5 の斬撃1本（_Sword5-1）。剣を振った向きに回す
+	Sword5Spin,		// 05の2段目：_Sword5 の斬撃が回転しながら弧を描く（_Sword5-2）。投げた剣の多段ヒット
+};
+
 class TPSCamera;
 class PlayerState;
 class BaseScene;
@@ -157,21 +166,20 @@ public:
 
 	// ボックス（OBB）による攻撃判定
 	// 敵に当たったら、その位置に剣を振った向きの斬撃のヒットエフェクトを出す
+	// hitEffectType：当たるたびに出すヒットエフェクトの種類
 	// finisherEffectName：決めの攻撃の専用エフェクト（空なら出さない。1振りに1回だけ出す）
 	// damageRate：ダメージの倍率（アビリティなど）
 	// hand：どちらの剣か（0：右、1：左）。剣ごとに当たりを数えるので、二刀流で1振りに2回当たる
-	bool AttackOBB(const Math::Matrix& swordMatrix, bool isCritical, const std::string& finisherEffectName = "", float damageRate = 1.0f, int hand = 0);
+	bool AttackOBB(const Math::Matrix& swordMatrix, bool isCritical, HitEffectType hitEffectType = HitEffectType::Slash, const std::string& finisherEffectName = "", float damageRate = 1.0f, int hand = 0);
 
 	// 攻撃の当たった記録を消す（新しい攻撃を振り始める時に呼ぶ）
 	void ResetAttackHits() { for (auto& record : m_lastHitFrame) record.clear(); m_isFinisherEffectPlayed = false; }
 
-	// 攻撃が当たった位置に、剣先が動いた向きの斬撃のヒットエフェクトを1つ出す（1ヒットに1つ）
-	void PlayHitEffect(const Math::Matrix& swordMatrix, int hand, const Math::Vector3& hitPos, bool isCritical) const;
+	// 攻撃が当たった位置に、ヒットエフェクトを1つ出す（1ヒットに1つ。種類は hitEffectType）
+	void PlayHitEffect(HitEffectType hitEffectType, const Math::Matrix& swordMatrix, int hand, const Math::Vector3& hitPos, bool isCritical) const;
 
-	// 剣を振る斬撃のエフェクトを、体の前に出す（攻撃パターン05の 1～3段目）
-	// screenAngleDeg：後ろから見た画面の上で、斬撃が進む向き（右が 0度、上が 90度、反時計回り）
-	// エフェクトの斬撃は「下から上」に進むので、その分を引いて Z で回す。速さはアニメーションの再生速度に合わせる
-	void PlaySwingSlashEffect(const std::string& effectName, float screenAngleDeg);
+	// 剣先が動いた向きを、画面の上の角度（ラジアン。右が 0、上が π/2）にする
+	float CalcScreenSlashAngle(const Math::Matrix& swordMatrix, int hand) const;
 
 	// 決めの攻撃（1-4・4・5-4 など）の専用エフェクトを出す（1振りに1回だけ）
 	void PlayFinisherEffect(const std::string& effectName, const Math::Vector3& hitPos, bool isCritical);

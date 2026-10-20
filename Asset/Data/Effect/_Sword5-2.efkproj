@@ -29,19 +29,22 @@
                   <Z>0</Z>
                 </Rotation>
               </Fixed>
+              <Type>1</Type>
               <PVA>
                 <Rotation>
-                  <Y>
-                    <Center>30</Center>
-                    <Max>30</Max>
-                    <Min>30</Min>
-                  </Y>
                   <Z>
-                    <Center>-30</Center>
-                    <Max>-30</Max>
-                    <Min>-30</Min>
+                    <Center>0</Center>
+                    <Max>180</Max>
+                    <Min>-180</Min>
                   </Z>
                 </Rotation>
+                <Velocity>
+                  <Z>
+                    <Center>24</Center>
+                    <Max>24</Max>
+                    <Min>24</Min>
+                  </Z>
+                </Velocity>
               </PVA>
             </RotationValues>
             <DrawingValues>
@@ -368,7 +371,7 @@
                   <Node>
                     <CommonValues>
                       <MaxGeneration>
-                        <Value>10</Value>
+                        <Value>4</Value>
                       </MaxGeneration>
                       <LocationEffectType>1</LocationEffectType>
                       <RotationEffectType>1</RotationEffectType>
@@ -740,7 +743,7 @@
                   <Node>
                     <CommonValues>
                       <MaxGeneration>
-                        <Value>75</Value>
+                        <Value>22</Value>
                       </MaxGeneration>
                       <ScaleEffectType>0</ScaleEffectType>
                       <RemoveWhenAllChildrenAreRemoved>True</RemoveWhenAllChildrenAreRemoved>
@@ -990,7 +993,7 @@
                   <Node>
                     <CommonValues>
                       <MaxGeneration>
-                        <Value>50</Value>
+                        <Value>15</Value>
                       </MaxGeneration>
                       <RemoveWhenAllChildrenAreRemoved>True</RemoveWhenAllChildrenAreRemoved>
                       <GenerationTime>
@@ -1459,7 +1462,7 @@
                   <Node>
                     <CommonValues>
                       <MaxGeneration>
-                        <Value>50</Value>
+                        <Value>15</Value>
                       </MaxGeneration>
                       <RemoveWhenAllChildrenAreRemoved>True</RemoveWhenAllChildrenAreRemoved>
                       <GenerationTime>

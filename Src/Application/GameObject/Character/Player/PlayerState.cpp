@@ -88,25 +88,6 @@ namespace
 	constexpr float kEvadeBlendFrame		= 3.0f;		// 前の動き→回避のブレンドフレーム数
 
 	// 攻撃
-	// 攻撃パターン05の 1～3段目の斬撃（_Sword5 の4本の斬撃を1本ずつに分けたもの）
-	// アニメーション（AS_Combo_Attack_05_0X）の剣先の動きを調べて、速く振っている所に合わせた
-	// frame：出すアニメーションのフレーム、angle：後ろから見た画面の上で斬撃が進む向き（右が 0度、上が 90度）
-	struct SlashEvent
-	{
-		int			step;
-		float		frame;
-		float		angle;
-		const std::string* effect;
-	};
-	const SlashEvent kAttack5SlashEvents[] =
-	{
-		{ 1,  2.0f,  135.0f, &EffectName::ComboSlash5_1 },	// 1段目：右の剣を左上へ振り上げる
-		{ 1, 17.0f, -155.0f, &EffectName::ComboSlash5_1 },	// 1段目：左の剣を左下へ振り下ろす
-		{ 2,  6.0f,   37.0f, &EffectName::ComboSlash5_2 },	// 2段目：右の剣を右上へ投げ上げる
-		{ 3,  5.0f, -166.0f, &EffectName::ComboSlash5_3 },	// 3段目：右の剣で右から左へ大きく払う
-		{ 3,  8.0f,   31.0f, &EffectName::ComboSlash5_3 },	// 3段目：左の剣で左から右上へ大きく払う
-	};
-
 	constexpr float kAttackAnimSpeed		= 1.15f;	// 攻撃の再生速度（少し速くして、もっさりしないようにする）
 	constexpr float kAttack5_3AnimSpeed		= 0.9f;		// 攻撃05の3段目だけは、少しゆっくり再生する
 	constexpr float kAttackEvadeCancelFrame	= 12.0f;	// 攻撃のこのフレーム以降なら、回避でキャンセルできる
@@ -572,20 +553,19 @@ void PlayerStateComboAttack::ChangeToNextAttack(Player* player) const
 	}
 }
 
-void PlayerStateComboAttack::UpdateSwingSlashEffects(Player* player, float animTime)
+HitEffectType PlayerStateComboAttack::GetHitEffectType() const
 {
-	if (m_comboType != 5) return;
-
-	// このフレームまでに出すはずの斬撃を順番に出す（同じ斬撃は1回だけ）
-	constexpr size_t eventNum = sizeof(kAttack5SlashEvents) / sizeof(kAttack5SlashEvents[0]);
-	while (m_slashEventIndex < eventNum)
+	if (m_comboType == 5)
 	{
-		const SlashEvent& ev = kAttack5SlashEvents[m_slashEventIndex];
-		if (ev.step < m_comboStep)	{ m_slashEventIndex++; continue; }	// 前の段の分は飛ばす
-		if (ev.step > m_comboStep || animTime < ev.frame) break;
-		player->PlaySwingSlashEffect(*ev.effect, ev.angle);
-		m_slashEventIndex++;
+		switch (m_comboStep)
+		{
+		case 1:	return HitEffectType::Sword5Slash;	// 2連撃：当たるたびに _Sword5 の斬撃1本
+		case 2:	return HitEffectType::Sword5Spin;	// 投げた剣の多段攻撃：当たるたびに回転する斬撃
+		case 3:	return HitEffectType::None;			// 瞬間移動の切り刻み：_Sword5 そのまま（決めのエフェクトの方で1回だけ）
+		default: break;
+		}
 	}
+	return HitEffectType::Slash;
 }
 
 const std::string& PlayerStateComboAttack::GetFinisherEffectName() const
@@ -598,6 +578,9 @@ const std::string& PlayerStateComboAttack::GetFinisherEffectName() const
 	// 攻撃タイプ1・5の4段目（しめの一撃）
 	if (m_comboType == 1 && m_comboStep == 4) return EffectName::ComboSlash1_4;
 	if (m_comboType == 5 && m_comboStep == 4) return EffectName::ComboSlash5_4;
+
+	// 05の3段目（戻ってきた剣をつかみ、瞬間移動しながら切り刻む）：_Sword5 の4本の斬撃をそのまま
+	if (m_comboType == 5 && m_comboStep == 3) return EffectName::ComboSlash5_3;
 
 	return kNone;
 }
@@ -688,9 +671,6 @@ void PlayerStateComboAttack::Update(Player* player)
 
 	float animTime = player->GetAnimTime();
 
-	// 攻撃パターン05：アニメーションの振りに合わせて斬撃を出す
-	UpdateSwingSlashEffects(player, animTime);
-
 	// 剣の軌跡（攻撃していないフレームはPlayer側で徐々に消える）
 	if (IsTrailFrame(player, animTime))
 	{
@@ -704,8 +684,8 @@ void PlayerStateComboAttack::Update(Player* player)
 		// （ヒットストップは AttackOBB の中で、すべての攻撃に同じルールでかかる）
 		// （右と左の剣は別々に当たりを数える。同じ剣は少し間をあければ、もう一度当たる＝多段ヒット）
 		float damageRate = m_isAbility ? kAbilityDamageRate : 1.0f;
-		player->AttackOBB(player->GetSwordMatrixR(), m_isCritical, GetFinisherEffectName(), damageRate, 0);
-		player->AttackOBB(player->GetSwordMatrixL(), m_isCritical, GetFinisherEffectName(), damageRate, 1);
+		player->AttackOBB(player->GetSwordMatrixR(), m_isCritical, GetHitEffectType(), GetFinisherEffectName(), damageRate, 0);
+		player->AttackOBB(player->GetSwordMatrixL(), m_isCritical, GetHitEffectType(), GetFinisherEffectName(), damageRate, 1);
 	}
 
 	// 予約があり、キャンセル可能フレームを超えたら次へ滑らかに移行

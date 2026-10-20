@@ -25,11 +25,8 @@ std::shared_ptr<KdEffekseerObject> EffectPlayer::Play(const std::string& fileNam
 std::shared_ptr<KdEffekseerObject> EffectPlayer::PlayFacingCamera(const std::string& fileName, const Math::Vector3& pos,
 	float scale, const Math::Vector3& screenDir)
 {
-	// カメラの向き（ビュー行列の逆）。X：画面の右、Y：画面の上、Z：画面の奥
-	Math::Matrix camRot = KdShaderManager::Instance().GetCameraCB().mView.Invert();
-	camRot.Translation(Math::Vector3::Zero);
-
 	// screenDir を画面の上の向きにして、その角度だけ Z で回す
+	Math::Matrix camRot = KdShaderManager::Instance().GetCameraCB().mView.Invert();
 	float angle = 0.0f;
 	float dx = screenDir.Dot(camRot.Right());
 	float dy = screenDir.Dot(camRot.Up());
@@ -37,9 +34,18 @@ std::shared_ptr<KdEffekseerObject> EffectPlayer::PlayFacingCamera(const std::str
 	{
 		angle = std::atan2(dy, dx);
 	}
+	return PlayFacingCameraRotZ(fileName, pos, scale, angle);
+}
+
+std::shared_ptr<KdEffekseerObject> EffectPlayer::PlayFacingCameraRotZ(const std::string& fileName, const Math::Vector3& pos,
+	float scale, float rotZ)
+{
+	// カメラの向き（ビュー行列の逆）。X：画面の右、Y：画面の上、Z：画面の奥
+	Math::Matrix camRot = KdShaderManager::Instance().GetCameraCB().mView.Invert();
+	camRot.Translation(Math::Vector3::Zero);
 
 	Math::Matrix mWorld = Math::Matrix::CreateScale(scale)
-		* Math::Matrix::CreateRotationZ(angle)
+		* Math::Matrix::CreateRotationZ(rotZ)
 		* camRot
 		* Math::Matrix::CreateTranslation(pos);
 	return Play(fileName, mWorld);
