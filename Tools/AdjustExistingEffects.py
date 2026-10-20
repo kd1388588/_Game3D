@@ -1,6 +1,6 @@
 # 今使っているエフェクト（.efkefc）を調整して、同じ名前の .efkproj を作るスクリプト
 # 使い方：python Tools/AdjustExistingEffects.py          （_Sword5-1・_Sword5-2 を作る）
-#         python Tools/AdjustExistingEffects.py claw     （_Claw2 だけ作り直す。boss_death・sword5_1・sword5_2 も選べる）
+#         python Tools/AdjustExistingEffects.py claw     （_Claw2 だけ作り直す。boss_death・sword5_1・sword5_2・sword1_4 も選べる）
 #   → Asset/Data/Effect/ に .efkproj ができる
 #   → Effekseer エディタで開いて「名前を付けて保存」で同じ名前の .efkefc に上書きする
 #
@@ -218,11 +218,22 @@ def make_sword5_2():
 	save("_Sword5-2", root)
 
 
+def adjust_sword1_4():
+	"""攻撃01の4段目：長い白い線（SwordMein・SwordGlow）をまっすぐ1本に見せる
+	元はカメラを向く板（回転ビルボード）で、Z の傾きだけを使う。この斬撃は Y にも 27.5度傾いているので、
+	2枚の板が少し違う角度になり、真ん中で折れて見えていた → 板の向きを固定にして、2枚を同じ直線にそろえる"""
+	root = load("_Sword1-4")
+	for name in ("SwordMein", "SwordGlow"):
+		child(find_node(root, name), "DrawingValues", "Sprite", "Billboard").text = "2"
+	save("_Sword1-4", root)
+
+
 ADJUSTS = {
 	"boss_death": adjust_boss_death,
 	"claw": adjust_claw,
 	"sword5_1": make_sword5_1,
 	"sword5_2": make_sword5_2,
+	"sword1_4": adjust_sword1_4,
 }
 
 

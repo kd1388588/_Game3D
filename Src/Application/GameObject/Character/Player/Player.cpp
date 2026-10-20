@@ -578,13 +578,21 @@ void Player::Init()
 	m_swordTrailR.polygon = std::make_shared<KdTrailPolygon>();
 	m_swordTrailL.polygon = std::make_shared<KdTrailPolygon>();
 
-	// 当たり判定
+	// 当たり判定（敵の攻撃を受ける所）：足元～腰と、胸～頭の2つの球で体全体を覆う
+	// （前は腰から下だけだったので、高い所を振る敵の腕が当たりにくかった）
 	m_pCollider = std::make_unique<KdCollider>();
 	m_pCollider->RegisterCollisionShape
 	(
 		"Player",
 		{ 0.0f, 0.5f, 0.0f },
 		0.6f,
+		KdCollider::Type::TypeDamage
+	);
+	m_pCollider->RegisterCollisionShape
+	(
+		"PlayerUpper",
+		{ 0.0f, 1.35f, 0.0f },
+		0.5f,
 		KdCollider::Type::TypeDamage
 	);
 

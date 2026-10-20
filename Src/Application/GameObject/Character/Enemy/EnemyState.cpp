@@ -9,9 +9,11 @@ namespace
 	constexpr float kChaseSpeed				= 0.1f;		// 走るスピード
 	constexpr float kLoseSightMargin		= 2.0f;		// 索敵範囲からこれだけ離れたら追跡をやめる
 
-	// 攻撃判定を出すアニメーションフレームの範囲
+	// 攻撃判定を出すアニメーションフレームの範囲（Attack_Melee_A）
+	// 0～14：振りかぶり、15～26：振り下ろし、27～：手を地面に置いたまま
+	// （前は 45 まで出していたので、振り終わって地面に置いた手に後から当たっていた）
 	constexpr float kAttackHitStartFrame	= 15.0f;
-	constexpr float kAttackHitEndFrame		= 45.0f;
+	constexpr float kAttackHitEndFrame		= 27.0f;
 
 	// 撃破エフェクトの大きさ（敵の体の大きさに掛ける）
 	constexpr float kDeathEffectScaleRate	= 0.15f;
