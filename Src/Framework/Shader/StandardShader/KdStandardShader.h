@@ -80,6 +80,16 @@ public:
 		m_dirtyCBObj = true;
 	}
 
+	// 名前に filter を含むマテリアルだけにかけるリムライト（髪だけ光らせる時など）
+	// それ以外のマテリアルは SetLimLight の設定のまま。DrawModel の後に自動で元に戻る
+	void SetMaterialLimLight(std::string_view filter, Math::Vector3 color, float pow = 1)
+	{
+		m_materialLimFilter = filter;
+		m_materialLimColor = color;
+		m_materialLimPow = pow;
+		m_dirtyCBObj = true;
+	}
+
 	// UVタイリング設定
 	void SetUVTiling(const Math::Vector2& tiling)
 	{
@@ -224,6 +234,11 @@ private:
 
 	// 定数バッファを初期状態に戻す
 	void ResetCBObject();
+
+	// マテリアルごとのリムライト（SetMaterialLimLight）
+	std::string		m_materialLimFilter;
+	Math::Vector3	m_materialLimColor = Math::Vector3::Zero;
+	float			m_materialLimPow = 1.0f;
 
 	// スキンメッシュ有効かどうか(スキンメッシュ対応)
 	void SetIsSkinMeshObj(bool isSkinMEshObj)

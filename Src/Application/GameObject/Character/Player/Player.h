@@ -449,6 +449,7 @@ private:
 	// バトルモード・ATB
 	BattleMode						m_battleMode = BattleMode::Operator;
 	int								m_modeLockTimer = 0;		// モードを切り替えられない残りフレーム（攻撃05の後）
+	int								m_modeSwitchCT = 0;			// モード切り替えのクールタイムの残りフレーム
 	int								m_abilityCT[static_cast<int>(AbilitySlot::Num)] = {};	// アビリティごとのCTの残りフレーム
 	bool							m_isGuarding = false;		// ガード中か
 	float							m_guardDurability = 100.0f;	// ガードの耐久値（0 になると崩される）

@@ -102,6 +102,7 @@ namespace
 		{ 5, 2, 60 * 8, "攻撃05" },	// ゲージ2本、CT 8秒
 	};
 	constexpr int	kModeLockFrame			= 60 * 5;	// 攻撃05を使った後、オペレーターに固定する時間（5秒）
+	constexpr int	kModeSwitchCoolFrame	= 60 * 3;	// モードを切り替えた後、次に切り替えられるまでの時間（3秒）
 	constexpr int	kAbilityStunFrame		= 50;		// ATBコマンドの技が当たった敵が、のけぞり続けるフレーム数（当たるたびに延びる）
 
 	// ヒットストップ（攻撃が当たった瞬間に止めるフレーム数と、カメラの揺れの強さ）
@@ -173,6 +174,11 @@ namespace
 	constexpr float	kLimFadeStartRate		= 0.4f;		// 全体のこの割合を過ぎたら、色をだんだん暗くして消す
 	const Math::Vector3 kOperatorLimColor	= { 0.0f, 0.5f, 1.0f };		// オペレーター：青
 	const Math::Vector3 kPunisherLimColor	= { 1.0f, 0.3f, 0.0f };		// パニッシャー：オレンジ
+
+	// 髪のリムライト（いつも光らせておく。モデルの髪のマテリアル名に含まれる文字で探す）
+	const std::string	kHairMaterialName	= "Hair";		// SK_Assassin の髪は MI_Hair_1
+	constexpr float		kHairLimBright		= 0.8f;			// 明るさ（モードの色にかける）
+	constexpr float		kHairLimPow			= 2.5f;			// 鋭さ（大きいほど髪のふちだけが光る）
 
 	// ガードの盾のエフェクトを出す位置（体の前）
 	constexpr float	kGuardEffectHeight		= 1.0f;		// 高さ
@@ -1319,6 +1325,10 @@ void Player::DrawLit()
 	shaderManager.ChangeRasterizerState(KdRasterizerState::CullNone);
 	shaderManager.ChangeBlendState(KdBlendState::Alpha);
 
+	// 髪だけ、いつも今のモードの色のリムライトで光らせる（モードを切り替えた時の光とは別）
+	const Math::Vector3& hairLimColor = IsPunisherMode() ? kPunisherLimColor : kOperatorLimColor;
+	shader.SetMaterialLimLight(kHairMaterialName, hairLimColor * kHairLimBright, kHairLimPow);
+
 	// リムライト：オペレーターは青、パニッシャーはオレンジ
 	if (m_isLimLight)
 	{
@@ -1605,6 +1615,14 @@ void Player::UpdateModeSwitch()
 		return;
 	}
 
+	// 切り替えた後は、しばらく切り替えられない（クールタイム）
+	if (m_modeSwitchCT > 0)
+	{
+		KdDebugGUI::Instance().AddLog("[System] モード切り替えのクールタイム中（あと %.1f 秒）\n", m_modeSwitchCT / 60.0f);
+		return;
+	}
+	m_modeSwitchCT = kModeSwitchCoolFrame;
+
 	bool toPunisher = (m_battleMode == BattleMode::Operator);
 	SetBattleMode(toPunisher ? BattleMode::Punisher : BattleMode::Operator);
 
@@ -1672,6 +1690,7 @@ void Player::UpdateAbilityTimers()
 		if (ct > 0) ct--;
 	}
 	if (m_modeLockTimer > 0) m_modeLockTimer--;
+	if (m_modeSwitchCT > 0) m_modeSwitchCT--;
 
 	// ガードの耐久値
 	if (m_guardBreakTimer > 0)
@@ -1827,8 +1846,10 @@ void Player::UpdateAtb()
 			atbGage->SetAbilityState(i, canUse, ctRatio, info.atbCost);
 		}
 
-		// モードの固定の残りの割合・ガード中か
-		atbGage->SetModeLockRatio(static_cast<float>(m_modeLockTimer) / static_cast<float>(kModeLockFrame));
+		// モードを切り替えられない残りの割合（攻撃05の後の固定と、切り替えのクールタイムの長い方）・ガード中か
+		float lockRatio = static_cast<float>(m_modeLockTimer) / static_cast<float>(kModeLockFrame);
+		float coolRatio = static_cast<float>(m_modeSwitchCT) / static_cast<float>(kModeSwitchCoolFrame);
+		atbGage->SetModeLockRatio(std::max(lockRatio, coolRatio));
 		atbGage->SetGuarding(m_isGuarding);
 		atbGage->SetGuardState(m_guardDurability / kGuardDurabilityMax, m_guardBreakTimer > 0);
 
