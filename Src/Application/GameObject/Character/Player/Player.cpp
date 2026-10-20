@@ -177,8 +177,8 @@ namespace
 
 	// 髪のリムライト（いつも光らせておく。モデルの髪のマテリアル名に含まれる文字で探す）
 	const std::string	kHairMaterialName	= "Hair";		// SK_Assassin の髪は MI_Hair_1
-	constexpr float		kHairLimBright		= 0.8f;			// 明るさ（モードの色にかける）
-	constexpr float		kHairLimPow			= 2.5f;			// 鋭さ（大きいほど髪のふちだけが光る）
+	constexpr float		kHairLimBright		= 1.0f;			// 明るさ（モードの色にかける）
+	constexpr float		kHairLimPow			= 0.7f;			// 鋭さ（大きいほど髪のふちだけが光る。1より小さいと髪全体が染まる）
 
 	// ガードの盾のエフェクトを出す位置（体の前）
 	constexpr float	kGuardEffectHeight		= 1.0f;		// 高さ
