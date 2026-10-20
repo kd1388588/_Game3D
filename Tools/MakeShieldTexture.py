@@ -1,6 +1,6 @@
 # ガードのエフェクトで使う「盾」と「盾の破片」の画像を作るスクリプト
 # 使い方：python Tools/MakeShieldTexture.py
-#   → Asset/Data/Effect/Tex/ShieldHex.png（半透明の「（ ）」の形の盾）、ShieldShard.png（砕けた盾のかけら）
+#   → Asset/Data/Effect/Tex/ShieldHex.png（丸い光の盾）、ShieldShard.png（砕けた盾のかけら）
 # 加算合成で描くので、黒・透明のところは見えない。色はエフェクト側でかけ算する（白っぽい水色で作る）
 
 import math
@@ -65,20 +65,16 @@ def write_png(path, width, height, pixel):
 
 
 def shield(x, y):
-	"""半透明の「（ ）」の形の盾：左右のふちが強く光り、真ん中は薄く透ける（丸く曲がった盾を正面から見た感じ）"""
+	"""丸い盾：ふちが強く光り、中は六角形の模様がうっすら光る"""
 	r = math.hypot(x, y)
 	if r > 1.0:
 		return 0, 0, 0, 0
-	side = abs(x)
-	# 左右のふちの光る弧（上下に行くほど細く・暗くして「（ ）」の形にする）
-	arc = smooth_step(0.72, 0.95, r) * smooth_step(1.0, 0.95, r) * smooth_step(0.15, 0.85, side / max(r, 1e-6))
-	# 曲面の照り返し（外側ほど明るい。左右を強く）
-	fresnel = 0.55 * (side ** 4) + 0.12 * r ** 3
-	grid = hex_edge(x, y, 0.13) * (0.06 + 0.3 * side ** 2)	# 六角形の模様は外側ほど見える
-	base = 0.06												# 真ん中もうっすら見える
-	v = min(arc + fresnel + grid + base, 1.0) * smooth_step(1.0, 0.96, r)
+	rim = smooth_step(0.80, 0.93, r) * smooth_step(1.0, 0.94, r)	# ふちの光る輪
+	inner_glow = 0.12 + 0.35 * r ** 3									# 外側ほど明るい
+	grid = hex_edge(x, y, 0.13) * (0.25 + 0.6 * r ** 2)				# 六角形の模様
+	v = min(rim + inner_glow + grid, 1.0) * smooth_step(1.0, 0.96, r)
 	c = BASE_COLOR
-	white = arc * 0.6
+	white = rim * 0.6
 	return (c[0] + (1 - c[0]) * white) * v, (c[1] + (1 - c[1]) * white) * v, (c[2] + (1 - c[2]) * white) * v, v
 
 

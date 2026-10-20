@@ -182,10 +182,10 @@ SOFT = "Tex/Particle_Soft.png"	# ふちがぼやけた丸
 SPARK = "Tex/Particle02.png"		# 光の粒
 LINE = "Tex/Line01.png"			# 細長い光
 IMPACT = "Tex/impact2.png"		# 衝撃の輪
-SHIELD = "Tex/ShieldHex.png"		# 半透明の「（ ）」の形の盾（Tools/MakeShieldTexture.py）
+SHIELD = "Tex/ShieldHex.png"		# 丸い光の盾（Tools/MakeShieldTexture.py）
 SHARD = "Tex/ShieldShard.png"		# 盾のかけら（Tools/MakeShieldTexture.py）
 FIXED = 2						# 板の向き：固定（ノードの向きのまま。盾をプレイヤーの前に立てる）
-SHIELD_W, SHIELD_H = 1.4, 1.9	# 盾の幅・高さ（体を覆う縦長の楕円）
+SHIELD_W, SHIELD_H = 1.6, 1.6	# 盾の幅・高さ（丸い盾）
 
 # ===== モード切り替え（E キー）：足元から光の輪が広がり、光の粒と柱が立ちのぼる =====
 # 色は白っぽく作り、ゲーム側でモードの色（青・オレンジ）をかけ算する
@@ -287,7 +287,7 @@ def ability_start():
 	], end_frame=70)
 
 
-# ===== ガード成功：体の前に半透明の「（ ）」の盾が出て、攻撃を受け止める =====
+# ===== ガード成功：体の前に丸い光の盾が出て、攻撃を受け止める =====
 # ゲーム側で、プレイヤーの前に、プレイヤーの向きに合わせて出す（盾は XY 平面に立つ）
 
 def guard():
