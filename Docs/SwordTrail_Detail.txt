@@ -1,0 +1,207 @@
+﻿============================================================
+ 剣のトレイル（軌跡）の仕組み（くわしい版：関数・変数・用語つき）
+============================================================
+
+※ かんたんな説明は SwordTrail.txt。こちらはコードの名前や専門用語を使った説明。
+
+■ 関係するファイル
+  Src/Application/GameObject/Character/Player/Player.cpp / Player.h   … 軌跡の処理のほとんど
+  Src/Application/GameObject/Character/Player/PlayerState.cpp          … 攻撃中に軌跡を伸ばす側
+  Src/Framework/Direct3D/Polygon/KdTrailPolygon.h / .cpp               … 帯を作るフレームワークのクラス
+  Tools/MakeTrailTexture.py                                            … 帯に貼る画像を作るスクリプト
+
+
+------------------------------------------------------------
+0. 全体の流れ（1フレームごと）
+------------------------------------------------------------
+
+  PlayerStateComboAttack::Update
+    └ IsTrailFrame() が true の間だけ
+        └ Player::AddSwordTrailPoints()
+            ├ AddSwordTrailSample(m_swordTrailR, m_swordWorldR)   … 右の剣
+            └ AddSwordTrailSample(m_swordTrailL, m_swordWorldL)   … 左の剣
+
+  Player::Update
+    └ UpdateSwordTrails()     … 追加しなかったフレームは、古い方から短くする
+
+  Player::DrawEffect
+    └ DrawPolygon(帯)         … 加算合成で描く
+
+
+------------------------------------------------------------
+1. 刃の「根元」と「先端」の位置を求める
+------------------------------------------------------------
+
+  static Math::Vector3 GetSwordPoint(const Math::Matrix& swordMat, float localY);
+  返り値：ワールド座標の点
+
+  ・swordMat は剣の「ワールド行列」。
+    手の骨（weapon_r / weapon_l ノード）の行列に、プレイヤーの行列をかけたもの。
+  ・剣のモデルは、ローカル座標の Y軸 が刃の方向になっている。
+    そこで「Y軸上の点 (0, localY, 0)」を行列で変換すると、刃の上の点がワールド座標で求まる。
+
+      Math::Vector3::Transform(Math::Vector3(0.0f, localY, 0.0f), swordMat);
+
+  ・使う localY は2つ
+      m_swordBladeBaseY … 刃の根元（つば）
+      m_swordBladeTipY  … 刃の先端
+  ・この2つは、起動時に CalcBladeShape() で「剣のメッシュの頂点」を調べ、
+    刃の本当の長さに合わせて決めている。
+    → 剣のモデルを差し替えても、帯の長さが刃からずれない。
+
+
+------------------------------------------------------------
+2. 帯の「1本の横線」を行列で作る
+------------------------------------------------------------
+
+  static Math::Matrix CreateTrailMatrix(const Math::Vector3& base, const Math::Vector3& tip);
+  返り値：KdTrailPolygon に渡す行列
+
+  ・帯を作るのはフレームワークの KdTrailPolygon（KdPolygon の派生クラス）。
+  ・AddPoint(行列) で受け取った行列ごとに、
+    「行列の位置を中心に、X軸の向きに伸びる線」を1本作り、
+    その線どうしをつないで帯（三角形の列）にする。
+  ・内部の計算：頂点 ＝ 位置 ± X軸の向き × (X軸の長さ × 0.25)
+    → 線の長さは「X軸の長さ × 0.5」になる。
+
+  ・そこで行列を次のように作っている
+      Right()（X軸）     ＝ (tip − base) × 2      … 刃の向き。長さは刃の2倍（0.5倍されて刃の長さになる）
+      Translation()（位置）＝ (base + tip) × 0.5   … 刃の真ん中
+
+
+------------------------------------------------------------
+3. フレームの間を曲線で補間する（★工夫）
+------------------------------------------------------------
+
+  void AddSwordTrailSample(SwordTrail& trail, const Math::Matrix& swordMat);
+
+  ・剣は1フレームで大きく動くので、毎フレームの位置をそのままつなぐと
+    カクカクした多角形になる。
+  ・前のフレームと今のフレームの間を「Catmull-Rom スプライン」
+    （4つの点を通る、なめらかな曲線）で 6つに分けて補間している。
+      kSwordTrailSubdivision = 6
+
+      Math::Vector3::CatmullRom(p0, p1, p2, p3, t);   // t = 1/6, 2/6, … 6/6
+
+      p0 … 2つ前のフレーム（baseHist[1]）
+      p1 … 1つ前のフレーム（baseHist[0]）
+      p2 … 今のフレーム（base）
+      p3 … この先の「予測位置」＝ 今 ＋ (今 − 1つ前)
+
+  ・根元・先端の両方を同じように補間し、6本ぶんの CreateTrailMatrix() を AddPoint() する。
+
+      そのままつなぐ　　　　　　曲線で補間する
+          ●―――●　　　　　　　　　●･･･●
+         ／　　　 ＼　　　　　　　 ･　　　　･
+        ●　　　　　●　　　→　　 ●　　　　　●
+         （多角形）　　　　　　　　（なめらかな円）
+
+  ・補間に使う履歴は、構造体 SwordTrail に持っている
+
+      struct SwordTrail
+      {
+          std::shared_ptr<KdTrailPolygon> polygon;   // 帯本体
+          std::deque<Math::Vector3> baseHistory;     // 根元の履歴（新しい順・2個）
+          std::deque<Math::Vector3> tipHistory;      // 先端の履歴（新しい順・2個）
+      };
+
+    push_front で新しい位置を入れ、pop_back で古いものを消して、
+    いつも直近2フレーム分だけ残す。
+    （std::deque … 前にも後ろにも速く出し入れできる入れ物）
+
+
+------------------------------------------------------------
+4. 長さの管理（出す・消す）
+------------------------------------------------------------
+
+  ・最大の長さ
+      polygon->SetLength(15 × 6) … 15フレーム分（補間込みで90本）が上限。
+      超えると AddPoint の中で、一番古い行列が自動で消える（pop_back）。
+      kSwordTrailLength = 15
+
+  ・出す期間
+      PlayerStateComboAttack::IsTrailFrame()  返り値：bool
+      true の間だけ追加する。
+        普通の攻撃   … 攻撃判定と同じフレームの範囲
+        溜め攻撃4-3  … 振り始めから、剣を地面に叩きつける瞬間（GetSwordSlamFrame()）まで
+
+  ・振り終わった後
+      UpdateSwordTrails() → ShrinkSwordTrail() が呼ばれ、
+      DelPointBack() を毎フレーム6回呼んで、古い方から短くして消す。
+      （補間で1フレームに6本足しているので、同じ数だけ消す）
+
+  ・新しい振り
+      m_isTrailActive が false（前の振りが終わっている）なら、
+      追加する前に ClearSwordTrail() で消す
+      → 前の振りの帯とつながらない。
+
+  ・m_isTrailAddedThisFrame
+      このフレームに追加したかどうかの印。追加したフレームは短くしない。
+
+
+------------------------------------------------------------
+5. 見た目（テクスチャ）
+------------------------------------------------------------
+
+  ・帯のUV
+      U（横） ＝ 刃の先端 → 根元
+      V（縦） ＝ 新しい → 古い
+
+  ・貼っている画像（Asset/Textures/Trail/。Tools/MakeTrailTexture.py で作成）
+      オペレーター用（青）     … SwordTrail_Operator.png
+      パニッシャー用（オレンジ） … SwordTrail_Punisher.png
+
+  ・画像の作り
+      先端ほど明るく、根元は15%の明るさ（kSwordTrailBaseBrightness = 0.15）
+      古いほど暗くなる
+      刃先の新しい所だけ、白い「芯」がある
+
+  ・モードを切り替えた時
+      ApplySwordTrailTexture() が polygon->SetMaterial(tex) で画像を差し替える。
+
+  ・画像ファイルが無い時（フォールバック）
+      LoadSwordTrailTexture() が CreateSwordTrailTexture() で、
+      同じ見た目の画像をプログラムで作る。
+      返り値はどちらも std::shared_ptr<KdTexture>。
+
+
+------------------------------------------------------------
+6. 描画
+------------------------------------------------------------
+
+  void Player::DrawEffect()   … UnLit（光の計算をしない）の描画の段階
+
+  設定                                         理由
+  KdBlendState::Add（加算合成）                 光って見える。黒い所は透明と同じになる
+  KdDepthStencilState::ZWriteDisable            帯の暗い所が、後ろの物を隠さない
+    （深度書き込みなし）
+  KdRasterizerState::CullNone（カリングなし）   帯を裏側から見ても消えない
+
+  最後に m_StandardShader.DrawPolygon(*polygon) で、右と左の2本を描く。
+
+
+------------------------------------------------------------
+7. 用語
+------------------------------------------------------------
+
+  ワールド行列       ：物の位置・向き・大きさを、ゲームの世界の座標で表した行列
+  ローカル座標       ：その物から見た座標（剣なら「刃の方向がY軸」）
+  ノード             ：モデルの骨や部品の1つ1つ（weapon_r など）
+  Catmull-Rom スプライン：通る点を指定すると、その点をなめらかに通る曲線になる補間の方法
+  補間               ：2つの値の間を計算でうめること
+  UV                 ：画像のどこを貼るかを 0～1 で表した座標
+  加算合成           ：描く色を、後ろの色に足して描く方法（光の表現に向いている）
+  深度（Zバッファ）  ：手前・奥を判断するための情報。書き込まないと後ろの物を隠さない
+  カリング           ：裏側の面を描かない設定
+  フォールバック     ：本来の方法が使えない時の代わりの方法
+
+
+------------------------------------------------------------
+8. 発表用の一言
+------------------------------------------------------------
+
+  「剣の行列から刃の根元と先端の位置を毎フレーム求め、KdTrailPolygon に
+    帯の1本の線として渡しています。
+    フレームの間は Catmull-Rom 曲線で6分割してなめらかな弧にし、
+    15フレーム分を残して、振り終わったら古い方から消しています。
+    描く時は加算合成で光らせています。」
