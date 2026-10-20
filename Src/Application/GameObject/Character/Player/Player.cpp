@@ -175,10 +175,9 @@ namespace
 	const Math::Vector3 kOperatorLimColor	= { 0.0f, 0.5f, 1.0f };		// オペレーター：青
 	const Math::Vector3 kPunisherLimColor	= { 1.0f, 0.3f, 0.0f };		// パニッシャー：オレンジ
 
-	// 髪のリムライト（いつも光らせておく。モデルの髪のマテリアル名に含まれる文字で探す）
-	const std::string	kHairMaterialName	= "Hair";		// SK_Assassin の髪は MI_Hair_1
-	constexpr float		kHairLimBright		= 1.0f;			// 明るさ（モードの色にかける）
-	constexpr float		kHairLimPow			= 0.7f;			// 鋭さ（大きいほど髪のふちだけが光る。1より小さいと髪全体が染まる）
+	// いつもの薄いリムライト（モードを切り替えた時の光とは別に、体全体のふちを今のモードの色で薄く光らせておく）
+	constexpr float		kBaseLimBright		= 0.35f;		// 明るさ（モードの色にかける）
+	constexpr float		kBaseLimPow			= 2.5f;			// 鋭さ（大きいほどふちだけが光る）
 
 	// ガードの盾のエフェクトを出す位置（体の前）
 	constexpr float	kGuardEffectHeight		= 1.0f;		// 高さ
@@ -1325,21 +1324,22 @@ void Player::DrawLit()
 	shaderManager.ChangeRasterizerState(KdRasterizerState::CullNone);
 	shaderManager.ChangeBlendState(KdBlendState::Alpha);
 
-	// 髪だけ、いつも今のモードの色のリムライトで光らせる（モードを切り替えた時の光とは別）
-	const Math::Vector3& hairLimColor = IsPunisherMode() ? kPunisherLimColor : kOperatorLimColor;
-	shader.SetMaterialLimLight(kHairMaterialName, hairLimColor * kHairLimBright, kHairLimPow);
-
 	// リムライト：オペレーターは青、パニッシャーはオレンジ
+	// いつもは体全体のふちを薄く光らせておき、モードを切り替えた時だけ強く光らせる
+	const Math::Vector3& modeLimColor = IsPunisherMode() ? kPunisherLimColor : kOperatorLimColor;
+	shader.SetLimLightEnable(true);
+	shader.SetLimLight(modeLimColor * kBaseLimBright, kBaseLimPow);
+
 	if (m_isLimLight)
 	{
-		// 後半は色もだんだん暗くして、最後に 0 へなめらかに消えるようにする
-		// （進み具合 0～1 を、始めと終わりがゆっくりになる曲線で 1 → 0 に変える）
+		// 後半は、いつもの薄いリムライトへなめらかに戻す
+		// （進み具合 0～1 を、始めと終わりがゆっくりになる曲線で 1 → 0 に変え、色と鋭さを混ぜる）
 		float rate = std::clamp((m_limPow / kLimPowMax - kLimFadeStartRate) / (1.0f - kLimFadeStartRate), 0.0f, 1.0f);
 		float fade = 1.0f - rate * rate * (3.0f - 2.0f * rate);
 
-		const Math::Vector3& limColor = IsPunisherMode() ? kPunisherLimColor : kOperatorLimColor;
-		shader.SetLimLightEnable(true);
-		shader.SetLimLight(limColor * fade, m_limPow);
+		float bright = kBaseLimBright + (1.0f - kBaseLimBright) * fade;
+		float pow = kBaseLimPow + (m_limPow - kBaseLimPow) * fade;
+		shader.SetLimLight(modeLimColor * bright, pow);
 	}
 
 	shader.DrawModel(*m_model, m_mWorld);
