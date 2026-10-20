@@ -144,8 +144,8 @@ public:
 	// 空中で腰が上がってよい高さ（空中ループのアニメーションの腰の高さ。これより上はプログラムのジャンプに任せる）
 	float GetAirPelvisMaxY() const { return m_airPelvisMaxY; }
 
-	// 左右の剣先のうち低い方の、足元からの高さ（溜め攻撃 4-3 で、剣が地面に届いたかを調べる）
-	float GetLowestSwordTipHeight() const;
+	// 剣先の、足元からの高さ（hand：0 右、1 左。溜め攻撃 4-3 で、剣が地面に届いたかを調べる）
+	float GetSwordTipHeight(int hand) const;
 
 	// 左クリックで出す攻撃の種類（オペレーター：01、パニッシャー：02）
 	int GetCurrentAttackType() const { return m_currentAttackType; }

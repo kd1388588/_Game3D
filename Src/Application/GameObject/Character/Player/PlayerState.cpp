@@ -20,8 +20,11 @@ namespace
 	//        最初の数フレーム（アニメーションをなめらかにつなぐ間）に剣を振り下ろすので、
 	//        剣先が本当に地面に届くまで軌跡を出す（念のため kSlamTrailMaxFrame で必ず止める）
 	constexpr float kChargeStartTrailFrame	= 2.0f;
-	constexpr float kSlamGroundHeight		= 0.15f;	// 剣先が足元からこの高さより下に来たら、地面に届いたとみなす
+	constexpr float kSlamGroundHeight		= 0.15f;	// 右の剣先が足元からこの高さより下に来たら、地面に届いたとみなす
+	constexpr float kSlamBlendFrame			= 5.0f;		// Loop → End をなめらかにつなぐフレーム数（この間は Loop の姿勢が残るので、地面の判定をしない）
 	constexpr float kSlamTrailMaxFrame		= 15.0f;
+	// ※叩きつけるのは右の剣（End の最初の姿勢で、右の剣が地面に刺さっている）。
+	//   左の剣も Loop で回る途中に地面近くを通るので、左は見ない
 	constexpr int	kMaxComboStep			= 5;
 
 	// 回避・被弾で移動するフレーム数
@@ -679,7 +682,9 @@ void PlayerStateComboAttack::Update(Player* player)
 	// 溜め攻撃（4-3）の End：剣先が地面に届いたら、次のフレームから軌跡を止める
 	if (IsSplitAttack() && m_subStep == SubStepEnd && !m_isSlamDone)
 	{
-		if (player->GetLowestSwordTipHeight() <= kSlamGroundHeight || animTime >= kSlamTrailMaxFrame)
+		bool isBlendDone = (animTime >= kSlamBlendFrame);
+		bool isOnGround = (player->GetSwordTipHeight(0) <= kSlamGroundHeight);
+		if ((isBlendDone && isOnGround) || animTime >= kSlamTrailMaxFrame)
 		{
 			m_isSlamDone = true;
 		}

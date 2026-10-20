@@ -1929,12 +1929,11 @@ float Player::GetTakeoffFrame(const std::string& animName) const
 	return (it != m_takeoffFrames.end()) ? it->second : 0.0f;
 }
 
-float Player::GetLowestSwordTipHeight() const
+float Player::GetSwordTipHeight(int hand) const
 {
-	// 左右の剣先のうち低い方の、足元からの高さ（今、画面に描いている剣の位置で調べる）
-	Math::Vector3 tipR = GetSwordPoint(m_swordWorldR, m_swordBladeTipY);
-	Math::Vector3 tipL = GetSwordPoint(m_swordWorldL, m_swordBladeTipY);
-	return std::min(tipR.y, tipL.y) - m_pos.y;
+	// 剣先の、足元からの高さ（最後に描いた剣の位置で調べる。剣の行列は PostUpdate で作るので、1フレーム前の姿勢）
+	const Math::Matrix& swordMat = (hand == 1) ? m_swordWorldL : m_swordWorldR;
+	return GetSwordPoint(swordMat, m_swordBladeTipY).y - m_pos.y;
 }
 
 float Player::GetLandingFrame(const std::string& animName) const
