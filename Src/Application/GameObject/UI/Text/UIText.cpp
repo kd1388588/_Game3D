@@ -8,8 +8,10 @@ namespace
 	// ※どちらも SIL Open Font License（無料で使える。ライセンス文は Asset/Font/OFL_*.txt）
 	const std::string	kFontName			= "Zen Old Mincho";
 	const std::string	kFontPath			= "Asset/Font/ZenOldMincho-Bold.ttf";
-	const std::string	kHeadingFontName	= "Cinzel";
-	const std::string	kHeadingFontPath	= "Asset/Font/Cinzel.ttf";
+	// ※元の Cinzel.ttf は可変フォントで、Windows の文字の描画では「M」などの輪郭が重なる所が欠けて表示される
+	//   そこで Tools/MakeHeadingFont.py で、太さを決めて輪郭の重なりをまとめた CinzelStatic.ttf を作って使う
+	const std::string	kHeadingFontName	= "Cinzel Static";
+	const std::string	kHeadingFontPath	= "Asset/Font/CinzelStatic.ttf";
 	constexpr int		kFontNoSmall		= 1;
 	constexpr int		kFontNoMedium		= 2;
 	constexpr int		kFontNoLarge		= 3;
