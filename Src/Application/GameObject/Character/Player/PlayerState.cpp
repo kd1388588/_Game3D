@@ -13,6 +13,15 @@ namespace
 	constexpr float kAttackHitStartFrame	= 10.0f;
 	constexpr float kAttackHitEndFrame		= 45.0f;
 	constexpr int	kChargeLoopFrame		= 90;		// 4-3 Loop の持続フレーム
+
+	// 溜め攻撃（4-3）の剣の軌跡
+	// Start：16フレームしかなく、2フレーム目から速く振っているので、そこから出す
+	// End　：End の最初の姿勢は「剣を地面に叩きつけた形」。Loop の途中から End に切り替わると、
+	//        最初の数フレーム（アニメーションをなめらかにつなぐ間）に剣を振り下ろすので、
+	//        剣先が本当に地面に届くまで軌跡を出す（念のため kSlamTrailMaxFrame で必ず止める）
+	constexpr float kChargeStartTrailFrame	= 2.0f;
+	constexpr float kSlamGroundHeight		= 0.15f;	// 剣先が足元からこの高さより下に来たら、地面に届いたとみなす
+	constexpr float kSlamTrailMaxFrame		= 15.0f;
 	constexpr int	kMaxComboStep			= 5;
 
 	// 回避・被弾で移動するフレーム数
@@ -585,13 +594,9 @@ bool PlayerStateComboAttack::IsTrailFrame(const Player* player, float animTime) 
 	{
 		switch (m_subStep)
 		{
-		case SubStepStart:	return animTime >= kAttackHitStartFrame;
+		case SubStepStart:	return animTime >= kChargeStartTrailFrame;
 		case SubStepLoop:	return true;
-		case SubStepEnd:
-		{
-			float slamFrame = player->GetSwordSlamFrame();
-			return animTime <= ((slamFrame >= 0.0f) ? slamFrame : kAttackHitEndFrame);
-		}
+		case SubStepEnd:	return !m_isSlamDone;	// 剣が地面に届くまで（届いたフレームも出す）
 		default:			break;
 		}
 	}
@@ -650,8 +655,17 @@ void PlayerStateComboAttack::Update(Player* player)
 		return;
 	}
 
+	float animTime = player->GetAnimTime();
+
+	// 剣の軌跡（攻撃していないフレームはPlayer側で徐々に消える）
+	if (IsTrailFrame(player, animTime))
+	{
+		player->AddSwordTrailPoints();
+	}
 
 	// 攻撃タイプ04のLoopは一定時間でEndへ
+	// （軌跡を足してから切り替える。先に切り替えると、このフレームに軌跡が足されず、
+	//   「振り終わった」とみなされて、End の最初に Loop の軌跡が消えてしまう）
 	if (IsSplitAttack() && m_subStep == SubStepLoop)
 	{
 		m_loopTimer++;
@@ -662,12 +676,13 @@ void PlayerStateComboAttack::Update(Player* player)
 		}
 	}
 
-	float animTime = player->GetAnimTime();
-
-	// 剣の軌跡（攻撃していないフレームはPlayer側で徐々に消える）
-	if (IsTrailFrame(player, animTime))
+	// 溜め攻撃（4-3）の End：剣先が地面に届いたら、次のフレームから軌跡を止める
+	if (IsSplitAttack() && m_subStep == SubStepEnd && !m_isSlamDone)
 	{
-		player->AddSwordTrailPoints();
+		if (player->GetLowestSwordTipHeight() <= kSlamGroundHeight || animTime >= kSlamTrailMaxFrame)
+		{
+			m_isSlamDone = true;
+		}
 	}
 
 	// 攻撃判定

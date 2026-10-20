@@ -265,9 +265,6 @@ namespace
 	constexpr float kMaxTakeoffFrame		= 60.0f;	// 踏み切りがこれより遅いアニメーションは、待たずにすぐ跳ぶ
 	// （ためが長いアニメーションでも、ためを途中から再生するので操作は遅れない（PlayerState.cpp の kJumpWindupFrames））
 
-	// 溜め攻撃（4-3）の最後で、剣を地面に叩きつけるアニメーション
-	const std::string kSlamAnimName			= "Attack_4_3_End";
-	constexpr float kSwordSlamTolerance		= 0.05f;	// 剣先が一番低い高さから、これ以内に来たら「叩きつけた」とみなす
 	// 足が地面に着いている・離れたかを調べる骨
 	// つま先の付け根（ball）を優先して使う。足首（foot）は、着地でひざを曲げるとかかとが浮いて高くなるので、
 	// 足首で調べると「まだ着地していない」と間違えてしまう（ball が無いモデルの時だけ foot を使う）
@@ -698,10 +695,6 @@ void Player::Init()
 
 	// ガード歩き：アニメーションごとに、どの方向へどれくらいの速さで進むかを調べる
 	SetupGuardWalkAnims();
-
-	// 溜め攻撃（4-3）で、剣を地面に叩きつけるフレームを事前に計算（軌跡をそこまで出すため）
-	m_swordSlamFrame = CalcSwordLowestFrame(kSlamAnimName);
-	OutputDebugStringA(("剣を叩きつけるフレーム: " + std::to_string(m_swordSlamFrame) + "\n").c_str());
 
 	// 着地アニメーションで両足が接地するフレームを事前に計算
 	for (const auto& animName : kLandingAnimNames)
@@ -1936,50 +1929,12 @@ float Player::GetTakeoffFrame(const std::string& animName) const
 	return (it != m_takeoffFrames.end()) ? it->second : 0.0f;
 }
 
-float Player::CalcSwordLowestFrame(const std::string& animName) const
+float Player::GetLowestSwordTipHeight() const
 {
-	auto it = m_animMap.find(animName);
-	if (it == m_animMap.end() || !m_model || !m_model->GetData()) return -1.0f;
-
-	// 剣先の位置（剣のメッシュから求めた刃の形を使う）
-	std::vector<const BladeShape*> blades;
-	for (const BladeShape* pShape : { &m_bladeShapeR, &m_bladeShapeL })
-	{
-		if (pShape->nodeIndex >= 0) blades.push_back(pShape);
-	}
-	if (blades.empty()) return -1.0f;
-
-	// 計算用にモデルを複製し、1フレームずつ再生して、左右の剣先の低い方の高さを記録する
-	KdModelWork work(m_model->GetData());
-	KdAnimator animator;
-	animator.SetAnimation(it->second, false);
-
-	std::vector<float> times;
-	std::vector<float> heights;
-	for (int i = 0; i < 1000 && !animator.IsAnimationEnd(); ++i)
-	{
-		times.push_back(animator.GetTime());
-		animator.AdvanceTime(work.WorkNodes(), 1.0f);
-		work.CalcNodeMatrices();
-
-		float lowest = std::numeric_limits<float>::max();
-		for (const BladeShape* pShape : blades)
-		{
-			Math::Vector3 localTip = pShape->localHand + pShape->localDir * pShape->tipLength;
-			Math::Vector3 tip = Math::Vector3::Transform(localTip, work.GetNodes()[pShape->nodeIndex].m_worldTransform);
-			lowest = std::min(lowest, tip.y);
-		}
-		heights.push_back(lowest);
-	}
-	if (heights.empty()) return -1.0f;
-
-	// 一番低い高さに最初に近づいたフレーム（＝地面に叩きつけた瞬間）
-	float minHeight = *std::min_element(heights.begin(), heights.end());
-	for (size_t i = 0; i < heights.size(); ++i)
-	{
-		if (heights[i] <= minHeight + kSwordSlamTolerance) return times[i];
-	}
-	return -1.0f;
+	// 左右の剣先のうち低い方の、足元からの高さ（今、画面に描いている剣の位置で調べる）
+	Math::Vector3 tipR = GetSwordPoint(m_swordWorldR, m_swordBladeTipY);
+	Math::Vector3 tipL = GetSwordPoint(m_swordWorldL, m_swordBladeTipY);
+	return std::min(tipR.y, tipL.y) - m_pos.y;
 }
 
 float Player::GetLandingFrame(const std::string& animName) const

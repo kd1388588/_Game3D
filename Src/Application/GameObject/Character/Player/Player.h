@@ -144,8 +144,8 @@ public:
 	// 空中で腰が上がってよい高さ（空中ループのアニメーションの腰の高さ。これより上はプログラムのジャンプに任せる）
 	float GetAirPelvisMaxY() const { return m_airPelvisMaxY; }
 
-	// 溜め攻撃（4-3）の End で、剣が地面に叩きつけられる（一番低くなる）フレーム（無ければ -1）
-	float GetSwordSlamFrame() const { return m_swordSlamFrame; }
+	// 左右の剣先のうち低い方の、足元からの高さ（溜め攻撃 4-3 で、剣が地面に届いたかを調べる）
+	float GetLowestSwordTipHeight() const;
 
 	// 左クリックで出す攻撃の種類（オペレーター：01、パニッシャー：02）
 	int GetCurrentAttackType() const { return m_currentAttackType; }
@@ -240,9 +240,6 @@ private:
 
 	// モデルのノード番号を名前で探す（見つからなければ -1）
 	int FindNodeIndex(const std::string& name) const;
-
-	// 指定したアニメーションで、剣先が一番低くなる（地面に叩きつける）フレームを求める（無ければ -1）
-	float CalcSwordLowestFrame(const std::string& animName) const;
 
 
 
@@ -406,7 +403,6 @@ private:
 
 	std::unordered_map<std::string, float>		 m_landingFrames;	// 着地アニメ名 → 両足が接地するフレーム
 	std::unordered_map<std::string, float>		 m_takeoffFrames;	// ジャンプ開始アニメ名 → 足が地面から離れるフレーム
-	float										 m_swordSlamFrame = -1.0f;	// 4-3 の End で剣を地面に叩きつけるフレーム
 	float										 m_airPelvisMaxY = -1.0f;	// 空中で腰が上がってよい高さ
 
 	std::weak_ptr<HPGage>			m_wpHpGage;

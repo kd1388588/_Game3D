@@ -172,6 +172,7 @@ private:
 
 
 	int m_loopTimer = 0;
+	bool m_isSlamDone = false;			// 溜め攻撃（4-3）の End で、剣が地面に届いたか（届いたら軌跡を止める）
 
 	// キャンセル可能になるフレームを取得する関数
 	float GetCancelFrame() const;
