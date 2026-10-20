@@ -19,7 +19,7 @@ namespace EffectName
 	inline const std::string ComboSlash5_2		= "_Sword5-2.efkefc";	// 攻撃タイプ5の2段目のヒット（_Sword5 の斬撃が回転しながら弧を描く）
 	inline const std::string ComboSlash5_3		= "_Sword5.efkefc";		// 攻撃タイプ5の3段目のヒット（_Sword5 そのまま。4本の斬撃）
 	inline const std::string ComboSlash5_4		= "_Sword5-4.efkefc";	// 攻撃タイプ5の4段目
-	inline const std::string ComboSlashDefault	= "_Sword1.efkefc";		// 専用のエフェクトが無い攻撃
+	inline const std::string ComboSlashDefault	= "_Sword5.efkefc";		// 専用のエフェクトが無い攻撃（元の _Sword1.efkefc は _Sword5.efkefc に名前を変えた）
 
 	// ヒット
 	inline const std::string HitEnemy			= "_Sword1-1.efkefc";	// プレイヤーの攻撃が敵に当たった（斬撃1本。剣を振った向きに回して出す）

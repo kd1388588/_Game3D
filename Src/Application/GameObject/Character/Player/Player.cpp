@@ -1997,13 +1997,19 @@ void Player::PlayHitEffect(HitEffectType hitEffectType, const Math::Matrix& swor
 		// （カメラの方を向けて出すので、エフェクトの XY 平面がそのまま画面になる）
 		float angle = CalcScreenSlashAngle(swordMatrix, hand) - DirectX::XM_PIDIV2;
 		float scale = kSword5SlashScale * (isCritical ? kCriticalHitEffectScale / kHitEffectScale : 1.0f);
-		EffectPlayer::PlayFacingCameraRotZ(EffectName::ComboSlash5_1, hitPos, scale, angle);
+		if (EffectPlayer::PlayFacingCameraRotZ(EffectName::ComboSlash5_1, hitPos, scale, angle)) break;
+
+		// _Sword5-1.efkefc がまだ無い時は、いつもの斬撃を出す
+		PlayHitEffect(HitEffectType::Slash, swordMatrix, hand, hitPos, isCritical);
 		break;
 	}
 
 	case HitEffectType::Sword5Spin:
 		// 回転する斬撃（向きはエフェクトの中でばらばらにしてある）
-		EffectPlayer::PlayFacingCamera(EffectName::ComboSlash5_2, hitPos, kSword5SpinScale);
+		if (EffectPlayer::PlayFacingCamera(EffectName::ComboSlash5_2, hitPos, kSword5SpinScale)) break;
+
+		// _Sword5-2.efkefc がまだ無い時は、いつもの斬撃を出す
+		PlayHitEffect(HitEffectType::Slash, swordMatrix, hand, hitPos, isCritical);
 		break;
 
 	default:
