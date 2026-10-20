@@ -363,6 +363,9 @@ private:
 	// パニッシャーの間、体のまわりにオレンジのオーラを描く
 	void DrawPunisherAura();
 
+	// ガードの盾のエフェクトを出す行列（体の前に、プレイヤーの向きに合わせて立てる）
+	Math::Matrix CreateGuardEffectMatrix() const;
+
 	// 読み込むアニメーションのリストを作成
 	static std::vector<AnimLoadInfo> CreateAnimList();
 

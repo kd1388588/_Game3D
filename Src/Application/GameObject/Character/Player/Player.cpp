@@ -174,6 +174,10 @@ namespace
 	const Math::Vector3 kOperatorLimColor	= { 0.0f, 0.5f, 1.0f };		// オペレーター：青
 	const Math::Vector3 kPunisherLimColor	= { 1.0f, 0.3f, 0.0f };		// パニッシャー：オレンジ
 
+	// ガードの盾のエフェクトを出す位置（体の前）
+	constexpr float	kGuardEffectHeight		= 1.0f;		// 高さ
+	constexpr float	kGuardEffectForward		= 0.6f;		// 体からの距離
+
 	// パニッシャーのオーラ（パニッシャーの間、体のまわりでオレンジの光がゆらめく）
 	// 腰を中心に少しずつ大きくした体を何枚か重ね、裏側だけを光の色で描く
 	constexpr int	kAuraLayerNum			= 3;		// 重ねる枚数
@@ -1339,6 +1343,15 @@ void Player::DrawLit()
 	DrawPunisherAura();
 }
 
+Math::Matrix Player::CreateGuardEffectMatrix() const
+{
+	// 体の前（胸の高さ）に、プレイヤーの向きに合わせて盾を立てる
+	Math::Matrix rotY = Math::Matrix::CreateRotationY(GetAngleRad());
+	Math::Vector3 forward = Math::Vector3::TransformNormal(Math::Vector3(0.0f, 0.0f, 1.0f), rotY);
+	Math::Vector3 pos = m_pos + Math::Vector3(0.0f, kGuardEffectHeight, 0.0f) + forward * kGuardEffectForward;
+	return rotY * Math::Matrix::CreateTranslation(pos);
+}
+
 void Player::DrawPunisherAura()
 {
 	if (!m_model || m_auraRate <= 0.0f) return;
@@ -2077,7 +2090,7 @@ void Player::OnDamage(int damage, bool isCritical)
 	{
 		m_hp -= std::max(static_cast<int>(std::round(damage * kGuardDamageRate)), 1);
 		m_invincibleTimer = kDamageInvincibleFrame;
-		EffectPlayer::Play(EffectName::Guard, m_pos + Math::Vector3(0.0f, 1.0f, 0.0f), 1.0f);
+		EffectPlayer::Play(EffectName::Guard, CreateGuardEffectMatrix());
 
 		// ガードの耐久値を減らす（受けすぎると崩される）
 		float cost = damage * kGuardCostPerDamage * (isCritical ? kGuardCriticalCostRate : 1.0f);
@@ -2093,7 +2106,7 @@ void Player::OnDamage(int damage, bool isCritical)
 			// ガードを崩された：しばらくガードできず、よろける
 			m_guardBreakTimer = kGuardBreakFrame;
 			HitStop::Request(kGuardBreakHitStopFrame, kGuardBreakShakePower);
-			EffectPlayer::Play(EffectName::GuardBreak, m_pos + Math::Vector3(0.0f, 1.0f, 0.0f), 1.0f);
+			EffectPlayer::Play(EffectName::GuardBreak, CreateGuardEffectMatrix());
 			KdDebugGUI::Instance().AddLog("[System] ガードを崩された！\n");
 			ChangeState(std::make_shared<PlayerStateGuardBreak>());
 		}

@@ -144,8 +144,25 @@ def ring(outer, inner, color=(255, 255, 255, 255), vertex=48):
 	))
 
 
-def node(name, *parts):
-	return el("Node", *parts, el("Name", name), el("Children", ""))
+def node(name, *parts, children=()):
+	return el("Node", *parts, el("Name", name), el("Children", *children) if children else el("Children", ""))
+
+
+def hidden():
+	"""描かないノード（子の位置・大きさの基準にだけ使う）"""
+	return el("DrawingValues", el("Type", 0)) + el("IsRendered", False)
+
+
+def scale_fixed(x=1.0, y=1.0, z=1.0):
+	return el("ScalingValues", el("Type", 0), el("Fixed", el("Scale", el("X", x), el("Y", y), el("Z", z))))
+
+
+def rotation_tumble(speed):
+	"""ばらばらの向きから、ばらばらの速さで回る（破片用。speed は1フレームに回る角度）"""
+	return el("RotationValues", el("Type", 1), el("PVA",
+		el("Rotation", xyz_rng(x=(0, 180), y=(0, 180), z=(0, 180))),
+		el("Velocity", xyz_rng(x=(0, speed), y=(0, speed), z=(0, speed))),
+	))
 
 
 def project(nodes, end_frame):
@@ -165,6 +182,10 @@ SOFT = "Tex/Particle_Soft.png"	# ふちがぼやけた丸
 SPARK = "Tex/Particle02.png"		# 光の粒
 LINE = "Tex/Line01.png"			# 細長い光
 IMPACT = "Tex/impact2.png"		# 衝撃の輪
+SHIELD = "Tex/ShieldHex.png"		# 半透明の「（ ）」の形の盾（Tools/MakeShieldTexture.py）
+SHARD = "Tex/ShieldShard.png"		# 盾のかけら（Tools/MakeShieldTexture.py）
+FIXED = 2						# 板の向き：固定（ノードの向きのまま。盾をプレイヤーの前に立てる）
+SHIELD_W, SHIELD_H = 1.4, 1.9	# 盾の幅・高さ（体を覆う縦長の楕円）
 
 # ===== モード切り替え（E キー）：足元から光の輪が広がり、光の粒と柱が立ちのぼる =====
 # 色は白っぽく作り、ゲーム側でモードの色（青・オレンジ）をかけ算する
@@ -266,73 +287,113 @@ def ability_start():
 	], end_frame=70)
 
 
-# ===== ガード成功：はじけた火花と、短い白い光 =====
+# ===== ガード成功：体の前に半透明の「（ ）」の盾が出て、攻撃を受け止める =====
+# ゲーム側で、プレイヤーの前に、プレイヤーの向きに合わせて出す（盾は XY 平面に立つ）
 
 def guard():
 	return project([
+		node("ShieldRoot",
+			common(life=24),
+			scale_fixed(SHIELD_W, SHIELD_H),
+			hidden(),
+			children=[
+				# 盾（ぱっと出て少し広がり、消える）
+				node("Shield",
+					common(life=24),
+					scale_single_easing(0.8, 1.0, start_speed=30, end_speed=-30),
+					renderer(texture=SHIELD, fade_in=2, fade_out=12),
+					sprite(color=(170, 225, 255, 210), billboard=FIXED),
+				),
+				# 受け止めた所の波紋
+				node("Ripple",
+					common(life=12),
+					location_fixed(z=0.01),
+					scale_single_easing(0.1, 0.7, start_speed=30, end_speed=-30),
+					renderer(texture=IMPACT, fade_out=8),
+					sprite(color=(200, 235, 255, 255), billboard=FIXED),
+				),
+			],
+		),
+		# 受け止めた瞬間の光
 		node("Flash",
 			common(life=8),
-			scale_single_easing(0.4, 1.4, start_speed=30, end_speed=-30),
+			scale_single_easing(0.3, 0.9, start_speed=30, end_speed=-30),
 			renderer(texture=SOFT, fade_out=6),
-			sprite(color=(200, 230, 255, 255), color_end=(150, 200, 255, 0)),
+			sprite(color=(220, 240, 255, 255), color_end=(150, 200, 255, 0)),
 		),
-		node("Impact",
-			common(life=10),
-			rotation_random_z(),
-			scale_single_easing(0.3, 1.6, start_speed=30, end_speed=-30),
-			renderer(texture=IMPACT, fade_out=6),
-			sprite(color=(180, 220, 255, 255)),
-		),
-		# 火花（勢いよく飛んで、重力で落ちる）
+		# 小さな火花
 		node("Sparks",
-			common(life=18, count=20, gen_time=0.1, life_spread=5),
+			common(life=14, count=10, gen_time=0.1, life_spread=4),
 			location_pva(
-				vel=((0, 0.12), (0.06, 0.08), (0, 0.12)),
-				acc=((0, 0), (-0.008, 0), (0, 0)),
+				vel=((0, 0.08), (0.03, 0.05), (0, 0.08)),
+				acc=((0, 0), (-0.006, 0), (0, 0)),
 			),
-			scale_single_easing(0.1, 0.0, start_spread=0.04),
-			renderer(texture=SPARK, fade_out=6),
-			sprite(color=(255, 240, 200, 255)),
+			scale_single_easing(0.08, 0.0, start_spread=0.03),
+			renderer(texture=SPARK, fade_out=5),
+			sprite(color=(255, 245, 220, 255)),
 		),
 	], end_frame=30)
 
 
-# ===== ガードブレイク：赤く大きく割れる光と、たくさんの火花 =====
+# ===== ガードブレイク：盾が赤くなって砕け、かけらが飛び散る =====
+
+BREAK_FRAME = 8		# 盾が砕けるまでのフレーム
 
 def guard_break():
 	red = (255, 90, 60, 255)
 	return project([
-		node("Flash",
-			common(life=14),
-			scale_single_easing(0.8, 3.0, start_speed=30, end_speed=-30),
-			renderer(texture=SOFT, fade_out=10),
-			sprite(color=(255, 160, 120, 255), color_end=(255, 60, 40, 0)),
+		node("ShieldRoot",
+			common(life=BREAK_FRAME + 2),
+			scale_fixed(SHIELD_W, SHIELD_H),
+			hidden(),
+			children=[
+				# 盾（青から赤に変わりながら、ふくらんで割れる）
+				node("Shield",
+					common(life=BREAK_FRAME + 2),
+					scale_single_easing(1.0, 1.1),
+					renderer(texture=SHIELD, fade_out=3),
+					sprite(color=(170, 225, 255, 230), color_end=(255, 80, 60, 255), billboard=FIXED),
+				),
+			],
 		),
-		node("Impact",
-			common(life=16, count=2, gen_time=3),
-			rotation_random_z(),
-			scale_single_easing(0.5, 3.0, start_speed=30, end_speed=-30),
-			renderer(texture=IMPACT, fade_out=8),
-			sprite(color=red),
+		# 割れた瞬間の光
+		node("BreakFlash",
+			common(life=14, offset=BREAK_FRAME),
+			scale_single_easing(0.6, 2.6, start_speed=30, end_speed=-30),
+			renderer(texture=IMPACT, fade_out=10),
+			sprite(color=(255, 200, 180, 255), color_end=red, billboard=FIXED),
 		),
-		node("Ring",
-			common(life=20),
-			rotation_fixed(x=90),
-			renderer(fade_out=10),
-			ring(outer=(0.3, 2.8), inner=(0.1, 2.4), color=red),
+		node("Glow",
+			common(life=16, offset=BREAK_FRAME),
+			scale_single_easing(1.0, 3.0, start_speed=30, end_speed=-30),
+			renderer(texture=SOFT, fade_out=12),
+			sprite(color=(255, 150, 120, 220), color_end=(255, 60, 40, 0)),
 		),
+		# 盾のかけら（盾のあった所から、回りながら飛び散って落ちる）
 		node("Shards",
-			common(life=30, count=40, gen_time=0.1, life_spread=8),
+			common(life=34, count=28, gen_time=0.05, offset=BREAK_FRAME, life_spread=8),
 			location_pva(
-				vel=((0, 0.18), (0.08, 0.1), (0, 0.18)),
-				acc=((0, 0), (-0.01, 0), (0, 0)),
+				pos=((0, SHIELD_W * 0.4), (0, SHIELD_H * 0.4), (0, 0.05)),
+				vel=((0, 0.09), (0.03, 0.07), (0, 0.07)),
+				acc=((0, 0), (-0.006, 0), (0, 0)),
 			),
-			rotation_random_z(),
-			scale_single_easing(0.16, 0.0, start_spread=0.06),
+			rotation_tumble(12),
+			scale_single_easing(0.24, 0.12, start_spread=0.08),
+			renderer(texture=SHARD, fade_out=14),
+			sprite(color=(190, 230, 255, 255), color_end=(255, 120, 100, 160), billboard=FIXED),
+		),
+		# 赤い火花
+		node("Sparks",
+			common(life=22, count=24, gen_time=0.1, offset=BREAK_FRAME, life_spread=6),
+			location_pva(
+				vel=((0, 0.16), (0.06, 0.1), (0, 0.16)),
+				acc=((0, 0), (-0.009, 0), (0, 0)),
+			),
+			scale_single_easing(0.12, 0.0, start_spread=0.05),
 			renderer(texture=SPARK, fade_out=8),
 			sprite(color=(255, 170, 120, 255)),
 		),
-	], end_frame=45)
+	], end_frame=50)
 
 
 EFFECTS = {
