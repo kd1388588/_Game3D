@@ -2,7 +2,9 @@
 
 // ============================================================
 // 使用するエフェクトのファイル名（Asset/Data/Effect/ からの相対パス）
-// 空文字 "" にしたものは再生されない（ファイルが用意できたら書き換える）
+// 空文字 "" にしたもの・ファイルが無いものは再生されない（ファイルが用意できたら書き換える）
+// ModeChange / AbilityStart / Guard / GuardBreak は Tools/MakeEffekseerProjects.py で作った .efkproj を
+// Effekseer エディタで .efkefc に保存して使う
 // ============================================================
 namespace EffectName
 {
@@ -26,10 +28,10 @@ namespace EffectName
 	// プレイヤーの動作（ファイルが用意できたら設定する）
 	inline const std::string Evade				= "";					// 回避
 	inline const std::string Landing			= "";					// ジャンプの着地
-	inline const std::string ModeChange			= "";					// バトルモードの切り替え（Eキー）
-	inline const std::string AbilityStart		= "";					// アビリティ（ATBコマンドで選んだ技）の発動
-	inline const std::string Guard				= "";					// 敵の攻撃をガードした
-	inline const std::string GuardBreak			= "";					// ガードを崩された
+	inline const std::string ModeChange			= "ModeChange.efkefc";		// バトルモードの切り替え（Eキー）（白く作ってあり、モードの色をかける）
+	inline const std::string AbilityStart		= "AbilityStart.efkefc";	// アビリティ（ATBコマンドで選んだ技）の発動
+	inline const std::string Guard				= "Guard.efkefc";		// 敵の攻撃をガードした
+	inline const std::string GuardBreak			= "GuardBreak.efkefc";	// ガードを崩された
 }
 
 // ============================================================

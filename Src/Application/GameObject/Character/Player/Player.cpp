@@ -1591,8 +1591,13 @@ void Player::UpdateModeSwitch()
 	bool toPunisher = (m_battleMode == BattleMode::Operator);
 	SetBattleMode(toPunisher ? BattleMode::Punisher : BattleMode::Operator);
 
-	// 切り替えた合図のエフェクト（足元）
-	EffectPlayer::Play(EffectName::ModeChange, m_pos, 1.0f);
+	// 切り替えた合図のエフェクト（足元）。白く作ってあるので、モードの色をかけて青・オレンジにする
+	std::shared_ptr<KdEffekseerObject> modeEffect = EffectPlayer::Play(EffectName::ModeChange, m_pos, 1.0f);
+	if (modeEffect)
+	{
+		const Math::Vector3& color = toPunisher ? kPunisherLimColor : kOperatorLimColor;
+		modeEffect->SetColor({ color.x * 0.5f + 0.5f, color.y * 0.5f + 0.5f, color.z * 0.5f + 0.5f, 1.0f });
+	}
 
 	KdDebugGUI::Instance().AddLog
 	(

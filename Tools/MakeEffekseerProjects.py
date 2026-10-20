@@ -1,0 +1,358 @@
+# Effekseer のエフェクトの元データ（.efkproj）を作るスクリプト
+# 使い方：python Tools/MakeEffekseerProjects.py
+#   → Asset/Data/Effect/ に .efkproj ができる
+#   → Effekseer エディタで開いて「名前を付けて保存」で同じ名前の .efkefc にする（ゲームが読むのは .efkefc）
+#
+# .efkproj は XML。書いていない項目はエディタの初期値になる
+# 色は白～明るめで作ってあり、ゲーム側の SetColor でモードの色をかけ算できる
+
+import os
+
+# ===== XML を組み立てる小さな道具 =====
+
+def fmt(v):
+	"""値を文字にする（整数の項目もあるので、整数になる数は小数点を付けない）"""
+	if isinstance(v, bool):
+		return "True" if v else "False"
+	if isinstance(v, float):
+		v = round(v, 4)
+		if v.is_integer():
+			return str(int(v))
+	return str(v)
+
+
+def el(name, *children):
+	"""<name>children</name> を作る。子が1つで、XML でない（数値・文字）ならそのまま値にする"""
+	if len(children) == 1 and not (isinstance(children[0], str) and children[0].startswith("<")):
+		return f"<{name}>{fmt(children[0])}</{name}>"
+	return f"<{name}>" + "".join(children) + f"</{name}>"
+
+
+def rng(center, spread=0.0):
+	"""ばらつきのある値（Center / Max / Min）"""
+	return el("Center", center) + el("Max", center + spread) + el("Min", center - spread)
+
+
+def xyz_rng(x=(0, 0), y=(0, 0), z=(0, 0)):
+	"""X / Y / Z それぞれ (中心, ばらつき)"""
+	return el("X", rng(*x)) + el("Y", rng(*y)) + el("Z", rng(*z))
+
+
+def rgba(r=255, g=255, b=255, a=255):
+	return el("R", r) + el("G", g) + el("B", b) + el("A", a)
+
+
+def rgba_rng(r=255, g=255, b=255, a=255):
+	return el("R", rng(r)) + el("G", rng(g)) + el("B", rng(b)) + el("A", rng(a))
+
+
+def common(life, count=1, gen_time=1.0, offset=0.0, life_spread=0.0):
+	"""寿命・出す数・出す間隔・出し始めるまでの時間（フレーム）"""
+	return el("CommonValues",
+		el("MaxGeneration", el("Value", count)),
+		el("Life", rng(life, life_spread)),
+		el("GenerationTime", rng(gen_time)),
+		el("GenerationTimeOffset", rng(offset)),
+	)
+
+
+def location_fixed(x=0.0, y=0.0, z=0.0):
+	return el("LocationValues", el("Type", 0), el("Fixed", el("Location", el("X", x), el("Y", y), el("Z", z))))
+
+
+def location_pva(pos=((0, 0), (0, 0), (0, 0)), vel=((0, 0), (0, 0), (0, 0)), acc=((0, 0), (0, 0), (0, 0))):
+	"""位置・速度・加速度（1フレームあたり）"""
+	return el("LocationValues", el("Type", 1), el("PVA",
+		el("Location", xyz_rng(*pos)),
+		el("Velocity", xyz_rng(*vel)),
+		el("Acceleration", xyz_rng(*acc)),
+	))
+
+
+def rotation_fixed(x=0.0, y=0.0, z=0.0):
+	return el("RotationValues", el("Type", 0), el("Fixed", el("Rotation", el("X", x), el("Y", y), el("Z", z))))
+
+
+def rotation_random_z():
+	"""板の向きをばらばらにする（Z回転をランダム）"""
+	return el("RotationValues", el("Type", 1), el("PVA", el("Rotation", xyz_rng(z=(0, 180)))))
+
+
+def scale_single_easing(start, end, start_spread=0.0, start_speed=0, end_speed=0):
+	"""全体の大きさを start → end に変える"""
+	return el("ScalingValues", el("Type", 4), el("SingleEasing",
+		el("Start", rng(start, start_spread)),
+		el("End", rng(end)),
+		el("StartSpeed", start_speed),
+		el("EndSpeed", end_speed),
+	))
+
+
+def scale_xy_easing(start, end, start_speed=0, end_speed=0):
+	"""X・Y の大きさを別々に start → end に変える（(x, y) で指定。細長い光などに使う）"""
+	return el("ScalingValues", el("Type", 2), el("Easing",
+		el("Start", el("X", rng(start[0])), el("Y", rng(start[1])), el("Z", rng(1.0))),
+		el("End", el("X", rng(end[0])), el("Y", rng(end[1])), el("Z", rng(1.0))),
+		el("StartSpeed", start_speed),
+		el("EndSpeed", end_speed),
+	))
+
+
+def renderer(texture=None, fade_in=0, fade_out=0):
+	"""加算合成。fade はフレーム数"""
+	items = []
+	if texture:
+		items.append(el("ColorTexture", texture))
+	items.append(el("AlphaBlend", 2))	# 2 = 加算
+	if fade_in > 0:
+		items += [el("FadeInType", 1), el("FadeIn", el("Frame", fade_in))]
+	if fade_out > 0:
+		items += [el("FadeOutType", 1), el("FadeOut", el("Frame", fade_out))]
+	return el("RendererCommonValues", *items)
+
+
+def sprite(color=(255, 255, 255, 255), color_end=None, billboard=None):
+	"""板（スプライト）。color_end を指定すると色がだんだん変わる"""
+	items = []
+	if color_end is None:
+		items.append(el("ColorAll", el("Type", 0), el("Fixed", rgba(*color))))
+	else:
+		items.append(el("ColorAll", el("Type", 2), el("Easing",
+			el("Start", rgba_rng(*color)), el("End", rgba_rng(*color_end)))))
+	sprite_items = []
+	if billboard is not None:
+		sprite_items.append(el("Billboard", billboard))
+	if sprite_items:
+		items.append(el("Sprite", *sprite_items))
+	return el("DrawingValues", el("Type", 2), *items)
+
+
+def ring(outer, inner, color=(255, 255, 255, 255), vertex=48):
+	"""輪っか。outer / inner は (始めの半径, 終わりの半径)"""
+	return el("DrawingValues", el("Type", 4), el("Ring",
+		el("VertexCount", vertex),
+		el("Outer", 2), el("Outer_Easing",
+			el("Start", el("X", rng(outer[0]))), el("End", el("X", rng(outer[1]))),
+			el("StartSpeed", 20), el("EndSpeed", -30)),
+		el("Inner", 2), el("Inner_Easing",
+			el("Start", el("X", rng(inner[0]))), el("End", el("X", rng(inner[1]))),
+			el("StartSpeed", 20), el("EndSpeed", -30)),
+		el("CenterRatio_Fixed", 0.5),
+		el("OuterColor_Fixed", rgba(*color[:3], 0)),
+		el("CenterColor_Fixed", rgba(*color)),
+		el("InnerColor_Fixed", rgba(*color[:3], 0)),
+	))
+
+
+def node(name, *parts):
+	return el("Node", *parts, el("Name", name), el("Children", ""))
+
+
+def project(nodes, end_frame):
+	root = el("Root", el("Name", "Root"), el("Children", *nodes))
+	body = el("EffekseerProject",
+		root,
+		el("ToolVersion", "1.7.3.0"),
+		el("Version", 3),
+		el("StartFrame", 0),
+		el("EndFrame", end_frame),
+		el("IsLoop", False),
+	)
+	return '<?xml version="1.0" encoding="utf-8"?>\n' + body
+
+
+SOFT = "Tex/Particle_Soft.png"	# ふちがぼやけた丸
+SPARK = "Tex/Particle02.png"		# 光の粒
+LINE = "Tex/Line01.png"			# 細長い光
+IMPACT = "Tex/impact2.png"		# 衝撃の輪
+
+# ===== モード切り替え（E キー）：足元から光の輪が広がり、光の粒と柱が立ちのぼる =====
+# 色は白っぽく作り、ゲーム側でモードの色（青・オレンジ）をかけ算する
+
+def mode_change():
+	return project([
+		# 足元に広がる光の輪
+		node("GroundRing",
+			common(life=28),
+			location_fixed(y=0.05),
+			rotation_fixed(x=90),
+			renderer(fade_out=14),
+			ring(outer=(0.4, 2.6), inner=(0.2, 2.2), color=(255, 255, 255, 255)),
+		),
+		# 体を包む光
+		node("BodyFlash",
+			common(life=16),
+			location_fixed(y=1.0),
+			scale_single_easing(1.0, 3.2, start_speed=20, end_speed=-30),
+			renderer(texture=SOFT, fade_out=10),
+			sprite(color=(255, 255, 255, 200), color_end=(255, 255, 255, 0)),
+		),
+		# 立ちのぼる光の柱（細長い光を数本）
+		node("Pillar",
+			common(life=24, count=6, gen_time=1.0),
+			location_pva(pos=((0, 0.5), (1.0, 0.2), (0, 0.5))),
+			rotation_random_z(),
+			scale_xy_easing((0.25, 3.0), (0.05, 4.5), start_speed=20, end_speed=-30),
+			renderer(texture=LINE, fade_in=4, fade_out=12),
+			sprite(color=(255, 255, 255, 220), billboard=1),	# 1 = Y軸だけ固定して縦に立てる
+		),
+		# 舞い上がる光の粒
+		node("Sparks",
+			common(life=36, count=30, gen_time=0.3, life_spread=8),
+			location_pva(
+				pos=((0, 0.6), (0.3, 0.3), (0, 0.6)),
+				vel=((0, 0.05), (0.06, 0.03), (0, 0.05)),
+				acc=((0, 0), (0.001, 0), (0, 0)),
+			),
+			scale_single_easing(0.18, 0.0, start_spread=0.06),
+			renderer(texture=SPARK, fade_out=10),
+			sprite(color=(255, 255, 255, 255)),
+		),
+	], end_frame=60)
+
+
+# ===== アビリティ（ATBコマンドの技）の発動：モード切り替えより大きく、金色に強く光る =====
+
+def ability_start():
+	gold = (255, 225, 140, 255)
+	return project([
+		node("GroundRing",
+			common(life=30),
+			location_fixed(y=0.05),
+			rotation_fixed(x=90),
+			renderer(fade_out=14),
+			ring(outer=(0.6, 4.0), inner=(0.3, 3.4), color=gold),
+		),
+		node("GroundRing2",
+			common(life=30, offset=6),
+			location_fixed(y=0.05),
+			rotation_fixed(x=90),
+			renderer(fade_out=14),
+			ring(outer=(0.4, 3.0), inner=(0.2, 2.6), color=(255, 255, 255, 200)),
+		),
+		node("BodyFlash",
+			common(life=18),
+			location_fixed(y=1.0),
+			scale_single_easing(1.5, 4.5, start_speed=20, end_speed=-30),
+			renderer(texture=SOFT, fade_out=12),
+			sprite(color=(255, 240, 200, 230), color_end=(255, 200, 120, 0)),
+		),
+		node("Impact",
+			common(life=14),
+			location_fixed(y=1.0),
+			rotation_random_z(),
+			scale_single_easing(0.5, 3.5, start_speed=30, end_speed=-30),
+			renderer(texture=IMPACT, fade_out=8),
+			sprite(color=gold),
+		),
+		node("Pillar",
+			common(life=26, count=10, gen_time=0.5),
+			location_pva(pos=((0, 0.7), (1.2, 0.2), (0, 0.7))),
+			scale_xy_easing((0.3, 3.5), (0.05, 6.0), start_speed=20, end_speed=-30),
+			renderer(texture=LINE, fade_in=3, fade_out=12),
+			sprite(color=gold, billboard=1),
+		),
+		node("Sparks",
+			common(life=40, count=50, gen_time=0.2, life_spread=10),
+			location_pva(
+				pos=((0, 0.8), (0.4, 0.4), (0, 0.8)),
+				vel=((0, 0.08), (0.08, 0.04), (0, 0.08)),
+				acc=((0, 0), (0.0015, 0), (0, 0)),
+			),
+			scale_single_easing(0.22, 0.0, start_spread=0.08),
+			renderer(texture=SPARK, fade_out=10),
+			sprite(color=gold),
+		),
+	], end_frame=70)
+
+
+# ===== ガード成功：はじけた火花と、短い白い光 =====
+
+def guard():
+	return project([
+		node("Flash",
+			common(life=8),
+			scale_single_easing(0.4, 1.4, start_speed=30, end_speed=-30),
+			renderer(texture=SOFT, fade_out=6),
+			sprite(color=(200, 230, 255, 255), color_end=(150, 200, 255, 0)),
+		),
+		node("Impact",
+			common(life=10),
+			rotation_random_z(),
+			scale_single_easing(0.3, 1.6, start_speed=30, end_speed=-30),
+			renderer(texture=IMPACT, fade_out=6),
+			sprite(color=(180, 220, 255, 255)),
+		),
+		# 火花（勢いよく飛んで、重力で落ちる）
+		node("Sparks",
+			common(life=18, count=20, gen_time=0.1, life_spread=5),
+			location_pva(
+				vel=((0, 0.12), (0.06, 0.08), (0, 0.12)),
+				acc=((0, 0), (-0.008, 0), (0, 0)),
+			),
+			scale_single_easing(0.1, 0.0, start_spread=0.04),
+			renderer(texture=SPARK, fade_out=6),
+			sprite(color=(255, 240, 200, 255)),
+		),
+	], end_frame=30)
+
+
+# ===== ガードブレイク：赤く大きく割れる光と、たくさんの火花 =====
+
+def guard_break():
+	red = (255, 90, 60, 255)
+	return project([
+		node("Flash",
+			common(life=14),
+			scale_single_easing(0.8, 3.0, start_speed=30, end_speed=-30),
+			renderer(texture=SOFT, fade_out=10),
+			sprite(color=(255, 160, 120, 255), color_end=(255, 60, 40, 0)),
+		),
+		node("Impact",
+			common(life=16, count=2, gen_time=3),
+			rotation_random_z(),
+			scale_single_easing(0.5, 3.0, start_speed=30, end_speed=-30),
+			renderer(texture=IMPACT, fade_out=8),
+			sprite(color=red),
+		),
+		node("Ring",
+			common(life=20),
+			rotation_fixed(x=90),
+			renderer(fade_out=10),
+			ring(outer=(0.3, 2.8), inner=(0.1, 2.4), color=red),
+		),
+		node("Shards",
+			common(life=30, count=40, gen_time=0.1, life_spread=8),
+			location_pva(
+				vel=((0, 0.18), (0.08, 0.1), (0, 0.18)),
+				acc=((0, 0), (-0.01, 0), (0, 0)),
+			),
+			rotation_random_z(),
+			scale_single_easing(0.16, 0.0, start_spread=0.06),
+			renderer(texture=SPARK, fade_out=8),
+			sprite(color=(255, 170, 120, 255)),
+		),
+	], end_frame=45)
+
+
+EFFECTS = {
+	"ModeChange.efkproj": mode_change,
+	"AbilityStart.efkproj": ability_start,
+	"Guard.efkproj": guard,
+	"GuardBreak.efkproj": guard_break,
+}
+
+
+def main():
+	root = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")
+	out_dir = os.path.join(root, "Asset", "Data", "Effect")
+	os.makedirs(out_dir, exist_ok=True)
+	for name, make in EFFECTS.items():
+		path = os.path.join(out_dir, name)
+		with open(path, "w", encoding="utf-8") as f:
+			f.write(make())
+		print("作成:", os.path.normpath(path))
+
+
+if __name__ == "__main__":
+	main()
