@@ -167,9 +167,34 @@ def adjust_claw():
 	save("_Claw2", root)
 
 
+def split_sword5():
+	"""攻撃パターン05の 1～3段目用に、_Sword5（＝_Sword1 と同じ中身）の4本の斬撃を1本ずつに分ける
+	元は Nluu～Nluu4 の4本が 0・8・16・24 フレーム目に、Z で -20・20・-70・70 度傾いて出る。
+	分けた斬撃は傾き 0（下から上へまっすぐ）・すぐ出るようにして、
+	いつ・どの向きに出すかはゲーム側（PlayerState.cpp の kAttack5SlashEvents）で、アニメーションに合わせて決める"""
+	src = "_Sword5" if os.path.exists(os.path.join(EFFECT_DIR, "_Sword5.efkefc")) else "_Sword1"
+	for step, slash_name in enumerate(("Nluu", "Nluu2", "Nluu3"), start=1):
+		root = load(src)
+		sword_null = find_node(root, "SwordNull")
+		children = sword_null.find("Children")
+		for c in list(children):
+			if c.findtext("Name") != slash_name:
+				children.remove(c)
+		slash = find_node(root, slash_name)
+		common = slash.find("CommonValues")
+		offset = common.find("GenerationTimeOffset")
+		if offset is not None:
+			common.remove(offset)
+		child(slash, "RotationValues", "Fixed", "Rotation", "Z").text = "0"
+		child(root, "StartFrame").text = "0"
+		child(root, "EndFrame").text = "45"
+		save(f"_Sword5-{step}", root)
+
+
 def main():
 	adjust_boss_death()
 	adjust_claw()
+	split_sword5()
 
 
 if __name__ == "__main__":

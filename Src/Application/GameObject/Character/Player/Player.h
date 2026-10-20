@@ -168,6 +168,11 @@ public:
 	// 攻撃が当たった位置に、剣先が動いた向きの斬撃のヒットエフェクトを1つ出す（1ヒットに1つ）
 	void PlayHitEffect(const Math::Matrix& swordMatrix, int hand, const Math::Vector3& hitPos, bool isCritical) const;
 
+	// 剣を振る斬撃のエフェクトを、体の前に出す（攻撃パターン05の 1～3段目）
+	// screenAngleDeg：後ろから見た画面の上で、斬撃が進む向き（右が 0度、上が 90度、反時計回り）
+	// エフェクトの斬撃は「下から上」に進むので、その分を引いて Z で回す。速さはアニメーションの再生速度に合わせる
+	void PlaySwingSlashEffect(const std::string& effectName, float screenAngleDeg);
+
 	// 決めの攻撃（1-4・4・5-4 など）の専用エフェクトを出す（1振りに1回だけ）
 	void PlayFinisherEffect(const std::string& effectName, const Math::Vector3& hitPos, bool isCritical);
 

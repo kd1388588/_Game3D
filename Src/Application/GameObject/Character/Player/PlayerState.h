@@ -170,6 +170,7 @@ private:
 
 
 	int m_loopTimer = 0;
+	size_t m_slashEventIndex = 0;		// 次に出す斬撃（攻撃パターン05）の番号
 
 	// キャンセル可能になるフレームを取得する関数
 	float GetCancelFrame() const;
@@ -182,6 +183,9 @@ private:
 
 	// 次の段の攻撃へ移行（5段目以降はIdleへ）
 	void ChangeToNextAttack(Player* player) const;
+
+	// 攻撃パターン05の斬撃を、アニメーションの振りに合わせて出す
+	void UpdateSwingSlashEffects(Player* player, float animTime);
 
 	// 決めの攻撃の専用エフェクトの名前（無い攻撃は空。普通の攻撃は、当たるたびに斬撃1本だけ出る）
 	const std::string& GetFinisherEffectName() const;

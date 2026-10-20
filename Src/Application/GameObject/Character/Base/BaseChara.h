@@ -27,6 +27,7 @@ public:
 	virtual void ChangeAnimation(const std::string& animName, bool isLoop = true, bool forceRestart = false, float blendFrame = 0.0f);
 	void LoadAnimations(const std::vector<AnimLoadInfo>& loadList);
 	void SetAnimationSpeed(float speed) { m_animSpeed = speed; }
+	float GetAnimationSpeed() const { return m_animSpeed; }
 	float GetAnimTime() const { return m_animator.GetTime(); }
 	void SetAnimTime(float time) { m_animator.SetTime(time); m_prevMotionTime = -1.0f; }
 	bool IsAnimEnd() const { return m_animator.IsAnimationEnd(); }

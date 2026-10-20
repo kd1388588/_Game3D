@@ -226,6 +226,9 @@ namespace
 	constexpr float kHitEffectScale			= 0.35f;	// 攻撃が敵に当たった時のエフェクト（斬撃1本）の大きさ
 	constexpr float kCriticalHitEffectScale	= 0.5f;		// クリティカル時のエフェクトの大きさ
 	constexpr float kHitSlashBaseAngle		= -70.0f;	// _Sword1-1 の斬撃の、エフェクトの中での傾き（Angle ノードの Z 回転）
+	constexpr float kSwingSlashScale		= 0.3f;		// 攻撃パターン05の 1～3段目の斬撃の大きさ
+	constexpr float kSwingSlashHeight		= 1.1f;		// その高さ
+	constexpr float kSwingSlashForward		= 0.6f;		// 体からの距離
 	constexpr float kFinisherEffectScaleRate	= 1.4f;		// 決めの攻撃の専用エフェクトの大きさ（斬撃1本の大きさに掛ける。前と同じ 0.5 くらい）
 
 	// カメラの注視点を腰の骨から下げる量
@@ -1979,6 +1982,21 @@ void Player::PlayHitEffect(const Math::Matrix& swordMatrix, int hand, const Math
 		* Math::Matrix::CreateRotationZ(rotZ)
 		* Math::Matrix::CreateTranslation(hitPos);
 	EffectPlayer::Play(EffectName::HitEnemy, mWorld);
+}
+
+void Player::PlaySwingSlashEffect(const std::string& effectName, float screenAngleDeg)
+{
+	// 体の前（胸の高さ）に、プレイヤーの向きで出す（エフェクトの XY 平面が、後ろから見た画面になる）
+	Math::Matrix rotY = Math::Matrix::CreateRotationY(GetAngleRad());
+	Math::Vector3 forward = Math::Vector3::TransformNormal(Math::Vector3(0.0f, 0.0f, 1.0f), rotY);
+	Math::Vector3 pos = m_pos + Math::Vector3(0.0f, kSwingSlashHeight, 0.0f) + forward * kSwingSlashForward;
+
+	// 斬撃はエフェクトの中で +Y（上）に進むので、90度引いた分だけ回すと screenAngleDeg の向きに進む
+	Math::Matrix mWorld = Math::Matrix::CreateScale(kSwingSlashScale)
+		* Math::Matrix::CreateRotationZ(DirectX::XMConvertToRadians(screenAngleDeg - 90.0f))
+		* rotY
+		* Math::Matrix::CreateTranslation(pos);
+	EffectPlayer::Play(effectName, mWorld, GetAnimationSpeed());
 }
 
 void Player::PlayFinisherEffect(const std::string& effectName, const Math::Vector3& hitPos, bool isCritical)
