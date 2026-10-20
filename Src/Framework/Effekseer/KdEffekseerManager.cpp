@@ -168,6 +168,13 @@ void KdEffekseerManager::SetSpeed(const int handle, const float speed)
 	m_efkManager->SetSpeed(handle, speed);
 }
 
+void KdEffekseerManager::SetColor(const int handle, const Math::Color& color)
+{
+	// Effekseer の色は 0～255
+	auto toByte = [](float v) { return static_cast<uint8_t>(std::clamp(v, 0.0f, 1.0f) * 255.0f); };
+	m_efkManager->SetAllColor(handle, Effekseer::Color(toByte(color.x), toByte(color.y), toByte(color.z), toByte(color.w)));
+}
+
 void KdEffekseerManager::SetPause(const int handle, const bool isPause)
 {
 	m_efkManager->SetPaused(handle, isPause);
@@ -343,6 +350,11 @@ void KdEffekseerObject::SetSpeed(const float speed)
 	m_info.Speed = speed;
 
 	KdEffekseerManager::GetInstance().SetSpeed(m_handle, speed);
+}
+
+void KdEffekseerObject::SetColor(const Math::Color& color)
+{
+	KdEffekseerManager::GetInstance().SetColor(m_handle, color);
 }
 
 void KdEffekseerObject::SetWorldMatrix(const Math::Matrix& mWorld)

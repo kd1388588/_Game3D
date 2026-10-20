@@ -174,6 +174,20 @@ namespace
 	const Math::Vector3 kOperatorLimColor	= { 0.0f, 0.5f, 1.0f };		// オペレーター：青
 	const Math::Vector3 kPunisherLimColor	= { 1.0f, 0.3f, 0.0f };		// パニッシャー：オレンジ
 
+	// パニッシャーのオーラ（パニッシャーの間、体のまわりでオレンジの光がゆらめく）
+	// 腰を中心に少しずつ大きくした体を何枚か重ね、裏側だけを光の色で描く
+	constexpr int	kAuraLayerNum			= 3;		// 重ねる枚数
+	constexpr float	kAuraBaseScale			= 1.04f;	// 1枚目の大きさ
+	constexpr float	kAuraScaleStep			= 0.045f;	// 1枚ごとに大きくする量
+	constexpr float	kAuraStretchY			= 0.04f;	// 外側ほど縦に伸ばす量（炎のように上へのびて見せる）
+	constexpr float	kAuraRiseY				= 0.04f;	// 外側ほど上にずらす量
+	constexpr float	kAuraWaveScale			= 0.02f;	// 大きさのゆらぎ
+	constexpr float	kAuraWaveSpeed			= 0.45f;	// 大きさのゆらぎの速さ
+	constexpr float	kAuraFlickerSpeed		= 0.9f;		// 明るさのちらつきの速さ
+	constexpr float	kAuraFlickerRange		= 0.35f;	// 明るさのちらつきの強さ
+	constexpr float	kAuraFadeSpeed			= 0.06f;	// モードを切り替えた時に出る・消える速さ
+	const Math::Vector3 kAuraColor			= { 1.6f, 0.6f, 0.15f };	// オレンジ
+
 	// 接地判定に使う重力の上限（落下し始めの1フレーム分）
 	constexpr float kOnGroundGravityMax = 0.011f;
 
@@ -836,6 +850,12 @@ void Player::Update()
 		}
 	}
 
+	// パニッシャーのオーラ：パニッシャーの間は出して、それ以外は消す
+	m_auraFrame++;
+	float auraTarget = (IsPunisherMode() && IsAlive()) ? 1.0f : 0.0f;
+	if (m_auraRate < auraTarget)	m_auraRate = std::min(m_auraRate + kAuraFadeSpeed, auraTarget);
+	else							m_auraRate = std::max(m_auraRate - kAuraFadeSpeed, auraTarget);
+
 	UpdateWorldMatrix();
 	UpdateLockOnMarker();
 }
@@ -1311,6 +1331,54 @@ void Player::DrawLit()
 		shader.DrawModel(*m_swordModel, m_swordWorldL);
 	}
 
+	shaderManager.UndoBlendState();
+	shaderManager.UndoRasterizerState();
+
+	// パニッシャーのオーラ（体を描いた後に重ねる）
+	DrawPunisherAura();
+}
+
+void Player::DrawPunisherAura()
+{
+	if (!m_model || m_auraRate <= 0.0f) return;
+
+	// 腰を中心に大きくする
+	Math::Vector3 center = m_pos;
+	if (m_pelvisNode >= 0 && m_pelvisNode < static_cast<int>(m_model->GetNodes().size()))
+	{
+		center = Math::Vector3::Transform(m_model->GetNodes()[m_pelvisNode].m_worldTransform.Translation(), m_mWorld);
+	}
+
+	// 裏側だけ・加算合成・深度書き込みなしで描くと、体のふちのまわりだけが光って見える
+	auto& shaderManager = KdShaderManager::Instance();
+	shaderManager.ChangeRasterizerState(KdRasterizerState::CullFront);
+	shaderManager.ChangeBlendState(KdBlendState::Add);
+	shaderManager.ChangeDepthStencilState(KdDepthStencilState::ZWriteDisable);
+
+	float frame = static_cast<float>(m_auraFrame);
+	for (int i = 0; i < kAuraLayerNum; ++i)
+	{
+		float layer = static_cast<float>(i);
+
+		// 1枚ごとにずらしたゆらぎで、大きさと明るさを細かく変える（炎のようにちらつかせる）
+		float wave = std::sin(frame * kAuraWaveSpeed + layer * 2.1f);
+		float flicker = 1.0f - kAuraFlickerRange * (0.5f + 0.5f * std::sin(frame * kAuraFlickerSpeed + layer * 1.7f));
+
+		float scaleXZ = kAuraBaseScale + kAuraScaleStep * layer + kAuraWaveScale * wave;
+		float scaleY = scaleXZ + kAuraStretchY * layer;
+		Math::Vector3 rise = { 0.0f, kAuraRiseY * layer * (1.0f + 0.5f * wave), 0.0f };
+
+		Math::Matrix auraMat = m_mWorld
+			* Math::Matrix::CreateTranslation(-center)
+			* Math::Matrix::CreateScale(scaleXZ, scaleY, scaleXZ)
+			* Math::Matrix::CreateTranslation(center + rise);
+
+		// 外側ほど薄く（体の色は使わず、光の色だけで描く）
+		Math::Vector3 color = kAuraColor * (m_auraRate * flicker / (layer + 1.0f));
+		shaderManager.m_StandardShader.DrawModel(*m_model, auraMat, Math::Color(0.0f, 0.0f, 0.0f, 1.0f), color);
+	}
+
+	shaderManager.UndoDepthStencilState();
 	shaderManager.UndoBlendState();
 	shaderManager.UndoRasterizerState();
 }

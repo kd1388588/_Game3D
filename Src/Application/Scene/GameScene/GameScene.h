@@ -4,6 +4,7 @@
 #include"../../Utility/InputHelper.h"
 
 class Player;
+class Barrier;
 
 class GameScene : public BaseScene
 {
@@ -33,6 +34,9 @@ private:
 	// クリア・ゲームオーバーの判定（条件を満たしてから少し待って画面を切り替える）
 	void CheckGameEnd();
 
+	// ザコ敵を全員倒したら、ボスの広間のバリアを開ける
+	void UpdateBarrier();
+
 	// 生き残っている敵の数
 	int GetAliveEnemyCount() const;
 
@@ -43,6 +47,7 @@ private:
 	InputHelper::KeyTrigger	m_debugSpawnKey{ VK_F3 };
 
 	std::weak_ptr<Player>	m_wpPlayer;
+	std::weak_ptr<Barrier>	m_wpBarrier;
 	int						m_gameOverTimer = 0;	// プレイヤーが倒れてからの経過フレーム
 	int						m_clearTimer = 0;		// 敵が全滅してからの経過フレーム
 };

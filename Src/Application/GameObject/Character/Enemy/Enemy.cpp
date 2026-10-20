@@ -35,7 +35,15 @@ namespace
 	constexpr int	kAttackDamage			= 5;
 	constexpr int	kCriticalAttackDamage	= 10;
 	constexpr float	kPushStrength			= 0.1f;		// 敵同士の押し出しの強さ（毎フレームの割合）
-	constexpr float	kHitEffectScale			= 1.0f;		// プレイヤーに攻撃が当たった時のエフェクトの大きさ
+	constexpr float	kHitEffectScale			= 0.5f;		// プレイヤーに攻撃が当たった時のエフェクトの大きさ
+	const Math::Color kHitEffectColor		= { 1.0f, 0.3f, 0.25f, 1.0f };	// その色（エフェクトの元の色にかけ算される。白なら元の色のまま）
+
+	// プレイヤーに攻撃が当たった時のエフェクト（小さめ・赤っぽい色にして、プレイヤーの攻撃のエフェクトと見分けやすくする）
+	void PlayHitPlayerEffect(const Math::Vector3& pos)
+	{
+		std::shared_ptr<KdEffekseerObject> effect = EffectPlayer::Play(EffectName::HitPlayer, pos, kHitEffectScale);
+		if (effect) effect->SetColor(kHitEffectColor);
+	}
 
 	const std::string kModelDir = "Asset/Models/GameObject/Enemy/Monster2/";
 
@@ -242,7 +250,7 @@ void Enemy::AttackHit(const Math::Matrix& hitMatrix, const Math::Vector3& extent
 
 		// 当たった位置にヒットエフェクト
 		Math::Vector3 hitPos = retList.empty() ? player->GetPos() : retList.back().m_hitPos;
-		EffectPlayer::Play(EffectName::HitPlayer, hitPos, kHitEffectScale);
+		PlayHitPlayerEffect(hitPos);
 	}
 }
 
@@ -401,5 +409,5 @@ void Enemy::GroundSmash()
 	if (diff.Length() > radius || height > kSmashHeight) return;
 
 	player->OnDamage(kSmashDamage, false);
-	EffectPlayer::Play(EffectName::HitPlayer, player->GetPos() + Math::Vector3(0.0f, 1.0f, 0.0f), kHitEffectScale);
+	PlayHitPlayerEffect(player->GetPos() + Math::Vector3(0.0f, 1.0f, 0.0f));
 }

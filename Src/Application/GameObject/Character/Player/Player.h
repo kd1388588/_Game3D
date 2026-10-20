@@ -360,6 +360,9 @@ private:
 	// 刃の形から剣の行列を作る（原点：手、Y軸：刃先の方向。Y座標がそのまま手からの距離になる）
 	Math::Matrix CalcBladeMatrix(const BladeShape& shape) const;
 
+	// パニッシャーの間、体のまわりにオレンジのオーラを描く
+	void DrawPunisherAura();
+
 	// 読み込むアニメーションのリストを作成
 	static std::vector<AnimLoadInfo> CreateAnimList();
 
@@ -396,6 +399,8 @@ private:
 	int												m_attackFrame = 0;	// 攻撃の当たりを数えるための経過フレーム（ヒットストップ中は進まない）
 	bool							m_isLimLight = false;	// リムライトを光らせている途中か
 	float							m_limPow = 0.0f;		// リムライトの pow（大きいほどふちだけが光る）
+	float							m_auraRate = 0.0f;		// パニッシャーのオーラの濃さ（0～1）
+	int								m_auraFrame = 0;		// オーラのゆらぎ用のフレーム数
 	std::weak_ptr<TPSCamera>		m_camera;
 	Math::Matrix					m_swordWorldR;
 	Math::Matrix					m_swordWorldL;

@@ -9,11 +9,15 @@
 #include "../../GameObject/Character/Player/Player.h"
 #include "../../GameObject/Character/Enemy/Enemy.h"
 
+// UI関連
+#include "../../GameObject/UI/ControlsGuide/ControlsGuide.h"
+
 // Stage関連
 #include "../../GameObject/Stage/Ground/Ground.h"
 #include "../../GameObject/Stage/Sky/Sky.h"
 #include "../../GameObject/Stage/Object/CathedralRuins/CathedralRuins.h"
 #include "../../GameObject/Stage/Object/RuinedRoad/RuinedRoad.h"
+#include "../../GameObject/Stage/Object/Barrier/Barrier.h"
 
 // Effekseer関連
 #include "../../../Framework/Effekseer/KdEffekseerManager.h"
@@ -43,7 +47,23 @@ void GameScene::Event()
 	}
 
 	UpdateDebugKeys();
+	UpdateBarrier();
 	CheckGameEnd();
+}
+
+void GameScene::UpdateBarrier()
+{
+	auto barrier = m_wpBarrier.lock();
+	if (!barrier || barrier->IsOpen()) return;
+
+	// ザコ敵を全員倒したら、ボスの広間のバリアを開ける
+	for (const auto& obj : m_objList)
+	{
+		auto enemy = std::dynamic_pointer_cast<Enemy>(obj);
+		if (enemy && !enemy->IsBoss() && enemy->IsAlive() && !enemy->IsExpired()) return;
+	}
+	barrier->Open();
+	KdDebugGUI::Instance().AddLog("ボスの広間のバリアが開いた\n");
 }
 
 void GameScene::UpdateDebugKeys()
@@ -138,6 +158,8 @@ void GameScene::Init()
 	// ※前の大聖堂の廃墟（CathedralRuins）と重なるので、そちらは置かない
 	//CreateObject<CathedralRuins>();
 	CreateObject<RuinedRoad>();
+	// ボスの広間の入口のバリア（ザコ敵を全員倒すと消える）
+	m_wpBarrier = CreateObject<Barrier>();
 
 	// プレイヤー（Init内でHPゲージを追加するため、先にオーナーをセットする）
 	std::shared_ptr<Player> player = std::make_shared<Player>();
@@ -173,6 +195,10 @@ void GameScene::Init()
 	player->SetCamera(camera);
 	camera->SetTarget(player);
 	KdEffekseerManager::GetInstance().SetCamera(camera->GetCamera());
+
+	// 右下の操作キーの一覧
+	std::shared_ptr<ControlsGuide> controlsGuide = CreateObject<ControlsGuide>();
+	controlsGuide->SetPlayer(player);
 }
 
 void GameScene::SpawnEnemy(const Math::Vector3& pos, bool isBoss, const std::shared_ptr<Player>& target)

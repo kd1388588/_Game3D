@@ -82,6 +82,9 @@
     <Filter Include="Src\Application\GameObject\Title\TitleUI">
       <UniqueIdentifier>{7c2ad1af-4721-4291-88d3-3b6082eab013}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Src\Application\GameObject\UI\ControlsGuide">
+      <UniqueIdentifier>{f1b901e1-2e04-4201-8a79-1c295557d1ea}</UniqueIdentifier>
+    </Filter>
     <Filter Include="Src\Application\GameObject\UI\Text">
       <UniqueIdentifier>{3ab3531c-51ed-4dd7-a5f1-2b22040c1673}</UniqueIdentifier>
     </Filter>
@@ -141,6 +144,9 @@
     </Filter>
     <Filter Include="Src\Application\GameObject\Stage\Object\CathedralRuins">
       <UniqueIdentifier>{af380bc7-511a-475c-a07b-e7cbdbed160e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Src\Application\GameObject\Stage\Object\Barrier">
+      <UniqueIdentifier>{9a37dcd1-d5ed-49c1-b1c8-50fb443e84ae}</UniqueIdentifier>
     </Filter>
     <Filter Include="Src\Application\GameObject\Stage\Object\RuinedRoad">
       <UniqueIdentifier>{7d3f2a91-5c1e-4b8a-9e60-1018a2b4c6d8}</UniqueIdentifier>
@@ -363,6 +369,9 @@
     <ClInclude Include="Src\Application\GameObject\Title\TitleUI\TitleUI.h">
       <Filter>Src\Application\GameObject\Title\TitleUI</Filter>
     </ClInclude>
+    <ClInclude Include="Src\Application\GameObject\UI\ControlsGuide\ControlsGuide.h">
+      <Filter>Src\Application\GameObject\UI\ControlsGuide</Filter>
+    </ClInclude>
     <ClInclude Include="Src\Application\GameObject\UI\Text\UIText.h">
       <Filter>Src\Application\GameObject\UI\Text</Filter>
     </ClInclude>
@@ -419,6 +428,9 @@
     </ClInclude>
     <ClInclude Include="Src\Application\GameObject\Stage\Object\CathedralRuins\CathedralRuins.h">
       <Filter>Src\Application\GameObject\Stage\Object\CathedralRuins</Filter>
+    </ClInclude>
+    <ClInclude Include="Src\Application\GameObject\Stage\Object\Barrier\Barrier.h">
+      <Filter>Src\Application\GameObject\Stage\Object\Barrier</Filter>
     </ClInclude>
     <ClInclude Include="Src\Application\GameObject\Stage\Object\RuinedRoad\RuinedRoad.h">
       <Filter>Src\Application\GameObject\Stage\Object\RuinedRoad</Filter>
@@ -608,6 +620,9 @@
     <ClCompile Include="Src\Application\GameObject\Title\TitleUI\TitleUI.cpp">
       <Filter>Src\Application\GameObject\Title\TitleUI</Filter>
     </ClCompile>
+    <ClCompile Include="Src\Application\GameObject\UI\ControlsGuide\ControlsGuide.cpp">
+      <Filter>Src\Application\GameObject\UI\ControlsGuide</Filter>
+    </ClCompile>
     <ClCompile Include="Src\Application\GameObject\UI\Text\UIText.cpp">
       <Filter>Src\Application\GameObject\UI\Text</Filter>
     </ClCompile>
@@ -658,6 +673,9 @@
     </ClCompile>
     <ClCompile Include="Src\Application\GameObject\Stage\Object\CathedralRuins\CathedralRuins.cpp">
       <Filter>Src\Application\GameObject\Stage\Object\CathedralRuins</Filter>
+    </ClCompile>
+    <ClCompile Include="Src\Application\GameObject\Stage\Object\Barrier\Barrier.cpp">
+      <Filter>Src\Application\GameObject\Stage\Object\Barrier</Filter>
     </ClCompile>
     <ClCompile Include="Src\Application\GameObject\Stage\Object\RuinedRoad\RuinedRoad.cpp">
       <Filter>Src\Application\GameObject\Stage\Object\RuinedRoad</Filter>

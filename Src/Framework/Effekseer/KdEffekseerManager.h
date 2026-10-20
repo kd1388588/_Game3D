@@ -45,6 +45,9 @@ public:
 
 	void SetSpeed(const int handle, const float speed = 1.0f);
 
+	// 色を設定（エフェクトの元の色にかけ算される。白 = 元の色のまま）
+	void SetColor(const int handle, const Math::Color& color);
+
 	void SetPause(const int handle, const bool isPause);
 
 	// すべてのエフェクトの再生速度（スローモーション用。1.0 で普通の速さ）
@@ -139,6 +142,9 @@ public:
 
 	// 速度設定
 	void SetSpeed(const float speed = 1.0f);
+
+	// 色設定（エフェクトの元の色にかけ算される）
+	void SetColor(const Math::Color& color);
 
 	// ワールド行列設定
 	void SetWorldMatrix(const Math::Matrix& mWorld);

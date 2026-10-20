@@ -380,13 +380,13 @@ void TitleUI::DrawLetterBox() const
 	spriteShader.DrawBox(0, -topY, halfW, halfH, &black);
 
 	// 下の黒帯の操作案内（ゆっくり明滅させる）
-	if (m_state == State::Intro || m_state == State::Decided) return;
+	// ※メニュー選択中の案内（W / S : SELECT ...）は出さない。操作説明を開いている時の「戻る」案内だけ出す
+	if (m_state != State::Controls) return;
 
-	std::shared_ptr<UIText> guide = (m_state == State::Controls) ? m_controlsGuide : m_selectGuide;
 	Math::Color color = kGuideColor;
 	color.w = 0.55f + 0.35f * std::sin(m_frame * 0.06f);
-	guide->SetColor(color);
-	guide->DrawSprite();
+	m_controlsGuide->SetColor(color);
+	m_controlsGuide->DrawSprite();
 }
 
 void TitleUI::DrawLogo() const
