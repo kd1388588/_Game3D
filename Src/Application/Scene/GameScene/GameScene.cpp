@@ -79,6 +79,7 @@ void GameScene::UpdateDebugKeys()
 	bool isAtb = m_debugAtbKey.Update();
 	bool isHp = m_debugHpKey.Update();
 	bool isSpawn = m_debugSpawnKey.Update();
+	bool isHpOne = m_debugHpOneKey.Update();
 	if (!kEnableDebugKeys) return;
 
 	auto player = m_wpPlayer.lock();
@@ -96,6 +97,13 @@ void GameScene::UpdateDebugKeys()
 	{
 		player->DebugFillHp();
 		KdDebugGUI::Instance().AddLog("[Debug] HP全開\n");
+	}
+
+	// F5：HPを1にする（あと1発で倒れる状態。ゲームオーバーの確認用）
+	if (isHpOne)
+	{
+		player->DebugSetHpOne();
+		KdDebugGUI::Instance().AddLog("[Debug] HPを1にした\n");
 	}
 
 	// F3：プレイヤーの前方にザコ敵を出す
