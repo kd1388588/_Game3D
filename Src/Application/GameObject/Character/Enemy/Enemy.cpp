@@ -35,14 +35,12 @@ namespace
 	constexpr int	kAttackDamage			= 5;
 	constexpr int	kCriticalAttackDamage	= 10;
 	constexpr float	kPushStrength			= 0.1f;		// 敵同士の押し出しの強さ（毎フレームの割合）
-	constexpr float	kHitEffectScale			= 0.5f;		// プレイヤーに攻撃が当たった時のエフェクトの大きさ
-	const Math::Color kHitEffectColor		= { 1.0f, 0.3f, 0.25f, 1.0f };	// その色（エフェクトの元の色にかけ算される。白なら元の色のまま）
+	constexpr float	kHitEffectScale			= 1.0f;		// プレイヤーに攻撃が当たった時のエフェクトの大きさ
 
-	// プレイヤーに攻撃が当たった時のエフェクト（小さめ・赤っぽい色にして、プレイヤーの攻撃のエフェクトと見分けやすくする）
+	// プレイヤーに攻撃が当たった時のエフェクト（小さな赤い爪あと。カメラの方を向けて出す）
 	void PlayHitPlayerEffect(const Math::Vector3& pos)
 	{
-		std::shared_ptr<KdEffekseerObject> effect = EffectPlayer::Play(EffectName::HitPlayer, pos, kHitEffectScale);
-		if (effect) effect->SetColor(kHitEffectColor);
+		EffectPlayer::PlayFacingCamera(EffectName::HitPlayer, pos, kHitEffectScale);
 	}
 
 	const std::string kModelDir = "Asset/Models/GameObject/Enemy/Monster2/";

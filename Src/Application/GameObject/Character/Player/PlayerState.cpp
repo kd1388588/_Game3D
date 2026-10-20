@@ -553,42 +553,6 @@ void PlayerStateComboAttack::ChangeToNextAttack(Player* player) const
 	}
 }
 
-const std::string& PlayerStateComboAttack::GetSlashEffectName() const
-{
-	// 4-3（溜め攻撃）：タイプ4の斬撃
-	if (IsSplitAttack())
-	{
-		return EffectName::ComboSlash4;
-	}
-
-	switch (m_comboType)
-	{
-	case 1:
-		// 攻撃タイプ1は段数ごとに専用のエフェクト
-		switch (m_comboStep)
-		{
-		case 1:	return EffectName::ComboSlash1_1;
-		case 2:	return EffectName::ComboSlash1_2;
-		case 3:	return EffectName::ComboSlash1_3;
-		case 4:	return EffectName::ComboSlash1_4;
-		default: break;
-		}
-		break;
-
-	case 4:
-		return EffectName::ComboSlash4;
-
-	case 5:
-		if (m_comboStep == 4) return EffectName::ComboSlash5_4;
-		break;
-
-	default:
-		break;
-	}
-
-	return EffectName::ComboSlashDefault;
-}
-
 bool PlayerStateComboAttack::IsTrailFrame(const Player* player, float animTime) const
 {
 	// 溜め攻撃（4-3）：Start の振り始めから、End で剣を地面に叩きつけるまで、途切れずに出す
@@ -609,11 +573,6 @@ bool PlayerStateComboAttack::IsTrailFrame(const Player* player, float animTime) 
 
 	// 普通の攻撃：攻撃判定のフレームの間
 	return animTime >= kAttackHitStartFrame && animTime <= kAttackHitEndFrame;
-}
-
-const std::string& PlayerStateComboAttack::GetHitEffectName() const
-{
-	return GetSlashEffectName();
 }
 
 void PlayerStateComboAttack::ChangeState(Player* player)
@@ -693,8 +652,8 @@ void PlayerStateComboAttack::Update(Player* player)
 		// （ヒットストップは AttackOBB の中で、すべての攻撃に同じルールでかかる）
 		// （右と左の剣は別々に当たりを数える。同じ剣は少し間をあければ、もう一度当たる＝多段ヒット）
 		float damageRate = m_isAbility ? kAbilityDamageRate : 1.0f;
-		player->AttackOBB(player->GetSwordMatrixR(), m_isCritical, GetHitEffectName(), damageRate, 0);
-		player->AttackOBB(player->GetSwordMatrixL(), m_isCritical, GetHitEffectName(), damageRate, 1);
+		player->AttackOBB(player->GetSwordMatrixR(), m_isCritical, damageRate, 0);
+		player->AttackOBB(player->GetSwordMatrixL(), m_isCritical, damageRate, 1);
 	}
 
 	// 予約があり、キャンセル可能フレームを超えたら次へ滑らかに移行

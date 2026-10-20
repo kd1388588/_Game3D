@@ -387,11 +387,143 @@ def guard_break():
 	], end_frame=50)
 
 
+# ===== プレイヤーの攻撃が敵に当たった：剣を振った向きに1本だけ走る斬撃の光 =====
+# ゲーム側で、カメラの方を向けて、X軸が剣先の動いた向きになるように回して出す（板は XY 平面）
+# 白く作ってあり、ゲーム側でモードの色をかけ算する
+
+def hit_slash():
+	def streak(name, width, length, color, life):
+		# 縦長の光（Line01）を Z で 90度回して、X 方向（剣を振った向き）に長くする
+		return node(name + "Root",
+			common(life=life),
+			rotation_fixed(z=90),
+			scale_fixed(width, length),
+			hidden(),
+			children=[
+				node(name,
+					common(life=life),
+					scale_single_easing(0.5, 1.0, start_speed=30, end_speed=-30),
+					renderer(texture=LINE, fade_out=life - 2),
+					sprite(color=color, color_end=(color[0], color[1], color[2], 0), billboard=FIXED),
+				),
+			],
+		)
+
+	return project([
+		streak("Slash", 0.35, 2.2, (255, 255, 255, 230), 10),
+		streak("SlashCore", 0.12, 2.6, (255, 255, 255, 255), 8),
+		# 当たった所の光
+		node("Flash",
+			common(life=6),
+			scale_single_easing(0.25, 0.7, start_speed=30, end_speed=-30),
+			renderer(texture=SOFT, fade_out=5),
+			sprite(color=(255, 255, 255, 230), color_end=(255, 255, 255, 0)),
+		),
+		# 振った向き（+X）に飛ぶ火花
+		node("Sparks",
+			common(life=12, count=6, gen_time=0.1, life_spread=3),
+			location_pva(
+				vel=((0.07, 0.04), (0, 0.04), (0, 0.03)),
+				acc=((0, 0), (-0.004, 0), (0, 0)),
+			),
+			scale_single_easing(0.07, 0.0, start_spread=0.02),
+			renderer(texture=SPARK, fade_out=4),
+			sprite(color=(255, 255, 255, 255)),
+		),
+	], end_frame=15)
+
+
+# ===== 敵の攻撃がプレイヤーに当たった：小さな赤い3本の爪あとと光 =====
+# ゲーム側でカメラの方を向けて出す
+
+def hit_player():
+	red = (255, 70, 50, 255)
+	claws = []
+	for i, offset in enumerate((-0.12, 0.0, 0.12)):
+		claws.append(node(f"Claw{i}Root",
+			common(life=10),
+			location_fixed(x=offset, y=-offset * 0.3),
+			rotation_fixed(z=35),
+			scale_fixed(0.18, 1.0),
+			hidden(),
+			children=[
+				node(f"Claw{i}",
+					common(life=10, offset=i),
+					scale_single_easing(0.4, 1.0, start_speed=30, end_speed=-30),
+					renderer(texture=LINE, fade_out=7),
+					sprite(color=red, color_end=(255, 40, 30, 0), billboard=FIXED),
+				),
+			],
+		))
+	return project(claws + [
+		node("Flash",
+			common(life=7),
+			scale_single_easing(0.2, 0.6, start_speed=30, end_speed=-30),
+			renderer(texture=SOFT, fade_out=6),
+			sprite(color=(255, 140, 110, 220), color_end=(255, 60, 40, 0)),
+		),
+		node("Sparks",
+			common(life=12, count=6, gen_time=0.1, life_spread=3),
+			location_pva(
+				vel=((0, 0.05), (0.02, 0.04), (0, 0.05)),
+				acc=((0, 0), (-0.004, 0), (0, 0)),
+			),
+			scale_single_easing(0.06, 0.0, start_spread=0.02),
+			renderer(texture=SPARK, fade_out=4),
+			sprite(color=(255, 150, 110, 255)),
+		),
+	], end_frame=15)
+
+
+# ===== 敵を倒した：小さくまとまった黒紫の光と、立ちのぼる粒（約1秒で消える）=====
+# 大きさ 1 で、普通の敵の体に合う大きさ。ゲーム側でカメラの方を向けて、体の大きさに合わせて出す
+
+def enemy_death():
+	purple = (170, 90, 255, 255)
+	return project([
+		node("Flash",
+			common(life=14),
+			scale_single_easing(0.6, 1.8, start_speed=30, end_speed=-30),
+			renderer(texture=SOFT, fade_out=10),
+			sprite(color=(220, 180, 255, 220), color_end=(120, 60, 200, 0)),
+		),
+		node("Ring",
+			common(life=16),
+			renderer(fade_out=10),
+			ring(outer=(0.2, 1.3), inner=(0.1, 1.15), color=purple),
+		),
+		# 立ちのぼって消える粒（体がほどけていく感じ）
+		node("Dust",
+			common(life=40, count=18, gen_time=0.5, life_spread=10),
+			location_pva(
+				pos=((0, 0.4), (0, 0.5), (0, 0.4)),
+				vel=((0, 0.01), (0.025, 0.01), (0, 0.01)),
+			),
+			scale_single_easing(0.16, 0.0, start_spread=0.05),
+			renderer(texture=SOFT, fade_in=4, fade_out=14),
+			sprite(color=(150, 80, 230, 230)),
+		),
+		node("Sparks",
+			common(life=16, count=10, gen_time=0.1, life_spread=4),
+			location_pva(
+				vel=((0, 0.06), (0.02, 0.05), (0, 0.06)),
+				acc=((0, 0), (-0.003, 0), (0, 0)),
+			),
+			scale_single_easing(0.08, 0.0, start_spread=0.03),
+			renderer(texture=SPARK, fade_out=6),
+			sprite(color=(230, 200, 255, 255)),
+		),
+	], end_frame=50)
+
+
 EFFECTS = {
 	"ModeChange.efkproj": mode_change,
 	"AbilityStart.efkproj": ability_start,
 	"Guard.efkproj": guard,
 	"GuardBreak.efkproj": guard_break,
+	"HitSlash.efkproj": hit_slash,
+	"HitPlayer.efkproj": hit_player,
+	"EnemyDeath.efkproj": enemy_death,
 }
 
 

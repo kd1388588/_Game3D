@@ -223,8 +223,8 @@ namespace
 	constexpr float kSwordTrailBaseBrightness = 0.15f;	// 刃の根元側の明るさ（先端を1.0とした割合）
 
 	// エフェクト
-	constexpr float kHitEffectScale			= 0.5f;		// 攻撃が敵に当たった時のエフェクトの大きさ
-	constexpr float kCriticalHitEffectScale	= 1.0f;		// クリティカル時のエフェクトの大きさ
+	constexpr float kHitEffectScale			= 1.0f;		// 攻撃が敵に当たった時のエフェクトの大きさ（HitSlash：1本の斬撃）
+	constexpr float kCriticalHitEffectScale	= 1.4f;		// クリティカル時のエフェクトの大きさ
 
 	// カメラの注視点を腰の骨から下げる量
 	constexpr float kCameraTargetOffsetY	= -0.9f;
@@ -1946,20 +1946,38 @@ float Player::GetLandingFrame(const std::string& animName) const
 	return (it != m_landingFrames.end()) ? it->second : 0.0f;
 }
 
-void Player::PlayHitEffect(const std::string& effectName, const Math::Vector3& hitPos, bool isCritical) const
+void Player::PlayHitEffect(const Math::Matrix& swordMatrix, int hand, const Math::Vector3& hitPos, bool isCritical) const
 {
-	// 攻撃の種類ごとのエフェクトが無ければ、いつものヒットエフェクト
-	const std::string& name = effectName.empty() ? EffectName::HitEnemy : effectName;
+	// 剣を振った向き：今の剣先と、軌跡に残っている前のフレームの剣先の差
+	Math::Vector3 slashDir = Math::Vector3::Zero;
+	const SwordTrail& trail = (hand == 1) ? m_swordTrailL : m_swordTrailR;
+	Math::Vector3 tip = GetSwordPoint(swordMatrix, m_swordBladeTipY);
+	for (const Math::Vector3& prevTip : trail.tipHistory)
+	{
+		// 同じ位置（まだ動いていない）の記録は飛ばす
+		if ((tip - prevTip).LengthSquared() > 0.0001f)
+		{
+			slashDir = tip - prevTip;
+			break;
+		}
+	}
 
-	// プレイヤーの攻撃の向きに合わせ、当たった位置に出す（クリティカルは大きく）
+	// クリティカルは大きく、モードの色をかける（白く作ってあるエフェクト）
 	float scale = isCritical ? kCriticalHitEffectScale : kHitEffectScale;
-	Math::Matrix mWorld = Math::Matrix::CreateScale(scale)
-		* Math::Matrix::CreateRotationY(GetAngleRad())
-		* Math::Matrix::CreateTranslation(hitPos);
-	EffectPlayer::Play(name, mWorld);
+	std::shared_ptr<KdEffekseerObject> effect = EffectPlayer::PlayFacingCamera(EffectName::HitEnemy, hitPos, scale, slashDir);
+	if (effect)
+	{
+		const Math::Vector3& color = IsPunisherMode() ? kPunisherLimColor : kOperatorLimColor;
+		float whiteRate = isCritical ? 0.7f : 0.4f;		// クリティカルは白っぽく光らせる
+		effect->SetColor({
+			color.x + (1.0f - color.x) * whiteRate,
+			color.y + (1.0f - color.y) * whiteRate,
+			color.z + (1.0f - color.z) * whiteRate,
+			1.0f });
+	}
 }
 
-bool Player::AttackOBB(const Math::Matrix& swordMatrix, bool isCritical, const std::string& hitEffectName, float damageRate, int hand)
+bool Player::AttackOBB(const Math::Matrix& swordMatrix, bool isCritical, float damageRate, int hand)
 {
 	// 刃の根元から先端までを囲む、Y軸方向に長い箱
 	float obbOffsetY = (m_swordBladeBaseY + m_swordBladeTipY) * 0.5f;
@@ -2017,7 +2035,7 @@ bool Player::AttackOBB(const Math::Matrix& swordMatrix, bool isCritical, const s
 		// 当たった位置にヒットエフェクト
 		// （敵は当たると少しの間無敵になるので、同じ敵に毎フレーム出続けることはない）
 		Math::Vector3 hitPos = retList.empty() ? obbMatrix.Translation() : retList.back().m_hitPos;
-		PlayHitEffect(hitEffectName, hitPos, isCritical);
+		PlayHitEffect(swordMatrix, hand, hitPos, isCritical);
 	}
 
 	// ヒットストップ（プレイヤーのすべての攻撃に、同じルールでかける）

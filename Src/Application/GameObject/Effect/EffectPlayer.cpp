@@ -22,6 +22,29 @@ std::shared_ptr<KdEffekseerObject> EffectPlayer::Play(const std::string& fileNam
 	return effect;
 }
 
+std::shared_ptr<KdEffekseerObject> EffectPlayer::PlayFacingCamera(const std::string& fileName, const Math::Vector3& pos,
+	float scale, const Math::Vector3& screenDir)
+{
+	// カメラの向き（ビュー行列の逆）。X：画面の右、Y：画面の上、Z：画面の奥
+	Math::Matrix camRot = KdShaderManager::Instance().GetCameraCB().mView.Invert();
+	camRot.Translation(Math::Vector3::Zero);
+
+	// screenDir を画面の上の向きにして、その角度だけ Z で回す
+	float angle = 0.0f;
+	float dx = screenDir.Dot(camRot.Right());
+	float dy = screenDir.Dot(camRot.Up());
+	if (dx * dx + dy * dy > 0.000001f)
+	{
+		angle = std::atan2(dy, dx);
+	}
+
+	Math::Matrix mWorld = Math::Matrix::CreateScale(scale)
+		* Math::Matrix::CreateRotationZ(angle)
+		* camRot
+		* Math::Matrix::CreateTranslation(pos);
+	return Play(fileName, mWorld);
+}
+
 void EffectPlayer::Stop(std::shared_ptr<KdEffekseerObject>& effect)
 {
 	if (effect)

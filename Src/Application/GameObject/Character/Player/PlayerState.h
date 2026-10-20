@@ -183,12 +183,6 @@ private:
 	// 次の段の攻撃へ移行（5段目以降はIdleへ）
 	void ChangeToNextAttack(Player* player) const;
 
-	// 今の攻撃で出す斬撃エフェクトのファイル名を取得
-	const std::string& GetSlashEffectName() const;
-
-	// 敵に当たった時に出すエフェクトの名前（攻撃の種類・段数ごと）
-	const std::string& GetHitEffectName() const;
-
 	// 今のフレームに剣の軌跡を出すか
 	// （普通の攻撃は攻撃判定のフレームの間。溜め攻撃は、振り始めから地面に叩きつけるまでずっと）
 	bool IsTrailFrame(const Player* player, float animTime) const;

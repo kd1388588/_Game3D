@@ -3,7 +3,7 @@
 // ============================================================
 // 使用するエフェクトのファイル名（Asset/Data/Effect/ からの相対パス）
 // 空文字 "" にしたもの・ファイルが無いものは再生されない（ファイルが用意できたら書き換える）
-// ModeChange / AbilityStart / Guard / GuardBreak は Tools/MakeEffekseerProjects.py で作った .efkproj を
+// ModeChange / AbilityStart / Guard / GuardBreak / HitSlash / HitPlayer / EnemyDeath は Tools/MakeEffekseerProjects.py で作った .efkproj を
 // Effekseer エディタで .efkefc に保存して使う
 // ============================================================
 namespace EffectName
@@ -18,11 +18,11 @@ namespace EffectName
 	inline const std::string ComboSlashDefault	= "_Sword1.efkefc";		// 専用のエフェクトが無い攻撃
 
 	// ヒット
-	inline const std::string HitEnemy			= "_Sword1.efkefc";		// プレイヤーの攻撃が敵に当たった
-	inline const std::string HitPlayer			= "_Claw2.efkefc";		// 敵の攻撃がプレイヤーに当たった
+	inline const std::string HitEnemy			= "HitSlash.efkefc";	// プレイヤーの攻撃が敵に当たった（剣を振った向きに1本の斬撃）
+	inline const std::string HitPlayer			= "HitPlayer.efkefc";	// 敵の攻撃がプレイヤーに当たった（小さな赤い爪あと）
 
 	// 撃破
-	inline const std::string EnemyDeath			= "_boss_death.efkefc";	// 敵が倒れた
+	inline const std::string EnemyDeath			= "EnemyDeath.efkefc";	// 敵が倒れた（小さくまとまった黒紫の光）
 	inline const std::string BossGroundSmash	= "";					// ボスの飛びかかり攻撃の着地
 
 	// プレイヤーの動作（ファイルが用意できたら設定する）
@@ -49,6 +49,11 @@ public:
 	// ワールド行列（位置・向き・大きさ）を指定してエフェクトを1回再生する
 	static std::shared_ptr<KdEffekseerObject> Play(const std::string& fileName, const Math::Matrix& mWorld,
 		float speed = 1.0f);
+
+	// カメラの方を向けて、エフェクトを1回再生する（板が XY 平面のエフェクト用）
+	// screenDir：エフェクトの X 軸を、画面の上でこの向き（ワールドの向き）に合わせる。ゼロなら回さない
+	static std::shared_ptr<KdEffekseerObject> PlayFacingCamera(const std::string& fileName, const Math::Vector3& pos,
+		float scale = 1.0f, const Math::Vector3& screenDir = Math::Vector3::Zero);
 
 	// 再生中のエフェクトを止めて、ポインタを空にする
 	static void Stop(std::shared_ptr<KdEffekseerObject>& effect);

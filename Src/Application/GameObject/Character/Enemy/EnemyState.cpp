@@ -14,7 +14,7 @@ namespace
 	constexpr float kAttackHitEndFrame		= 45.0f;
 
 	// 撃破エフェクトの大きさ（敵の体の大きさに掛ける）
-	constexpr float kDeathEffectScaleRate	= 0.2f;
+	constexpr float kDeathEffectScaleRate	= 0.8f;		// EnemyDeath は大きさ 1 で普通の敵に合うように作ってある
 
 	// 飛びかかり攻撃（ボスもザコも。使った後の CT は Enemy.cpp の敵の種類ごとのパラメータ）
 	constexpr float kJumpAttackMinDist		= 4.0f;		// プレイヤーがこれより遠く、
@@ -342,14 +342,8 @@ void EnemyStateDead::ChangeState(Enemy* enemy)
 	// 撃破エフェクト（体の中心あたりに、体の大きさに合わせて出す）
 	float bodyScale = enemy->GetBodyScale();
 	Math::Vector3 effectPos = enemy->GetPos() + Math::Vector3(0.0f, bodyScale, 0.0f);
-	// ビルボード：エフェクトの板がいつもカメラの方を向くように、カメラの向き（ビュー行列の逆）で回す
-	// （そのままだと、横から見た時に板が薄く見えてしまう）
-	Math::Matrix camRot = KdShaderManager::Instance().GetCameraCB().mView.Invert();
-	camRot.Translation(Math::Vector3::Zero);
-	Math::Matrix effectMat = Math::Matrix::CreateScale(bodyScale * kDeathEffectScaleRate)
-		* camRot
-		* Math::Matrix::CreateTranslation(effectPos);
-	EffectPlayer::Play(EffectName::EnemyDeath, effectMat);
+	// ビルボード：エフェクトの板がいつもカメラの方を向くようにする（横から見た時に板が薄く見えないように）
+	EffectPlayer::PlayFacingCamera(EffectName::EnemyDeath, effectPos, bodyScale * kDeathEffectScaleRate);
 }
 
 void EnemyStateDead::Update(Enemy* enemy)

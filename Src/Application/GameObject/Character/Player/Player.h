@@ -156,16 +156,16 @@ public:
 	bool IsDead() const { return m_hp <= 0; }
 
 	// ボックス（OBB）による攻撃判定
-	// 敵に当たったら、その位置に hitEffectName のエフェクトを出す（空ならいつものヒットエフェクト）
+	// 敵に当たったら、その位置に剣を振った向きの斬撃のヒットエフェクトを出す
 	// damageRate：ダメージの倍率（アビリティなど）
 	// hand：どちらの剣か（0：右、1：左）。剣ごとに当たりを数えるので、二刀流で1振りに2回当たる
-	bool AttackOBB(const Math::Matrix& swordMatrix, bool isCritical, const std::string& hitEffectName = "", float damageRate = 1.0f, int hand = 0);
+	bool AttackOBB(const Math::Matrix& swordMatrix, bool isCritical, float damageRate = 1.0f, int hand = 0);
 
 	// 攻撃の当たった記録を消す（新しい攻撃を振り始める時に呼ぶ）
 	void ResetAttackHits() { for (auto& record : m_lastHitFrame) record.clear(); }
 
-	// 攻撃が当たった位置に、プレイヤーの攻撃の向きでヒットエフェクトを出す
-	void PlayHitEffect(const std::string& effectName, const Math::Vector3& hitPos, bool isCritical) const;
+	// 攻撃が当たった位置に、剣先が動いた向きの斬撃のヒットエフェクトを1つ出す（1ヒットに1つ）
+	void PlayHitEffect(const Math::Matrix& swordMatrix, int hand, const Math::Vector3& hitPos, bool isCritical) const;
 
 
 	// 被弾判定
