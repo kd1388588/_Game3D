@@ -705,7 +705,8 @@ void Player::Init()
 	}
 	ApplySwordTrailTexture();
 
-	m_pos = { 0, 0.0f, 0.5f };
+	// スタート位置（道の始まりの壁は z = -15。最初の敵は z = 10）
+	m_pos = { 0.0f, 0.0f, -8.0f };
 	m_prevFramePos = m_pos;
 
 	// カメラの注視点の高さ：立っている時の腰の高さを基準にする（腰が上下に動いても付いていかない）

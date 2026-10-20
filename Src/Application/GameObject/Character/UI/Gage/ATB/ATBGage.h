@@ -80,4 +80,16 @@ private:
 	std::shared_ptr<UIText>					m_guardText = nullptr;
 	std::shared_ptr<UIText>					m_breakText = nullptr;	// ガードを崩された時の「BREAK」
 	std::vector<std::shared_ptr<UIText>>	m_slotKeyTexts;				// アビリティの枠の「04」「05」
+
+	// どのキーで使えるかの表示（四角い枠の中にキーの名前）
+	struct KeyBadge
+	{
+		std::shared_ptr<UIText>	text;
+		Math::Vector2			pos;
+	};
+	KeyBadge								m_modeKeyBadge;		// モードの文字の左の「E」
+	KeyBadge								m_commandKeyBadge;	// アビリティの枠の右の「F」
+
+	static KeyBadge CreateKeyBadge(const std::string& key, const Math::Vector2& pos);
+	static void DrawKeyBadge(const KeyBadge& badge);
 };

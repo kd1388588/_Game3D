@@ -50,6 +50,13 @@ namespace
 	constexpr int		kModeFlashFrame		= 15;		// モードが変わった時に文字が大きくなる長さ
 	constexpr float		kModeFlashScale		= 1.4f;		// モードが変わった瞬間の文字の大きさ
 
+	// キーの表示（モードの文字の左に「E」、アビリティの枠の右に「F」）
+	constexpr int		kKeyBadgeHalfSize	= 11;		// 枠の大きさ（半分）
+	constexpr float		kKeyTextScale		= 0.75f;	// キーの文字の大きさ
+	const Math::Color	kKeyBadgeColor		= { 0.85f, 0.85f, 0.9f, 0.9f };		// 枠とキーの文字
+	const Math::Vector2	kModeKeyPos			= { static_cast<float>(kGageLeft - 20), kModeTextY };
+	const Math::Vector2	kCommandKeyPos		= { static_cast<float>(kSlotCenterX + kSlotSpace + kSlotHalfSize + 20), static_cast<float>(kSlotCenterY) };
+
 	// 文字の左端を x にそろえて置く（UIText は中心の位置を指定するので、幅の半分だけずらす）
 	void SetTextLeft(const std::shared_ptr<UIText>& text, float x, float y)
 	{
@@ -94,6 +101,32 @@ void ATBGage::Init()
 		text->SetCenterPos({ static_cast<float>(kSlotCenterX + kSlotSpace * i), static_cast<float>(kSlotCenterY - 2) });
 		m_slotKeyTexts.push_back(text);
 	}
+
+	// どのキーで使えるか
+	m_modeKeyBadge = CreateKeyBadge("E", kModeKeyPos);
+	m_commandKeyBadge = CreateKeyBadge("F", kCommandKeyPos);
+}
+
+ATBGage::KeyBadge ATBGage::CreateKeyBadge(const std::string& key, const Math::Vector2& pos)
+{
+	KeyBadge badge;
+	badge.text = std::make_shared<UIText>();
+	badge.text->SetText(key, UIText::FontSize::Small);
+	badge.text->SetScale(kKeyTextScale);
+	badge.text->SetColor(kKeyBadgeColor);
+	badge.text->SetCenterPos(pos);
+	badge.pos = pos;
+	return badge;
+}
+
+void ATBGage::DrawKeyBadge(const KeyBadge& badge)
+{
+	auto& spriteShader = KdShaderManager::Instance().m_spriteShader;
+	int x = static_cast<int>(badge.pos.x);
+	int y = static_cast<int>(badge.pos.y);
+	spriteShader.DrawBox(x, y, kKeyBadgeHalfSize, kKeyBadgeHalfSize, &kBackColor, true);
+	spriteShader.DrawBox(x, y, kKeyBadgeHalfSize, kKeyBadgeHalfSize, &kKeyBadgeColor, false);
+	badge.text->DrawSprite();
 }
 
 void ATBGage::SetPunisherMode(bool isPunisher)
@@ -298,4 +331,8 @@ void ATBGage::DrawSprite()
 	{
 		text->DrawSprite();
 	}
+
+	// どのキーで使えるか（E：モード切り替え、F：ATBコマンド）
+	DrawKeyBadge(m_modeKeyBadge);
+	DrawKeyBadge(m_commandKeyBadge);
 }
