@@ -35,7 +35,7 @@ namespace
 	constexpr int	kAttackDamage			= 5;
 	constexpr int	kCriticalAttackDamage	= 10;
 	constexpr float	kPushStrength			= 0.1f;		// 敵同士の押し出しの強さ（毎フレームの割合）
-	constexpr float	kHitEffectScale			= 0.25f;	// プレイヤーに攻撃が当たった時のエフェクトの大きさ（大きいと前が見えなくなる）
+	constexpr float	kHitEffectScale			= 0.12f;	// プレイヤーに攻撃が当たった時のエフェクトの大きさ（大きいと前が見えなくなる）
 	const Math::Color kHitEffectColor		= { 1.0f, 0.3f, 0.25f, 1.0f };	// その色（エフェクトの元の色にかけ算される。白なら元の色のまま）
 
 	// プレイヤーに攻撃が当たった時のエフェクト（小さめ・赤っぽい色にして、プレイヤーの攻撃のエフェクトと見分けやすくする）

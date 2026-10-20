@@ -147,9 +147,14 @@ def adjust_boss_death():
 		remove_node(root, name)
 	set_range(find_node(root, "Base"), ("CommonValues", "Life"), 90)
 	set_range(find_node(root, "Ambient Glow"), ("CommonValues", "Life"), 90)
+	# 最後の光の輪：元は速さ 0.1・加速 0.01 で広がり続ける（60フレームで約24倍）ので、
+	# 加速をなくし、短くして、体のまわりで小さく光って消えるようにする
 	final = find_node(root, "Final Flash")
 	set_range(final, ("CommonValues", "GenerationTimeOffset"), 20)
-	set_range(final, ("CommonValues", "Life"), 60)
+	set_range(final, ("CommonValues", "Life"), 25)
+	set_range(final, ("ScalingValues", "SinglePVA", "Velocity"), 0.08)
+	set_range(final, ("ScalingValues", "SinglePVA", "Acceleration"), 0)
+	child(final, "RendererCommonValues", "FadeOut", "Frame").text = "15"
 	set_range(find_node(root, "Twinkle"), ("CommonValues", "GenerationTimeOffset"), 0)
 	child(root, "EndFrame").text = "90"
 	save("_boss_death", root)
