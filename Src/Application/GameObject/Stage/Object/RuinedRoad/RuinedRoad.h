@@ -11,4 +11,9 @@ public:
 	~RuinedRoad()override {}
 
 	void Init()override;
+
+private:
+
+	// 柱のまわりの見えない当たり判定のモデル（描画しない）
+	std::shared_ptr<KdModelData>	m_spGuardModel = nullptr;
 };

@@ -1,0 +1,177 @@
+{
+ "asset": {
+  "version": "2.0",
+  "generator": "Tools/MakeStageModel.py"
+ },
+ "scene": 0,
+ "scenes": [
+  {
+   "nodes": [
+    0
+   ]
+  }
+ ],
+ "nodes": [
+  {
+   "name": "RuinedRoadCollision",
+   "mesh": 0
+  }
+ ],
+ "meshes": [
+  {
+   "name": "RuinedRoadCollision",
+   "primitives": [
+    {
+     "attributes": {
+      "POSITION": 0,
+      "NORMAL": 1,
+      "TEXCOORD_0": 2,
+      "COLOR_0": 3
+     },
+     "indices": 4,
+     "material": 1
+    }
+   ]
+  }
+ ],
+ "materials": [
+  {
+   "name": "Pavement",
+   "pbrMetallicRoughness": {
+    "baseColorTexture": {
+     "index": 0
+    },
+    "baseColorFactor": [
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "metallicFactor": 0.0,
+    "roughnessFactor": 1.0
+   }
+  },
+  {
+   "name": "StoneWall",
+   "pbrMetallicRoughness": {
+    "baseColorTexture": {
+     "index": 1
+    },
+    "baseColorFactor": [
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "metallicFactor": 0.0,
+    "roughnessFactor": 1.0
+   }
+  }
+ ],
+ "textures": [
+  {
+   "source": 0,
+   "sampler": 0
+  },
+  {
+   "source": 1,
+   "sampler": 0
+  }
+ ],
+ "images": [
+  {
+   "uri": "Pavement.png"
+  },
+  {
+   "uri": "StoneWall.png"
+  }
+ ],
+ "samplers": [
+  {
+   "magFilter": 9729,
+   "minFilter": 9987,
+   "wrapS": 10497,
+   "wrapT": 10497
+  }
+ ],
+ "buffers": [
+  {
+   "uri": "RuinedRoadCollision.bin",
+   "byteLength": 41472
+  }
+ ],
+ "bufferViews": [
+  {
+   "buffer": 0,
+   "byteOffset": 0,
+   "byteLength": 9216,
+   "target": 34962
+  },
+  {
+   "buffer": 0,
+   "byteOffset": 9216,
+   "byteLength": 9216,
+   "target": 34962
+  },
+  {
+   "buffer": 0,
+   "byteOffset": 18432,
+   "byteLength": 6144,
+   "target": 34962
+  },
+  {
+   "buffer": 0,
+   "byteOffset": 24576,
+   "byteLength": 12288,
+   "target": 34962
+  },
+  {
+   "buffer": 0,
+   "byteOffset": 36864,
+   "byteLength": 4608,
+   "target": 34963
+  }
+ ],
+ "accessors": [
+  {
+   "bufferView": 0,
+   "componentType": 5126,
+   "count": 768,
+   "type": "VEC3",
+   "min": [
+    -17.600000381469727,
+    0.0,
+    -95.5999984741211
+   ],
+   "max": [
+    17.600000381469727,
+    4.0,
+    9.520410537719727
+   ]
+  },
+  {
+   "bufferView": 1,
+   "componentType": 5126,
+   "count": 768,
+   "type": "VEC3"
+  },
+  {
+   "bufferView": 2,
+   "componentType": 5126,
+   "count": 768,
+   "type": "VEC2"
+  },
+  {
+   "bufferView": 3,
+   "componentType": 5126,
+   "count": 768,
+   "type": "VEC4"
+  },
+  {
+   "bufferView": 4,
+   "componentType": 5125,
+   "count": 1152,
+   "type": "SCALAR"
+  }
+ ]
+}

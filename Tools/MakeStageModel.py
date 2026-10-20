@@ -6,7 +6,7 @@
 #   ・石畳の道（幅 kRoadWidth）
 #   ・道の両側に並ぶ、折れた柱
 #   ・その外側の、崩れた低い石壁
-#   ・あちこちに転がる瓦礫
+#   ・柱のまわりの見えない当たり判定（RuinedRoadCollision.gltf。柱に近づきすぎないように）
 #   ・大聖堂の手前の、半分崩れたアーチの門
 #   ・道の先の、崩れた大聖堂（ボスと戦う広間。厚い壁・窓の穴・中の柱・奥の半円の壁）
 #     ※壁や柱はすべて厚みのある箱で作る（薄い板だと、キャラが勢いよく動いた時にすり抜けるため）
@@ -182,6 +182,17 @@ def build_road(mesh, rng):
 		z += step
 
 
+# 柱のまわりの見えない当たり判定（柱から、これだけ外側まで近づけない）
+PILLAR_GUARD_MARGIN = 0.6
+PILLAR_GUARD_HEIGHT = 4.0
+
+# 見えない当たり判定を置く柱（中心 x, z と、台座の大きさ）。柱を作る時に集める
+pillar_guards = []
+
+# 瓦礫は置かない（ここに入れた形は書き出さない。乱数の順番を変えないように、作るだけ作って捨てる）
+discard = None
+
+
 def build_pillars(mesh, rng):
 	"""道の両側に並ぶ柱（折れているものが多い）"""
 	z = ROAD_START_Z + 4.0
@@ -192,14 +203,15 @@ def build_pillars(mesh, rng):
 			# 台座
 			mesh.add_box((x, 0.3, pz), (1.7, 0.6, 1.7), STONE_TILE_METER, rot_y=rng.uniform(-0.05, 0.05),
 				shade=0.85, bottom_shade=0.45)
+			pillar_guards.append((x, pz, 1.7))
 
 			kind = rng.random()
 			if kind < 0.2:
 				# 根元だけ残っている
 				h = rng.uniform(0.6, 1.4)
 				mesh.add_column((x, pz), 0.6, h, 0.6, STONE_TILE_METER, broken=0.35, rng=rng)
-				# 倒れた柱の残り
-				mesh.add_box((x + side * 1.8, 0.45, pz + rng.uniform(-1, 1)), (1.0, 0.9, 3.2), STONE_TILE_METER,
+				# 倒れた柱の残り（瓦礫なので置かない）
+				discard.add_box((x + side * 1.8, 0.45, pz + rng.uniform(-1, 1)), (1.0, 0.9, 3.2), STONE_TILE_METER,
 					rot_y=rng.uniform(-0.6, 0.6), shade=0.8, bottom_shade=0.45)
 			elif kind < 0.75:
 				# 途中で折れている
@@ -253,6 +265,7 @@ def build_gate(mesh, rng):
 	# 左右の太い柱（右はアーチの途中まで残り、左は途中で崩れている）
 	for side, h in ((-1, 5.5), (1, 9.0)):
 		mesh.add_box((side * gx, 0.5, GATE_Z), (2.6, 1.0, 2.6), STONE_TILE_METER, shade=0.85, bottom_shade=0.4)
+		pillar_guards.append((side * gx, GATE_Z, 2.6))
 		offsets = [rng.uniform(-0.8, 0.0) for _ in range(4)] if side < 0 else None
 		mesh.add_box((side * gx, 1.0 + h / 2, GATE_Z), (1.8, h, 1.8), STONE_TILE_METER, shade=0.9, bottom_shade=0.6,
 			top_offsets=offsets)
@@ -364,6 +377,7 @@ def build_cathedral(road, stone, rng):
 		for sign in (-1, 1):
 			x = sign * NAVE_PILLAR_X
 			stone.add_box((x, 0.3, z), (2.0, 0.6, 2.0), STONE_TILE_METER, shade=0.85, bottom_shade=0.45)
+			pillar_guards.append((x, z, 2.0))
 			if rng.random() < 0.35:
 				h = rng.uniform(1.5, 4.0)
 				stone.add_column((x, z), 0.6, h, 0.75, STONE_TILE_METER, broken=0.6, rng=rng)
@@ -378,13 +392,13 @@ def build_cathedral(road, stone, rng):
 		y = ROAD_TOP_Y + 0.18 * (i + 1)
 		road.add_box((0.0, y - 0.1, NAVE_END_Z + 1.5), (w, 0.2, d), PAVE_TILE_METER, shade=0.8, bottom_shade=0.5)
 
-	# 広間の瓦礫（壁ぞいだけ）
+	# 広間の瓦礫（置かない）
 	for _ in range(40):
 		side = rng.choice((-1, 1))
 		x = side * rng.uniform(hw - 3.5, hw - 1.2)
 		zz = rng.uniform(NAVE_START_Z + 2, NAVE_END_Z)
 		sz = rng.uniform(0.3, 1.0)
-		stone.add_box((x, sz * 0.35, zz), (sz * 1.3, sz * 0.7, sz), STONE_TILE_METER, rot_y=rng.uniform(0, math.pi),
+		discard.add_box((x, sz * 0.35, zz), (sz * 1.3, sz * 0.7, sz), STONE_TILE_METER, rot_y=rng.uniform(0, math.pi),
 			rot_x=rng.uniform(-0.3, 0.3), shade=rng.uniform(0.6, 0.85), bottom_shade=0.4)
 
 
@@ -594,14 +608,24 @@ def main():
 	road = MeshBuilder()
 	build_road(road, rng)
 
+	global discard
+	discard = MeshBuilder()
+
 	stone = MeshBuilder()
 	build_pillars(stone, rng)
 	build_walls(stone, rng)
-	build_rubble(stone, rng)
+	build_rubble(discard, rng)	# 瓦礫は置かない
 	build_gate(stone, rng)
 	build_cathedral(road, stone, rng)
 
 	write_gltf(out_dir, "RuinedRoad", [(road, 0), (stone, 1)])
+
+	# 柱のまわりの見えない当たり判定（描画はせず、横から近づけないようにするだけ）
+	guard = MeshBuilder()
+	for x, z, size in pillar_guards:
+		w = size + PILLAR_GUARD_MARGIN * 2
+		guard.add_box((x, PILLAR_GUARD_HEIGHT / 2, z), (w, PILLAR_GUARD_HEIGHT, w), STONE_TILE_METER)
+	write_gltf(out_dir, "RuinedRoadCollision", [(guard, 1)])
 
 	# テクスチャ（青みがかった灰色の石。夜の廃墟に合う暗めの色）
 	pave = make_stone_texture(np_rng, rows=6, cols_per_row=4, base_color=(0.42, 0.42, 0.45),
