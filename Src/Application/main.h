@@ -27,6 +27,10 @@ private:
 	void PreUpdate();
 	void Update();
 	void PostUpdate();
+
+	// F4 でデバッグ表示を切り替え、シーンに合わせてマウスカーソルを出す・消す
+	void UpdateDebugToggle();
+	void SetCursorVisible(bool isVisible);
 	void KdPostUpdate();
 
 	void KdBeginDraw(bool usePostProcess = true);
@@ -50,6 +54,9 @@ private:
 
 	// ゲーム終了フラグ trueで終了する
 	bool		m_endFlag = false;
+
+	// マウスカーソルを出しているか
+	bool		m_isCursorVisible = true;
 
 //=====================================================
 // シングルトンパターン

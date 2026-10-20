@@ -988,7 +988,6 @@ void Player::UpdateInputBuffer()
 	};
 
 	update(m_attackKey, m_attackBuffer);
-	update(m_jumpKey, m_jumpBuffer);
 	update(m_evadeKey, m_evadeBuffer);
 	for (int i = 0; i < static_cast<int>(AbilitySlot::Num); ++i)
 	{
@@ -999,7 +998,6 @@ void Player::UpdateInputBuffer()
 void Player::ClearInputBuffers()
 {
 	m_attackBuffer = 0;
-	m_jumpBuffer = 0;
 	m_evadeBuffer = 0;
 	for (int& buffer : m_abilityBuffer) buffer = 0;
 }
@@ -1054,8 +1052,8 @@ bool Player::UpdateCommandMenu()
 		}
 	}
 
-	// 決定：左クリック・Enter・Space
-	if (enter || ConsumeInput(m_attackBuffer) || ConsumeInput(m_jumpBuffer))
+	// 決定：左クリック・Enter
+	if (enter || ConsumeInput(m_attackBuffer))
 	{
 		DecideCommand(m_commandCursor);
 	}

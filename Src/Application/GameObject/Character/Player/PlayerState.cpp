@@ -91,7 +91,7 @@ namespace
 	constexpr float kAttackAnimSpeed		= 1.15f;	// 攻撃の再生速度（少し速くして、もっさりしないようにする）
 	constexpr float kAttack5_3AnimSpeed		= 0.9f;		// 攻撃05の3段目だけは、少しゆっくり再生する
 	constexpr float kAttackEvadeCancelFrame	= 12.0f;	// 攻撃のこのフレーム以降なら、回避でキャンセルできる
-	constexpr float kAttackRecoveryFrame	= 6.0f;		// 次の攻撃に移れるフレームから、さらにこれだけたったら、移動・ジャンプで攻撃の後のすきをキャンセルできる
+	constexpr float kAttackRecoveryFrame	= 6.0f;		// 次の攻撃に移れるフレームから、さらにこれだけたったら、移動で攻撃の後のすきをキャンセルできる
 
 	// 回避した時に、パニッシャーからオペレーターに戻すか（FF7リメイクのクラウドと同じ動き）
 	// false にすると、回避してもモードはそのまま
@@ -144,13 +144,6 @@ bool PlayerState::TryCommonTransition(Player* player)
 	if (player->CheckEvadeInput())
 	{
 		StartEvade(player);
-		return true;
-	}
-
-	// ジャンプ（空中で押した入力は、着地するまで残しておく）
-	if (player->IsOnGround() && player->CheckJumpInput())
-	{
-		player->ChangeState(std::make_shared<PlayerStateJump>());
 		return true;
 	}
 
@@ -705,18 +698,13 @@ void PlayerStateComboAttack::Update(Player* player)
 		}
 	}
 
-	// 次の攻撃の予約が無く、少したったら、移動・ジャンプで攻撃の後のすきをキャンセルできる
+	// 次の攻撃の予約が無く、少したったら、移動で攻撃の後のすきをキャンセルできる
 	// （アビリティ・溜め攻撃の途中・最後まで再生する攻撃は除く）
 	float cancelFrame = GetCancelFrame();
 	bool canRecoveryCancel = !m_isAbility && !m_nextAttackReserved && !IsSplitAttack()
 		&& cancelFrame < kAttackHitEndFrame && animTime >= cancelFrame + kAttackRecoveryFrame;
 	if (canRecoveryCancel)
 	{
-		if (player->IsOnGround() && player->CheckJumpInput())
-		{
-			player->ChangeState(std::make_shared<PlayerStateJump>());
-			return;
-		}
 		if (player->CheckMoveInput())
 		{
 			player->ChangeState(std::make_shared<PlayerStateRun>());

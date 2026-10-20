@@ -1,6 +1,7 @@
 ﻿#include "main.h"
 
 #include "Scene/SceneManager.h"
+#include "Utility/InputHelper.h"
 
 // ///// ///// ///// ///// ///// ///// ///// ///// ///// ///// ///// ///// ///// ///// /////
 // エントリーポイント
@@ -67,9 +68,36 @@ void Application::PreUpdate()
 // ///// ///// ///// ///// ///// ///// ///// ///// ///// ///// ///// ///// ///// ///// /////
 void Application::Update()
 {
+	UpdateDebugToggle();
+
 	SceneManager::Instance().Update();
 
 	KdEffekseerManager::GetInstance().Update();
+}
+
+void Application::UpdateDebugToggle()
+{
+	// F4：デバッグ表示（ImGui のウィンドウ・当たり判定のワイヤー）の表示・非表示を切り替える
+	static InputHelper::KeyTrigger debugKey{ VK_F4 };
+	if (debugKey.Update())
+	{
+		KdDebugGUI::Instance().ToggleVisible();
+	}
+
+	// マウスカーソル：ゲーム中は消す（マウスはカメラの操作に使うため）
+	// タイトル・結果の画面はマウスでも選べるので出す。デバッグ表示中は ImGui を触れるように出す
+	bool isCursorVisible = (SceneManager::Instance().GetCurrentSceneType() != SceneManager::SceneType::Game)
+		|| KdDebugGUI::Instance().IsVisible();
+	SetCursorVisible(isCursorVisible);
+}
+
+void Application::SetCursorVisible(bool isVisible)
+{
+	// ShowCursor は呼んだ回数を数えるしくみなので、見える・見えないが変わる時だけ、0 をまたぐまで呼ぶ
+	if (isVisible == m_isCursorVisible) return;
+	m_isCursorVisible = isVisible;
+	if (isVisible)	{ while (ShowCursor(TRUE) < 0) {} }
+	else			{ while (ShowCursor(FALSE) >= 0) {} }
 }
 
 // ///// ///// ///// ///// ///// ///// ///// ///// ///// ///// ///// ///// ///// ///// /////
@@ -130,8 +158,11 @@ void Application::PostDraw()
 	// 画面のぼかしや被写界深度処理の実施
 	KdShaderManager::Instance().m_postProcessShader.PostEffectProcess();
 
-	// 現在のシーンのデバッグ描画
-	SceneManager::Instance().DrawDebug();
+	// 現在のシーンのデバッグ描画（当たり判定のワイヤーなど。デバッグ表示を出している時だけ）
+	if (KdDebugGUI::Instance().IsVisible())
+	{
+		SceneManager::Instance().DrawDebug();
+	}
 }
 
 // ///// ///// ///// ///// ///// ///// ///// ///// ///// ///// ///// ///// ///// ///// /////

@@ -117,8 +117,14 @@ public:
 
 	void AddLog(const char* fmt, ...);
 	void ClearLog();
+
+	// デバッグ表示（ImGui のウィンドウ・当たり判定のワイヤー）を出すか（最初は出さない）
+	void ToggleVisible() { m_isVisible = !m_isVisible; }
+	bool IsVisible() const { return m_isVisible; }
 	
 private:
+	bool m_isVisible = false;
+
 	void GuiRelease();
 
 	// ImGui

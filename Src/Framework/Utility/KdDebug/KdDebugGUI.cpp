@@ -47,6 +47,14 @@ void KdDebugGUI::GuiProcess()
 	ImGui_ImplWin32_NewFrame();
 	ImGui::NewFrame();
 
+	// デバッグ表示を消している時は、ウィンドウを何も出さない
+	if (!m_isVisible)
+	{
+		ImGui::Render();
+		ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
+		return;
+	}
+
 	//===========================================================
 	// 以下にImGui描画処理を記述
 	//===========================================================

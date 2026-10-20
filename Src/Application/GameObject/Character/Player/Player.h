@@ -62,7 +62,6 @@ public:
 	// 押してから kInputBufferFrame フレームの間は「押された」と答える（1回答えたら消える）
 	// （技の終わり際など、少し早めに押しても受け付けて、操作の反応を良くする）
 	bool CheckAttackInput()		{ return ConsumeInput(m_attackBuffer); }	// 左クリック（攻撃）
-	bool CheckJumpInput()		{ return ConsumeInput(m_jumpBuffer); }		// Space（ジャンプ）
 	bool CheckEvadeInput()		{ return ConsumeInput(m_evadeBuffer); }		// 右クリック（回避）
 
 	// ATBコマンドメニューを開いているか（開いている間は時間がゆっくりになる）
@@ -478,11 +477,9 @@ private:
 	InputHelper::KeyTrigger			m_menuDecideKey{ VK_RETURN };
 	InputHelper::KeyTrigger			m_menuBackKey{ VK_BACK };
 	InputHelper::KeyTrigger			m_modeKey{ 'E' };
-	InputHelper::KeyTrigger			m_jumpKey{ VK_SPACE };
 
 	// 先行入力の残りフレーム（0 なら押されていない）
 	int								m_attackBuffer = 0;
-	int								m_jumpBuffer = 0;
 	int								m_abilityBuffer[static_cast<int>(AbilitySlot::Num)] = {};
 	int								m_evadeBuffer = 0;
 

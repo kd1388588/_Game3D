@@ -30,6 +30,9 @@ public :
 		m_nextSceneType = _nextScene;
 	}
 
+	// 現在のシーンの種類
+	SceneType GetCurrentSceneType() const { return m_currentSceneType; }
+
 	// 現在のシーンのオブジェクトリストを取得
 	const std::list<std::shared_ptr<KdGameObject>>& GetObjList();
 

@@ -126,6 +126,7 @@ private:
 	int										m_stateFrame = 0;		// 今の状態になってからのフレーム数
 	int										m_selectIndex = 0;		// 選択中のメニュー
 	float									m_cursorY = 0.0f;		// カーソルの高さ（選択中の項目へなめらかに移動する）
+	float									m_menuMaxHalfWidth = 0.0f;	// 一番長いメニューの項目の幅の半分
 	std::vector<float>						m_menuScales;			// 項目ごとの拡大率（選択中の項目を少し大きくする）
 	float									m_controlsOpen = 0.0f;	// 操作説明の開き具合（0～1）
 

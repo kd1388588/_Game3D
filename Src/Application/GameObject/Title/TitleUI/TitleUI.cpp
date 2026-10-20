@@ -44,6 +44,7 @@ namespace
 	constexpr float		kSmoothRate			= 0.2f;			// カーソルなどが目標に近づく割合（1フレーム）
 	constexpr float		kSelectedScale		= 1.12f;		// 選択中の項目の拡大率
 	constexpr float		kUnselectedScale	= 0.9f;
+	constexpr float		kDotHideRate		= 4.0f;			// カーソルが動いている間、選択中の光の点を消す強さ（項目の間隔の 1/4 動くと消える）
 	constexpr float		kUnselectedAlpha	= 0.45f;
 
 	// ===== マウス =====
@@ -120,6 +121,12 @@ void TitleUI::Init()
 		m_menuTexts.push_back(text);
 	}
 	m_menuScales.assign(m_menuTexts.size(), kUnselectedScale);
+
+	// 一番長い項目の幅の半分（選択中の光の点の位置を、どの項目でもそろえるため）
+	for (const auto& text : m_menuTexts)
+	{
+		m_menuMaxHalfWidth = std::max(m_menuMaxHalfWidth, text->GetSize().x * 0.5f);
+	}
 	m_cursorY = GetMenuItemPos(m_selectIndex).y;
 
 	// 操作案内（下の黒帯）
@@ -141,7 +148,6 @@ void TitleUI::Init()
 		{ "右クリック",		"回避" },
 		{ "F",				"ATBコマンド（スローにして技を選ぶ）" },
 		{ "Shift",			"走りながら：ダッシュ　止まって：ガード" },
-		{ "Space",			"ジャンプ" },
 		{ "ホイール / R",	"ロックオン（近くの敵に視点を合わせる）" },
 	};
 	for (size_t i = 0; i < controls.size(); ++i)
@@ -489,9 +495,12 @@ void TitleUI::DrawMenu() const
 		DrawGlow(cursorPos, { 440.0f, 70.0f }, barColor);
 
 		// 項目の左右で揺れる光の点
-		float halfWidth = m_menuTexts[m_selectIndex]->GetSize().x * 0.5f * m_menuScales[m_selectIndex];
-		float offset = halfWidth + 34.0f + 6.0f * pulse;
-		Math::Color dotColor = { 1.0f, 1.0f, 1.0f, appear * dim };
+		// ・どの項目でも同じ幅（一番長い項目に合わせる）にして、上下に動く時に横へ伸び縮みしないようにする
+		// ・カーソルが動いている間は消し、止まったら出す（文字より先に光だけが動いて見えないように）
+		float offset = m_menuMaxHalfWidth * kSelectedScale + 34.0f + 6.0f * pulse;
+		float moving = std::abs(GetMenuItemPos(m_selectIndex).y - m_cursorY) / kMenuSpacing;
+		float dotAlpha = std::clamp(1.0f - moving * kDotHideRate, 0.0f, 1.0f);
+		Math::Color dotColor = { 1.0f, 1.0f, 1.0f, dotAlpha * appear * dim };
 		DrawGlow({ cursorPos.x - offset, cursorPos.y }, { 26.0f, 26.0f }, dotColor);
 		DrawGlow({ cursorPos.x + offset, cursorPos.y }, { 26.0f, 26.0f }, dotColor);
 	}
