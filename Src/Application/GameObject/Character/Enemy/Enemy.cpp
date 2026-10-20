@@ -80,7 +80,7 @@ void Enemy::Init()
 		{ "Run",	kModelDir + "Animation/Move/Sprint_Biped_Fwd/Sprint_Biped_Fwd.gltf" },
 		{ "Attack",	kModelDir + "Animation/Attack/Attack_Melee_A/Attack_Melee_A.gltf" },
 		{ "Damage",	kModelDir + "Animation/Hit/Hit/HitReact_Front/HitReact_Front.gltf" },
-		{ "Dead",	kModelDir + "Animation/Hit/Death/Death_A/Death_A.gltf" },
+		{ "Dead",	kModelDir + "Animation/Hit/Death/Death_A.gltf" },
 
 		// 飛びかかり攻撃（ファイルが無い時は読み込まれず、この攻撃は使われない）
 		{ "JumpAttackStart",	kModelDir + "Animation/Special/Ability_GroundSmash_Start/Ability_GroundSmash_Start.gltf" },
