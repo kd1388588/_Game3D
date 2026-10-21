@@ -1,6 +1,7 @@
 ﻿#include "GameOverScene.h"
 #include "../../GameObject/UI/Heading/UIHeading.h"
 #include "../SceneManager.h"
+#include "../../Utility/SoundPlayer.h"
 
 #include "../../GameObject/UI/Text/UIText.h"
 #include "../../GameObject/UI/Background/UIBackground.h"
@@ -59,6 +60,9 @@ void GameOverScene::Event()
 
 void GameOverScene::Init()
 {
+	// BGM（魂の還る場所）
+	SoundPlayer::PlayBGM(SoundName::GameOverBGM);
+
 	// 背景（一番最初に追加して、一番奥に描く）
 	std::shared_ptr<UIBackground> background = std::make_shared<UIBackground>();
 	background->Load("Asset/Textures/UI/Result/GameOver.png");

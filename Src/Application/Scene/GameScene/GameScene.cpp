@@ -170,7 +170,7 @@ void GameScene::Init()
 	EffectPlayer::SetEnabled(true);
 
 	// BGM
-	SoundPlayer::PlayBGM(SoundName::BGM);
+	SoundPlayer::PlayBGM(SoundName::GameBGM);
 
 	// 光・フォグ・影
 	StageEnvironment::Apply();

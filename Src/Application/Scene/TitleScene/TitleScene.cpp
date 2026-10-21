@@ -46,7 +46,7 @@ void TitleScene::Init()
 	EffectPlayer::SetEnabled(false);
 
 	// BGM
-	SoundPlayer::PlayBGM(SoundName::BGM);
+	SoundPlayer::PlayBGM(SoundName::TitleBGM);
 
 	// 光・フォグ・影（ゲーム画面と同じ）
 	StageEnvironment::Apply();

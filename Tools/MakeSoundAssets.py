@@ -6,7 +6,9 @@ Asset/Music の mp3 から、ゲームで使う wav を作る
   使い方：python Tools/MakeSoundAssets.py   （ffmpeg と numpy が必要）
 
   作るもの
-    Asset/Sounds/BGM/Deckrail.wav        … BGM（そのまま変換）
+    Asset/Sounds/BGM/Deckrail.wav        … ゲーム画面の BGM（そのまま変換）
+    Asset/Sounds/BGM/Break_Down.wav      … タイトル画面の BGM（そのまま変換）
+    Asset/Sounds/BGM/GameOver.wav        … GAME OVER 画面の BGM（魂の還る場所.mp3 をそのまま変換）
     Asset/Sounds/SE/Slash.wav            … 剣で斬る2.mp3（前後の無音を切る）
     Asset/Sounds/SE/HeavyHit.wav         … 重いパンチ1.mp3（前後の無音を切る）
     Asset/Sounds/SE/Footstep1～4.wav     … アスファルトの上を走る1.mp3 から、足音を1歩ずつ切り出す
@@ -79,6 +81,8 @@ def normalize(data, peak=0.9):
 def main():
 	# BGM
 	write_wav(os.path.join(BGM_DIR, "Deckrail.wav"), decode("Deckrail.mp3", 2))
+	write_wav(os.path.join(BGM_DIR, "Break_Down.wav"), decode("Break_Down.mp3", 2))
+	write_wav(os.path.join(BGM_DIR, "GameOver.wav"), decode("魂の還る場所.mp3", 2))
 
 	# 効果音
 	slash = trim_silence(decode("剣で斬る2.mp3", 2))
