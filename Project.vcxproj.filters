@@ -453,9 +453,6 @@
     <ClInclude Include="Src\Application\GameObject\Character\UI\Gage\ATB\ATBGage.h">
       <Filter>Src\Application\GameObject\UI\Gage\ATB</Filter>
     </ClInclude>
-    <ClInclude Include="Src\Application\GameObject\Character\UI\LockOn\LockOnMarker.h">
-      <Filter>Src\Application\GameObject\UI\LockOn</Filter>
-    </ClInclude>
     <ClInclude Include="Src\Application\GameObject\Character\UI\Gage\ATB\ATBCommandMenu.h">
       <Filter>Src\Application\GameObject\UI\Gage\ATB</Filter>
     </ClInclude>
@@ -700,9 +697,6 @@
     </ClCompile>
     <ClCompile Include="Src\Application\GameObject\Character\UI\Gage\ATB\ATBGage.cpp">
       <Filter>Src\Application\GameObject\UI\Gage\ATB</Filter>
-    </ClCompile>
-    <ClCompile Include="Src\Application\GameObject\Character\UI\LockOn\LockOnMarker.cpp">
-      <Filter>Src\Application\GameObject\UI\LockOn</Filter>
     </ClCompile>
     <ClCompile Include="Src\Application\GameObject\Character\UI\Gage\ATB\ATBCommandMenu.cpp">
       <Filter>Src\Application\GameObject\UI\Gage\ATB</Filter>

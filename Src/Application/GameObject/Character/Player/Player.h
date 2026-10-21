@@ -32,7 +32,6 @@ class BaseScene;
 class HPGage;
 class ATBGage;
 class ATBCommandMenu;
-class LockOnMarker;
 class Enemy;
 
 class Player : public BaseChara
@@ -69,9 +68,6 @@ public:
 
 	// ロックオン中の敵（いなければ nullptr）
 	std::shared_ptr<Enemy> GetLockTarget() const { return m_wpLockTarget.lock(); }
-
-	// 注目中か（ホイール押し込みの後しばらく。カメラを敵の方へ強く向ける）
-	bool IsLockOnFocus() const { return m_focusTimer > 0; }
 
 	// ロックオン中の敵の方へすぐ向く（攻撃・技を出す瞬間に呼ぶ。出した後は向きを変えない）
 	void FaceLockTarget();
@@ -255,14 +251,11 @@ private:
 	// 先行入力をすべて消す（メニューを開く・閉じる時に、メニューの操作が攻撃などに使われないように）
 	void ClearInputBuffers();
 
-	// ロックオン（近くの敵に自動でロックオンする。ホイール押し込みで注目＝カメラを敵の方へ強く向ける）
+	// ロックオン（10m 以内の一番近い敵に自動でロックオンする。マークは出さない）
 	void UpdateLockOn();
 
-	// ロックオンできる一番近い敵を探す（exclude の敵は除く。いなければ nullptr）
+	// range の中で一番近い、生きている敵を探す（いなければ nullptr）
 	std::shared_ptr<Enemy> FindLockTarget(float range) const;
-
-	// ロックオンのマークの位置を更新する
-	void UpdateLockOnMarker();
 
 	// 敵の体にめり込んだ・通り抜けた時に、敵の手前へ押し戻す
 	void PushOutFromEnemies();
@@ -419,9 +412,7 @@ private:
 	std::weak_ptr<HPGage>			m_wpHpGage;
 	std::weak_ptr<ATBGage>			m_wpAtbGage;
 	std::weak_ptr<ATBCommandMenu>	m_wpCommandMenu;
-	std::weak_ptr<LockOnMarker>		m_wpLockOnMarker;
 	std::weak_ptr<Enemy>			m_wpLockTarget;			// ロックオン中の敵
-	int								m_focusTimer = 0;		// 注目（カメラを敵の方へ強く向ける）の残りフレーム
 	// 多段ヒット：剣ごと（右・左）に、敵ごとの最後に当たったフレームを覚えておく
 	std::unordered_map<const KdGameObject*, int>	m_lastHitFrame[2];
 	bool											m_isFinisherEffectPlayed = false;	// 今の1振りで、決めの攻撃のエフェクトを出したか
@@ -476,7 +467,6 @@ private:
 	InputHelper::KeyTrigger			m_abilityKeys[static_cast<int>(AbilitySlot::Num)] = { InputHelper::KeyTrigger{ '1' }, InputHelper::KeyTrigger{ '2' } };	// メニューで直接選ぶ
 
 	// ATBコマンドメニューの操作
-	InputHelper::KeyTrigger			m_lockOnKey{ VK_MBUTTON };	// 注目（ホイール押し込み）
 	InputHelper::KeyTrigger			m_commandKey{ 'F' };		// 開く・閉じる
 	InputHelper::KeyTrigger			m_menuUpKey{ 'W' };
 	InputHelper::KeyTrigger			m_menuDownKey{ 'S' };

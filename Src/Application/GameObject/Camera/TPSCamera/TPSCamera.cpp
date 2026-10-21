@@ -15,12 +15,10 @@ namespace
 	constexpr float kLookAheadFollow	= 0.08f;	// 注視点をずらす速さ（0～1。小さいほどゆっくり）
 
 	// ロックオン中
-	// ロックオン中は弱く敵の方へ回し（自分でもカメラを動かせるように）、注目（ホイール押し込み）中だけ強く向ける
+	// ロックオン中は弱く敵の方へ回す（自分でもカメラを動かせるように）
 	constexpr float kLockOnFollowRate	= 0.04f;	// 敵の方へカメラを回す速さ（0～1）
-	constexpr float kFocusFollowRate	= 0.25f;	// 注目中に、敵の方へカメラを回す速さ
 	constexpr float kLockOnPitch		= 12.0f;	// 少し上から見下ろす角度（度）
 	constexpr float kLockOnPitchRate	= 0.02f;
-	constexpr float kFocusPitchRate		= 0.1f;
 
 	// めり込み防止
 	constexpr float kCameraWallMargin	= 0.3f;		// 壁からこれだけ手前にカメラを置く
@@ -78,7 +76,7 @@ void TPSCamera::PostUpdate()
 			if (auto lockTarget = player->GetLockTarget())
 			{
 				// ロックオン中：プレイヤーの後ろから、敵の方を見る
-				UpdateLockOnFollow(player->GetPos(), lockTarget->GetPos(), player->IsLockOnFocus());
+				UpdateLockOnFollow(player->GetPos(), lockTarget->GetPos());
 				m_lookAhead *= 0.9f;
 			}
 			else
@@ -163,7 +161,7 @@ void TPSCamera::UpdateSideFollow(const Math::Vector3& moveDelta)
 	m_lookAhead += (target - m_lookAhead) * kLookAheadFollow;
 }
 
-void TPSCamera::UpdateLockOnFollow(const Math::Vector3& playerPos, const Math::Vector3& targetPos, bool isFocus)
+void TPSCamera::UpdateLockOnFollow(const Math::Vector3& playerPos, const Math::Vector3& targetPos)
 {
 	Math::Vector3 dir = targetPos - playerPos;
 	dir.y = 0.0f;
@@ -174,10 +172,10 @@ void TPSCamera::UpdateLockOnFollow(const Math::Vector3& playerPos, const Math::V
 	float diff = targetYaw - m_DegAng.y;
 	while (diff > 180.0f)	diff -= 360.0f;
 	while (diff < -180.0f)	diff += 360.0f;
-	m_DegAng.y += diff * (isFocus ? kFocusFollowRate : kLockOnFollowRate);
+	m_DegAng.y += diff * kLockOnFollowRate;
 
 	// 上下は少し見下ろす角度へ
-	m_DegAng.x += (kLockOnPitch - m_DegAng.x) * (isFocus ? kFocusPitchRate : kLockOnPitchRate);
+	m_DegAng.x += (kLockOnPitch - m_DegAng.x) * kLockOnPitchRate;
 }
 
 void TPSCamera::ApplyHitShake()

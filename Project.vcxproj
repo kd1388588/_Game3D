@@ -286,7 +286,6 @@
     <ClInclude Include="Src\Application\GameObject\Character\UI\Gage\Base\BaseGage.h" />
     <ClInclude Include="Src\Application\GameObject\Character\UI\Gage\HP\HPGage.h" />
     <ClInclude Include="Src\Application\GameObject\Character\UI\Gage\ATB\ATBGage.h" />
-    <ClInclude Include="Src\Application\GameObject\Character\UI\LockOn\LockOnMarker.h" />
     <ClInclude Include="Src\Application\GameObject\Character\UI\Gage\ATB\ATBCommandMenu.h" />
     <ClInclude Include="Src\Application\GameObject\Effect\Effect.h" />
     <ClInclude Include="Src\Application\GameObject\Effect\EffectPlayer.h" />
@@ -377,7 +376,6 @@
     <ClCompile Include="Src\Application\GameObject\Character\UI\Gage\Base\BaseGage.cpp" />
     <ClCompile Include="Src\Application\GameObject\Character\UI\Gage\HP\HPGage.cpp" />
     <ClCompile Include="Src\Application\GameObject\Character\UI\Gage\ATB\ATBGage.cpp" />
-    <ClCompile Include="Src\Application\GameObject\Character\UI\LockOn\LockOnMarker.cpp" />
     <ClCompile Include="Src\Application\GameObject\Character\UI\Gage\ATB\ATBCommandMenu.cpp" />
     <ClCompile Include="Src\Application\GameObject\Effect\Effect.cpp" />
     <ClCompile Include="Src\Application\GameObject\Effect\EffectPlayer.cpp" />
