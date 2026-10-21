@@ -11,7 +11,8 @@ namespace SoundName
 	// BGM
 	inline const std::string TitleBGM			= "Asset/Sounds/BGM/Break_Down.wav";	// タイトル画面
 	inline const std::string GameBGM			= "Asset/Sounds/BGM/Deckrail.wav";		// ゲーム画面
-	inline const std::string GameOverBGM		= "Asset/Sounds/BGM/GameOver.wav";		// GAME OVER 画面（魂の還る場所）
+	inline const std::string GameClearBGM		= "Asset/Sounds/BGM/GameClear.wav";		// GAME Clear 画面
+	inline const std::string GameOverBGM		= "Asset/Sounds/BGM/GameOver.wav";		// GAME OVER 画面
 
 	// プレイヤーの攻撃が敵に当たった
 	inline const std::string Slash				= "Asset/Sounds/SE/Slash.wav";
