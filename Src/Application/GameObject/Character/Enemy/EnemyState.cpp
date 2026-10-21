@@ -14,7 +14,6 @@ namespace
 	// （前は 45 まで出していたので、振り終わって地面に置いた手に後から当たっていた）
 	constexpr float kAttackHitStartFrame	= 15.0f;
 	constexpr float kAttackHitEndFrame		= 27.0f;
-	constexpr float kAttackSlamFrame		= 26.0f;	// 振り下ろした手が地面に当たるフレーム（ここで叩きつけのエフェクト）
 
 	// 撃破エフェクトの大きさ（敵の体の大きさに掛ける）
 	constexpr float kDeathEffectScaleRate	= 0.15f;
@@ -148,7 +147,6 @@ void EnemyStateChase::Update(Enemy* enemy)
 void EnemyStateAttack::ChangeState(Enemy* enemy)
 {
 	m_isCritical = false;
-	m_isSlamPlayed = false;
 
 	enemy->ChangeAnimation("Attack", false, true, 5.0f);
 	enemy->SetAnimationSpeed(1.0f);
@@ -184,13 +182,6 @@ void EnemyStateAttack::Update(Enemy* enemy)
 		Math::Vector3 extents(0.73f, 0.35f, 0.35f);
 
 		enemy->AttackHit(hitMat, extents, m_isCritical);
-	}
-
-	// 振り下ろした手が地面に当たった瞬間に、叩きつけのエフェクト（衝撃波・土煙・ひび）
-	if (!m_isSlamPlayed && animTime >= kAttackSlamFrame)
-	{
-		m_isSlamPlayed = true;
-		enemy->PlaySlamEffect();
 	}
 
 	if (enemy->IsAnimEnd())

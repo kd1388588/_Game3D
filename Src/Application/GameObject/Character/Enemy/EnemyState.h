@@ -46,7 +46,6 @@ public:
 
 private:
 	bool  m_isCritical = false;
-	bool  m_isSlamPlayed = false;	// 手を地面に叩きつけたエフェクトを出したか
 };
 
 // 飛びかかり攻撃（ボス）：構える → 飛び上がってプレイヤーへ飛ぶ → 着地で周りを攻撃 → すき
