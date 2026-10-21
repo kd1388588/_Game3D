@@ -27,15 +27,16 @@ namespace EffectName
 
 	// 撃破
 	inline const std::string EnemyDeath			= "_boss_death.efkefc";	// 敵が倒れた
-	inline const std::string BossGroundSmash	= "";					// ボスの飛びかかり攻撃の着地
+	inline const std::string BossGroundSmash	= "_GroundSmash.efkefc";	// ボスの飛びかかり攻撃の着地（_GroundSmash.efkproj をエディタで保存）
+	inline const std::string EnemySlam			= "_GroundSmash.efkefc";	// 敵の攻撃で、手を地面に叩きつけた所
 
 	// プレイヤーの動作（ファイルが用意できたら設定する）
 	inline const std::string Evade				= "";					// 回避
 	inline const std::string Landing			= "";					// ジャンプの着地
 	inline const std::string ModeChange			= "ModeChange.efkefc";		// バトルモードの切り替え（Eキー）（白く作ってあり、モードの色をかける）
 	inline const std::string AbilityStart		= "AbilityStart.efkefc";	// アビリティ（ATBコマンドで選んだ技）の発動
-	inline const std::string Guard				= "Guard.efkefc";		// 敵の攻撃をガードした
-	inline const std::string GuardBreak			= "GuardBreak.efkefc";	// ガードを崩された
+	inline const std::string Guard				= "_Guard.efkefc";		// 敵の攻撃をガードした
+	inline const std::string GuardBreak			= "_GuardBreak.efkefc";	// ガードを崩された
 }
 
 // ============================================================
