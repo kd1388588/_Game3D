@@ -153,6 +153,26 @@ class MeshBuilder:
 			j = (i + 1) % sides
 			self.add_tri(center_top, ring_t[j], ring_t[i], tile, top)
 
+	def add_obox(self, center, ax, ay, az, size, tile, shade=1.0, top_offsets=None):
+		"""好きな向き（ax・ay・az の3つの軸）に向けた箱を追加する（扉の鉄の部品用）"""
+		c = np.array(center, dtype=np.float64)
+		axes = [np.array(a, dtype=np.float64) / np.linalg.norm(a) for a in (ax, ay, az)]
+		h = [size[0] / 2, size[1] / 2, size[2] / 2]
+		def corner(sx, sy, sz):
+			return c + axes[0] * sx * h[0] + axes[1] * sy * h[1] + axes[2] * sz * h[2]
+		col = (shade, shade, shade, 1.0)
+		for k in range(3):
+			for s in (-1, 1):
+				# 軸 k に垂直な面（外向きが表）
+				o1, o2 = [i for i in range(3) if i != k]
+				pts = []
+				for a, b in ((-1, -1), (1, -1), (1, 1), (-1, 1)):
+					v = [0, 0, 0]
+					v[k], v[o1], v[o2] = s, a, b
+					pts.append(corner(*v))
+				uvs = [(np.dot(p, axes[o1]) / tile, np.dot(p, axes[o2]) / tile) for p in pts]
+				self.add_quad_uv(pts, uvs, col, axes[k] * s)
+
 	def add_quad_uv(self, pts, uvs, shade, outward):
 		"""UV を直接決めた四角形を追加する（扉のように、テクスチャを1枚ぴったり貼る形用）
 		   outward：表の向き（頂点の並びを、この向きが表になるように直す）"""
@@ -303,7 +323,7 @@ def pointed_arch_height(x, span_half, spring_y):
 	return spring_y + math.sqrt(max(radius * radius - dx * dx, 0.0))
 
 
-def build_entrance_door(mesh, door, rng):
+def build_entrance_door(mesh, door, iron, rng):
 	"""スタート地点の後ろの壁の、入口の扉
 
 	  ・とがったアーチの石の枠と、両わきの太い柱（まわりの壁より高くして目立たせる）
@@ -355,10 +375,10 @@ def build_entrance_door(mesh, door, rng):
 			shade=0.0, bottom_shade=0.0)
 
 	# 開いた扉（2枚。蝶番の所から、内側（道の方）へ 70 度ほど開いている）
-	# 扉は木の板と鉄の帯のテクスチャ（DoorWood.png）を貼った、別のメッシュ（door）に作る
+	# 木の板（DoorWood.png）と鉄の部品（Iron.png）は、テクスチャの違う別のメッシュに作る
 	open_angle = math.radians(70)
 	for sign in (-1, 1):
-		add_door_leaf(door, sign, z_front - 0.1, open_angle)
+		add_door_leaf(door, iron, sign, z_front - 0.1, open_angle, rng)
 
 	# 扉の前の低い段（乗り越えられる高さ）
 	mesh.add_box((0.0, ROAD_TOP_Y + 0.08, z_front + 0.9), (dw * 2 + 2.4, 0.16, 1.6), PAVE_TILE_METER,
@@ -371,16 +391,24 @@ DOOR_LEAF_WIDTH = DOOR_HALF_WIDTH - 0.08
 DOOR_LEAF_HEIGHT = DOOR_SPRING_Y + DOOR_HALF_WIDTH * 2 * math.sin(math.radians(60))
 
 
-def add_door_leaf(mesh, sign, hinge_z, open_angle):
-	"""扉1枚：上はアーチに合わせてとがった形（真ん中ほど高い）。表と裏にテクスチャを1枚ずつ貼る
+DOOR_PLANKS = 5				# 扉1枚の板の数
+DOOR_BAND_YS = (0.7, 2.0, 3.3, 4.6)	# 鉄の帯の高さ
+IRON_TILE_METER = 0.5		# 鉄のテクスチャ1枚が何メートル分か
 
+
+def add_door_leaf(wood, iron, sign, hinge_z, open_angle, rng):
+	"""扉1枚：上はアーチに合わせてとがった形（真ん中ほど高い）
+
+	  ・木の板を1枚ずつ別の形で作り、少しすき間を空け、厚さも少しずつ変える（板の凹凸が見える）
+	  ・鉄の帯・鋲・蝶番・輪の取っ手は、板から出っ張った立体で作る（表と裏の両方）
 	  sign：-1 なら左、+1 なら右の扉（蝶番は外側、開く側は真ん中）
-	  扉の中の位置 (u, y)：u は蝶番からの距離、y は高さ
+	  扉の中の位置 (u, y, n)：u は蝶番からの距離、y は高さ、n は厚みの向き
 	"""
 	w = DOOR_LEAF_WIDTH
 	t = DOOR_THICK
 	hinge = np.array((sign * (DOOR_HALF_WIDTH - 0.06), 0.0, hinge_z))
 	along = np.array((-sign * math.cos(open_angle), 0.0, math.sin(open_angle)))	# 蝶番から開く側への向き
+	up = np.array((0.0, 1.0, 0.0))
 	side = np.array((along[2], 0.0, -along[0]))								# 扉の厚みの向き
 
 	def top(u):
@@ -388,98 +416,130 @@ def add_door_leaf(mesh, sign, hinge_z, open_angle):
 		return pointed_arch_height(DOOR_HALF_WIDTH - 0.06 - u, DOOR_HALF_WIDTH, DOOR_SPRING_Y) - 0.08
 
 	def point(u, y, n):
-		return tuple(hinge + along * u + side * n + np.array((0.0, y, 0.0)))
+		return tuple(hinge + along * u + side * n + up * y)
 
 	def uv(u, y):
 		return (u / w, 1.0 - y / DOOR_LEAF_HEIGHT)
 
-	slices = 10
-	us = [w * i / slices for i in range(slices + 1)]
-	shade = (1.0, 1.0, 1.0, 1.0)
-	for k in range(slices):
-		u0, u1 = us[k], us[k + 1]
-		for n in (-t / 2, t / 2):
-			pts = [point(u0, 0.0, n), point(u1, 0.0, n), point(u1, top(u1), n), point(u0, top(u0), n)]
-			uvs = [uv(u0, 0.0), uv(u1, 0.0), uv(u1, top(u1)), uv(u0, top(u0))]
-			mesh.add_quad_uv(pts, uvs, shade, side * (1 if n > 0 else -1))
-		# 上の面（とがった形のふち）
-		pts = [point(u0, top(u0), -t / 2), point(u1, top(u1), -t / 2), point(u1, top(u1), t / 2), point(u0, top(u0), t / 2)]
-		mesh.add_quad_uv(pts, [uv(u0, top(u0))] * 2 + [uv(u1, top(u1))] * 2, shade, np.array((0.0, 1.0, 0.0)))
-	# 蝶番の側・開く側の、ふちの面
-	for u, out in ((0.0, -along), (w, along)):
-		pts = [point(u, 0.0, -t / 2), point(u, 0.0, t / 2), point(u, top(u), t / 2), point(u, top(u), -t / 2)]
-		mesh.add_quad_uv(pts, [uv(u, 0.0)] * 2 + [uv(u, top(u))] * 2, shade, out)
+	white = (1.0, 1.0, 1.0, 1.0)
+
+	# ---- 木の板 ----
+	plank_w = w / DOOR_PLANKS
+	gap = 0.012
+	for k in range(DOOR_PLANKS):
+		u_a = k * plank_w + gap / 2
+		u_b = (k + 1) * plank_w - gap / 2
+		pt = t + rng.uniform(-0.03, 0.0)		# 板ごとに厚さを少し変える
+		pn = rng.uniform(-0.008, 0.008)		# 板ごとに少し前後にずらす
+		n0, n1 = pn - pt / 2, pn + pt / 2
+		slices = 3
+		us = [u_a + (u_b - u_a) * i / slices for i in range(slices + 1)]
+		for a in range(slices):
+			u0, u1 = us[a], us[a + 1]
+			for n, out in ((n0, -side), (n1, side)):
+				pts = [point(u0, 0.0, n), point(u1, 0.0, n), point(u1, top(u1), n), point(u0, top(u0), n)]
+				uvs = [uv(u0, 0.0), uv(u1, 0.0), uv(u1, top(u1)), uv(u0, top(u0))]
+				wood.add_quad_uv(pts, uvs, white, out)
+			# 上のふち
+			pts = [point(u0, top(u0), n0), point(u1, top(u1), n0), point(u1, top(u1), n1), point(u0, top(u0), n1)]
+			wood.add_quad_uv(pts, [uv(u0, top(u0))] * 2 + [uv(u1, top(u1))] * 2, white, up)
+		# 板の左右のふち（すき間から見える面。少し暗く）
+		dark = (0.6, 0.6, 0.6, 1.0)
+		for u, out in ((u_a, -along), (u_b, along)):
+			pts = [point(u, 0.0, n0), point(u, 0.0, n1), point(u, top(u), n1), point(u, top(u), n0)]
+			wood.add_quad_uv(pts, [uv(u, 0.0)] * 2 + [uv(u + 0.01, top(u))] * 2, dark, out)
+
+	# ---- 鉄の部品（板の表と裏に出っ張る） ----
+	def iron_box(u, y, n, su, sy, sn, shade=1.0, top_offsets=None):
+		iron.add_obox(point(u, y, n), along, up, side, (su, sy, sn), IRON_TILE_METER, shade=shade, top_offsets=top_offsets)
+
+	face = t / 2 + 0.005		# 板の表面
+	for band_y in DOOR_BAND_YS:
+		# 帯の届く所（アーチで扉が低くなっている所は、扉のふちより手前で止める）
+		u_end = w - 0.04
+		while u_end > 0.3 and top(u_end) < band_y + 0.2 and top(0.0) < band_y + 0.2:
+			u_end -= 0.05
+		if top(0.0) < band_y + 0.2:
+			# 蝶番の側が低い（アーチの肩）：扉の高い所だけに帯を付ける
+			u_start = 0.0
+			while u_start < w and top(u_start) < band_y + 0.2:
+				u_start += 0.05
+			if u_start >= w - 0.3:
+				continue
+		else:
+			u_start = 0.0
+		length = u_end - u_start
+		for ns in (-1, 1):
+			# 帯（厚さ 2.5cm・幅 16cm）
+			iron_box(u_start + length / 2, band_y, ns * (face + 0.012), length, 0.16, 0.025)
+			# 鋲（帯の上に等間隔。頭は少しとがらせる）
+			for ru in np.arange(u_start + 0.16, u_end - 0.05, 0.3):
+				iron_box(ru, band_y, ns * (face + 0.03), 0.055, 0.055, 0.025, shade=1.25)
+		# 蝶番（扉の付け根の、縦の太い筒）
+		hinge_h = 0.34
+		center = point(-0.04, band_y - hinge_h / 2, 0.0)
+		iron.add_column((center[0], center[2]), center[1], hinge_h, 0.065, IRON_TILE_METER, sides=8, shade=0.9)
+
+	# 開く側のふちの、縦の細い鉄（板をまとめる）
+	edge_h = top(w - 0.06) - 0.3
+	for ns in (-1, 1):
+		iron_box(w - 0.1, 0.15 + edge_h / 2, ns * (face + 0.01), 0.08, edge_h, 0.02)
+
+	# 輪の取っ手（開く側の、胸の高さ）。丸い座金と、円を小さな箱でつないだ輪
+	hu, hy = w - 0.4, 1.45
+	for ns in (-1, 1):
+		iron_box(hu, hy, ns * (face + 0.02), 0.2, 0.2, 0.04, shade=1.1)
+		iron_box(hu, hy, ns * (face + 0.06), 0.06, 0.06, 0.06, shade=1.2)
+		ring_r = 0.19
+		ring_cy = hy - ring_r
+		segs = 14
+		for i in range(segs):
+			a = 2 * math.pi * (i + 0.5) / segs
+			ru = hu + math.cos(a) * ring_r
+			ry = ring_cy + math.sin(a) * ring_r
+			seg_len = 2 * math.pi * ring_r / segs * 1.15
+			# 輪の接線の向きに合わせた箱
+			tangent = along * (-math.sin(a)) + up * math.cos(a)
+			normal_in = along * math.cos(a) + up * math.sin(a)
+			iron.add_obox(point(ru, ry, ns * (face + 0.07)), tangent, normal_in, side, (seg_len, 0.035, 0.035),
+				IRON_TILE_METER, shade=1.15)
 
 
 def make_door_texture(rng):
-	"""扉のテクスチャ：縦に並んだ古い木の板と、黒い鉄の帯・鋲・輪の取っ手
+	"""扉の木の板のテクスチャ：縦に並んだ古い木の板（鉄の部品は立体で作るので、ここには描かない）
 
-	  扉1枚（幅 DOOR_LEAF_WIDTH × 高さ DOOR_LEAF_HEIGHT）にちょうど1枚貼るので、
-	  鋲などの丸い形は、メートルに直して丸くなるように描く
+	  扉1枚（幅 DOOR_LEAF_WIDTH × 高さ DOOR_LEAF_HEIGHT）にちょうど1枚貼る
 	"""
 	size = TEX_SIZE * 2		# 扉は縦に長く引きのばして貼るので、細かく描く
 	ys, xs = np.mgrid[0:size, 0:size] / size
-	mx = xs * DOOR_LEAF_WIDTH							# 横の位置（メートル。0 が蝶番の側）
 	my = (1.0 - ys) * DOOR_LEAF_HEIGHT					# 高さ（メートル）
 	noise = fractal_noise(size, rng)
 	fine = fractal_noise(size, rng, octaves=(64, 128))
 
-	# 木の板（縦に5枚。板ごとに色を変え、木目は縦に長くのびた模様にする）
-	planks = 5
-	plank = np.minimum((xs * planks).astype(int), planks - 1)
-	lu = xs * planks - plank
-	tones = np.array([rng.uniform(0.8, 1.1) for _ in range(planks)])
+	# 木の板（板ごとに色を変え、木目は縦に長くのびた模様にする）
+	plank = np.minimum((xs * DOOR_PLANKS).astype(int), DOOR_PLANKS - 1)
+	lu = xs * DOOR_PLANKS - plank
+	tones = np.array([rng.uniform(0.8, 1.1) for _ in range(DOOR_PLANKS)])
 	grain = 0.5 + 0.5 * np.sin((lu * 9.0 + noise * 3.0 + plank * 1.7) * math.pi * 2)
+	knots = np.clip(1.0 - np.abs(value_noise(size, 6, rng) - 0.5) / 0.03, 0.0, 1.0) * (noise > 0.6)	# 節
 	wood = np.array((0.32, 0.22, 0.14))[None, None, :] * (tones[plank] * (0.75 + 0.25 * grain) * (0.85 + 0.3 * fine))[..., None]
-	# 板と板のすき間（暗い線）と、板のふちの少しの影
-	gap = np.clip(1.0 - np.minimum(lu, 1.0 - lu) / 0.03, 0.0, 1.0)
-	color = wood * (1.0 - 0.85 * gap[..., None])
+	color = wood * (1.0 - 0.4 * knots[..., None])
+	# 板のふちは少し暗く（角が丸まって影になる）
+	edge = np.clip(1.0 - np.minimum(lu, 1.0 - lu) / 0.06, 0.0, 1.0)
+	color *= (1.0 - 0.35 * edge)[..., None]
 	# 下の方ほど汚れて暗い（雨や泥）
 	color *= (0.7 + 0.3 * np.clip(my / 1.5, 0.0, 1.0))[..., None]
+	return np.clip(color, 0.0, 1.0)
 
-	iron = np.array((0.13, 0.13, 0.14))
-	iron_hi = np.array((0.34, 0.33, 0.33))
 
-	def paint(mask, base, highlight=None, highlight_mask=None):
-		nonlocal color
-		c = base[None, None, :] * (0.8 + 0.4 * fine)[..., None]
-		if highlight is not None:
-			c = c * (1 - highlight_mask[..., None]) + highlight[None, None, :] * highlight_mask[..., None]
-		color = color * (1 - mask[..., None]) + c * mask[..., None]
-
-	# 鉄の帯（横に4本。蝶番の側は、先がとがった長い蝶番の形）
-	for band_y in (0.7, 2.0, 3.3, 4.6):
-		half = 0.09
-		dy = np.abs(my - band_y)
-		# 開く側に向かって少し細くなる
-		taper = half * (1.0 - 0.35 * np.clip(mx / DOOR_LEAF_WIDTH, 0.0, 1.0))
-		band = (dy < taper).astype(float)
-		# 蝶番の側の、太くなった所
-		knuckle = ((mx < 0.35) & (dy < half * 1.6)).astype(float)
-		mask = np.maximum(band, knuckle)
-		edge_hi = ((my - band_y > taper * 0.55) & (mask > 0)).astype(float)	# 上のふちを明るく（光が当たる）
-		paint(mask, iron, iron_hi, edge_hi * 0.6)
-		# 鋲（帯の上に等間隔）
-		for rx in np.arange(0.18, DOOR_LEAF_WIDTH - 0.05, 0.32):
-			d = np.sqrt((mx - rx) ** 2 + (my - band_y) ** 2)
-			rivet = (d < 0.045).astype(float)
-			hi = ((d < 0.025) & (my > band_y)).astype(float)
-			paint(rivet, iron * 1.3, iron_hi * 1.4, hi)
-
-	# 開く側のふちの鋲（縦に並ぶ）
-	for ry in np.arange(0.35, DOOR_LEAF_HEIGHT, 0.45):
-		d = np.sqrt((mx - (DOOR_LEAF_WIDTH - 0.12)) ** 2 + (my - ry) ** 2)
-		paint((d < 0.035).astype(float), iron * 1.3)
-
-	# 輪の取っ手（開く側の、胸の高さ）
-	hx, hy = DOOR_LEAF_WIDTH - 0.38, 1.45
-	d_plate = np.sqrt((mx - hx) ** 2 + (my - hy) ** 2)
-	paint((d_plate < 0.1).astype(float), iron * 1.2, iron_hi, ((d_plate < 0.05) & (my > hy)).astype(float))
-	ring_c = hy - 0.22
-	d_ring = np.sqrt((mx - hx) ** 2 + (my - ring_c) ** 2)
-	ring = ((np.abs(d_ring - 0.2) < 0.03) & (my < hy - 0.02)).astype(float)
-	paint(ring, iron * 1.4, iron_hi * 1.2, (ring * (my > ring_c)).astype(float) * 0.7)
-
+def make_iron_texture(rng):
+	"""鉄のテクスチャ：黒っぽい鉄に、ざらつきと少しの赤さび"""
+	size = TEX_SIZE // 2
+	noise = fractal_noise(size, rng)
+	fine = fractal_noise(size, rng, octaves=(32, 64, 128))
+	base = np.array((0.2, 0.2, 0.21))[None, None, :] * (0.75 + 0.5 * fine)[..., None]
+	rust = np.clip((noise - 0.55) / 0.2, 0.0, 1.0)[..., None]
+	color = base * (1 - rust * 0.4) + np.array((0.32, 0.17, 0.09))[None, None, :] * rust * 0.4
 	return np.clip(color, 0.0, 1.0)
 
 
@@ -817,9 +877,10 @@ def write_gltf(out_dir, name, meshes):
 			material("Pavement", 0, [1.0, 1.0, 1.0, 1.0]),
 			material("StoneWall", 1, [1.0, 1.0, 1.0, 1.0]),
 			material("DoorWood", 2, [1.0, 1.0, 1.0, 1.0]),
+			material("Iron", 3, [1.0, 1.0, 1.0, 1.0]),
 		],
-		"textures": [{"source": 0, "sampler": 0}, {"source": 1, "sampler": 0}, {"source": 2, "sampler": 0}],
-		"images": [{"uri": "Pavement.png"}, {"uri": "StoneWall.png"}, {"uri": "DoorWood.png"}],
+		"textures": [{"source": i, "sampler": 0} for i in range(4)],
+		"images": [{"uri": "Pavement.png"}, {"uri": "StoneWall.png"}, {"uri": "DoorWood.png"}, {"uri": "Iron.png"}],
 		"samplers": [{"magFilter": 9729, "minFilter": 9987, "wrapS": 10497, "wrapT": 10497}],
 		"buffers": [{"uri": name + ".bin", "byteLength": len(bin_data)}],
 		"bufferViews": buffer_views,
@@ -854,9 +915,10 @@ def main():
 	build_gate(stone, rng)
 	build_cathedral(road, stone, rng)
 	door = MeshBuilder()
-	build_entrance_door(stone, door, random.Random(SEED + 2))	# 扉は別の乱数を使う（ほかの形が変わらないように）
+	iron = MeshBuilder()
+	build_entrance_door(stone, door, iron, random.Random(SEED + 2))	# 扉は別の乱数を使う（ほかの形が変わらないように）
 
-	write_gltf(out_dir, "RuinedRoad", [(road, 0), (stone, 1), (door, 2)])
+	write_gltf(out_dir, "RuinedRoad", [(road, 0), (stone, 1), (door, 2), (iron, 3)])
 
 	# 柱のまわりの見えない当たり判定（描画はせず、横から近づけないようにするだけ）
 	guard = MeshBuilder()
@@ -873,6 +935,7 @@ def main():
 	write_png(os.path.join(out_dir, "Pavement.png"), pave)
 	write_png(os.path.join(out_dir, "StoneWall.png"), wall)
 	write_png(os.path.join(out_dir, "DoorWood.png"), make_door_texture(np.random.default_rng(SEED + 2)))
+	write_png(os.path.join(out_dir, "Iron.png"), make_iron_texture(np.random.default_rng(SEED + 3)))
 
 	tri = (len(road.idx) + len(stone.idx)) // 3
 	print("作成:", os.path.normpath(out_dir), "（三角形", tri, "枚）")

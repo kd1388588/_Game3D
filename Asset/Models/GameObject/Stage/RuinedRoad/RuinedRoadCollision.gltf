@@ -82,6 +82,22 @@
     "metallicFactor": 0.0,
     "roughnessFactor": 1.0
    }
+  },
+  {
+   "name": "Iron",
+   "pbrMetallicRoughness": {
+    "baseColorTexture": {
+     "index": 3
+    },
+    "baseColorFactor": [
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "metallicFactor": 0.0,
+    "roughnessFactor": 1.0
+   }
   }
  ],
  "textures": [
@@ -96,6 +112,10 @@
   {
    "source": 2,
    "sampler": 0
+  },
+  {
+   "source": 3,
+   "sampler": 0
   }
  ],
  "images": [
@@ -107,6 +127,9 @@
   },
   {
    "uri": "DoorWood.png"
+  },
+  {
+   "uri": "Iron.png"
   }
  ],
  "samplers": [
