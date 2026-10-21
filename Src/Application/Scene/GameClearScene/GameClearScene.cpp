@@ -33,6 +33,7 @@ void GameClearScene::Init()
 	std::shared_ptr<UIText> guide = std::make_shared<UIText>();
 	guide->SetText("CLICK TO TITLE", UIText::FontSize::Medium);
 	guide->SetCenterPos({ 0.0f, -150.0f });
+	guide->SetColor({ 0.0f,0.0f,0.0f,1.0f });
 	guide->SetBlink(true);
 	m_objList.push_back(guide);
 }

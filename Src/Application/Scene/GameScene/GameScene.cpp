@@ -35,7 +35,7 @@ namespace
 	// ボスが待っている位置（大聖堂の広間の奥。祭壇の手前）
 	// 広間はゲームの中では z = 65（入口・バリア）～ 125（奥の壁）。祭壇は z = 124 あたりから
 	// （Tools/MakeStageModel.py の NAVE_START_Z = 52 / NAVE_END_Z = 100 に、ステージの拡大率 1.25 をかけた値）
-	const Math::Vector3 kBossPos		= { 0.0f, 0.0f, 105.0f };
+	const Math::Vector3 kBossPos		= { 0.0f, 0.0f, 90.0f };
 }
 
 void GameScene::Event()
