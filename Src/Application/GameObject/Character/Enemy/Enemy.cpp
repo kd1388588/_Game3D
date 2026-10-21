@@ -65,6 +65,14 @@ namespace
 	constexpr int	kSmashHitStopFrame		= 4;		// 着地の時のヒットストップ（当たらなくても、地面が揺れる感じを出す）
 	constexpr float	kSmashShakePower		= 0.2f;
 	constexpr float	kSmashEffectScaleRate	= 1.0f;		// 着地のエフェクトの大きさ（体の大きさに掛ける。攻撃の範囲と同じくらいに広がる）
+
+	// 普通の攻撃で、手を地面に叩きつけた時の爪のエフェクト（体の大きさに掛ける）
+	constexpr float	kSlamEffectScaleRate	= 0.12f;
+
+	// 足元の近くへの攻撃判定（体の大きさに掛ける）
+	constexpr float	kNearHitRadius			= 0.9f;		// 体の中心からこの距離以内（ボスなら約2.3m、ザコなら約1.1m）
+	constexpr float	kNearHitHeight			= 2.0f;		// 上下にこれ以上離れていたら当たらない
+	constexpr float	kNearHitBackDot			= -0.3f;	// 体の向きとの内積がこれより小さい（真後ろ）なら当たらない
 }
 
 void Enemy::Init()
@@ -394,6 +402,54 @@ void Enemy::UpdateLeapMove()
 bool Enemy::IsLeapLanded() const
 {
 	return m_isLeapFalling && m_gravity >= 0.0f && m_gravity <= kOnGroundGravity;
+}
+
+void Enemy::PlaySlamEffect()
+{
+	// 叩きつけた手（モデルの骨の向きの都合で、攻撃に使う腕は "_l"）の真下の地面
+	Math::Vector3 pos = m_pos;
+	if (m_model)
+	{
+		if (const KdModelWork::Node* pNode = m_model->FindNode("hand_l"))
+		{
+			Math::Vector3 hand = (pNode->m_worldTransform * m_mWorld).Translation();
+			pos.x = hand.x;
+			pos.z = hand.z;
+		}
+	}
+	pos.y += 0.3f;
+
+	std::shared_ptr<KdEffekseerObject> effect = EffectPlayer::Play(EffectName::HitPlayer, pos, kSlamEffectScaleRate * m_scale);
+	if (effect) effect->SetColor(kHitEffectColor);
+}
+
+void Enemy::AttackHitNear(bool isCritical)
+{
+	auto player = m_wpTarget.lock();
+	if (!player || player->IsInvincible() || !player->IsAlive()) return;
+
+	float radius = kNearHitRadius * m_scale;
+	if (m_pDebugWire)
+	{
+		m_pDebugWire->AddDebugSphere(m_pos, radius, { 1.0f, 0.0f, 0.0f, 1.0f });
+	}
+
+	Math::Vector3 diff = player->GetPos() - m_pos;
+	float height = std::abs(diff.y);
+	diff.y = 0.0f;
+	if (diff.Length() > radius || height > kNearHitHeight) return;
+
+	// 体の向き（モデルが逆向きなので、回転の 180 度反対）。真後ろにいる時は当たらない
+	Math::Vector3 forward = { -std::sin(m_rotY), 0.0f, -std::cos(m_rotY) };
+	if (diff.LengthSquared() > 0.0001f)
+	{
+		Math::Vector3 dir = diff;
+		dir.Normalize();
+		if (dir.Dot(forward) < kNearHitBackDot) return;
+	}
+
+	player->OnDamage(isCritical ? kCriticalAttackDamage : kAttackDamage, isCritical);
+	PlayHitPlayerEffect(player->GetPos() + Math::Vector3(0.0f, 1.0f, 0.0f));
 }
 
 void Enemy::GroundSmash()

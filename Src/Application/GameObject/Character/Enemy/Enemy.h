@@ -69,6 +69,13 @@ public:
 	// 着地の衝撃：周りの円の中にいるプレイヤーにダメージを与える
 	void GroundSmash();
 
+	// 振り下ろした手が地面に着いた所に、爪のエフェクト（_Claw2）を出す
+	void PlaySlamEffect();
+
+	// 足元の近く（体の真下・すぐ前）にいるプレイヤーへの攻撃判定
+	// （腕の判定は体の前の方を通るので、足元まで近づかれると当たらなかったため）
+	void AttackHitNear(bool isCritical);
+
 	// 攻撃中にのけぞらないようにする（ダメージは受ける）
 	void SetSuperArmor(bool isSuperArmor) { m_isSuperArmor = isSuperArmor; }
 

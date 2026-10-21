@@ -287,12 +287,6 @@ void ATBGage::DrawSprite()
 		DrawBar(i, left, m_atbValue - static_cast<float>(i));
 	}
 
-	// アビリティの枠
-	for (int i = 0; i < static_cast<int>(m_abilities.size()); ++i)
-	{
-		DrawAbilitySlot(i);
-	}
-
 	// モードの固定の残り時間（モードの文字の下に、赤い線が短くなっていく）
 	if (m_modeLockRatio > 0.0f)
 	{
@@ -324,12 +318,6 @@ void ATBGage::DrawSprite()
 	else if (m_isGuarding)
 	{
 		m_guardText->DrawSprite();
-	}
-
-
-	for (const auto& text : m_slotKeyTexts)
-	{
-		text->DrawSprite();
 	}
 
 	// どのキーで使えるか（E：モード切り替え、F：ATBコマンド）
