@@ -164,9 +164,12 @@ namespace
 	constexpr float	kPlayerBodyRadius		= 0.4f;		// プレイヤーの体の半径
 
 	// ロックオン
-	constexpr float	kLockOnRange			= 15.0f;	// この距離の中で一番近い敵をロックオンする
+	constexpr float	kAutoLockOnRange		= 10.0f;	// この距離に近づいた敵に、自動でロックオンする
+	constexpr float	kLockOnRange			= 15.0f;	// 注目（ホイール押し込み）した時は、この距離の中で一番近い敵をロックオンする
 	constexpr float	kLockOnLoseRange		= 20.0f;	// これより離れたらロックオンを外す
-	constexpr float	kLockOnMarkHeightRate	= 1.2f;		// マークを出す高さ（敵の体の大きさに掛ける）
+	constexpr int	kLockOnFocusFrame		= 30;		// 注目した時、カメラを敵の方へ強く向ける時間（フレーム）
+	constexpr float	kLockOnMarkHeadRate		= 2.3f;		// 三角のマークを出す高さ（敵の頭の上。敵の体の大きさに掛ける）
+	constexpr float	kLockOnMarkCenterRate	= 1.0f;		// 丸のマークを出す高さ（敵の体の真ん中）
 
 	// リムライト（バトルモードを切り替えた時に1回だけ光らせる）
 	constexpr float	kLimPowSpeed			= 0.1f;		// 1フレームで pow を増やす量
@@ -884,15 +887,15 @@ void Player::Update()
 	UpdateLockOnMarker();
 }
 
-std::shared_ptr<Enemy> Player::FindLockTarget(const Enemy* exclude) const
+std::shared_ptr<Enemy> Player::FindLockTarget(float range) const
 {
 	std::shared_ptr<Enemy> nearest = nullptr;
-	float nearestDist = kLockOnRange;
+	float nearestDist = range;
 
 	for (auto& obj : SceneManager::Instance().GetObjList())
 	{
 		auto enemy = std::dynamic_pointer_cast<Enemy>(obj);
-		if (!enemy || enemy.get() == exclude || !enemy->IsAlive() || enemy->IsExpired()) continue;
+		if (!enemy || !enemy->IsAlive() || enemy->IsExpired()) continue;
 
 		Math::Vector3 diff = enemy->GetPos() - m_pos;
 		diff.y = 0.0f;
@@ -908,36 +911,38 @@ std::shared_ptr<Enemy> Player::FindLockTarget(const Enemy* exclude) const
 
 void Player::UpdateLockOn()
 {
-	// どちらのキーも毎フレーム更新する
-	bool mainKey = m_lockOnKey.Update();
-	bool subKey = m_lockOnSubKey.Update();
+	// ホイール押し込み：注目（カメラを敵の方へ強く向ける）
+	bool isFocusKey = m_lockOnKey.Update();
+	if (m_focusTimer > 0) m_focusTimer--;
 
 	auto target = m_wpLockTarget.lock();
 
-	// キーを押したら、ロックオンする／外す
-	if (mainKey || subKey)
+	// 敵が倒れた・離れすぎた：外す（下で、近くの別の敵を探し直す）
+	if (target)
 	{
-		if (target)
+		Math::Vector3 diff = target->GetPos() - m_pos;
+		diff.y = 0.0f;
+		if (!target->IsAlive() || target->IsExpired() || diff.Length() > kLockOnLoseRange)
 		{
 			m_wpLockTarget.reset();
-			KdDebugGUI::Instance().AddLog("[System] ロックオン解除\n");
+			target = nullptr;
 		}
-		else if (auto newTarget = FindLockTarget())
-		{
-			m_wpLockTarget = newTarget;
-			KdDebugGUI::Instance().AddLog("[System] ロックオン\n");
-		}
-		return;
 	}
 
-	if (!target) return;
-
-	// 敵が倒れた・離れすぎた：近くに他の敵がいればそちらへ、いなければ外す
-	Math::Vector3 diff = target->GetPos() - m_pos;
-	diff.y = 0.0f;
-	if (!target->IsAlive() || target->IsExpired() || diff.Length() > kLockOnLoseRange)
+	// ロックオンしていなければ、近くの敵に自動でロックオンする
+	// （注目した時は、もう少し遠くの敵まで探す）
+	if (!target)
 	{
-		m_wpLockTarget = FindLockTarget(target.get());
+		target = FindLockTarget(isFocusKey ? kLockOnRange : kAutoLockOnRange);
+		m_wpLockTarget = target;
+		if (target) KdDebugGUI::Instance().AddLog("[System] ロックオン\n");
+	}
+
+	// 注目：しばらくの間、カメラを敵の方へ強く向ける（マークも、もう一度はっきり出す）
+	if (isFocusKey && target)
+	{
+		m_focusTimer = kLockOnFocusFrame;
+		if (auto marker = m_wpLockOnMarker.lock()) marker->Flash();
 	}
 }
 
@@ -954,8 +959,10 @@ void Player::UpdateLockOnMarker()
 		return;
 	}
 
-	// 敵の胸のあたりを、画面の座標に直す（カメラの後ろにいる時は出さない）
-	Math::Vector3 worldPos = target->GetPos() + Math::Vector3(0.0f, target->GetBodyScale() * kLockOnMarkHeightRate, 0.0f);
+	// マークを出す所を、画面の座標に直す（カメラの後ろにいる時は出さない）
+	// 三角のマークは敵の頭の上、丸のマークは体の真ん中に出す
+	float heightRate = (LockOnMarker::GetStyle() == LockOnMarker::Style::Triangle) ? kLockOnMarkHeadRate : kLockOnMarkCenterRate;
+	Math::Vector3 worldPos = target->GetPos() + Math::Vector3(0.0f, target->GetBodyScale() * heightRate, 0.0f);
 	Math::Vector3 screenPos;
 	camera->WorkCamera()->ConvertWorldToScreenDetail(worldPos, screenPos);
 	if (screenPos.z <= 0.0f)

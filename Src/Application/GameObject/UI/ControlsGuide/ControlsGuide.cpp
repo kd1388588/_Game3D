@@ -7,11 +7,11 @@ namespace
 	// 画面の右下（画面中央が原点、右が+X・上が+Y。画面は 1280x720）
 	constexpr float		kRightX			= 625.0f;	// パネルの右端
 	constexpr float		kBottomY		= -345.0f;	// パネルの下端
-	constexpr float		kPanelWidth		= 250.0f;
+	constexpr float		kPanelWidth		= 310.0f;
 	constexpr float		kPadding		= 10.0f;	// パネルの内側の余白
 	constexpr float		kRowSpacing		= 20.0f;	// 行と行の間
 	constexpr float		kTextScale		= 0.75f;	// 文字の大きさ（Small の 24px を 18px にする）
-	constexpr float		kActionOffsetX	= 105.0f;	// キーの左端から、操作の左端までの距離
+	constexpr float		kActionOffsetX	= 150.0f;	// キーの左端から、操作の左端までの距離（一番長い「ホイール押し込み」が入る幅）
 	constexpr float		kFadeSpeed		= 0.1f;		// 出たり消えたりする速さ
 
 	const Math::Color	kPanelColor		= { 0.02f, 0.03f, 0.08f, 0.55f };
@@ -26,7 +26,7 @@ namespace
 		{ "Shift",			"ダッシュ / ガード" },
 		{ "E",				"モード切り替え" },
 		{ "F",				"ATBコマンド" },
-		{ "ホイール / R",	"ロックオン" },
+		{ "ホイール押し込み",	"注目（敵を見る）" },
 	};
 }
 
