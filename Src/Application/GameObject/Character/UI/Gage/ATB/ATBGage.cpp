@@ -93,7 +93,7 @@ void ATBGage::Init()
 	SetTextLeft(m_breakText, static_cast<float>(kGageLeft + 140), kModeTextY);
 
 	// アビリティの枠の「04」「05」
-	const char* const slotNames[] = { "04", "05" };
+	const char* const slotNames[] = { "05", "04" };
 	for (int i = 0; i < static_cast<int>(AbilitySlot::Num); ++i)
 	{
 		auto text = std::make_shared<UIText>();

@@ -12,8 +12,8 @@ enum class BattleMode
 // アビリティ（ATBコマンドメニューで選ぶ技。ATBゲージを使い、使った後はCT（クールタイム）がある）
 enum class AbilitySlot
 {
-	Slot1 = 0,	// 攻撃04（ATBゲージ1本）
-	Slot2 = 1,	// 攻撃05（ATBゲージ2本。使った後しばらくオペレーターに固定）
+	Slot1 = 0,	// 攻撃05（ATBゲージ1本。使った後しばらくオペレーターに固定）。メニューの上
+	Slot2 = 1,	// 攻撃04（ATBゲージ2本）。メニューの下
 	Num
 };
 
@@ -106,6 +106,9 @@ public:
 	float GetAtbGage() const { return m_atbGage; }
 	int GetAtbBarCount() const { return static_cast<int>(m_atbGage / kAtbBarMax); }	// たまっている本数
 	void AddAtbGage(float val);
+
+	// 回避した時に ATB ゲージをためる（PlayerState の回避から呼ぶ）
+	void GainAtbByEvade();
 
 	// デバッグ用：ATBゲージを全部ためる・HPを満タンにする（倒れている時は何もしない）
 	void DebugFillAtb() { AddAtbGage(kAtbBarMax * kAtbBarNum); }

@@ -71,19 +71,20 @@ namespace
 	//	 モードの役割分担（両方を使い分けて戦うように、得意・不得意をはっきり分ける）
 	//   オペレーター：攻撃が速く、ゲージがよくたまる。そのかわり威力は低い
 	//   パニッシャー：攻撃が遅く、移動も遅い。ゲージはたまらない。そのかわり威力が高い
-	//   ATBの技（04・05）：モードに関係なく一番威力が高い（オペレーターでためて、技で大ダメージ）
+	//   ATBの技（04・05）：モードに関係なく、普通の攻撃より少し強い（攻撃・回避でためて使う）
 	constexpr float kOperatorDamageRate		= 0.6f;		// オペレーターのダメージの倍率
 	constexpr float kPunisherDamageRate		= 1.6f;		// パニッシャーのダメージの倍率
 	constexpr float kOperatorAttackSpeedRate = 1.2f;	// オペレーターの攻撃の再生速度の倍率
 	constexpr float kPunisherAttackSpeedRate = 0.9f;	// パニッシャーの攻撃の再生速度の倍率
 	constexpr float kPunisherMoveRate		= 0.6f;		// パニッシャーの移動の速さ（オペレーターを1.0とした倍率）
 
-	// ATBゲージのたまり方
-	constexpr float kAtbPassiveGain			= 0.1f;		// オペレーターの時、1フレームにたまる量（約17秒で1本）
+	// ATBゲージのたまり方（1本 = 100）
+	// ※時間ではたまらない（攻撃を当てる・回避することでだけたまる）
 	constexpr float kAtbHitGain				= 6.0f;		// 攻撃を当てた時にたまる量（多段ヒットになったので、1回あたりは半分）
-	constexpr float kOperatorAtbHitRate		= 1.5f;		// オペレーターの時、当てた時にたまる量の倍率
-	// ※パニッシャーの時は、時間でも攻撃でもたまらない
+	constexpr float kOperatorAtbHitRate		= 1.5f;		// オペレーターの時、当てた時にたまる量の倍率（よくたまる）
+	constexpr float kPunisherAtbHitRate		= 0.75f;	// パニッシャーの時の倍率（少なめ）
 	constexpr float kAtbCriticalRate		= 1.5f;		// クリティカルの時、当てた時にたまる量の倍率
+	constexpr float kAtbEvadeGain			= 8.0f;		// 回避した時にたまる量（約12回で1本）
 
 	// ATBコマンドメニュー
 	constexpr float	kCommandTimeScale		= 0.1f;		// メニューを開いている間の時間の速さ（10分の1）
@@ -96,11 +97,13 @@ namespace
 		int			coolTime;		// CT（使った後、もう一度使えるまでのフレーム数）
 		const char*	name;			// ログに出す名前
 	};
+	// メニューの上から順番（AbilitySlot の順番）
 	constexpr AbilityInfo kAbilityInfos[] =
 	{
-		{ 4, 1, 60 * 3, "攻撃04" },	// ゲージ1本、CT 3秒
-		{ 5, 2, 60 * 8, "攻撃05" },	// ゲージ2本、CT 8秒
+		{ 5, 1, 60 * 3, "攻撃05" },	// ゲージ1本、CT 3秒（上）
+		{ 4, 2, 60 * 8, "攻撃04" },	// ゲージ2本、CT 8秒（下）
 	};
+	constexpr int	kModeLockAttackType		= 5;		// 使った後にオペレーターに固定する技（攻撃05）
 	constexpr int	kModeLockFrame			= 60 * 5;	// 攻撃05を使った後、オペレーターに固定する時間（5秒）
 	constexpr int	kModeSwitchCoolFrame	= 60 * 3;	// モードを切り替えた後、次に切り替えられるまでの時間（3秒）
 	constexpr int	kAbilityStunFrame		= 50;		// ATBコマンドの技が当たった敵が、のけぞり続けるフレーム数（当たるたびに延びる）
@@ -1679,6 +1682,11 @@ void Player::AddAtbGage(float val)
 	m_atbGage = std::clamp(m_atbGage + val, 0.0f, kAtbBarMax * kAtbBarNum);
 }
 
+void Player::GainAtbByEvade()
+{
+	AddAtbGage(kAtbEvadeGain);
+}
+
 int Player::TryStartAbility(AbilitySlot slot)
 {
 	int index = static_cast<int>(slot);
@@ -1705,7 +1713,7 @@ int Player::TryStartAbility(AbilitySlot slot)
 	m_abilityCT[index] = info.coolTime;
 
 	// 攻撃05の後は、しばらくオペレーターに固定する
-	if (slot == AbilitySlot::Slot2)
+	if (info.attackType == kModeLockAttackType)
 	{
 		SetBattleMode(BattleMode::Operator);
 		m_modeLockTimer = kModeLockFrame;
@@ -1858,12 +1866,6 @@ bool Player::IsShiftDown() const
 
 void Player::UpdateAtb()
 {
-	// オペレーターの時は、時間でも少しずつたまる（メニューを開いている間は止める）
-	if (m_battleMode == BattleMode::Operator && !IsDead() && !m_isCommandOpen)
-	{
-		AddAtbGage(kAtbPassiveGain);
-	}
-
 	// UIへ伝える
 	if (auto atbGage = m_wpAtbGage.lock())
 	{
@@ -2141,10 +2143,10 @@ bool Player::AttackOBB(const Math::Matrix& swordMatrix, bool isCritical, HitEffe
 		enemy->OnDamage(damage, isCritical);
 		isHit = true;
 
-		// 攻撃を当てるとATBゲージがたまる（オペレーターだけ。アビリティの攻撃ではたまらない）
-		if (!m_isAbilityAttack && m_battleMode == BattleMode::Operator)
+		// 攻撃を当てるとATBゲージがたまる（オペレーターは多め、パニッシャーは少なめ。アビリティの攻撃ではたまらない）
+		if (!m_isAbilityAttack)
 		{
-			float gain = kAtbHitGain * kOperatorAtbHitRate;
+			float gain = kAtbHitGain * ((m_battleMode == BattleMode::Operator) ? kOperatorAtbHitRate : kPunisherAtbHitRate);
 			if (isCritical) gain *= kAtbCriticalRate;
 			AddAtbGage(gain);
 		}
