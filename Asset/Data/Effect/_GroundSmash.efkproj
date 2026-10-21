@@ -96,8 +96,8 @@
                   </X>
                   <Y>
                     <Max>0.2</Max>
-                    <Min>-0.2</Min>
-                  </Y>
+                    <Min>0.0</Min>
+                  <Center>0.1</Center></Y>
                   <Z>
                     <Max>0.2</Max>
                     <Min>-0.2</Min>
@@ -109,9 +109,9 @@
                     <Min>-3</Min>
                   </X>
                   <Y>
-                    <Max>3</Max>
-                    <Min>-3</Min>
-                  </Y>
+                    <Max>0.6</Max>
+                    <Min>0.0</Min>
+                  <Center>0.3</Center></Y>
                   <Z>
                     <Max>3</Max>
                     <Min>-3</Min>
@@ -208,8 +208,8 @@
                   </X>
                   <Y>
                     <Max>0.2</Max>
-                    <Min>-0.2</Min>
-                  </Y>
+                    <Min>0.0</Min>
+                  <Center>0.1</Center></Y>
                   <Z>
                     <Max>0.2</Max>
                     <Min>-0.2</Min>
@@ -221,9 +221,9 @@
                     <Min>-3</Min>
                   </X>
                   <Y>
-                    <Max>3</Max>
-                    <Min>-3</Min>
-                  </Y>
+                    <Max>0.6</Max>
+                    <Min>0.0</Min>
+                  <Center>0.3</Center></Y>
                   <Z>
                     <Max>3</Max>
                     <Min>-3</Min>
@@ -310,8 +310,8 @@
                   </X>
                   <Y>
                     <Max>0.2</Max>
-                    <Min>-0.2</Min>
-                  </Y>
+                    <Min>0.0</Min>
+                  <Center>0.1</Center></Y>
                   <Z>
                     <Max>0.2</Max>
                     <Min>-0.2</Min>
@@ -323,9 +323,9 @@
                     <Min>-3</Min>
                   </X>
                   <Y>
-                    <Max>3</Max>
-                    <Min>-3</Min>
-                  </Y>
+                    <Max>0.6</Max>
+                    <Min>0.0</Min>
+                  <Center>0.3</Center></Y>
                   <Z>
                     <Max>3</Max>
                     <Min>-3</Min>
@@ -396,8 +396,8 @@
                   </X>
                   <Y>
                     <Max>0.2</Max>
-                    <Min>-0.2</Min>
-                  </Y>
+                    <Min>0.0</Min>
+                  <Center>0.1</Center></Y>
                   <Z>
                     <Max>0.2</Max>
                     <Min>-0.2</Min>
@@ -409,9 +409,9 @@
                     <Min>-3</Min>
                   </X>
                   <Y>
-                    <Max>3</Max>
-                    <Min>-3</Min>
-                  </Y>
+                    <Max>0.6</Max>
+                    <Min>0.0</Min>
+                  <Center>0.3</Center></Y>
                   <Z>
                     <Max>3</Max>
                     <Min>-3</Min>
@@ -515,7 +515,7 @@
             <DrawingValues>
               <Type>4</Type>
               <Ring>
-                <Billboard>1</Billboard>
+                <Billboard>2</Billboard>
                 <Outer_Fixed>
                   <Location>
                     <X>1</X>
@@ -611,7 +611,7 @@
             <DrawingValues>
               <Type>4</Type>
               <Ring>
-                <Billboard>1</Billboard>
+                <Billboard>2</Billboard>
                 <Outer_Fixed>
                   <Location>
                     <X>1</X>
@@ -707,7 +707,7 @@
             <DrawingValues>
               <Type>4</Type>
               <Ring>
-                <Billboard>1</Billboard>
+                <Billboard>2</Billboard>
                 <Outer_Fixed>
                   <Location>
                     <X>1</X>

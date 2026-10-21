@@ -9,6 +9,7 @@
 #     （元は 10 フレーム目に叩きつけるので、0 フレーム目から始まるように前へずらす）
 #   ・foot_smoke1：地面を走る衝撃波（地面に寝かせた輪）
 #   ・地面のひび（Tools/MakeImpactTexture.py の GroundCrack.png）：しばらく残って消える
+#   岩のかけら・光の粒・衝撃波の輪は、空中ではなく地面に沿って広がるように直す
 #   全体を Scale のノードの下にまとめ、大きさ 1 で 半径 約2m に広がるように小さくしている
 
 import os
@@ -40,6 +41,34 @@ def value_xyz(parent, tag, x, y, z):
 	sub(e, "Y", y)
 	sub(e, "Z", z)
 	return e
+
+
+def set_range(elem, lo, hi):
+	"""ばらつきのある値（Center / Max / Min）を lo ～ hi にする"""
+	for tag, v in (("Center", (lo + hi) / 2), ("Max", hi), ("Min", lo)):
+		e = elem.find(tag)
+		if e is None:
+			e = sub(elem, tag)
+		e.text = str(round(v, 4))
+
+
+def flatten_to_ground(nodes):
+	"""空中に飛び散るものを、地面に沿って広がるようにする
+
+	  ・岩のかけら・光の粒：上下には少ししか動かさない（地面の少し上で、横へ広がる）
+	  ・衝撃波の輪：カメラの方を向く板（Y軸固定）から、向き固定にして地面に寝かせる（ノードは X に 90 度回してある）
+	"""
+	for root in nodes:
+		for n in root.iter("Node"):
+			easing = n.find("LocationValues/Easing")
+			if n.findtext("LocationValues/Type") == "2" and easing is not None:
+				for part, (lo, hi) in (("Start", (0.0, 0.2)), ("End", (0.0, 0.6))):
+					y = easing.find(part + "/Y")
+					if y is not None:
+						set_range(y, lo, hi)
+			bb = n.find("DrawingValues/Ring/Billboard")
+			if n.findtext("DrawingValues/Type") == "4" and bb is not None:
+				bb.text = "2"
 
 
 def set_offset_zero(node):
@@ -108,6 +137,8 @@ def main():
 		for tex in n.iter("ColorTexture"):
 			if (tex.text or "").endswith(".efkproj"):
 				tex.text = ""
+	flatten_to_ground(golem)
+
 	# 地面を走る衝撃波
 	smoke = load_nodes(os.path.join(src, "foot_smoke1.efkproj"))
 
