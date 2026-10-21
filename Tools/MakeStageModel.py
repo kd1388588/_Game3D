@@ -8,8 +8,8 @@
 #   ・その外側の、崩れた低い石壁
 #   ・柱のまわりの見えない当たり判定（RuinedRoadCollision.gltf。柱に近づきすぎないように）
 #   ・大聖堂の手前の、半分崩れたアーチの門
+#   ・スタート地点の後ろの壁の、入口の扉（開いているが、中は真っ黒で通れない）
 #   ・道の先の、崩れた大聖堂（ボスと戦う広間。厚い壁・窓の穴・中の柱・奥の半円の壁）
-#   ・大聖堂の一番奥の出口（とがったアーチの門と丸窓、外へ続く崩れかけた通路。外へは見えない壁で出られない）
 #     ※壁や柱はすべて厚みのある箱で作る（薄い板だと、キャラが勢いよく動いた時にすり抜けるため）
 #
 # 座標はゲームの座標（左手系：+Z が前）で作り、書き出す時に glTF の座標（右手系）に直す
@@ -48,12 +48,10 @@ NAVE_PILLAR_X = 16.0		# 中の柱の位置（真ん中で待つボスにかか�
 NAVE_WINDOW_BOTTOM = 4.0	# 窓の穴の下の高さ（ジャンプで窓に乗れないように高くする）
 ENTRANCE_HALF_WIDTH = 9.0	# 入口の幅の半分
 
-# 出口（大聖堂の一番奥。半円の壁の真ん中に開いた、とがったアーチの門と、外へ続く短い通路）
-EXIT_HALF_WIDTH = 3.2		# 門の穴の幅の半分
-EXIT_SPRING_Y = 7.0			# アーチが曲がり始める高さ
-EXIT_FACADE_TOP = 18.5		# 門のまわりの壁の高さ（ほかの壁より高くして、奥の目印にする）
-EXIT_PASSAGE_LENGTH = 9.0	# 門の先の通路の長さ
-EXIT_STEP_HEIGHT = 0.15		# 門の段差1段の高さ（乗り越えられる高さ 0.35 より低く）
+# スタート地点の後ろの、入口の扉（ここから来た、という入口。中は真っ黒で通れない）
+DOOR_HALF_WIDTH = 2.4		# 扉の穴の幅の半分
+DOOR_SPRING_Y = 4.2			# アーチが曲がり始める高さ
+WALL_THICK = 1.4			# 両わき・後ろの石壁の厚さ
 
 # ===== テクスチャ =====
 TEX_SIZE = 512
@@ -196,7 +194,6 @@ PILLAR_GUARD_HEIGHT = 4.0
 
 # 見えない当たり判定を置く柱（中心 x, z と、台座の大きさ）。柱を作る時に集める
 pillar_guards = []
-exit_blockers = []	# 出口の通路の、見えない壁（中心, 大きさ）
 
 # 瓦礫は置かない（ここに入れた形は書き出さない。乱数の順番を変えないように、作るだけ作って捨てる）
 discard = None
@@ -237,7 +234,7 @@ def build_pillars(mesh, rng):
 def build_walls(mesh, rng):
 	"""道の両わきと後ろの石壁（すき間なく囲んで、道から落ちないようにする。上は崩れてギザギザ）"""
 	seg = 1.6
-	thick = 1.4
+	thick = WALL_THICK
 	for side in (-1, 1):
 		z = ROAD_START_Z - thick
 		while z < NAVE_START_Z - 0.8:
@@ -252,9 +249,113 @@ def build_walls(mesh, rng):
 	while x < WALL_X - 1e-6:
 		h = rng.uniform(WALL_MIN_HEIGHT + 0.4, WALL_MIN_HEIGHT + 1.8)
 		offsets = [rng.uniform(-0.4, 0.1) for _ in range(4)]
-		mesh.add_box((x + seg / 2, h / 2, ROAD_START_Z - thick / 2), (seg + 0.05, h, thick), STONE_TILE_METER,
-			shade=rng.uniform(0.7, 0.9), bottom_shade=0.4, top_offsets=offsets)
+		shade = rng.uniform(0.7, 0.9)
+		# 真ん中は入口の扉にする（乱数は使ってから飛ばすので、ほかの形は変わらない）
+		if abs(x + seg / 2) > DOOR_HALF_WIDTH + 1.0:
+			mesh.add_box((x + seg / 2, h / 2, ROAD_START_Z - thick / 2), (seg + 0.05, h, thick), STONE_TILE_METER,
+				shade=shade, bottom_shade=0.4, top_offsets=offsets)
 		x += seg
+
+
+def pointed_arch(mesh, z, depth, thick, span_half, spring_y, shade):
+	"""とがったアーチ（ゴシック）：左右の柱の上から、反対側の柱を中心にした円弧を描き、真ん中でとがらせる"""
+	radius = span_half * 2
+	stones = 6
+	top = math.radians(60)		# 2つの円弧が真ん中で出会う角度
+	for sign in (-1, 1):
+		for i in range(stones):
+			a0 = top * i / stones
+			a1 = top * (i + 1) / stones
+			am = (a0 + a1) / 2
+			x = sign * (-span_half + math.cos(am) * radius)
+			y = spring_y + math.sin(am) * radius
+			length = radius * (a1 - a0) * 1.08
+			mesh.add_box((x, y, z), (length, thick, depth), STONE_TILE_METER, shade=shade, bottom_shade=shade * 0.75)
+			# 石の傾き：円弧の接線に合わせる
+			rotate_last_box_z(mesh, (x, y, z), (math.pi / 2 - am) if sign < 0 else (math.pi / 2 + am))
+
+
+def pointed_arch_height(x, span_half, spring_y):
+	"""とがったアーチの内側の高さ（横の位置 x で）"""
+	radius = span_half * 2
+	dx = span_half + abs(x)
+	return spring_y + math.sqrt(max(radius * radius - dx * dx, 0.0))
+
+
+def build_entrance_door(mesh, rng):
+	"""スタート地点の後ろの壁の、入口の扉
+
+	  ・とがったアーチの石の枠と、両わきの太い柱（まわりの壁より高くして目立たせる）
+	  ・扉は2枚とも内側（道の方）へ開いている
+	  ・扉の穴の中は真っ黒な板でふさぐ（この先は何も無い。壁と同じ当たり判定で通れない）
+	"""
+	dw = DOOR_HALF_WIDTH
+	t = WALL_THICK
+	z_wall = ROAD_START_Z - t / 2		# 後ろの壁の厚さの真ん中
+	z_front = ROAD_START_Z				# 壁の、道の側の面
+	top_y = DOOR_SPRING_Y + dw * 2 * math.sin(math.radians(60)) + 1.6	# 扉のまわりの壁の高さ（アーチの上まで）
+
+	# 扉のまわりの壁（後ろの壁の切れ目をふさぐ。アーチの上まで高く）
+	for sign in (-1, 1):
+		x0, x1 = sorted((sign * dw, sign * (dw + 1.9)))
+		mesh.add_box(((x0 + x1) / 2, top_y / 2, z_wall), (x1 - x0, top_y, t), STONE_TILE_METER,
+			shade=rng.uniform(0.8, 0.9), bottom_shade=0.4, top_offsets=[rng.uniform(-0.8, 0.0) for _ in range(4)])
+		# 両わきの太い柱（上は飾り石）
+		px = sign * (dw + 1.7)
+		mesh.add_box((px, top_y / 2 + 0.6, z_wall + 0.3), (1.2, top_y + 1.2, t + 0.8), STONE_TILE_METER,
+			shade=0.92, bottom_shade=0.45)
+		mesh.add_box((px, top_y + 1.5, z_wall + 0.3), (1.5, 0.5, t + 1.1), STONE_TILE_METER, shade=0.95, bottom_shade=0.7)
+		pillar_guards.append((px, z_wall + 0.3, t + 0.8))
+		# 扉の枠の柱（穴の両わき。手前に少し出っ張る）
+		mesh.add_box((sign * (dw + 0.3), DOOR_SPRING_Y / 2, z_front + 0.15), (0.6, DOOR_SPRING_Y, 0.6), STONE_TILE_METER,
+			shade=0.95, bottom_shade=0.5)
+
+	# アーチの上の壁（アーチの形に合わせて、細い縦の石を並べてふさぐ）
+	slices = 8
+	for i in range(slices):
+		xa = -dw + 2 * dw * i / slices
+		xb = xa + 2 * dw / slices
+		y0 = pointed_arch_height((xa + xb) / 2, dw, DOOR_SPRING_Y) - 0.2
+		y1 = top_y - rng.uniform(0.0, 0.4)
+		mesh.add_box(((xa + xb) / 2, (y0 + y1) / 2, z_wall), (xb - xa + 0.02, y1 - y0, t), STONE_TILE_METER,
+			shade=rng.uniform(0.8, 0.9), bottom_shade=0.7)
+
+	# 石の枠のアーチ（壁の中と、手前の出っ張った枠）
+	pointed_arch(mesh, z_wall, t, 0.6, dw, DOOR_SPRING_Y, 0.9)
+	pointed_arch(mesh, z_front + 0.15, 0.6, 0.6, dw + 0.3, DOOR_SPRING_Y, 0.95)
+
+	# 穴の中の真っ黒な板（色を 0 にして、光を当てても黒いままにする。アーチの形に合わせて縦に並べる）
+	slices = 12
+	for i in range(slices):
+		xa = -dw + 2 * dw * i / slices
+		xb = xa + 2 * dw / slices
+		h = pointed_arch_height((xa + xb) / 2, dw, DOOR_SPRING_Y)
+		mesh.add_box(((xa + xb) / 2, h / 2, z_wall - 0.2), (xb - xa + 0.02, h, 0.4), STONE_TILE_METER,
+			shade=0.0, bottom_shade=0.0)
+
+	# 開いた扉（2枚。蝶番の所から、内側（道の方）へ 70 度ほど開いている）
+	door_w = dw - 0.05
+	door_h = DOOR_SPRING_Y + 1.2
+	open_angle = math.radians(70)
+	for sign in (-1, 1):
+		hinge_x = sign * (dw - 0.1)
+		hinge_z = z_front - 0.1
+		# 扉の真ん中：蝶番から、扉の幅の半分だけ、開いた向きへ進んだ所
+		dir_x = -sign * math.cos(open_angle)
+		dir_z = math.sin(open_angle)
+		cx = hinge_x + dir_x * door_w / 2
+		cz = hinge_z + dir_z * door_w / 2
+		rot = math.atan2(-dir_z, dir_x)		# 箱の X（幅）を、開いた向きに合わせる
+		mesh.add_box((cx, door_h / 2, cz), (door_w, door_h, 0.18), STONE_TILE_METER, rot_y=rot,
+			shade=0.45, bottom_shade=0.25)
+		# 扉の補強の横木（3本）
+		for y in (0.8, door_h * 0.5, door_h - 0.8):
+			mesh.add_box((cx, y, cz), (door_w * 0.95, 0.18, 0.26), STONE_TILE_METER, rot_y=rot,
+				shade=0.3, bottom_shade=0.2)
+
+	# 扉の前の低い段（乗り越えられる高さ）
+	mesh.add_box((0.0, ROAD_TOP_Y + 0.08, z_front + 0.9), (dw * 2 + 2.4, 0.16, 1.6), PAVE_TILE_METER,
+		shade=0.75, bottom_shade=0.45)
 
 
 def build_rubble(mesh, rng):
@@ -374,13 +475,8 @@ def build_cathedral(road, stone, rng):
 		cz = NAVE_END_Z + math.sin(am) * apse_r * 0.6
 		length = apse_r * (a1 - a0) * 1.15
 		h = rng.uniform(4.0, 11.0)
-		shade = rng.uniform(0.8, 0.95)
-		offsets = [rng.uniform(-1.0, 0.0) for _ in range(4)]
-		# 真ん中は出口の門にする（乱数は使ってから飛ばすので、ほかの形は変わらない）
-		if abs(cx) < EXIT_HALF_WIDTH + 1.0:
-			continue
 		stone.add_box((cx, h / 2, cz), (length, h, t), STONE_TILE_METER, rot_y=-(am - math.pi / 2) * 0.9,
-			shade=shade, bottom_shade=0.45, top_offsets=offsets)
+			shade=rng.uniform(0.8, 0.95), bottom_shade=0.45, top_offsets=[rng.uniform(-1.0, 0.0) for _ in range(4)])
 	# 奥の壁と半円の間をふさぐ柱
 	for sign in (-1, 1):
 		stone.add_box((sign * hw, 5.0, NAVE_END_Z), (t + 1.0, 10.0, 2.0), STONE_TILE_METER, shade=0.9, bottom_shade=0.5)
@@ -414,136 +510,6 @@ def build_cathedral(road, stone, rng):
 		sz = rng.uniform(0.3, 1.0)
 		discard.add_box((x, sz * 0.35, zz), (sz * 1.3, sz * 0.7, sz), STONE_TILE_METER, rot_y=rng.uniform(0, math.pi),
 			rot_x=rng.uniform(-0.3, 0.3), shade=rng.uniform(0.6, 0.85), bottom_shade=0.4)
-
-
-def build_exit(road, stone, rng):
-	"""大聖堂の一番奥の出口：とがったアーチ（ゴシック）の門と、外へ続く崩れかけた通路
-
-	  ・門のまわりは高い壁と、両わきの太い控え柱（ほかの壁より高くして、奥の目印にする）
-	  ・門の先は、壁にはさまれた短い通路。肋骨のような石のアーチがいくつか残り、天井は崩れて無い
-	  ・通路の先は外（夜空）。外へは出られないように、見えない壁を置く（RuinedRoadCollision）
-	"""
-	hw = NAVE_HALF_WIDTH
-	t = NAVE_WALL_THICK
-	ew = EXIT_HALF_WIDTH
-	FRAME_RINGS = ((0.3, ew + 0.35, 0.7), (0.9, ew + 0.95, 0.6))	# 手前の枠：（壁からの距離, 中心の幅の半分, 太さ）
-	z_face = NAVE_END_Z + hw * 0.6			# 半円の壁の一番奥（門の位置）
-	z_end = z_face + EXIT_PASSAGE_LENGTH	# 通路の終わり
-
-	def pointed_arch(z, depth, thick, span_half, spring_y, shade, broken_after=None):
-		"""とがったアーチ：左右の柱の上から、反対側の柱を中心にした円弧を描き、真ん中でとがらせる"""
-		radius = span_half * 2
-		stones = 7
-		top = math.radians(60)		# 2つの円弧が真ん中で出会う角度（正三角形のアーチ）
-		for sign in (-1, 1):
-			for i in range(stones):
-				if broken_after is not None and sign > 0 and i >= broken_after:
-					break	# ここから先は崩れて落ちている
-				a0 = top * i / stones
-				a1 = top * (i + 1) / stones
-				am = (a0 + a1) / 2
-				x = sign * (-span_half + math.cos(am) * radius)
-				y = spring_y + math.sin(am) * radius
-				length = radius * (a1 - a0) * 1.08
-				stone.add_box((x, y, z), (length, thick, depth), STONE_TILE_METER, shade=shade, bottom_shade=shade * 0.75)
-				# 石の傾き：円弧の接線に合わせる
-				rotate_last_box_z(stone, (x, y, z), (math.pi / 2 - am) if sign < 0 else (math.pi / 2 + am))
-		return radius
-
-	def arch_height(x, span_half, spring_y):
-		"""とがったアーチの内側の高さ（x の位置で）"""
-		radius = span_half * 2
-		dx = span_half + abs(x)
-		return spring_y + math.sqrt(max(radius * radius - dx * dx, 0.0))
-
-	# ---- 門 ----
-	# 門の両わきの壁（半円の壁の切れ目をふさぐ）
-	for sign in (-1, 1):
-		x0, x1 = sorted((sign * ew, sign * (ew + 3.0)))
-		stone.add_box(((x0 + x1) / 2, EXIT_FACADE_TOP / 2, z_face), (x1 - x0, EXIT_FACADE_TOP, t), STONE_TILE_METER,
-			shade=rng.uniform(0.85, 0.95), bottom_shade=0.45, top_offsets=[rng.uniform(-1.5, 0.0) for _ in range(4)])
-		# 太い控え柱（上はとがった飾り）
-		bx = sign * (ew + 3.2)
-		stone.add_box((bx, 10.0, z_face - 0.4), (1.8, 20.0, 2.8), STONE_TILE_METER, shade=0.95, bottom_shade=0.5)
-		stone.add_box((bx, 20.6, z_face - 0.4), (1.2, 1.2, 1.2), STONE_TILE_METER, shade=0.95, bottom_shade=0.8,
-			top_offsets=[0.9, 0.9, 0.9, 0.9])
-		pillar_guards.append((bx, z_face - 0.4, 2.8))
-		# 門の手前の、段になった枠の柱（ゴシックの門のように、手前ほど広がる。上にアーチが乗る）
-		for z_off, span, w in FRAME_RINGS:
-			stone.add_box((sign * span, EXIT_SPRING_Y / 2, z_face - t / 2 - z_off), (w, EXIT_SPRING_Y, 0.6), STONE_TILE_METER,
-				shade=0.9, bottom_shade=0.5)
-
-	# とがったアーチ（壁の中に1つと、手前に段になった枠のアーチ2つ）
-	pointed_arch(z_face, t, 0.8, ew, EXIT_SPRING_Y, 0.9)
-	for z_off, span, w in FRAME_RINGS:
-		pointed_arch(z_face - t / 2 - z_off, 0.6, w, span, EXIT_SPRING_Y, 0.95)
-
-	# アーチの上の壁（アーチの形に合わせて、細い縦の石を並べてふさぐ）
-	slices = 10
-	for i in range(slices):
-		xa = -ew + 2 * ew * i / slices
-		xb = xa + 2 * ew / slices
-		y0 = arch_height((xa + xb) / 2, ew, EXIT_SPRING_Y) + 0.3
-		y1 = EXIT_FACADE_TOP - rng.uniform(0.0, 0.5)
-		stone.add_box(((xa + xb) / 2, (y0 + y1) / 2, z_face), (xb - xa + 0.02, y1 - y0, t * 0.9), STONE_TILE_METER,
-			shade=rng.uniform(0.85, 0.92), bottom_shade=0.7)
-	# 門の上の丸窓（バラ窓）の枠：円の形に石を並べる
-	rose_y = EXIT_FACADE_TOP - 2.4
-	rose_r = 1.4
-	for i in range(12):
-		a = 2 * math.pi * i / 12
-		x = math.cos(a) * rose_r
-		y = rose_y + math.sin(a) * rose_r
-		stone.add_box((x, y, z_face - t / 2 - 0.15), (0.9, 0.35, 0.3), STONE_TILE_METER, shade=0.98, bottom_shade=0.9)
-		rotate_last_box_z(stone, (x, y, z_face - t / 2 - 0.15), a + math.pi / 2)
-	stone.add_box((0.0, rose_y, z_face - t / 2 - 0.15), (0.5, 0.5, 0.3), STONE_TILE_METER, shade=0.98)
-
-	# ---- 段差と床 ----
-	# 門の手前に低い段を3段（祭壇の奥から、門へ上がる）
-	for i in range(3):
-		y = ROAD_TOP_Y + EXIT_STEP_HEIGHT * (i + 1)
-		depth = 3.0 - i * 0.8
-		road.add_box((0.0, y - 0.1, z_face - t / 2 - depth / 2 + 0.2), (ew * 2 + 2.0 - i * 0.6, 0.2, depth),
-			PAVE_TILE_METER, shade=0.82, bottom_shade=0.5)
-	floor_y = ROAD_TOP_Y + EXIT_STEP_HEIGHT * 3
-	# 通路の床（一段高い所）
-	px = ew + 0.6	# 通路の壁の位置
-	cols = 5
-	tile_w = px * 2 / cols
-	step = 1.5
-	z = z_face - t / 2
-	while z < z_end + 2.0:
-		for c in range(cols):
-			x = -px + tile_w * (c + 0.5)
-			sh = rng.uniform(0.7, 0.9)
-			road.add_box((x, floor_y - 0.1 + rng.uniform(-0.02, 0.0), z + step / 2),
-				(tile_w, 0.2, step), PAVE_TILE_METER, shade=sh, bottom_shade=sh * 0.6)
-		z += step
-
-	# ---- 通路 ----
-	for sign in (-1, 1):
-		x0, x1 = sorted((sign * px, sign * (px + 1.2)))
-		z = z_face + t / 2
-		while z < z_end - 1e-6:
-			z1 = min(z + 3.0, z_end)
-			h = rng.uniform(6.0, 9.5)
-			stone.add_box(((x0 + x1) / 2, h / 2, (z + z1) / 2), (x1 - x0, h, z1 - z), STONE_TILE_METER,
-				shade=rng.uniform(0.75, 0.9), bottom_shade=0.4, top_offsets=[rng.uniform(-1.2, 0.0) for _ in range(4)])
-			z = z1
-
-	# 通路に残る石のアーチ（天井は崩れて、肋骨のようなアーチだけが残っている。最後の1つは半分崩れている）
-	ribs = 3
-	for i in range(ribs):
-		zr = z_face + t / 2 + EXIT_PASSAGE_LENGTH * (i + 0.5) / ribs
-		pointed_arch(zr, 0.7, 0.6, px, EXIT_SPRING_Y - 1.0, 0.85, broken_after=(3 if i == ribs - 1 else None))
-
-	# 通路の出口：外側の門（低く崩れた枠）
-	for sign in (-1, 1):
-		stone.add_box((sign * (px + 0.6), 3.5, z_end), (1.6, 7.0, 1.6), STONE_TILE_METER, shade=0.85, bottom_shade=0.45,
-			top_offsets=[rng.uniform(-1.8, 0.0) for _ in range(4)])
-
-	# 外へは出られないように、通路の途中に見えない壁（描画しない当たり判定）
-	exit_blockers.append(((0.0, 4.0, z_face + EXIT_PASSAGE_LENGTH * 0.55), (px * 2, 8.0, 0.8)))
 
 
 def rotate_last_box_z(mesh, center, angle):
@@ -761,7 +727,7 @@ def main():
 	build_rubble(discard, rng)	# 瓦礫は置かない
 	build_gate(stone, rng)
 	build_cathedral(road, stone, rng)
-	build_exit(road, stone, random.Random(SEED + 1))	# 出口は別の乱数を使う（ほかの形が変わらないように）
+	build_entrance_door(stone, random.Random(SEED + 2))	# 扉は別の乱数を使う（ほかの形が変わらないように）
 
 	write_gltf(out_dir, "RuinedRoad", [(road, 0), (stone, 1)])
 
@@ -770,8 +736,6 @@ def main():
 	for x, z, size in pillar_guards:
 		w = size + PILLAR_GUARD_MARGIN * 2
 		guard.add_box((x, PILLAR_GUARD_HEIGHT / 2, z), (w, PILLAR_GUARD_HEIGHT, w), STONE_TILE_METER)
-	for center, size in exit_blockers:
-		guard.add_box(center, size, STONE_TILE_METER)
 	write_gltf(out_dir, "RuinedRoadCollision", [(guard, 1)])
 
 	# テクスチャ（青みがかった灰色の石。夜の廃墟に合う暗めの色）
