@@ -389,95 +389,11 @@ def guard_break():
 	], end_frame=50)
 
 
-# ===== 叩きつけ：敵が地面を叩いた所に、衝撃波・土煙・飛び散る石・地面のひび =====
-# 大きさ 1 で、半径 約1.8m に広がる（ゲーム側で敵の体の大きさに合わせて大きさを変える）
-# 地面に寝かせるもの（衝撃波・ひび）は、ノードを X に 90 度回して、板の向きを固定（FIXED）にする
-
-CRACK = "Tex/GroundCrack.png"	# 地面のひび（Tools/MakeImpactTexture.py）
-HARD = "Tex/Particle_Hard.png"	# ふちのはっきりした丸（石のかけら）
-
-def ground_smash():
-	dust = (105, 95, 85, 170)
-	return project([
-		# 地面のひび（しばらく残って、ゆっくり消える）
-		node("Crack",
-			common(life=70),
-			location_fixed(y=0.03),
-			rotation_fixed(x=90),
-			scale_single_easing(1.6, 1.8, start_speed=40, end_speed=-40),
-			renderer(texture=CRACK, fade_in=1, fade_out=30, blend=1),
-			sprite(color=(255, 255, 255, 235), billboard=FIXED),
-		),
-		# 叩いた瞬間の光（オレンジがかった白）
-		node("Flash",
-			common(life=8),
-			location_fixed(y=0.3),
-			scale_single_easing(0.6, 1.8, start_speed=30, end_speed=-30),
-			renderer(texture=SOFT, fade_out=6),
-			sprite(color=(255, 230, 190, 255), color_end=(255, 150, 80, 0)),
-		),
-		# 地面を走る衝撃波（2重。外側は速く大きく、内側は少し遅れて）
-		node("Shockwave",
-			common(life=18),
-			location_fixed(y=0.06),
-			rotation_fixed(x=90),
-			renderer(fade_out=12),
-			ring(outer=(0.2, 1.9), inner=(0.1, 1.6), color=(255, 225, 180, 230), billboard=FIXED),
-		),
-		node("Shockwave2",
-			common(life=16, offset=3),
-			location_fixed(y=0.05),
-			rotation_fixed(x=90),
-			renderer(fade_out=10),
-			ring(outer=(0.1, 1.2), inner=(0.0, 1.0), color=(255, 200, 150, 170), billboard=FIXED),
-		),
-		# 土煙（叩いた所から外へ広がりながら、ふくらんで消える）
-		node("Dust",
-			common(life=42, count=16, gen_time=0.1, life_spread=8),
-			location_pva(
-				pos=((0, 0.3), (0.15, 0.05), (0, 0.3)),
-				vel=((0, 0.045), (0.012, 0.008), (0, 0.045)),
-				acc=((0, 0), (-0.0002, 0), (0, 0)),
-			),
-			rotation_random_z(),
-			scale_single_easing(0.5, 1.5, start_spread=0.15, start_speed=30, end_speed=-20),
-			renderer(texture=SOFT, fade_in=2, fade_out=24, blend=1),
-			sprite(color=dust, color_end=(dust[0], dust[1], dust[2], 0)),
-		),
-		# 飛び散る石のかけら（回りながら跳ねて、落ちる）
-		node("Debris",
-			common(life=34, count=14, gen_time=0.1, life_spread=6),
-			location_pva(
-				pos=((0, 0.3), (0.1, 0.05), (0, 0.3)),
-				vel=((0, 0.06), (0.09, 0.04), (0, 0.06)),
-				acc=((0, 0), (-0.008, 0), (0, 0)),
-			),
-			rotation_tumble(10),
-			scale_single_easing(0.09, 0.07, start_spread=0.04),
-			renderer(texture=HARD, fade_out=8, blend=1),
-			sprite(color=(70, 62, 55, 255)),
-		),
-		# 火花（少しだけ）
-		node("Sparks",
-			common(life=16, count=10, gen_time=0.1, life_spread=4),
-			location_pva(
-				pos=((0, 0.2), (0.1, 0.0), (0, 0.2)),
-				vel=((0, 0.1), (0.07, 0.04), (0, 0.1)),
-				acc=((0, 0), (-0.007, 0), (0, 0)),
-			),
-			scale_single_easing(0.07, 0.0, start_spread=0.02),
-			renderer(texture=SPARK, fade_out=6),
-			sprite(color=(255, 200, 140, 255)),
-		),
-	], end_frame=75)
-
-
 EFFECTS = {
 	"ModeChange.efkproj": mode_change,
 	"AbilityStart.efkproj": ability_start,
 	"Guard.efkproj": guard,
 	"GuardBreak.efkproj": guard_break,
-	"_GroundSmash.efkproj": ground_smash,
 }
 
 
