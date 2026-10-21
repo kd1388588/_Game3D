@@ -32,8 +32,10 @@ namespace
 	constexpr bool	kEnableDebugKeys	= true;
 	constexpr float	kDebugSpawnDistance	= 6.0f;		// F3 で敵を出す、プレイヤーの前方の距離
 
-	// ボスが待っている位置（大聖堂の広間の真ん中。広間は z=52～100。Tools/MakeStageModel.py の NAVE_START_Z / NAVE_END_Z）
-	const Math::Vector3 kBossPos		= { 0.0f, 0.0f, 76.0f };
+	// ボスが待っている位置（大聖堂の広間の奥。祭壇の手前）
+	// 広間はゲームの中では z = 65（入口・バリア）～ 125（奥の壁）。祭壇は z = 124 あたりから
+	// （Tools/MakeStageModel.py の NAVE_START_Z = 52 / NAVE_END_Z = 100 に、ステージの拡大率 1.25 をかけた値）
+	const Math::Vector3 kBossPos		= { 0.0f, 0.0f, 105.0f };
 }
 
 void GameScene::Event()
@@ -205,7 +207,7 @@ void GameScene::Init()
 		SpawnEnemy(pos, false, player);
 	}
 
-	// ボス：大聖堂の広間の真ん中で待っている（プレイヤーが近づくと動き出す）
+	// ボス：大聖堂の広間の奥で待っている（プレイヤーが近づくと動き出す）
 	SpawnEnemy(kBossPos, true, player);
 
 	// カメラ
