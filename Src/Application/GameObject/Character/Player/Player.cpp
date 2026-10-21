@@ -120,6 +120,9 @@ namespace
 	constexpr int	kGuardHitStopFrame		= 4;		// 敵の攻撃をガードした時
 	constexpr float	kGuardShakePower		= 0.05f;
 
+	// 回避中に攻撃を受けた時のダメージの倍率（半分）
+	constexpr float	kEvadeDamageRate		= 0.5f;
+
 	// ガード
 	constexpr float	kGuardDamageRate		= 0.2f;		// ガード中に受けるダメージの倍率
 	constexpr float	kGuardMoveRate			= 0.5f;		// ガードしながら歩く速さ（普段の走る速さの何倍か）
@@ -2228,6 +2231,12 @@ void Player::OnDamage(int damage, bool isCritical)
 {
 	if (m_invincibleTimer > 0) return;
 	if (m_hp <= 0) return;
+
+	// 回避中はダメージを半分にする（1 より小さくはしない）
+	if (std::dynamic_pointer_cast<PlayerStateEvade>(m_state))
+	{
+		damage = std::max(static_cast<int>(std::round(damage * kEvadeDamageRate)), 1);
+	}
 
 	// ガード中：ダメージを減らし、のけぞらない
 	if (m_isGuarding)
