@@ -69,9 +69,6 @@ public:
 	// 着地の衝撃：周りの円の中にいるプレイヤーにダメージを与える
 	void GroundSmash();
 
-	// 攻撃で手を地面に叩きつけた所に、エフェクトと音を出す
-	void PlaySlamEffect();
-
 	// 攻撃中にのけぞらないようにする（ダメージは受ける）
 	void SetSuperArmor(bool isSuperArmor) { m_isSuperArmor = isSuperArmor; }
 

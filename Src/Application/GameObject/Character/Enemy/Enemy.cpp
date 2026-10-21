@@ -65,13 +65,6 @@ namespace
 	constexpr int	kSmashHitStopFrame		= 4;		// 着地の時のヒットストップ（当たらなくても、地面が揺れる感じを出す）
 	constexpr float	kSmashShakePower		= 0.2f;
 	constexpr float	kSmashEffectScaleRate	= 1.0f;		// 着地のエフェクトの大きさ（体の大きさに掛ける。攻撃の範囲と同じくらいに広がる）
-
-	// 普通の攻撃で、手を地面に叩きつけた時
-	constexpr float	kSlamEffectScaleRate	= 0.55f;	// エフェクトの大きさ（体の大きさに掛ける）
-	constexpr float	kSlamSEVolume			= 0.6f;
-	constexpr float	kSlamSEPitch			= -0.3f;	// 少し低い音
-	constexpr int	kBossSlamHitStopFrame	= 2;		// ボスの時だけ、少し止めて揺らす
-	constexpr float	kBossSlamShakePower		= 0.08f;
 }
 
 void Enemy::Init()
@@ -401,27 +394,6 @@ void Enemy::UpdateLeapMove()
 bool Enemy::IsLeapLanded() const
 {
 	return m_isLeapFalling && m_gravity >= 0.0f && m_gravity <= kOnGroundGravity;
-}
-
-void Enemy::PlaySlamEffect()
-{
-	// 叩きつけた手（モデルの骨の向きの都合で、攻撃に使う腕は "_l"）の真下の地面
-	Math::Vector3 pos = m_pos;
-	if (m_model)
-	{
-		if (const KdModelWork::Node* pNode = m_model->FindNode("hand_l"))
-		{
-			Math::Vector3 hand = (pNode->m_worldTransform * m_mWorld).Translation();
-			pos.x = hand.x;
-			pos.z = hand.z;
-		}
-	}
-
-	EffectPlayer::Play(EffectName::EnemySlam, pos, kSlamEffectScaleRate * m_scale);
-	SoundPlayer::PlaySE(SoundName::HeavyHit, kSlamSEVolume, kSlamSEPitch, 0.05f);
-
-	// ボスは大きいので、地面が少し揺れる
-	if (m_isBoss) HitStop::Request(kBossSlamHitStopFrame, kBossSlamShakePower);
 }
 
 void Enemy::GroundSmash()
