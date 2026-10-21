@@ -23,6 +23,12 @@ namespace
 	constexpr float kSlamGroundHeight		= 0.15f;	// 右の剣先が足元からこの高さより下に来たら、地面に届いたとみなす
 	constexpr float kSlamBlendFrame			= 5.0f;		// Loop → End をなめらかにつなぐフレーム数（この間は Loop の姿勢が残るので、地面の判定をしない）
 	constexpr float kSlamTrailMaxFrame		= 15.0f;
+
+	// 04の4段目（AS_Combo_Attack_04_04）：0～10 地面の剣を抜く、11～35 跳び上がる、36～47 落ちる、
+	// 48～49 剣を地面に叩きつける。叩きつけるフレームは Player が起動時にアニメーションから求める
+	constexpr float kJumpSlamTrailStartFrame	= 1.0f;	// 剣を地面から抜き始めるところから軌跡を出す
+	constexpr float kJumpSlamTrailExtraFrame	= 1.0f;	// 叩きつけた後も少し出す（剣の位置は1フレーム遅れて作るので、その分）
+	constexpr float kJumpSlamHitExtraFrame		= 4.0f;	// 叩きつけた後も、これだけ攻撃判定を出す
 	// ※叩きつけるのは右の剣（End の最初の姿勢で、右の剣が地面に刺さっている）。
 	//   左の剣も Loop で回る途中に地面近くを通るので、左は見ない
 	constexpr int	kMaxComboStep			= 5;
@@ -514,6 +520,9 @@ float PlayerStateComboAttack::GetCancelFrame() const
 	if (m_comboType == 2 && m_comboStep == 4) return 30.0f;		// 落ちる前（空中）のフレームを指定
 	if (m_comboType == 2 && m_comboStep == 5) return 999.0f;	// 5段目は最後まで再生
 
+	// 04の4段目：跳び上がって叩きつけるまで（空中で次へ行かないように）最後まで再生
+	if (IsJumpSlamAttack()) return 999.0f;
+
 	// 03シリーズ
 	if (m_comboType == 3 && m_comboStep == 3) return 30.0f;
 
@@ -604,6 +613,14 @@ bool PlayerStateComboAttack::IsTrailFrame(const Player* player, float animTime) 
 		}
 	}
 
+	// 04の4段目：剣を抜くところから、跳んで落ちてきて地面に叩きつけるまで
+	if (IsJumpSlamAttack())
+	{
+		float slamFrame = player->GetJumpSlamFrame();
+		float endFrame = (slamFrame >= 0.0f) ? slamFrame + kJumpSlamTrailExtraFrame : kAttackHitEndFrame;
+		return animTime >= kJumpSlamTrailStartFrame && animTime <= endFrame;
+	}
+
 	// 普通の攻撃：攻撃判定のフレームの間
 	return animTime >= kAttackHitStartFrame && animTime <= kAttackHitEndFrame;
 }
@@ -690,8 +707,13 @@ void PlayerStateComboAttack::Update(Player* player)
 		}
 	}
 
-	// 攻撃判定
-	if (animTime >= kAttackHitStartFrame && animTime <= kAttackHitEndFrame)
+	// 攻撃判定（04の4段目は、落ちてきて地面に叩きつけるところまで出す）
+	float hitEndFrame = kAttackHitEndFrame;
+	if (IsJumpSlamAttack() && player->GetJumpSlamFrame() >= 0.0f)
+	{
+		hitEndFrame = std::max(kAttackHitEndFrame, player->GetJumpSlamFrame() + kJumpSlamHitExtraFrame);
+	}
+	if (animTime >= kAttackHitStartFrame && animTime <= hitEndFrame)
 	{
 		// 当たったら、攻撃の種類・段数ごとのエフェクトをその位置に出す
 		// （ヒットストップは AttackOBB の中で、すべての攻撃に同じルールでかかる）

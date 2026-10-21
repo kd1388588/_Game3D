@@ -147,6 +147,9 @@ public:
 	// 剣先の、足元からの高さ（hand：0 右、1 左。溜め攻撃 4-3 で、剣が地面に届いたかを調べる）
 	float GetSwordTipHeight(int hand) const;
 
+	// 04の4段目で、跳び上がった後に剣を地面に叩きつけるフレーム（求められなかった時は -1）
+	float GetJumpSlamFrame() const { return m_jumpSlamFrame; }
+
 	// 左クリックで出す攻撃の種類（オペレーター：01、パニッシャー：02）
 	int GetCurrentAttackType() const { return m_currentAttackType; }
 
@@ -294,6 +297,10 @@ private:
 	// ガード歩きのアニメーションの向きと速さを調べる（最初の1回）
 	void SetupGuardWalkAnims();
 
+	// 跳び上がって落ちてくるアニメーションで、剣先が地面に叩きつけられるフレームを求める（無ければ -1）
+	// 剣先が一番高くなった後、一番低い高さに最初に近づいたフレーム
+	float CalcJumpSlamFrame(const std::string& animName) const;
+
 	struct GuardWalkAnim
 	{
 		std::string		name;
@@ -401,6 +408,7 @@ private:
 	bool							m_isTrailActive = false;			// 軌跡を描いている途中か
 	bool							m_isTrailAddedThisFrame = false;	// このフレームに軌跡を追加したか
 
+	float										 m_jumpSlamFrame = -1.0f;	// 04の4段目で、剣を地面に叩きつけるフレーム
 	std::unordered_map<std::string, float>		 m_landingFrames;	// 着地アニメ名 → 両足が接地するフレーム
 	std::unordered_map<std::string, float>		 m_takeoffFrames;	// ジャンプ開始アニメ名 → 足が地面から離れるフレーム
 	float										 m_airPelvisMaxY = -1.0f;	// 空中で腰が上がってよい高さ

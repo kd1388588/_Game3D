@@ -265,6 +265,10 @@ namespace
 	constexpr float kMaxTakeoffFrame		= 60.0f;	// 踏み切りがこれより遅いアニメーションは、待たずにすぐ跳ぶ
 	// （ためが長いアニメーションでも、ためを途中から再生するので操作は遅れない（PlayerState.cpp の kJumpWindupFrames））
 
+	// 04の4段目：跳び上がって、落ちてきて剣を地面に叩きつける（AS_Combo_Attack_04_04。49フレーム目あたりで叩きつける）
+	const std::string kJumpSlamAnimName		= "Attack_4_4";
+	constexpr float kJumpSlamTolerance		= 0.15f;	// 跳んだ後の一番低い剣先の高さから、これ以内に来たら「叩きつけた」とみなす
+
 	// 足が地面に着いている・離れたかを調べる骨
 	// つま先の付け根（ball）を優先して使う。足首（foot）は、着地でひざを曲げるとかかとが浮いて高くなるので、
 	// 足首で調べると「まだ着地していない」と間違えてしまう（ball が無いモデルの時だけ foot を使う）
@@ -695,6 +699,11 @@ void Player::Init()
 
 	// ガード歩き：アニメーションごとに、どの方向へどれくらいの速さで進むかを調べる
 	SetupGuardWalkAnims();
+
+	// 04の4段目（跳び上がって剣を地面に叩きつける）で、叩きつけるフレームを事前に計算
+	// （剣の軌跡・攻撃判定を、跳んでいる間から叩きつけるまで出すため）
+	m_jumpSlamFrame = CalcJumpSlamFrame(kJumpSlamAnimName);
+	OutputDebugStringA(("04の4段目で剣を叩きつけるフレーム: " + std::to_string(m_jumpSlamFrame) + "\n").c_str());
 
 	// 着地アニメーションで両足が接地するフレームを事前に計算
 	for (const auto& animName : kLandingAnimNames)
@@ -1927,6 +1936,55 @@ float Player::GetTakeoffFrame(const std::string& animName) const
 {
 	auto it = m_takeoffFrames.find(animName);
 	return (it != m_takeoffFrames.end()) ? it->second : 0.0f;
+}
+
+float Player::CalcJumpSlamFrame(const std::string& animName) const
+{
+	auto it = m_animMap.find(animName);
+	if (it == m_animMap.end() || !m_model || !m_model->GetData()) return -1.0f;
+
+	// 剣先の位置（剣のメッシュから求めた刃の形を使う）
+	std::vector<const BladeShape*> blades;
+	for (const BladeShape* pShape : { &m_bladeShapeR, &m_bladeShapeL })
+	{
+		if (pShape->nodeIndex >= 0) blades.push_back(pShape);
+	}
+	if (blades.empty()) return -1.0f;
+
+	// 計算用にモデルを複製し、1フレームずつ再生して、左右の剣先の低い方の高さを記録する
+	KdModelWork work(m_model->GetData());
+	KdAnimator animator;
+	animator.SetAnimation(it->second, false);
+
+	std::vector<float> times;
+	std::vector<float> heights;
+	for (int i = 0; i < 1000 && !animator.IsAnimationEnd(); ++i)
+	{
+		times.push_back(animator.GetTime());
+		animator.AdvanceTime(work.WorkNodes(), 1.0f);
+		work.CalcNodeMatrices();
+
+		float lowest = std::numeric_limits<float>::max();
+		for (const BladeShape* pShape : blades)
+		{
+			Math::Vector3 localTip = pShape->localHand + pShape->localDir * pShape->tipLength;
+			Math::Vector3 tip = Math::Vector3::Transform(localTip, work.GetNodes()[pShape->nodeIndex].m_worldTransform);
+			lowest = std::min(lowest, tip.y);
+		}
+		heights.push_back(lowest);
+	}
+	if (heights.empty()) return -1.0f;
+
+	// ① 一番高く跳んだフレーム（剣先が一番高い所）
+	size_t apex = static_cast<size_t>(std::max_element(heights.begin(), heights.end()) - heights.begin());
+
+	// ② そこから後で一番低い高さに、最初に近づいたフレーム（＝落ちてきて地面に叩きつけた瞬間）
+	float minAfterApex = *std::min_element(heights.begin() + apex, heights.end());
+	for (size_t i = apex; i < heights.size(); ++i)
+	{
+		if (heights[i] <= minAfterApex + kJumpSlamTolerance) return times[i];
+	}
+	return -1.0f;
 }
 
 float Player::GetSwordTipHeight(int hand) const
