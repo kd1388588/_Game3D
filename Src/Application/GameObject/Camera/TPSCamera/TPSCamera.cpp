@@ -3,7 +3,6 @@
 #include "../../Character/Enemy/Enemy.h"
 #include "../../../Utility/HitStop.h"
 #include "../../../Scene/SceneManager.h"
-#include "../../../main.h"
 
 namespace
 {
@@ -25,12 +24,9 @@ namespace
 	constexpr float kCameraMinDistance	= 0.5f;		// キャラにこれ以上は近づけない
 	constexpr float kCameraRayStartHeight = 1.3f;	// レイを飛ばし始める高さ（注視点から。カメラの高さと同じ）
 
-	// マウスホイールでカメラの距離を変える
-	constexpr float kCameraHeight		= 1.3f;		// 注視点からのカメラの高さ
-	constexpr float kZoomStep			= 0.6f;		// ホイール1目盛りで変わる距離
-	constexpr float kZoomMinDistance	= 3.0f;		// 一番近い距離
-	constexpr float kZoomMaxDistance	= 9.0f;		// 一番遠い距離
-	constexpr float kZoomFollow			= 0.15f;	// 決めた距離へなめらかに近づく割合（1フレーム）
+	// 注視点からのカメラの位置（少し引いて、周りの敵が見やすいようにする）
+	constexpr float kCameraHeight		= 1.3f;		// 高さ
+	constexpr float kCameraDistance		= 5.5f;		// 距離
 }
 
 void TPSCamera::Init()
@@ -38,29 +34,14 @@ void TPSCamera::Init()
 	// 親クラスの初期化呼び出し
 	CameraBase::Init();
 
-	// 注視点からのカメラの位置（少し引いて、周りの敵が見やすいようにする）
-	m_mLocalPos = Math::Matrix::CreateTranslation(0, kCameraHeight, -m_distance);
+	// 注視点からのカメラの位置
+	m_mLocalPos = Math::Matrix::CreateTranslation(0, kCameraHeight, -kCameraDistance);
 
 	//SetCursorPos(m_FixMousePos.x, m_FixMousePos.y);
 }
 
-void TPSCamera::UpdateZoom()
-{
-	// ホイールを奥へ回すと近づき、手前へ回すと離れる（1目盛り＝120）
-	int wheel = Application::Instance().GetMouseWheelValue();
-	if (wheel != 0)
-	{
-		m_targetDistance -= static_cast<float>(wheel) / 120.0f * kZoomStep;
-		m_targetDistance = std::clamp(m_targetDistance, kZoomMinDistance, kZoomMaxDistance);
-	}
-
-	m_distance += (m_targetDistance - m_distance) * kZoomFollow;
-	m_mLocalPos = Math::Matrix::CreateTranslation(0, kCameraHeight, -m_distance);
-}
-
 void TPSCamera::PostUpdate()
 {
-	UpdateZoom();
 
 	Math::Matrix								_targetMat = Math::Matrix::Identity;
 	const std::shared_ptr<const KdGameObject>	_spTarget = m_wpTarget.lock();
