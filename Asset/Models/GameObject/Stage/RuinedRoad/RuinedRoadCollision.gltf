@@ -66,6 +66,22 @@
     "metallicFactor": 0.0,
     "roughnessFactor": 1.0
    }
+  },
+  {
+   "name": "DoorWood",
+   "pbrMetallicRoughness": {
+    "baseColorTexture": {
+     "index": 2
+    },
+    "baseColorFactor": [
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "metallicFactor": 0.0,
+    "roughnessFactor": 1.0
+   }
   }
  ],
  "textures": [
@@ -76,6 +92,10 @@
   {
    "source": 1,
    "sampler": 0
+  },
+  {
+   "source": 2,
+   "sampler": 0
   }
  ],
  "images": [
@@ -84,6 +104,9 @@
   },
   {
    "uri": "StoneWall.png"
+  },
+  {
+   "uri": "DoorWood.png"
   }
  ],
  "samplers": [
