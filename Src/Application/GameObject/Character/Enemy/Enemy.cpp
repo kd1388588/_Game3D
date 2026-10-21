@@ -66,8 +66,10 @@ namespace
 	constexpr float	kSmashShakePower		= 0.2f;
 	constexpr float	kSmashEffectScaleRate	= 1.0f;		// 着地のエフェクトの大きさ（体の大きさに掛ける。攻撃の範囲と同じくらいに広がる）
 
-	// 普通の攻撃で、手を地面に叩きつけた時の爪のエフェクト（体の大きさに掛ける）
-	constexpr float	kSlamEffectScaleRate	= 0.12f;
+	// 普通の攻撃で、手を地面に叩きつけた時の爪のエフェクト（体の大きさに掛ける。ザコ約0.3、ボス約0.6）
+	constexpr float	kSlamEffectScaleRate	= 0.24f;
+	constexpr float	kSlamEffectHeightRate	= 0.4f;		// 地面からの高さ（体の大きさに掛ける。地面や腕に埋もれて見えなくならないように）
+	constexpr float	kSmashClawScaleRate		= 0.35f;	// 飛びかかりの着地で、_GroundSmash が無い時に代わりに出す爪のエフェクトの大きさ
 
 	// 足元の近くへの攻撃判定（体の大きさに掛ける）
 	constexpr float	kNearHitRadius			= 0.9f;		// 体の中心からこの距離以内（ボスなら約2.3m、ザコなら約1.1m）
@@ -417,7 +419,7 @@ void Enemy::PlaySlamEffect()
 			pos.z = hand.z;
 		}
 	}
-	pos.y += 0.3f;
+	pos.y += kSlamEffectHeightRate * m_scale;
 
 	std::shared_ptr<KdEffekseerObject> effect = EffectPlayer::Play(EffectName::HitPlayer, pos, kSlamEffectScaleRate * m_scale);
 	if (effect) effect->SetColor(kHitEffectColor);
@@ -458,7 +460,13 @@ void Enemy::GroundSmash()
 
 	// 地面が揺れる感じを出す（当たらなくても）
 	HitStop::Request(kSmashHitStopFrame, kSmashShakePower);
-	EffectPlayer::Play(EffectName::BossGroundSmash, m_pos, kSmashEffectScaleRate * m_scale);
+	if (!EffectPlayer::Play(EffectName::BossGroundSmash, m_pos, kSmashEffectScaleRate * m_scale))
+	{
+		// _GroundSmash.efkefc がまだ無い時は、爪のエフェクトで代わりにする
+		std::shared_ptr<KdEffekseerObject> effect = EffectPlayer::Play(EffectName::HitPlayer,
+			m_pos + Math::Vector3(0.0f, kSlamEffectHeightRate * m_scale, 0.0f), kSmashClawScaleRate * m_scale);
+		if (effect) effect->SetColor(kHitEffectColor);
+	}
 	SoundPlayer::PlaySE(SoundName::HeavyHit, 1.0f, -0.5f);	// 地面を叩きつけた、低い音
 
 	if (m_pDebugWire)
