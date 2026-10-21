@@ -87,7 +87,7 @@ namespace
 
 	// アビリティ（ATBコマンドメニューで選ぶ攻撃04・05。使うゲージの量・CTは Player.cpp の kAbilityInfos）
 	// アビリティの攻撃は、ボタンを押さなくても最後の段まで自動で出る
-	constexpr float kAbilityDamageRate		= 2.5f;		// 普通の攻撃（倍率1.0）の何倍のダメージか。モードの倍率はかからない
+	constexpr float kAbilityDamageRate		= 1.5f;		// 普通の攻撃（倍率1.0）の何倍のダメージか。モードの倍率はかからない
 
 	// ガード（止まっている時に Shift を押している間）
 	// アニメーション：Sequence2/08_Hit/14_Block の Block_Start / Loop / Hit / End
@@ -156,6 +156,7 @@ void PlayerState::StartEvade(Player* player)
 	{
 		player->SetBattleMode(BattleMode::Operator);
 	}
+	player->GainAtbByEvade();	// 回避すると ATB ゲージがたまる
 	player->ChangeState(std::make_shared<PlayerStateEvade>());
 }
 

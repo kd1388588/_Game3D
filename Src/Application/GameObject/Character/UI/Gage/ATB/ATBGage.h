@@ -26,7 +26,7 @@ public:
 	// モードを切り替えられない残りの割合（0 なら切り替えられる）
 	void SetModeLockRatio(float ratio) { m_modeLockRatio = ratio; }
 
-	// アビリティの状態（index：0 が攻撃04、1 が攻撃05）
+	// アビリティの状態（index：0 が攻撃05、1 が攻撃04。メニューの上から）
 	// canUse：今使えるか、ctRatio：CTの残りの割合（0～1）、cost：使うATBゲージの本数
 	void SetAbilityState(int index, bool canUse, float ctRatio, int cost);
 

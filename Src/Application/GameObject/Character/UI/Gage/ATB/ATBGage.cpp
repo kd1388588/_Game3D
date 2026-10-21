@@ -93,7 +93,7 @@ void ATBGage::Init()
 	SetTextLeft(m_breakText, static_cast<float>(kGageLeft + 140), kModeTextY);
 
 	// アビリティの枠の「04」「05」
-	const char* const slotNames[] = { "04", "05" };
+	const char* const slotNames[] = { "05", "04" };
 	for (int i = 0; i < static_cast<int>(AbilitySlot::Num); ++i)
 	{
 		auto text = std::make_shared<UIText>();
@@ -287,12 +287,6 @@ void ATBGage::DrawSprite()
 		DrawBar(i, left, m_atbValue - static_cast<float>(i));
 	}
 
-	// アビリティの枠
-	for (int i = 0; i < static_cast<int>(m_abilities.size()); ++i)
-	{
-		DrawAbilitySlot(i);
-	}
-
 	// モードの固定の残り時間（モードの文字の下に、赤い線が短くなっていく）
 	if (m_modeLockRatio > 0.0f)
 	{
@@ -326,13 +320,7 @@ void ATBGage::DrawSprite()
 		m_guardText->DrawSprite();
 	}
 
-
-	for (const auto& text : m_slotKeyTexts)
-	{
-		text->DrawSprite();
-	}
-
-	// どのキーで使えるか（E：モード切り替え、F：ATBコマンド）
+	// どのキーで使えるか（E：モード切り替え）
+	// ※ATBコマンドの F は、技の枠と一緒に表示しないようにした
 	DrawKeyBadge(m_modeKeyBadge);
-	DrawKeyBadge(m_commandKeyBadge);
 }

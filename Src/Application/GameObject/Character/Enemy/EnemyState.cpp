@@ -14,6 +14,8 @@ namespace
 	// （前は 45 まで出していたので、振り終わって地面に置いた手に後から当たっていた）
 	constexpr float kAttackHitStartFrame	= 15.0f;
 	constexpr float kAttackHitEndFrame		= 27.0f;
+	constexpr float kAttackNearHitStartFrame	= 20.0f;	// 足元の近くへの判定は、手が下りてくる所から出す
+	constexpr float kAttackSlamFrame		= 26.0f;	// 振り下ろした手が地面に着くフレーム（ここで爪のエフェクト）
 
 	// 撃破エフェクトの大きさ（敵の体の大きさに掛ける）
 	constexpr float kDeathEffectScaleRate	= 0.15f;
@@ -147,6 +149,7 @@ void EnemyStateChase::Update(Enemy* enemy)
 void EnemyStateAttack::ChangeState(Enemy* enemy)
 {
 	m_isCritical = false;
+	m_isSlamPlayed = false;
 
 	enemy->ChangeAnimation("Attack", false, true, 5.0f);
 	enemy->SetAnimationSpeed(1.0f);
@@ -182,6 +185,19 @@ void EnemyStateAttack::Update(Enemy* enemy)
 		Math::Vector3 extents(0.73f, 0.35f, 0.35f);
 
 		enemy->AttackHit(hitMat, extents, m_isCritical);
+
+		// 足元の近く（体の真下・すぐ前）まで来ているプレイヤーにも当てる
+		if (animTime >= kAttackNearHitStartFrame)
+		{
+			enemy->AttackHitNear(m_isCritical);
+		}
+	}
+
+	// 振り下ろした手が地面に着いた瞬間に、爪のエフェクト
+	if (!m_isSlamPlayed && animTime >= kAttackSlamFrame)
+	{
+		m_isSlamPlayed = true;
+		enemy->PlaySlamEffect();
 	}
 
 	if (enemy->IsAnimEnd())
