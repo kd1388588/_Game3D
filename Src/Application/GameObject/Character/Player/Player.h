@@ -338,7 +338,7 @@ private:
 	const KdModelWork::Node* FindFirstNode(const std::vector<std::string>& nodeNames) const;
 
 public:
-	// ===== 剣の形と軌跡の道具（タイトル画面のキャラクターからも使う） =====
+	// ===== 剣の形と軌跡の道具 =====
 
 	// モデルに含まれる剣のメッシュから求めた、刃の向きと長さ（メッシュのノードから見た座標）
 	struct BladeShape
@@ -362,7 +362,7 @@ public:
 	// 剣の軌跡ポリゴンに渡す行列を作成（刃の根元・先端の位置から）
 	static Math::Matrix CreateTrailMatrix(const Math::Vector3& base, const Math::Vector3& tip);
 
-	// 剣の軌跡用のテクスチャを作成する
+	//   剣の軌跡用のテクスチャを作成する
 	// （刃の先端ほど明るく、古い部分ほど暗くなるグラデーション。加算合成用）
 	static std::shared_ptr<KdTexture> CreateSwordTrailTexture(const Math::Vector3& trailColor);
 
@@ -405,8 +405,8 @@ private:
 	bool							m_isTrailAddedThisFrame = false;	// このフレームに軌跡を追加したか
 
 	float										 m_jumpSlamFrame = -1.0f;	// 04の4段目で、剣を地面に叩きつけるフレーム
-	std::unordered_map<std::string, float>		 m_landingFrames;	// 着地アニメ名 → 両足が接地するフレーム
-	std::unordered_map<std::string, float>		 m_takeoffFrames;	// ジャンプ開始アニメ名 → 足が地面から離れるフレーム
+	std::unordered_map<std::string, float>		 m_landingFrames;			// 着地アニメ名 → 両足が接地するフレーム
+	std::unordered_map<std::string, float>		 m_takeoffFrames;			// ジャンプ開始アニメ名 → 足が地面から離れるフレーム
 	float										 m_airPelvisMaxY = -1.0f;	// 空中で腰が上がってよい高さ
 
 	std::weak_ptr<HPGage>			m_wpHpGage;
