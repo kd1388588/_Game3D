@@ -7,6 +7,7 @@
 #include "GameOverScene/GameOverScene.h"
 
 #include "../GameObject/Effect/EffectPlayer.h"
+#include "../Utility/SoundPlayer.h"
 
 void SceneManager::PreUpdate()
 {
@@ -63,6 +64,9 @@ void SceneManager::ChangeScene(SceneType _sceneType)
 {
 	// 前のシーンのエフェクトが残らないように全て止める
 	EffectPlayer::StopAll();
+
+	// 前のシーンの音（BGM・効果音）も止める（BGM はシーンの Init で流し直す）
+	SoundPlayer::StopAll();
 
 	// 次のシーンを作成し、現在のシーンにする
 	switch (_sceneType)

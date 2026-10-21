@@ -1,5 +1,6 @@
 ﻿#include "GameScene.h"
 #include "../../GameObject/Effect/EffectPlayer.h"
+#include "../../Utility/SoundPlayer.h"
 #include "../SceneManager.h"
 #include "../../Utility/StageEnvironment.h"
 
@@ -167,6 +168,9 @@ void GameScene::Init()
 {
 	// エフェクトを出す（タイトル画面では止めているので、ここで戻す）
 	EffectPlayer::SetEnabled(true);
+
+	// BGM
+	SoundPlayer::PlayBGM(SoundName::BGM);
 
 	// 光・フォグ・影
 	StageEnvironment::Apply();

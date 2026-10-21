@@ -310,6 +310,7 @@
     <ClInclude Include="Src\Application\Utility\StageEnvironment.h" />
     <ClInclude Include="Src\Application\Utility\HitStop.h" />
     <ClInclude Include="Src\Application\Utility\GameTime.h" />
+    <ClInclude Include="Src\Application\Utility\SoundPlayer.h" />
     <ClInclude Include="Src\Application\Utility\SpriteUtil.h" />
     <ClInclude Include="Src\Application\GameObject\Title\TitleChara\TitleChara.h" />
     <ClInclude Include="Src\Application\GameObject\Title\TitleCamera\TitleCamera.h" />

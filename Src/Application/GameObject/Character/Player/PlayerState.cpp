@@ -62,6 +62,11 @@ namespace
 	constexpr float kRunBlendFrame			= 4.0f;		// 待機⇔走りのブレンドフレーム数（小さいほど素早く切り替わる）
 	constexpr float kRunAnimSpeedShare		= 0.6f;		// 速くする分のうち、アニメーションの再生速度で上げる割合
 
+	// 足音の大きさ（足が地面に着くたびに鳴らす。Player::UpdateFootsteps）
+	constexpr float kRunFootstepVolume		= 0.5f;		// 走る
+	constexpr float kDashFootstepVolume		= 0.8f;		// 全力疾走・急ブレーキ（強く踏む）
+	constexpr float kGuardFootstepVolume	= 0.3f;		// ガードしながら歩く（そっと歩く）
+
 	// 回避・着地エフェクトの大きさ
 	constexpr float kEvadeEffectScale		= 1.0f;
 	constexpr float kLandingEffectScale		= 1.0f;
@@ -439,6 +444,22 @@ void PlayerStateRun::Update(Player* player)
 			player->ChangeState(std::make_shared<PlayerStateIdle>());
 		}
 	}
+}
+
+float PlayerStateRun::GetFootstepVolume() const
+{
+	return (m_dashPhase == DashPhase::None) ? kRunFootstepVolume : kDashFootstepVolume;
+}
+
+float PlayerStateDashStop::GetFootstepVolume() const
+{
+	return kDashFootstepVolume;
+}
+
+float PlayerStateGuard::GetFootstepVolume() const
+{
+	// 構えたまま歩いている時だけ（受け止めた・構え始めなどの足の動きでは鳴らさない）
+	return (m_phase == Phase::Loop) ? kGuardFootstepVolume : 0.0f;
 }
 
 void PlayerStateDashStop::ChangeState(Player* player)

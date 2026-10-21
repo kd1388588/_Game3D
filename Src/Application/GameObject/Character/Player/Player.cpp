@@ -24,6 +24,7 @@
 
 // Utility
 #include "../../../Utility/HitStop.h"
+#include "../../../Utility/SoundPlayer.h"
 #include "../../../Utility/GameTime.h"
 
 // Scene
@@ -131,6 +132,23 @@ namespace
 	constexpr int	kGuardBreakFrame		= 60 * 2;	// 崩された後、ガードできない時間（2秒。その間も耐久値は少しずつ回復する）
 	constexpr int	kGuardBreakHitStopFrame	= 10;		// 崩された時のヒットストップ
 	constexpr float	kGuardBreakShakePower	= 0.15f;
+
+	// 効果音（ファイル名は Utility/SoundPlayer.h の SoundName）
+	// pitch：音の高さ（-1.0 低い ～ 0 そのまま ～ 1.0 高い）
+	constexpr float	kSlashSEVolume			= 0.7f;		// 斬った音（普通の攻撃）
+	constexpr float	kSlashSEHeavyPitch		= -0.2f;	// パニッシャー・アビリティの重い攻撃は低く
+	constexpr float	kSlashSECriticalPitch	= -0.35f;	// クリティカルはもっと低く
+	constexpr float	kSlashSEPitchRandom		= 0.1f;		// 毎回少し高さを変える（同じ音の繰り返しが機械的に聞こえないように）
+	constexpr float	kGuardSEVolume			= 0.6f;		// 盾で受け止めた音
+	constexpr float	kGuardSEPitch			= 0.4f;		// 受けた時より高く軽い音にする
+	constexpr float	kGuardBreakSEPitch		= -0.4f;	// 盾が砕けた音は低く重く
+
+	// 足音：足の骨（つま先の付け根）が、地面に着いている高さからこれより上がったら「離れた」、
+	// その後これより下がったら「着いた」とみなして1歩鳴らす（間を空けて、細かい揺れで何度も鳴らないように）
+	constexpr float	kFootstepLiftHeight		= 0.10f;
+	constexpr float	kFootstepPlantHeight	= 0.04f;
+	constexpr int	kFootstepCoolFrame		= 6;		// 1歩鳴らしてから、次を鳴らせるまでのフレーム数
+	constexpr float	kFootGroundRiseSpeed	= 0.001f;	// 地面に着いている高さを、1フレームに上げていく量
 
 	// ガードしながら歩くアニメーション（Sequence2/03_Walk/03_Walk_Block の Loop）
 	// angle：キャラの向きから見て、どの方向へ歩くアニメーションか（度。右が＋）
@@ -640,6 +658,18 @@ void Player::Init()
 	m_handNodeR = FindNodeIndex("hand_r");
 	m_handNodeL = FindNodeIndex("hand_l");
 	m_pelvisNode = FindNodeIndex("pelvis");
+
+	// 足音を鳴らすための足の骨（つま先の付け根が無いモデルなら足首）と、立っている時の高さ
+	for (int f = 0; f < 2; ++f)
+	{
+		m_footstepNodes[f] = FindNodeIndex(kToeNodeNames[f]);
+		if (m_footstepNodes[f] < 0) m_footstepNodes[f] = FindNodeIndex(kFootNodeNames[f]);
+		if (m_footstepNodes[f] >= 0)
+		{
+			m_footGroundY[f] = m_model->GetData()->GetOriginalNodes()[m_footstepNodes[f]].m_worldTransform.Translation().y;
+		}
+	}
+
 	m_throwAngleR = CalcThrowCorrectionAngle(kThrowAnimName, m_weaponNodeR);
 	m_throwAngleL = CalcThrowCorrectionAngle(kThrowAnimName, m_weaponNodeL);
 	OutputDebugStringA(("剣を投げる向きの補正: 右 " + std::to_string(m_throwAngleR)
@@ -846,6 +876,7 @@ void Player::Update()
 	}
 
 	UpdateSwordTrails();
+	UpdateFootsteps();
 	UpdateHpGage();
 	UpdateModeSwitch();
 	UpdateAbilityTimers();
@@ -1222,6 +1253,43 @@ void Player::PostUpdate()
 
 	// ヒットストップの時間を進める（すべてのキャラの Update が終わった後なので、敵も同じフレーム数だけ止まる）
 	HitStop::Advance();
+}
+
+void Player::UpdateFootsteps()
+{
+	if (m_footstepCoolTimer > 0) m_footstepCoolTimer--;
+	if (!m_model) return;
+
+	// 走る・歩く状態の時だけ鳴らす（攻撃や回避の足の動きでは鳴らさない）
+	float volume = m_state ? m_state->GetFootstepVolume() : 0.0f;
+
+	const auto& nodes = m_model->GetNodes();
+	for (int f = 0; f < 2; ++f)
+	{
+		int node = m_footstepNodes[f];
+		if (node < 0 || node >= static_cast<int>(nodes.size())) continue;
+
+		float footY = nodes[node].m_worldTransform.Translation().y;
+
+		// 地面に着いている時の高さは、実際に一番低くなった所に合わせていく（モデルの立ち姿と少し違っても合うように）
+		// 少しずつ上げておき、アニメーションが変わって低い所が変わっても合うようにする
+		if (volume > 0.0f) m_footGroundY[f] = std::min(m_footGroundY[f] + kFootGroundRiseSpeed, footY);
+
+		if (footY > m_footGroundY[f] + kFootstepLiftHeight)
+		{
+			m_isFootLifted[f] = true;
+		}
+		else if (m_isFootLifted[f] && footY < m_footGroundY[f] + kFootstepPlantHeight)
+		{
+			// 離れていた足が地面に着いた
+			m_isFootLifted[f] = false;
+			if (volume > 0.0f && m_footstepCoolTimer <= 0)
+			{
+				SoundPlayer::PlayFootstep(volume);
+				m_footstepCoolTimer = kFootstepCoolFrame;
+			}
+		}
+	}
 }
 
 void Player::UpdateCameraTargetY()
@@ -2096,6 +2164,11 @@ bool Player::AttackOBB(const Math::Matrix& swordMatrix, bool isCritical, HitEffe
 		int frames = isCritical ? kCriticalHitStopFrame : kHitStopFrame;
 		if (m_battleMode == BattleMode::Punisher || m_isAbilityAttack) frames += kHeavyHitStopBonus;
 		HitStop::Request(frames, isCritical ? kCriticalHitShakePower : kHitShakePower);
+
+		// 斬った音（同じフレームに何体に当たっても1回だけ。重い攻撃・クリティカルは低く大きく）
+		bool isHeavy = (m_battleMode == BattleMode::Punisher || m_isAbilityAttack);
+		float pitch = isCritical ? kSlashSECriticalPitch : (isHeavy ? kSlashSEHeavyPitch : 0.0f);
+		SoundPlayer::PlaySE(SoundName::Slash, (isCritical || isHeavy) ? 1.0f : kSlashSEVolume, pitch, kSlashSEPitchRandom);
 	}
 
 	return isHit;
@@ -2160,6 +2233,7 @@ void Player::OnDamage(int damage, bool isCritical)
 		m_hp -= std::max(static_cast<int>(std::round(damage * kGuardDamageRate)), 1);
 		m_invincibleTimer = kDamageInvincibleFrame;
 		EffectPlayer::Play(EffectName::Guard, CreateGuardEffectMatrix());
+		SoundPlayer::PlaySE(SoundName::HeavyHit, kGuardSEVolume, kGuardSEPitch, 0.05f);	// 盾で受け止めた、軽く高い音
 
 		// ガードの耐久値を減らす（受けすぎると崩される）
 		float cost = damage * kGuardCostPerDamage * (isCritical ? kGuardCriticalCostRate : 1.0f);
@@ -2176,6 +2250,7 @@ void Player::OnDamage(int damage, bool isCritical)
 			m_guardBreakTimer = kGuardBreakFrame;
 			HitStop::Request(kGuardBreakHitStopFrame, kGuardBreakShakePower);
 			EffectPlayer::Play(EffectName::GuardBreak, CreateGuardEffectMatrix());
+			SoundPlayer::PlaySE(SoundName::HeavyHit, 1.0f, kGuardBreakSEPitch);				// 盾が砕けた、重く低い音
 			KdDebugGUI::Instance().AddLog("[System] ガードを崩された！\n");
 			ChangeState(std::make_shared<PlayerStateGuardBreak>());
 		}
@@ -2191,6 +2266,7 @@ void Player::OnDamage(int damage, bool isCritical)
 	m_hp -= damage;
 	m_invincibleTimer = kDamageInvincibleFrame;
 	HitStop::Request(kDamageHitStopFrame, kDamageShakePower);
+	SoundPlayer::PlaySE(SoundName::HeavyHit, 1.0f, 0.0f, 0.05f);
 
 	if (m_hp <= 0)
 	{

@@ -1,5 +1,6 @@
 ﻿#include "TitleScene.h"
 #include "../../Utility/StageEnvironment.h"
+#include "../../Utility/SoundPlayer.h"
 #include "../../GameObject/Effect/EffectPlayer.h"
 #include "../SceneManager.h"
 #include "../../main.h"
@@ -43,6 +44,9 @@ void TitleScene::Init()
 {
 	// タイトル画面では、エフェクシアのエフェクトを出さない（ゲーム画面に入ったら出す）
 	EffectPlayer::SetEnabled(false);
+
+	// BGM
+	SoundPlayer::PlayBGM(SoundName::BGM);
 
 	// 光・フォグ・影（ゲーム画面と同じ）
 	StageEnvironment::Apply();

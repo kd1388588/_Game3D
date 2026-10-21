@@ -435,6 +435,13 @@ private:
 	int								m_handNodeR = -1;			// hand_r のノード番号
 	int								m_handNodeL = -1;			// hand_l のノード番号
 	int								m_pelvisNode = -1;			// pelvis のノード番号
+
+	// 足音（足が地面に着いた瞬間に1歩ずつ鳴らす）
+	void UpdateFootsteps();
+	int								m_footstepNodes[2] = { -1, -1 };		// 足の接地を調べる骨（左・右）
+	float							m_footGroundY[2] = { 0.0f, 0.0f };		// 足が地面に着いている時の骨の高さ
+	bool							m_isFootLifted[2] = { false, false };	// 足が地面から離れているか
+	int								m_footstepCoolTimer = 0;				// 続けて鳴らさないための待ち時間
 	float							m_throwAngleR = 0.0f;		// 右の剣をまっすぐ前へ向ける角度（度）
 	float							m_throwAngleL = 0.0f;		// 左の剣をまっすぐ前へ向ける角度（度）
 	float							m_swordBladeBaseY = 0.0f;	// 刃の根元

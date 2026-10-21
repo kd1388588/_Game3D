@@ -18,6 +18,9 @@ public:
 	// 毎フレーム呼ばれる（入力・移動処理など）
 	virtual void Update(Player* player) = 0;
 
+	// 足が地面に着いた時に鳴らす足音の大きさ（0 なら鳴らさない。走る・歩く状態だけ鳴らす）
+	virtual float GetFootstepVolume() const { return 0.0f; }
+
 protected:
 
 	// 前方へ減速しながら移動する（回避用）
@@ -51,6 +54,7 @@ public:
 
 	void ChangeState(Player* player) override;
 	void Update(Player* player) override;
+	float GetFootstepVolume() const override;
 
 private:
 	// ダッシュの流れ
@@ -74,6 +78,7 @@ class PlayerStateDashStop : public PlayerState
 public:
 	void ChangeState(Player* player) override;
 	void Update(Player* player) override;
+	float GetFootstepVolume() const override;
 
 private:
 	enum class Phase
@@ -103,6 +108,7 @@ public:
 
 	void ChangeState(Player* player) override;
 	void Update(Player* player) override;
+	float GetFootstepVolume() const override;
 
 private:
 
