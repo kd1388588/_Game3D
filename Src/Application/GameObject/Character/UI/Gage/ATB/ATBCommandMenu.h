@@ -4,7 +4,7 @@
 class UIText;
 
 // ATBコマンドメニュー（FF7リメイク風）
-// ・開いている間は時間がゆっくりになり、ATBゲージを使う技（攻撃04・05）を選ぶ
+// ・開いている間は時間がゆっくりになり、ATBゲージを使う技（Attack1・Attack2）を選ぶ
 // ・選んだ技は、最後の段まで自動で出る（Player 側で処理）
 class ATBCommandMenu : public BaseGage
 {

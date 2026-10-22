@@ -100,8 +100,8 @@ namespace
 	// メニューの上から順番（AbilitySlot の順番）
 	constexpr AbilityInfo kAbilityInfos[] =
 	{
-		{ 5, 2, 60 * 15, "攻撃04" },	// ゲージ1本、CT 3秒
-		{ 4, 1, 60 * 10, "攻撃05" },	// ゲージ2本、CT 8秒
+		{ 5, 1, 60 * 15, "Attack1" },	// ゲージ1本、CT 3秒（上）
+		{ 4, 2, 60 * 20, "Attack2" },	// ゲージ2本、CT 8秒（下）
 	};
 	constexpr int	kModeLockAttackType		= 5;		// 使った後にオペレーターに固定する技（攻撃05）
 	constexpr int	kModeLockFrame			= 60 * 5;	// 攻撃05を使った後、オペレーターに固定する時間（5秒）
