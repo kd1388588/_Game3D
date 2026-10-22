@@ -123,9 +123,9 @@ namespace
 	constexpr float kAttackEvadeCancelFrame	= 12.0f;	// 攻撃のこのフレーム以降なら、回避でキャンセルできる
 	constexpr float kAttackRecoveryFrame	= 6.0f;		// 次の攻撃に移れるフレームから、さらにこれだけたったら、移動で攻撃の後のすきをキャンセルできる
 
-	// 回避した時に、パニッシャーからオペレーターに戻すか（FF7リメイクのクラウドと同じ動き）
+	// 回避した時に、パニッシャーからオペレーターに戻すか（true で FF7リメイクのクラウドと同じ動き）
 	// false にすると、回避してもモードはそのまま
-	constexpr bool	kEvadeReturnsToOperator	= true;
+	constexpr bool	kEvadeReturnsToOperator	= false;	// パニッシャーのまま回避できるようにした（そのかわり、パニッシャーは攻撃が遅く、受けるダメージが多い）
 
 	// 着地
 	constexpr float kLandingCancelFrame		= 4.0f;		// 着地してからこのフレーム数がたったら、攻撃・回避・ジャンプに移れる

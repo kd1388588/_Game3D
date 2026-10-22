@@ -75,7 +75,8 @@ namespace
 	constexpr float kOperatorDamageRate		= 0.6f;		// オペレーターのダメージの倍率
 	constexpr float kPunisherDamageRate		= 1.6f;		// パニッシャーのダメージの倍率
 	constexpr float kOperatorAttackSpeedRate = 1.2f;	// オペレーターの攻撃の再生速度の倍率
-	constexpr float kPunisherAttackSpeedRate = 0.9f;	// パニッシャーの攻撃の再生速度の倍率
+	constexpr float kPunisherAttackSpeedRate = 0.8f;	// パニッシャーの攻撃の再生速度の倍率（回避できるようにしたかわりに、0.9 から遅くした）
+	constexpr float kPunisherTakenDamageRate = 1.3f;	// パニッシャーの時に受けるダメージの倍率（回避できるようにしたかわりに、多く受ける）
 	constexpr float kPunisherMoveRate		= 0.6f;		// パニッシャーの移動の速さ（オペレーターを1.0とした倍率）
 
 	// ATBゲージのたまり方（1本 = 100）
@@ -2274,6 +2275,12 @@ void Player::OnDamage(int damage, bool isCritical)
 	if (m_invincibleTimer > 0) return;
 	if (m_hp <= 0) return;
 	if (m_isDebugInvincible) return;	// デバッグキー（F6）で無敵
+
+	// パニッシャーの時は、受けるダメージが増える
+	if (m_battleMode == BattleMode::Punisher)
+	{
+		damage = static_cast<int>(std::round(damage * kPunisherTakenDamageRate));
+	}
 
 	// 回避中はダメージを半分にする（1 より小さくはしない）
 	if (std::dynamic_pointer_cast<PlayerStateEvade>(m_state))
