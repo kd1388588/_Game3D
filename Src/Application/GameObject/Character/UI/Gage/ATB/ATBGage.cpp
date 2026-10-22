@@ -320,7 +320,5 @@ void ATBGage::DrawSprite()
 		m_guardText->DrawSprite();
 	}
 
-	// どのキーで使えるか（E：モード切り替え）
-	// ※ATBコマンドの F は、技の枠と一緒に表示しないようにした
-	DrawKeyBadge(m_modeKeyBadge);
+	// ※どのキーで使えるか（E：モード切り替え、F：ATBコマンド）の表示は、画面をすっきりさせるために出さないようにした
 }
