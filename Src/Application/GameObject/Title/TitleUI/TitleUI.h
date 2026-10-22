@@ -85,7 +85,7 @@ private:
 
 	// 描画（奥から順に呼ぶ）
 	void DrawVignette() const;
-	void DrawLetterBox() const;
+	void DrawGuide() const;
 	void DrawLogo() const;
 	void DrawMenu() const;
 	void DrawControls() const;

@@ -20,12 +20,10 @@ namespace
 	constexpr float		kMenuX				= -290.0f;
 	constexpr float		kMenuTopY			= -70.0f;
 	constexpr float		kMenuSpacing		= 62.0f;
-	constexpr float		kLetterBoxHeight	= 50.0f;		// 画面の上下の黒帯の太さ
-	constexpr float		kGuideY				= -335.0f;		// 下の黒帯の中に操作案内を出す
+	constexpr float		kGuideY				= -335.0f;		// 画面の下に操作案内を出す
 
 	// ===== 登場演出のタイミング（フレーム） =====
 	constexpr int		kFadeInFrame		= 45;			// 黒からのフェードイン
-	constexpr int		kLetterBoxFrame		= 60;			// 黒帯が入ってくる
 	constexpr int		kLogoStartFrame		= 30;			// ロゴが現れ始める
 	constexpr int		kLogoAppearFrame	= 60;
 	constexpr int		kLogoBurstFrame		= 35;			// ロゴが現れきった時の光
@@ -129,7 +127,7 @@ void TitleUI::Init()
 	}
 	m_cursorY = GetMenuItemPos(m_selectIndex).y;
 
-	// 操作案内（下の黒帯）
+	// 操作案内（画面の下）
 	m_selectGuide = CreateText("W / S : SELECT        ENTER : DECIDE", UIText::FontSize::Small);
 	m_selectGuide->SetCenterPos({ 0.0f, kGuideY });
 	m_controlsGuide = CreateText("Enter / BackSpace：戻る", UIText::FontSize::Small);
@@ -345,7 +343,7 @@ float TitleUI::CalcProgress(int startFrame, int duration) const
 void TitleUI::DrawSprite()
 {
 	DrawVignette();
-	DrawLetterBox();
+	DrawGuide();
 	DrawLogo();
 	DrawMenu();
 	DrawControls();
@@ -368,23 +366,11 @@ void TitleUI::DrawVignette() const
 		static_cast<int>(m_screenSize.x), static_cast<int>(m_screenSize.y));
 }
 
-void TitleUI::DrawLetterBox() const
+void TitleUI::DrawGuide() const
 {
-	// 画面の外から黒帯が入ってくる
-	float progress = SpriteUtil::EaseOutCubic(CalcProgress(0, kLetterBoxFrame));
-	float height = kLetterBoxHeight * progress;
-	if (height <= 0.0f) return;
+	// ※前は画面の上下に黒帯（映画のような帯）を出していたが、画面を広く見せるためにやめた
 
-	int halfW = static_cast<int>(m_screenSize.x * 0.5f);
-	int halfH = static_cast<int>(height * 0.5f);
-	int topY = static_cast<int>(m_screenSize.y * 0.5f - height * 0.5f);
-	Math::Color black = { 0.0f, 0.0f, 0.0f, 1.0f };
-
-	auto& spriteShader = KdShaderManager::Instance().m_spriteShader;
-	spriteShader.DrawBox(0, topY, halfW, halfH, &black);
-	spriteShader.DrawBox(0, -topY, halfW, halfH, &black);
-
-	// 下の黒帯の操作案内（ゆっくり明滅させる）
+	// 画面の下の操作案内（ゆっくり明滅させる）
 	// ※メニュー選択中の案内（W / S : SELECT ...）は出さない。操作説明を開いている時の「戻る」案内だけ出す
 	if (m_state != State::Controls) return;
 
