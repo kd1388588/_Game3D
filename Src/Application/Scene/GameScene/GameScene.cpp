@@ -119,18 +119,20 @@ void GameScene::UpdateDebugKeys()
 		KdDebugGUI::Instance().AddLog(on ? "[Debug] 無敵 ON\n" : "[Debug] 無敵 OFF\n");
 	}
 
-	// F7：ボスの手前（広間の中。バリアの内側）へ瞬間移動して、ボスの方を向く
+	// F7：ボス以外の敵を全員倒し（バリアも開く）、ボスの手前（広間の中）へ瞬間移動して、ボスの方を向く
 	if (isWarp)
 	{
 		Math::Vector3 pos = kBossPos;
 		for (const auto& obj : m_objList)
 		{
 			auto enemy = std::dynamic_pointer_cast<Enemy>(obj);
-			if (enemy && enemy->IsBoss() && enemy->IsAlive()) { pos = enemy->GetPos(); break; }
+			if (!enemy || !enemy->IsAlive()) continue;
+			if (enemy->IsBoss())	pos = enemy->GetPos();
+			else					enemy->DebugKill();
 		}
 		pos.z -= kDebugWarpBossDistance;
 		player->DebugWarp(pos, 0.0f);
-		KdDebugGUI::Instance().AddLog("[Debug] ボスの手前へ移動\n");
+		KdDebugGUI::Instance().AddLog("[Debug] ボス以外の敵を倒して、ボスの手前へ移動\n");
 	}
 
 	// F3：プレイヤーの前方にザコ敵を出す

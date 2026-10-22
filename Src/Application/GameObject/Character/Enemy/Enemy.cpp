@@ -292,6 +292,13 @@ void Enemy::Release()
 	m_model = nullptr;
 }
 
+void Enemy::DebugKill()
+{
+	if (m_hp <= 0) return;
+	m_hp = 0;
+	ChangeState(std::make_shared<EnemyStateDead>());
+}
+
 void Enemy::OnDamage(int damage, bool isCritical)
 {
 	if (m_invincibleTimer > 0) return;

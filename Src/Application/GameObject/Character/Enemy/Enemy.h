@@ -69,6 +69,9 @@ public:
 	// 着地の衝撃：周りの円の中にいるプレイヤーにダメージを与える
 	void GroundSmash();
 
+	// デバッグ：すぐに倒す（倒れる演出・撃破エフェクトは普通に倒した時と同じ）
+	void DebugKill();
+
 	// 振り下ろした手が地面に着いた所に、爪のエフェクト（_Claw2）を出す
 	void PlaySlamEffect();
 

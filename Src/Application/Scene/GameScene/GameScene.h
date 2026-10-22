@@ -40,7 +40,7 @@ private:
 	// 生き残っている敵の数
 	int GetAliveEnemyCount() const;
 
-	// デバッグキー（F1：ATB全開、F2：HP全開、F3：敵をプレイヤーの前に出す、F5：HPを1にする、F6：無敵の切り替え、F7：ボスの手前へ移動）
+	// デバッグキー（F1：ATB全開、F2：HP全開、F3：敵をプレイヤーの前に出す、F5：HPを1にする、F6：無敵の切り替え、F7：ボス以外を倒してボスの手前へ移動）
 	// ※F4 はデバッグ表示の切り替え（main.cpp）
 	void UpdateDebugKeys();
 	InputHelper::KeyTrigger	m_debugAtbKey{ VK_F1 };
