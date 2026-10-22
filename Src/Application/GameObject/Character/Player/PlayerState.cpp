@@ -33,6 +33,13 @@ namespace
 	//   左の剣も Loop で回る途中に地面近くを通るので、左は見ない
 	constexpr int	kMaxComboStep			= 5;
 
+	// 02の3段目（AS_Combo_Attack_02_03）：回りながら跳び上がる回転攻撃（アニメーションを Python で調べた結果）
+	// 4～48：剣を振り回しながら跳び上がる（2本の剣が交互に体のまわりを回る）、64：一番高い所、68～76：落ちて着地
+	// ※前は 20 フレームで次の段へ行けたので、連打すると回転のほとんどが途中で切れて当たらなかった
+	constexpr float kSpinLeapHitStartFrame	= 4.0f;		// 回り始めから攻撃判定を出す
+	constexpr float kSpinLeapHitEndFrame	= 80.0f;	// 着地まで出す
+	constexpr float kSpinLeapCancelFrame	= 48.0f;	// 回転が終わってから次の段（空中から叩きつける4段目）へ行ける
+
 	// 回避・被弾で移動するフレーム数
 	constexpr float kEvadeMoveFrame			= 25.0f;
 	constexpr float kDamageKnockbackFrame	= 15.0f;
@@ -539,6 +546,7 @@ float PlayerStateComboAttack::GetCancelFrame() const
 	}
 
 	// 02シリーズ（空中の繋がり）
+	if (IsSpinLeapAttack()) return kSpinLeapCancelFrame;		// 回転し終わるまで次へ行かない
 	if (m_comboType == 2 && m_comboStep == 4) return 30.0f;		// 落ちる前（空中）のフレームを指定
 	if (m_comboType == 2 && m_comboStep == 5) return 999.0f;	// 5段目は最後まで再生
 
@@ -643,6 +651,12 @@ bool PlayerStateComboAttack::IsTrailFrame(const Player* player, float animTime) 
 		return animTime >= kJumpSlamTrailStartFrame && animTime <= endFrame;
 	}
 
+	// 02の3段目：回り始めから着地まで（攻撃判定と同じ）
+	if (IsSpinLeapAttack())
+	{
+		return animTime >= kSpinLeapHitStartFrame && animTime <= kSpinLeapHitEndFrame;
+	}
+
 	// 普通の攻撃：攻撃判定のフレームの間
 	return animTime >= kAttackHitStartFrame && animTime <= kAttackHitEndFrame;
 }
@@ -729,13 +743,19 @@ void PlayerStateComboAttack::Update(Player* player)
 		}
 	}
 
-	// 攻撃判定（04の4段目は、落ちてきて地面に叩きつけるところまで出す）
+	// 攻撃判定（04の4段目は、落ちてきて地面に叩きつけるところまで出す。02の3段目は回り始めから着地まで）
+	float hitStartFrame = kAttackHitStartFrame;
 	float hitEndFrame = kAttackHitEndFrame;
 	if (IsJumpSlamAttack() && player->GetJumpSlamFrame() >= 0.0f)
 	{
 		hitEndFrame = std::max(kAttackHitEndFrame, player->GetJumpSlamFrame() + kJumpSlamHitExtraFrame);
 	}
-	if (animTime >= kAttackHitStartFrame && animTime <= hitEndFrame)
+	if (IsSpinLeapAttack())
+	{
+		hitStartFrame = kSpinLeapHitStartFrame;
+		hitEndFrame = kSpinLeapHitEndFrame;
+	}
+	if (animTime >= hitStartFrame && animTime <= hitEndFrame)
 	{
 		// 当たったら、攻撃の種類・段数ごとのエフェクトをその位置に出す
 		// （ヒットストップは AttackOBB の中で、すべての攻撃に同じルールでかかる）

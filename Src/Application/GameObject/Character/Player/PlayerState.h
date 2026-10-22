@@ -190,6 +190,7 @@ private:
 	bool IsSplitAttack() const { return m_comboType == 4 && m_comboStep == 3; }
 	// 04の4段目（跳び上がって、落ちてきて剣を地面に叩きつける）か
 	bool IsJumpSlamAttack() const { return m_comboType == 4 && m_comboStep == 4; }
+	bool IsSpinLeapAttack() const { return m_comboType == 2 && m_comboStep == 3; }	// 02の3段目：回りながら跳び上がる回転攻撃
 
 	// 次の段の攻撃へ移行（5段目以降はIdleへ）
 	void ChangeToNextAttack(Player* player) const;

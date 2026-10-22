@@ -227,6 +227,10 @@ namespace
 	constexpr float kSwordBladeBaseY		= 0.05f;	// 刃の根元
 	constexpr float kSwordBladeTipY			= 1.15f;	// 刃の先端
 	constexpr float kSwordOBBHalfWidth		= 0.1f;		// 攻撃判定の箱の太さ（半分）
+	// 剣が速く動いた時（回転攻撃など）は、前のフレームとの間の位置にも判定の箱を置く
+	// （1フレームに剣先が大きく動くと、箱と箱の間に敵がいても当たらなかったため）
+	constexpr float kSwordSweepStep			= 0.15f;	// 剣先がこの距離だけ動くごとに、間に箱を1つ置く
+	constexpr int	kSwordSweepMaxStep		= 8;
 
 	// モデルに含まれる剣のメッシュ（上から順に探して、最初に見つかったものを使う）
 	const std::vector<std::string> kBladeMeshNodeNamesR	= { "SM_Blade_R" };
@@ -2108,12 +2112,45 @@ bool Player::AttackOBB(const Math::Matrix& swordMatrix, bool isCritical, HitEffe
 	Math::Matrix obbMatrix = Math::Matrix::CreateTranslation(0.0f, obbOffsetY, 0.0f) * swordMatrix;
 	Math::Vector3 offset = Math::Vector3::Zero;
 
-	KdCollider::BoxInfo obbInfo(KdCollider::TypeDamage, obbMatrix, offset, obbExtents, true);
-
-	// デバッグ用の赤い箱を描画
-	if (m_pDebugWire)
+	// 剣が速く動いた時は、前のフレームの剣との間にも箱を置く（回転攻撃で、箱と箱の間をすり抜けないように）
+	// 前のフレームの剣の行列と今の行列の間を、回転は球面補間・位置は直線補間で分ける
+	int handIndex = std::clamp(hand, 0, 1);
+	std::vector<Math::Matrix> obbMatrices = { obbMatrix };
+	if (m_prevAttackFrame[handIndex] == m_attackFrame - 1)
 	{
-		m_pDebugWire->AddDebugBox(obbMatrix, obbExtents, offset, true, { 1.0f, 0.0f, 0.0f, 1.0f });
+		const Math::Matrix& prevMat = m_prevAttackSwordMat[handIndex];
+		Math::Vector3 prevTip = GetSwordPoint(prevMat, m_swordBladeTipY);
+		Math::Vector3 tip = GetSwordPoint(swordMatrix, m_swordBladeTipY);
+		int steps = std::min(static_cast<int>((tip - prevTip).Length() / kSwordSweepStep), kSwordSweepMaxStep);
+
+		Math::Vector3 s0, s1, t0, t1;
+		Math::Quaternion q0, q1;
+		Math::Matrix m0 = prevMat, m1 = swordMatrix;
+		if (steps > 0 && m0.Decompose(s0, q0, t0) && m1.Decompose(s1, q1, t1))
+		{
+			for (int i = 1; i <= steps; ++i)
+			{
+				float t = static_cast<float>(i) / (steps + 1);
+				Math::Matrix mid = Math::Matrix::CreateScale(Math::Vector3::Lerp(s0, s1, t))
+					* Math::Matrix::CreateFromQuaternion(Math::Quaternion::Slerp(q0, q1, t))
+					* Math::Matrix::CreateTranslation(Math::Vector3::Lerp(t0, t1, t));
+				obbMatrices.push_back(Math::Matrix::CreateTranslation(0.0f, obbOffsetY, 0.0f) * mid);
+			}
+		}
+	}
+	m_prevAttackSwordMat[handIndex] = swordMatrix;
+	m_prevAttackFrame[handIndex] = m_attackFrame;
+
+	std::vector<KdCollider::BoxInfo> obbInfos;
+	for (const Math::Matrix& mat : obbMatrices)
+	{
+		obbInfos.emplace_back(KdCollider::TypeDamage, mat, offset, obbExtents, true);
+
+		// デバッグ用の赤い箱を描画
+		if (m_pDebugWire)
+		{
+			m_pDebugWire->AddDebugBox(mat, obbExtents, offset, true, { 1.0f, 0.0f, 0.0f, 1.0f });
+		}
 	}
 
 	bool isHit = false;
@@ -2127,7 +2164,12 @@ bool Player::AttackOBB(const Math::Matrix& swordMatrix, bool isCritical, HitEffe
 	for (auto& obj : SceneManager::Instance().GetObjList())
 	{
 		if (obj.get() == this) continue;
-		if (!obj->Intersects(obbInfo, &retList)) continue;
+		bool isTouched = false;
+		for (const KdCollider::BoxInfo& info : obbInfos)
+		{
+			if (obj->Intersects(info, &retList)) { isTouched = true; break; }
+		}
+		if (!isTouched) continue;
 
 		// 敵以外・無敵中・倒れている敵には何もしない
 		// （毎フレームヒット扱いになって、ヒットストップやエフェクトが連続しないように）

@@ -430,6 +430,10 @@ private:
 	std::weak_ptr<Enemy>			m_wpLockTarget;			// ロックオン中の敵
 	// 多段ヒット：剣ごと（右・左）に、敵ごとの最後に当たったフレームを覚えておく
 	std::unordered_map<const KdGameObject*, int>	m_lastHitFrame[2];
+
+	// 前のフレームに攻撃判定に使った剣の行列（剣が速く動いた時に、間の位置も調べるため）
+	Math::Matrix					m_prevAttackSwordMat[2];
+	int								m_prevAttackFrame[2] = { -100, -100 };	// それを使ったフレーム（m_attackFrame）
 	bool											m_isFinisherEffectPlayed = false;	// 今の1振りで、決めの攻撃のエフェクトを出したか
 	int												m_attackFrame = 0;	// 攻撃の当たりを数えるための経過フレーム（ヒットストップ中は進まない）
 	bool							m_isLimLight = false;	// リムライトを光らせている途中か
