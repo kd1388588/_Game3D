@@ -294,9 +294,8 @@ void Enemy::Release()
 
 void Enemy::DebugKill()
 {
-	if (m_hp <= 0) return;
 	m_hp = 0;
-	ChangeState(std::make_shared<EnemyStateDead>());
+	m_isExpired = true;		// シーンから取り除く（撃破エフェクトを出さない）
 }
 
 void Enemy::OnDamage(int damage, bool isCritical)
