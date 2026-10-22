@@ -32,6 +32,7 @@ namespace
 	// デバッグキー（発表などで使わない時は false にする）
 	constexpr bool	kEnableDebugKeys	= true;
 	constexpr float	kDebugSpawnDistance	= 6.0f;		// F3 で敵を出す、プレイヤーの前方の距離
+	constexpr float	kDebugWarpBossDistance	= 12.0f;	// F7 でボスの手前のどこへ移動するか（ボスから入口の方へ）
 
 	// ボスが待っている位置（大聖堂の広間の奥。祭壇の手前）
 	// 広間はゲームの中では z = 65（入口・バリア）～ 125（奥の壁）。祭壇は z = 124 あたりから
@@ -83,6 +84,8 @@ void GameScene::UpdateDebugKeys()
 	bool isHp = m_debugHpKey.Update();
 	bool isSpawn = m_debugSpawnKey.Update();
 	bool isHpOne = m_debugHpOneKey.Update();
+	bool isInvincible = m_debugInvincibleKey.Update();
+	bool isWarp = m_debugWarpKey.Update();
 	if (!kEnableDebugKeys) return;
 
 	auto player = m_wpPlayer.lock();
@@ -107,6 +110,27 @@ void GameScene::UpdateDebugKeys()
 	{
 		player->DebugSetHpOne();
 		KdDebugGUI::Instance().AddLog("[Debug] HPを1にした\n");
+	}
+
+	// F6：無敵の切り替え（もう一度押すと元に戻る）
+	if (isInvincible)
+	{
+		bool on = player->DebugToggleInvincible();
+		KdDebugGUI::Instance().AddLog(on ? "[Debug] 無敵 ON\n" : "[Debug] 無敵 OFF\n");
+	}
+
+	// F7：ボスの手前（広間の中。バリアの内側）へ瞬間移動して、ボスの方を向く
+	if (isWarp)
+	{
+		Math::Vector3 pos = kBossPos;
+		for (const auto& obj : m_objList)
+		{
+			auto enemy = std::dynamic_pointer_cast<Enemy>(obj);
+			if (enemy && enemy->IsBoss() && enemy->IsAlive()) { pos = enemy->GetPos(); break; }
+		}
+		pos.z -= kDebugWarpBossDistance;
+		player->DebugWarp(pos, 0.0f);
+		KdDebugGUI::Instance().AddLog("[Debug] ボスの手前へ移動\n");
 	}
 
 	// F3：プレイヤーの前方にザコ敵を出す

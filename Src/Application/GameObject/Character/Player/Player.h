@@ -115,6 +115,18 @@ public:
 	void DebugFillHp() { if (m_hp > 0) m_hp = m_maxHp; }
 	void DebugSetHpOne() { if (m_hp > 0) m_hp = 1; }	// 倒れている時は何もしない
 
+	// デバッグ：無敵の切り替え（無敵の間は、敵の攻撃を受けてもダメージ・のけぞりが無い）
+	bool DebugToggleInvincible() { m_isDebugInvincible = !m_isDebugInvincible; return m_isDebugInvincible; }
+
+	// デバッグ：指定した位置へ瞬間移動する（angleDeg：向く角度。0 で +Z（奥）を向く）
+	void DebugWarp(const Math::Vector3& pos, float angleDeg)
+	{
+		m_pos = pos;
+		m_prevFramePos = pos;
+		m_angle = angleDeg;
+		m_gravity = 0.0f;
+	}
+
 	// アビリティを使う（ATBゲージとCTを確かめ、使えたらゲージを減らしてCTを始める）
 	// 使えたら、出す攻撃の種類（04・05）を返す。使えなければ 0
 	int TryStartAbility(AbilitySlot slot);
@@ -466,6 +478,7 @@ private:
 	int								m_guardBreakTimer = 0;		// 崩された後、ガードできない残りフレーム
 	bool							m_isCommandOpen = false;	// ATBコマンドメニューを開いているか
 	int								m_commandCursor = 0;		// メニューで選んでいる技
+	bool							m_isDebugInvincible = false;	// デバッグキー（F6）で無敵にしているか
 	float							m_atbGage = 0.0f;			// ATBゲージ（0 ～ kAtbBarMax × kAtbBarNum）
 	bool							m_isAbilityAttack = false;	// アビリティの攻撃中か
 

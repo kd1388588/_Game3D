@@ -2231,6 +2231,7 @@ void Player::OnDamage(int damage, bool isCritical)
 {
 	if (m_invincibleTimer > 0) return;
 	if (m_hp <= 0) return;
+	if (m_isDebugInvincible) return;	// デバッグキー（F6）で無敵
 
 	// 回避中はダメージを半分にする（1 より小さくはしない）
 	if (std::dynamic_pointer_cast<PlayerStateEvade>(m_state))
