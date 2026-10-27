@@ -81,11 +81,11 @@ namespace
 
 	// ATBゲージのたまり方（1本 = 100）
 	// ※時間ではたまらない（攻撃を当てる・回避することでだけたまる）
-	constexpr float kAtbHitGain				= 2.5f;		// 攻撃を当てた時にたまる量（多段ヒットになったので、1回あたりは半分）
+	constexpr float kAtbHitGain				= 2.5f;		// 攻撃を当てた時にたまる量（多段ヒットで何度も当たるので少なめ）
 	constexpr float kOperatorAtbHitRate		= 1.15f;		// オペレーターの時、当てた時にたまる量の倍率（よくたまる）
 	constexpr float kPunisherAtbHitRate		= 0.75f;	// パニッシャーの時の倍率（少なめ）
 	constexpr float kAtbCriticalRate		= 1.25f;		// クリティカルの時、当てた時にたまる量の倍率
-	constexpr float kAtbEvadeGain			= 5.0f;		// 回避した時にたまる量（約12回で1本）
+	constexpr float kAtbEvadeGain			= 5.0f;		// 回避した時にたまる量（20回で1本）
 
 	// ATBコマンドメニュー
 	constexpr float	kCommandTimeScale		= 0.1f;		// メニューを開いている間の時間の速さ（10分の1）
@@ -250,7 +250,7 @@ namespace
 	const Math::Vector3 kPunisherTrailColor	= { 1.0f, 0.4f, 0.08f };	// パニッシャーの軌跡の色（オレンジ）
 	const Math::Vector3 kSwordTrailCoreColor = { 1.0f, 1.0f, 1.0f };	// 刃先付近の芯の色
 	// 軌跡の画像（Tools/MakeTrailTexture.py で作成。無い時は上の色からプログラムで作る）
-	const std::string kfOperFatorTrailTexPath	= "Asset/Textures/Trail/SwordTrail_Operator.png";
+	const std::string kOperatorTrailTexPath	= "Asset/Textures/Trail/SwordTrail_Operator.png";
 	const std::string kPunisherTrailTexPath	= "Asset/Textures/Trail/SwordTrail_Punisher.png";
 	constexpr float kSwordTrailBaseBrightness = 0.15f;	// 刃の根元側の明るさ（先端を1.0とした割合）
 
