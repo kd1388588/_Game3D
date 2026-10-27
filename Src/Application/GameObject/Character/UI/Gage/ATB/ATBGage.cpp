@@ -72,12 +72,12 @@ void ATBGage::Init()
 
 	// モードの文字は2つとも作っておき、表示する方を切り替える
 	m_operatorText = std::make_shared<UIText>();
-	m_operatorText->SetText("OPERATOR", UIText::FontSize::Small);
+	m_operatorText->SetText("BLADE", UIText::FontSize::Small);
 	m_operatorText->SetColor(kOperatorColor);
 	SetTextLeft(m_operatorText, static_cast<float>(kGageLeft), kModeTextY);
 
 	m_punisherText = std::make_shared<UIText>();
-	m_punisherText->SetText("PUNISHER", UIText::FontSize::Small);
+	m_punisherText->SetText("SLASH", UIText::FontSize::Small);
 	m_punisherText->SetColor(kPunisherColor);
 	SetTextLeft(m_punisherText, static_cast<float>(kGageLeft), kModeTextY);
 
