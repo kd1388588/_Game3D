@@ -42,7 +42,7 @@ void TitleScene::Event()
 
 void TitleScene::Init()
 {
-	// タイトル画面では、エフェクシアのエフェクトを出さない（ゲーム画面に入ったら出す）
+	// タイトル画面では、エフェクシアのエフェクトを出さない
 	EffectPlayer::SetEnabled(false);
 
 	// BGM
