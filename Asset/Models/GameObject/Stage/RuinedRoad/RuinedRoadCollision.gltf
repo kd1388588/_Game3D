@@ -143,38 +143,38 @@
  "buffers": [
   {
    "uri": "RuinedRoadCollision.bin",
-   "byteLength": 89424
+   "byteLength": 123120
   }
  ],
  "bufferViews": [
   {
    "buffer": 0,
    "byteOffset": 0,
-   "byteLength": 19872,
+   "byteLength": 27360,
    "target": 34962
   },
   {
    "buffer": 0,
-   "byteOffset": 19872,
-   "byteLength": 19872,
+   "byteOffset": 27360,
+   "byteLength": 27360,
    "target": 34962
   },
   {
    "buffer": 0,
-   "byteOffset": 39744,
-   "byteLength": 13248,
+   "byteOffset": 54720,
+   "byteLength": 18240,
    "target": 34962
   },
   {
    "buffer": 0,
-   "byteOffset": 52992,
-   "byteLength": 26496,
+   "byteOffset": 72960,
+   "byteLength": 36480,
    "target": 34962
   },
   {
    "buffer": 0,
-   "byteOffset": 79488,
-   "byteLength": 9936,
+   "byteOffset": 109440,
+   "byteLength": 13680,
    "target": 34963
   }
  ],
@@ -182,15 +182,15 @@
   {
    "bufferView": 0,
    "componentType": 5126,
-   "count": 1656,
+   "count": 2280,
    "type": "VEC3",
    "min": [
-    -20.799999237060547,
+    -39.650001525878906,
     0.0,
     -170.89999389648438
    ],
    "max": [
-    20.799999237060547,
+    41.099998474121094,
     4.0,
     14.100000381469727
    ]
@@ -198,25 +198,25 @@
   {
    "bufferView": 1,
    "componentType": 5126,
-   "count": 1656,
+   "count": 2280,
    "type": "VEC3"
   },
   {
    "bufferView": 2,
    "componentType": 5126,
-   "count": 1656,
+   "count": 2280,
    "type": "VEC2"
   },
   {
    "bufferView": 3,
    "componentType": 5126,
-   "count": 1656,
+   "count": 2280,
    "type": "VEC4"
   },
   {
    "bufferView": 4,
    "componentType": 5125,
-   "count": 2484,
+   "count": 3420,
    "type": "SCALAR"
   }
  ]

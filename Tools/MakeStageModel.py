@@ -73,6 +73,15 @@ THRONE_START_Z = NAVE_END_Z
 THRONE_END_Z = 172.0
 THRONE_HALF_WIDTH = 14.0
 
+# 左右の部屋（中庭の左右の城壁の入口から入る。左：兵舎、右：武器庫）
+WING_DOOR_Z = (COURT_START_Z + COURT_END_Z) / 2	# 入口の z（中庭の真ん中）
+WING_DOOR_HALF_WIDTH = 2.4		# 入口の幅の半分
+WING_DOOR_HEIGHT = 5.4			# 入口の高さ（上は石の梁）
+WING_START_Z = 63.0				# 部屋の手前の壁（中の面）
+WING_END_Z = 85.0				# 部屋の奥の壁（中の面）
+WING_DEPTH = 18.0				# 中庭の城壁の外側の面から、部屋の一番外の壁までの距離
+WING_WALL_HEIGHT = 8.0
+
 # スタート地点の後ろの、入口の扉（ここから来た、という入口。中は真っ黒で通れない）
 DOOR_HALF_WIDTH = 2.4		# 扉の穴の幅の半分
 DOOR_SPRING_Y = 4.2			# アーチが曲がり始める高さ
@@ -714,20 +723,24 @@ def build_courtyard(road, stone, iron, rng):
 	h = COURT_WALL_HEIGHT
 	z0, z1 = COURT_START_Z, COURT_END_Z
 	build_floor(road, rng, -hw, hw, z0, z1, shade_range=(0.6, 0.85))
-	# 左右の城壁（上にぎざぎざ。真ん中あたりに、後で左右の部屋へつなげる扉の跡）
+	# 左右の城壁（上にぎざぎざ。真ん中に、左右の部屋へ入る入口）
+	zc = WING_DOOR_Z
+	dw = WING_DOOR_HALF_WIDTH
 	for sign in (-1, 1):
 		xa, xb = sorted((sign * hw, sign * (hw + t)))
-		z = z0
-		while z < z1 - 1e-6:
-			zz = min(z + 6.0, z1)
-			build_wall_box(stone, rng, xa, xb, z, zz, 0.0, h + rng.uniform(-1.0, 0.3), broken=0.4)
-			z = zz
+		for za, zb in ((z0, zc - dw), (zc + dw, z1)):		# 入口の手前と奥に分けて作る
+			z = za
+			while z < zb - 1e-6:
+				zz = min(z + 6.0, zb)
+				build_wall_box(stone, rng, xa, xb, z, zz, 0.0, h + rng.uniform(-1.0, 0.3), broken=0.4)
+				z = zz
+		build_wall_box(stone, rng, xa, xb, zc - dw, zc + dw, WING_DOOR_HEIGHT, h)	# 入口の上の壁
 		build_crenellations(stone, rng, xa, xb, z0, z1, h, along_x=False)
-		# 閉ざされた扉（左右の部屋へ続く。今は開かない）
-		zc = (z0 + z1) / 2
-		stone.add_box((sign * (hw - 0.2), 2.4, zc), (0.5, 4.8, 4.4), STONE_TILE_METER, shade=0.35, bottom_shade=0.25)
-		for k in (-1, 1):
-			stone.add_box((sign * (hw - 0.4), 2.8, zc + k * 2.6), (0.9, 5.6, 0.9), STONE_TILE_METER, shade=0.95)
+		# 入口の両わきの太い柱と、上の石の梁（中庭の側と部屋の側の両方）
+		for face in (hw - 0.4, hw + t + 0.4):
+			for k in (-1, 1):
+				stone.add_box((sign * face, 2.9, zc + k * (dw + 0.45)), (0.9, 5.8, 0.9), STONE_TILE_METER, shade=0.95)
+			stone.add_box((sign * face, WING_DOOR_HEIGHT + 0.35, zc), (0.9, 0.7, dw * 2 + 1.8), STONE_TILE_METER, shade=0.9)
 		# 壁の松明
 		for zz in (z0 + 8.0, z1 - 8.0):
 			add_wall_torch(stone, iron, sign * hw, 2.8, zz, -sign, 0.0)
@@ -745,6 +758,128 @@ def build_courtyard(road, stone, iron, rng):
 		pillar_guards.append((x, zc, 2.0))
 	# 真ん中の丸い石の台（後で闇のクリスタルを置く場所）
 	road.add_column((0.0, (z0 + z1) / 2), ROAD_TOP_Y - 0.1, 0.25, 4.0, PAVE_TILE_METER, sides=16, shade=0.7)
+
+
+def add_crate(wood, iron, x, y, z, s, rot=0.0):
+	"""木箱（ふちに鉄の帯）"""
+	wood.add_box((x, y + s / 2, z), (s, s, s), 1.0, rot_y=rot, shade=0.95, bottom_shade=0.55)
+	iron.add_box((x, y + s * 0.85, z), (s + 0.04, 0.06, s + 0.04), 0.5, rot_y=rot, shade=0.8)
+	iron.add_box((x, y + s * 0.15, z), (s + 0.04, 0.06, s + 0.04), 0.5, rot_y=rot, shade=0.8)
+
+
+def add_barrel(wood, iron, x, z, r=0.45, hgt=1.1):
+	"""樽（木の筒に鉄の輪）"""
+	wood.add_column((x, z), 0.0, hgt, r, 1.0, sides=12, shade=0.95)
+	for y in (0.15, hgt - 0.25):
+		iron.add_column((x, z), y, 0.08, r + 0.03, 0.5, sides=12, shade=0.8)
+
+
+def build_wing_rooms(road, stone, iron, wood, rng):
+	"""中庭の左右の部屋（左：兵舎、右：武器庫）。屋根は崩れ落ちて、上は夜空が見える
+	真ん中は戦えるように空けて、家具は壁ぎわに並べる"""
+	t = 1.6
+	inner = COURT_HALF_WIDTH + t			# 中庭の城壁の外側の面（ここから部屋が始まる）
+	outer = inner + WING_DEPTH				# 部屋の一番外の壁（中の面）
+	z0, z1 = WING_START_Z, WING_END_Z
+	h = WING_WALL_HEIGHT
+	zc = WING_DOOR_Z
+	for sign in (-1, 1):
+		def X(d):
+			"""中庭の城壁の外側の面からの距離 d を、x 座標にする（左の部屋は -、右の部屋は +）"""
+			return sign * (inner + d)
+
+		# 床（入口の厚みの分も敷く）
+		xa, xb = sorted((sign * COURT_HALF_WIDTH, X(WING_DEPTH)))
+		build_floor(road, rng, xa, xb, z0, z1, shade_range=(0.6, 0.85))
+
+		# 壁：一番外の壁と、手前・奥の壁（上は崩れている）
+		xa, xb = sorted((X(WING_DEPTH), X(WING_DEPTH + t)))
+		z = z0 - t
+		while z < z1 + t - 1e-6:
+			zz = min(z + 4.0, z1 + t)
+			build_wall_box(stone, rng, xa, xb, z, zz, 0.0, h + rng.uniform(-1.5, 0.5), broken=0.8)
+			z = zz
+		for za, zb in ((z0 - t, z0), (z1, z1 + t)):
+			x = 0.0
+			while x < WING_DEPTH + t - 1e-6:
+				xx = min(x + 4.0, WING_DEPTH + t)
+				xa, xb = sorted((X(x), X(xx)))
+				build_wall_box(stone, rng, xa, xb, za, zb, 0.0, h + rng.uniform(-1.5, 0.5), broken=0.8)
+				x = xx
+		# 壁の上に残った梁の名残（屋根が落ちた跡）
+		for zz in (z0 + 5.5, z1 - 5.5):
+			xa, xb = sorted((X(0.0), X(WING_DEPTH)))
+			stone.add_box(((xa + xb) / 2, h - 0.6, zz), (WING_DEPTH, 0.6, 0.6), STONE_TILE_METER,
+				shade=0.7, bottom_shade=0.5, top_offsets=[rng.uniform(-0.3, 0.0) for _ in range(4)])
+
+		# 壁の松明（外の壁に2つ、手前・奥の壁に1つずつ）
+		for zz in (zc - 6.0, zc + 6.0):
+			add_wall_torch(stone, iron, X(WING_DEPTH), 2.6, zz, -sign, 0.0)
+		add_wall_torch(stone, iron, X(WING_DEPTH * 0.55), 2.6, z0, 0.0, 1.0)
+		add_wall_torch(stone, iron, X(WING_DEPTH * 0.55), 2.6, z1, 0.0, -1.0)
+
+		if sign < 0:
+			# ===== 左：兵舎 =====
+			# 2段ベッド（手前と奥の壁ぎわに3つずつ。頭を壁に向ける）
+			for zw, inward in ((z0, 1.0), (z1, -1.0)):
+				for d in (4.0, 9.0, 14.0):
+					bx, bz = X(d), zw + inward * 1.25
+					for k in (-1, 1):
+						for kk in (-1, 1):
+							wood.add_box((bx + k * 0.48, 0.95, bz + kk * 1.1), (0.1, 1.9, 0.1), 1.0, shade=0.85)	# 柱
+					for y in (0.45, 1.45):
+						wood.add_box((bx, y, bz), (1.05, 0.12, 2.3), 1.0, shade=0.9, bottom_shade=0.6)			# 板
+						road.add_box((bx, y + 0.12, bz), (0.9, 0.12, 2.0), 1.5, shade=0.45, bottom_shade=0.35)	# 古い布団
+					pillar_guards.append((bx, bz, 1.6))
+			# 長い机とベンチ（外の壁ぎわ）
+			tx = X(WING_DEPTH - 2.4)
+			wood.add_box((tx, 0.85, zc), (1.4, 0.12, 7.0), 1.0, shade=0.95, bottom_shade=0.6)
+			for k in (-1, 1):
+				for kz in (-3.0, 0.0, 3.0):
+					wood.add_box((tx + k * 0.55, 0.42, zc + kz), (0.12, 0.84, 0.12), 1.0, shade=0.8)
+				wood.add_box((tx + k * 1.15, 0.45, zc), (0.4, 0.08, 6.4), 1.0, shade=0.9, bottom_shade=0.6)
+			pillar_guards.append((tx, zc - 2.0, 2.8))
+			pillar_guards.append((tx, zc + 2.0, 2.8))
+			# 樽（隅に置く）
+			for (d, zz) in ((WING_DEPTH - 1.0, z0 + 1.0), (WING_DEPTH - 2.0, z0 + 1.2), (WING_DEPTH - 1.0, z1 - 1.0)):
+				add_barrel(wood, iron, X(d), zz)
+				pillar_guards.append((X(d), zz, 0.9))
+			# 部屋の真ん中寄りに、かがり火（暖をとっていた跡）
+			add_brazier(stone, iron, X(WING_DEPTH * 0.45), zc + 4.0, 1.0)
+		else:
+			# ===== 右：武器庫 =====
+			# 武器かけ（外の壁ぎわ。木の枠に、槍と剣を立てかける）
+			rx = X(WING_DEPTH - 0.6)
+			for zz in (zc - 5.0, zc, zc + 5.0):
+				for kz in (-1.4, 1.4):
+					wood.add_box((rx, 1.1, zz + kz), (0.5, 2.2, 0.12), 1.0, shade=0.85)	# 枠の柱
+				for y in (0.5, 1.6):
+					wood.add_box((rx, y, zz), (0.5, 0.1, 3.0), 1.0, shade=0.9)			# 横の棒
+				for i in range(6):
+					sz = zz - 1.1 + i * 0.44
+					tall = rng.uniform(2.2, 2.8)
+					iron.add_box((rx - sign * 0.15, tall / 2, sz), (0.05, tall, 0.05), 0.5, rot_x=rng.uniform(-0.08, 0.08), shade=0.85)
+					iron.add_box((rx - sign * 0.15, tall + 0.12, sz), (0.04, 0.3, 0.1), 0.5, shade=1.0)			# 槍の先
+				pillar_guards.append((rx, zz, 3.0))
+			# 木箱（手前と奥の隅に積む）
+			for zw, inward in ((z0, 1.0), (z1, -1.0)):
+				for (d, s, rot) in ((2.5, 1.2, 0.1), (3.9, 1.0, -0.2), (12.0, 1.3, 0.05), (13.6, 0.9, 0.3)):
+					add_crate(wood, iron, X(d), 0.0, zw + inward * (s / 2 + 0.3), s, rot)
+					pillar_guards.append((X(d), zw + inward * (s / 2 + 0.3), s))
+				add_crate(wood, iron, X(2.6), 1.2, zw + inward * 0.85, 0.8, 0.4)		# 上に積んだ箱
+			# 鍛冶の炉と金床（手前の壁ぎわ）
+			fx, fz = X(7.5), z0 + 1.4
+			stone.add_box((fx, 0.6, fz), (2.4, 1.2, 1.8), STONE_TILE_METER, shade=0.75, bottom_shade=0.45)
+			stone.add_box((fx, 1.35, fz), (1.6, 0.3, 1.2), STONE_TILE_METER, shade=0.15)							# 炭
+			stone.add_box((fx, 3.0, fz - 0.5), (1.4, 3.6, 0.8), STONE_TILE_METER, shade=0.65)						# 煙突
+			add_light((fx, 1.8, fz), BRAZIER_LIGHT)
+			pillar_guards.append((fx, fz, 2.4))
+			ax, az = X(7.5), z0 + 4.2
+			iron.add_box((ax, 0.3, az), (0.5, 0.6, 0.5), 0.5, shade=0.8)
+			iron.add_box((ax, 0.72, az), (0.45, 0.25, 1.0), 0.5, shade=0.95)										# 金床
+			pillar_guards.append((ax, az, 1.0))
+			add_barrel(wood, iron, X(10.0), z0 + 1.0, 0.4, 0.9)		# 水おけ
+			pillar_guards.append((X(10.0), z0 + 1.0, 0.8))
 
 
 def build_throne_room(road, stone, iron, rng):
@@ -1121,6 +1256,7 @@ def main():
 	build_entrance_door(stone, door, iron, random.Random(SEED + 2))	# 扉は別の乱数を使う（ほかの形が変わらないように）
 	build_gatehouse(road, stone, iron, random.Random(SEED + 10))
 	build_courtyard(road, stone, iron, random.Random(SEED + 11))
+	build_wing_rooms(road, stone, iron, door, random.Random(SEED + 13))
 	build_cathedral(road, stone, iron, rng)
 	build_throne_room(road, stone, iron, random.Random(SEED + 12))
 	# 城の中の道：両わきの壁に松明

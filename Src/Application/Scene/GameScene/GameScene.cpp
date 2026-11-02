@@ -37,6 +37,7 @@ namespace
 
 	// ステージの部屋の並び（ゲームの中の z。Tools/MakeStageModel.py の値 × ステージの拡大率 1.25）
 	//   -15～57.5 城の中の道 ／ 57.5～70 門楼 ／ 70～115 中庭 ／ 115～175 大聖堂の広間 ／ 175～215 玉座の間
+	//   中庭の左右の部屋：x ±27～±49.5、z 79～106（中庭の真ん中の城壁の入口から入る。左：兵舎、右：武器庫）
 
 	// バリア（置く場所：下の真ん中、大きさ：幅・高さ）
 	const Math::Vector3 kGateBarrierPos			= { 0.0f, 0.0f, 57.5f };	// 門楼の入口（城の中の道の敵を全滅させると開く）
@@ -60,6 +61,13 @@ namespace
 		{ -7.0f, 0.0f, 86.0f },
 		{  7.0f, 0.0f, 88.0f },
 		{  0.0f, 0.0f, 101.0f },
+	};
+	const std::vector<Math::Vector3> kWingEnemies =		// 中庭の左右の部屋（兵舎・武器庫）
+	{
+		{ -36.0f, 0.0f, 88.0f },
+		{ -42.0f, 0.0f, 99.0f },
+		{  36.0f, 0.0f, 88.0f },
+		{  42.0f, 0.0f, 99.0f },
 	};
 }
 
@@ -272,6 +280,7 @@ void GameScene::Init()
 	cathedralGate.barrier = cathedralBarrier;
 	cathedralGate.name = "大聖堂";
 	for (const auto& pos : kCourtyardEnemies) cathedralGate.enemies.push_back(SpawnEnemy(pos, false, player));
+	for (const auto& pos : kWingEnemies) cathedralGate.enemies.push_back(SpawnEnemy(pos, false, player));	// 左右の部屋の敵も倒さないと、大聖堂は開かない
 	m_gates.push_back(cathedralGate);
 
 	// ボス：一番奥の玉座の間で待っている（プレイヤーが近づくと動き出す）
