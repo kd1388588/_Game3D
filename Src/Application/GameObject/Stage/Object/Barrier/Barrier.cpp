@@ -4,11 +4,6 @@ namespace
 {
 	const std::string	kTexturePath	= "Asset/Textures/Stage/Barrier.png";
 
-	// 大聖堂の入口（Tools/MakeStageModel.py の NAVE_START_Z = 52、ENTRANCE_HALF_WIDTH = 9 に
-	// ステージの拡大率 1.25 をかけた位置。両わきの柱に少しめり込ませてすき間をなくす）
-	const Math::Vector3	kPosition		= { 0.0f, 0.0f, 65.0f };
-	const Math::Vector2	kSize			= { 23.0f, 10.0f };		// 幅・高さ
-
 	const Math::Vector3	kColor			= { 0.55f, 0.6f, 1.0f };	// 光の色（画像の色にかける）
 	constexpr float		kPulseSpeed		= 0.05f;	// ゆらめきの速さ
 	constexpr float		kPulseRange		= 0.25f;	// ゆらめきの強さ
@@ -19,13 +14,13 @@ void Barrier::Init()
 {
 	m_spPolygon = std::make_shared<KdSquarePolygon>(kTexturePath);
 	m_spPolygon->SetPivot(KdSquarePolygon::PivotType::Center_Bottom);
-	m_spPolygon->SetScale(kSize);
+	m_spPolygon->SetScale(m_size);
 
 	// 板で通れないようにする（ステージの壁と同じ TypeBump）
 	m_pCollider = std::make_unique<KdCollider>();
 	m_pCollider->RegisterCollisionShape("Barrier", m_spPolygon, KdCollider::TypeBump);
 
-	m_mWorld = Math::Matrix::CreateTranslation(kPosition);
+	m_mWorld = Math::Matrix::CreateTranslation(m_pos);
 }
 
 void Barrier::Update()

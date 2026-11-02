@@ -2,7 +2,8 @@
 
 #include "../Base/BaseStageObject.h"
 
-// 廃墟の参道と崩れた大聖堂（石畳の道・折れた柱・崩れた壁・門・ボスと戦う広間）
+// 山の上の廃城（城の中の道・門楼・中庭・崩れた大聖堂・玉座の間。光源の小物の台も含む）
+// 光そのもの（点光源・炎）は StageLights が出す
 // モデルは Tools/MakeStageModel.py で作成
 class RuinedRoad : public BaseStageObject
 {

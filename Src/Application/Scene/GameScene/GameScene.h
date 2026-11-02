@@ -5,6 +5,7 @@
 
 class Player;
 class Barrier;
+class Enemy;
 
 class GameScene : public BaseScene
 {
@@ -29,13 +30,22 @@ private:
 	}
 
 	// 敵を生成して配置する
-	void SpawnEnemy(const Math::Vector3& pos, bool isBoss, const std::shared_ptr<Player>& target);
+	std::shared_ptr<Enemy> SpawnEnemy(const Math::Vector3& pos, bool isBoss, const std::shared_ptr<Player>& target);
 
 	// クリア・ゲームオーバーの判定（条件を満たしてから少し待って画面を切り替える）
 	void CheckGameEnd();
 
-	// ザコ敵を全員倒したら、ボスの広間のバリアを開ける
+	// 部屋ごとの敵を全員倒したら、その先のバリアを開ける
 	void UpdateBarrier();
+
+	// バリアと、それを開けるために倒す敵のまとまり
+	struct Gate
+	{
+		std::weak_ptr<Barrier>				barrier;
+		std::vector<std::weak_ptr<Enemy>>	enemies;
+		std::string							name;
+	};
+	std::vector<Gate>	m_gates;
 
 	// 生き残っている敵の数
 	int GetAliveEnemyCount() const;
@@ -54,7 +64,6 @@ private:
 	InputHelper::KeyTrigger	m_debugTitleKey{ InputHelper::Bind::DebugToTitle };
 
 	std::weak_ptr<Player>	m_wpPlayer;
-	std::weak_ptr<Barrier>	m_wpBarrier;
 	int						m_gameOverTimer = 0;	// プレイヤーが倒れてからの経過フレーム
 	int						m_clearTimer = 0;		// 敵が全滅してからの経過フレーム
 };

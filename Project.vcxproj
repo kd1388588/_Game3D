@@ -294,6 +294,7 @@
     <ClInclude Include="Src\Application\GameObject\Stage\Object\CathedralRuins\CathedralRuins.h" />
     <ClInclude Include="Src\Application\GameObject\Stage\Object\RuinedRoad\RuinedRoad.h" />
     <ClInclude Include="Src\Application\GameObject\Stage\Object\Barrier\Barrier.h" />
+    <ClInclude Include="Src\Application\GameObject\Stage\Object\StageLights\StageLights.h" />
     <ClInclude Include="Src\Application\GameObject\Stage\Sky\Sky.h" />
     <ClInclude Include="Src\Application\main.h" />
     <ClInclude Include="Src\Application\Scene\BaseScene\BaseScene.h" />
@@ -385,6 +386,7 @@
     <ClCompile Include="Src\Application\GameObject\Stage\Object\CathedralRuins\CathedralRuins.cpp" />
     <ClCompile Include="Src\Application\GameObject\Stage\Object\RuinedRoad\RuinedRoad.cpp" />
     <ClCompile Include="Src\Application\GameObject\Stage\Object\Barrier\Barrier.cpp" />
+    <ClCompile Include="Src\Application\GameObject\Stage\Object\StageLights\StageLights.cpp" />
     <ClCompile Include="Src\Application\GameObject\Stage\Sky\Sky.cpp" />
     <ClCompile Include="Src\Application\main.cpp" />
     <ClCompile Include="Src\Application\Scene\BaseScene\BaseScene.cpp" />

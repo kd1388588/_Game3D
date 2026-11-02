@@ -7,9 +7,20 @@
 #   ・道の両側に並ぶ、折れた柱
 #   ・その外側の、崩れた低い石壁
 #   ・柱のまわりの見えない当たり判定（RuinedRoadCollision.gltf。柱に近づきすぎないように）
-#   ・大聖堂の手前の、半分崩れたアーチの門
 #   ・スタート地点の後ろの壁の、入口の扉（開いているが、中は真っ黒で通れない）
-#   ・道の先の、崩れた大聖堂（ボスと戦う広間。厚い壁・窓の穴・中の柱・奥の半円の壁）
+#   ・道の先の門楼（門の建物。入口にバリアが立つ）
+#   ・中庭（高い城壁に囲まれた広場。四隅に崩れた塔）
+#   ・崩れた大聖堂（厚い壁・窓の穴・中の柱。入口にバリアが立つ）
+#   ・一番奥の玉座の間（ボスと戦う。奥の壁が崩れて夜空が見える）
+#   ・光源の小物（壁掛け松明・かがり火・燭台）。光の位置は RuinedRoadLights.csv に書き出し、
+#     ゲーム側（StageLights）が点光源と炎の光を出す
+#
+#   部屋の並び（モデルの座標。ゲームの中ではステージの拡大率 1.25 倍）
+#     z = -12～46  城の中の道（スタート地点・外郭の大通り）
+#     z =  46～56  門楼
+#     z =  56～92  中庭
+#     z =  92～140 大聖堂の広間
+#     z = 140～172 玉座の間
 #     ※壁や柱はすべて厚みのある箱で作る（薄い板だと、キャラが勢いよく動いた時にすり抜けるため）
 #
 # 座標はゲームの座標（左手系：+Z が前）で作り、書き出す時に glTF の座標（右手系）に直す
@@ -28,25 +39,39 @@ SEED = 1018
 
 # ===== 道の大きさ（メートル） =====
 ROAD_START_Z = -12.0		# 道の始まり（スタート地点の少し後ろ）
-ROAD_END_Z = 52.0			# 道の終わり（大聖堂の手前）
+ROAD_END_Z = 46.0			# 道の終わり（門楼の手前）
 ROAD_TOP_Y = 0.04			# 石畳の上の面の高さ
 PILLAR_X = 11.0				# 柱が並ぶ位置（道の中心からの距離）
 PILLAR_STEP = 7.0			# 柱の間隔
 WALL_X = 16.0				# 両わきの石壁の位置（石畳はこの壁まで敷きつめる＝道から落ちない）
 WALL_MIN_HEIGHT = 3.6		# 石壁の一番低い所（ジャンプの高さ 約3.1m より高くして、乗り越えられないようにする）
 ROAD_WIDTH = WALL_X * 2		# 石畳の幅
-GATE_Z = 46.0				# 門の位置
-GATE_HALF_WIDTH = 8.0		# 門の幅の半分
+GATE_Z = 46.0				# 門楼の手前の壁の位置
+GATE_HALF_WIDTH = 5.0		# 門の穴の幅の半分（ここにバリアが立つ）
+GATEHOUSE_DEPTH = 10.0		# 門楼の奥行き
+GATEHOUSE_HALF_WIDTH = 8.0	# 門楼の幅の半分
+
+# ===== 中庭 =====
+COURT_START_Z = GATE_Z + GATEHOUSE_DEPTH	# 56
+COURT_END_Z = 92.0			# 中庭の奥（＝大聖堂の入口の壁）
+COURT_HALF_WIDTH = 20.0		# 中庭の幅の半分
+COURT_WALL_HEIGHT = 9.0		# 中庭の城壁の高さ
 
 # ===== 大聖堂（ボスの広間） =====
-NAVE_START_Z = 52.0			# 入口の壁の位置
-NAVE_END_Z = 100.0			# 奥の壁の位置（この先に半円の壁）
+NAVE_START_Z = COURT_END_Z	# 入口の壁の位置（中庭の奥）
+NAVE_END_Z = 140.0			# 奥の壁の位置（この先に玉座の間）
 NAVE_HALF_WIDTH = 22.0		# 広間の幅の半分（大きなボスと戦えるように広くする）
 NAVE_WALL_THICK = 1.6		# 壁の厚さ
 NAVE_BAY = 6.0				# 柱と柱の間隔（窓1つ分）
 NAVE_PILLAR_X = 16.0		# 中の柱の位置（真ん中で待つボスにかからないように）
 NAVE_WINDOW_BOTTOM = 4.0	# 窓の穴の下の高さ（ジャンプで窓に乗れないように高くする）
 ENTRANCE_HALF_WIDTH = 9.0	# 入口の幅の半分
+NAVE_BACK_DOOR_HALF_WIDTH = 6.0	# 奥の壁の、玉座の間への入口の幅の半分
+
+# ===== 玉座の間（ボス） =====
+THRONE_START_Z = NAVE_END_Z
+THRONE_END_Z = 172.0
+THRONE_HALF_WIDTH = 14.0
 
 # スタート地点の後ろの、入口の扉（ここから来た、という入口。中は真っ黒で通れない）
 DOOR_HALF_WIDTH = 2.4		# 扉の穴の幅の半分
@@ -229,6 +254,58 @@ def build_road(mesh, rng):
 		z += step
 
 
+# 光源（ゲーム側の StageLights が点光源と炎の光を出す。位置はモデルの座標）
+# (x, y, z, r, g, b, 光の届く半径, 炎の大きさ)
+stage_lights = []
+TORCH_LIGHT = ((1.0, 0.55, 0.2), 7.0, 0.5)		# 色・半径・炎の大きさ（壁掛け松明）
+BRAZIER_LIGHT = ((1.0, 0.6, 0.25), 11.0, 1.2)	# かがり火
+CANDLE_LIGHT = ((1.0, 0.7, 0.35), 4.0, 0.25)	# 燭台
+
+
+def add_light(pos, light):
+	color, radius, flame = light
+	stage_lights.append((pos[0], pos[1], pos[2], color[0], color[1], color[2], radius, flame))
+
+
+def add_wall_torch(stone, iron, x, y, z, out_x, out_z):
+	"""壁掛け松明（壁の金具・斜めに出た柄・鉄のかご）。(out_x, out_z) は壁から外へ向かう向き"""
+	def at(d, h):
+		return (x + out_x * d, y + h, z + out_z * d)
+	rot = math.atan2(out_x, out_z)
+	iron.add_box(at(0.04, 0.0), (0.28, 0.42, 0.08), 0.5, rot_y=rot, shade=0.9, bottom_shade=0.7)
+	iron.add_box(at(0.18, -0.05), (0.06, 0.06, 0.3), 0.5, rot_y=rot, shade=0.85)
+	stone.add_box(at(0.3, 0.2), (0.09, 0.7, 0.09), STONE_TILE_METER, rot_y=rot, rot_x=-0.35, shade=0.32, bottom_shade=0.25)
+	iron.add_column((at(0.42, 0)[0], at(0.42, 0)[2]), y + 0.45, 0.18, 0.13, 0.5, sides=8, shade=0.9)
+	add_light(at(0.45, 0.85), TORCH_LIGHT)
+
+
+def add_brazier(stone, iron, x, z, scale=1.0):
+	"""かがり火（八角形の石の台・3本脚の鉄の器・炭）"""
+	s = scale
+	stone.add_column((x, z), 0.0, 0.3 * s, 0.55 * s, STONE_TILE_METER, sides=8, shade=0.85)
+	iron.add_column((x, z), 0.3 * s, 0.7 * s, 0.14 * s, 0.5, sides=8, shade=0.8)
+	for i in range(3):
+		a = 2 * math.pi * i / 3
+		iron.add_box((x + math.cos(a) * 0.32 * s, 0.7 * s, z + math.sin(a) * 0.32 * s), (0.07 * s, 0.8 * s, 0.07 * s), 0.5,
+			rot_y=-a, shade=0.8)
+	iron.add_column((x, z), 1.0 * s, 0.35 * s, 0.6 * s, 0.5, sides=12, shade=0.9)
+	stone.add_column((x, z), 1.3 * s, 0.1 * s, 0.5 * s, STONE_TILE_METER, sides=10, shade=0.15)
+	pillar_guards.append((x, z, 1.2 * s))
+	add_light((x, 1.9 * s, z), (BRAZIER_LIGHT[0], BRAZIER_LIGHT[1] * s, BRAZIER_LIGHT[2] * s))
+
+
+def add_candelabra(stone, iron, x, z):
+	"""燭台（鉄の柱に3本の腕、ろうそく）"""
+	iron.add_column((x, z), 0.0, 0.1, 0.35, 0.5, sides=8, shade=0.8)
+	iron.add_column((x, z), 0.1, 1.6, 0.05, 0.5, sides=6, shade=0.85)
+	for a in (0.0, 2 * math.pi / 3, 4 * math.pi / 3):
+		ax, az = x + math.cos(a) * 0.35, z + math.sin(a) * 0.35
+		iron.add_box(((x + ax) / 2, 1.6, (z + az) / 2), (0.36, 0.04, 0.04), 0.5, rot_y=-a, shade=0.85)
+		stone.add_column((ax, az), 1.62, 0.22, 0.04, STONE_TILE_METER, sides=6, shade=1.0)
+		add_light((ax, 1.95, az), CANDLE_LIGHT)
+	pillar_guards.append((x, z, 0.7))
+
+
 # 柱のまわりの見えない当たり判定（柱から、これだけ外側まで近づけない）
 PILLAR_GUARD_MARGIN = 0.6
 PILLAR_GUARD_HEIGHT = 4.0
@@ -278,8 +355,8 @@ def build_walls(mesh, rng):
 	thick = WALL_THICK
 	for side in (-1, 1):
 		z = ROAD_START_Z - thick
-		while z < NAVE_START_Z - 0.8:
-			z1 = min(z + seg, NAVE_START_Z - 0.8)
+		while z < GATE_Z - 0.8:
+			z1 = min(z + seg, GATE_Z - 0.8)
 			h = rng.uniform(WALL_MIN_HEIGHT + 0.4, WALL_MIN_HEIGHT + 1.8)
 			offsets = [rng.uniform(-0.4, 0.1) for _ in range(4)]
 			mesh.add_box((side * (WALL_X + thick / 2), h / 2, (z + z1) / 2), (thick, h, (z1 - z) + 0.05),
@@ -554,49 +631,175 @@ def build_rubble(mesh, rng):
 			rot_y=rng.uniform(0, math.pi), rot_x=rng.uniform(-0.3, 0.3), shade=rng.uniform(0.6, 0.85), bottom_shade=0.4)
 
 
-def build_gate(mesh, rng):
-	"""大聖堂の手前の、半分崩れたアーチの門"""
-	gx = GATE_HALF_WIDTH
-	# 左右の太い柱（右はアーチの途中まで残り、左は途中で崩れている）
-	for side, h in ((-1, 5.5), (1, 9.0)):
-		mesh.add_box((side * gx, 0.5, GATE_Z), (2.6, 1.0, 2.6), STONE_TILE_METER, shade=0.85, bottom_shade=0.4)
-		pillar_guards.append((side * gx, GATE_Z, 2.6))
-		offsets = [rng.uniform(-0.8, 0.0) for _ in range(4)] if side < 0 else None
-		mesh.add_box((side * gx, 1.0 + h / 2, GATE_Z), (1.8, h, 1.8), STONE_TILE_METER, shade=0.9, bottom_shade=0.6,
-			top_offsets=offsets)
-
-	# アーチ：右の柱から、半円に石を並べる（左半分は崩れて無い）
-	radius = gx
-	spring_y = 10.0
-	stones = 12
-	for i in range(stones):
-		a0 = math.pi * i / stones
-		a1 = math.pi * (i + 1) / stones
-		am = (a0 + a1) / 2
-		if am > math.pi * 0.55:
-			break	# ここから先は崩れている
-		x = math.cos(am) * radius
-		y = spring_y + math.sin(am) * radius * 0.55
-		length = radius * (a1 - a0) * 1.05
-		mesh.add_box((x, y, GATE_Z), (length, 1.2, 1.6), STONE_TILE_METER, rot_y=0.0, shade=0.9, bottom_shade=0.7)
-		# 石の傾き：半円の接線に合わせる（X軸まわりではなくZ軸まわりなので、頂点を直接回す）
-		rotate_last_box_z(mesh, (x, y, GATE_Z), am - math.pi / 2)
-
-	# 門の下に落ちたアーチの石
-	for _ in range(6):
-		mesh.add_box((rng.uniform(-gx, 0.0), 0.4, GATE_Z + rng.uniform(-2.5, 2.5)), (1.4, 0.8, 1.2), STONE_TILE_METER,
-			rot_y=rng.uniform(0, math.pi), rot_x=rng.uniform(-0.25, 0.25), shade=0.75, bottom_shade=0.4)
+def build_wall_box(mesh, rng, x0, x1, z0, z1, y0, y1, broken=0.0, shade=None):
+	"""厚みのある壁の箱。broken > 0 なら上をギザギザに崩す"""
+	offsets = [rng.uniform(-broken, 0.0) for _ in range(4)] if broken > 0 else None
+	mesh.add_box(((x0 + x1) / 2, (y0 + y1) / 2, (z0 + z1) / 2), (x1 - x0, y1 - y0, z1 - z0), STONE_TILE_METER,
+		shade=shade if shade is not None else rng.uniform(0.8, 0.95), bottom_shade=0.45, top_offsets=offsets)
 
 
-def build_cathedral(road, stone, rng):
-	"""道の先の、崩れた大聖堂（ボスと戦う広間）"""
+def build_floor(road, rng, x0, x1, z0, z1, y=ROAD_TOP_Y, step=2.0, shade_range=(0.75, 0.95)):
+	"""石畳の床（細かい板を並べる）"""
+	z = z0
+	while z < z1 - 1e-6:
+		zs = min(step, z1 - z)
+		x = x0
+		while x < x1 - 1e-6:
+			xs = min(step, x1 - x)
+			shade = rng.uniform(*shade_range)
+			road.add_box((x + xs / 2, y + rng.uniform(-0.02, 0.0) - 0.1, z + zs / 2), (xs, 0.2, zs), PAVE_TILE_METER,
+				shade=shade, bottom_shade=shade * 0.6)
+			x += xs
+		z += zs
+
+
+def build_crenellations(mesh, rng, x0, x1, z0, z1, y, along_x=True):
+	"""城壁の上のぎざぎざ（凸凹の石）。ところどころ欠けている"""
+	length = (x1 - x0) if along_x else (z1 - z0)
+	n = int(length / 1.6)
+	for i in range(n):
+		if rng.random() < 0.25:
+			continue	# 欠けている
+		if along_x:
+			cx, cz = x0 + (i + 0.5) * (x1 - x0) / n, (z0 + z1) / 2
+			size = ((x1 - x0) / n * 0.6, 1.0, z1 - z0)
+		else:
+			cx, cz = (x0 + x1) / 2, z0 + (i + 0.5) * (z1 - z0) / n
+			size = (x1 - x0, 1.0, (z1 - z0) / n * 0.6)
+		mesh.add_box((cx, y + 0.5, cz), size, STONE_TILE_METER, shade=rng.uniform(0.8, 0.95), bottom_shade=0.6)
+
+
+def build_gatehouse(road, stone, iron, rng):
+	"""門楼：道の終わりにある門の建物（入口と出口に穴の開いた厚い壁・両わきの壁・上の屋根）
+	入口の穴にはゲーム側でバリアを立てる（城の中の道の敵を全滅させると開く）"""
+	t = 1.6
+	hw = GATEHOUSE_HALF_WIDTH
+	h = 10.0
+	z0, z1 = GATE_Z, GATE_Z + GATEHOUSE_DEPTH
+	build_floor(road, rng, -hw, hw, z0 - t / 2, z1 + t / 2)
+	# 前の壁（道の壁 x=±16 までつなげる）と後ろの壁（中庭の城壁へつながる）
+	for zc, outer in ((z0, WALL_X + WALL_THICK), (z1, COURT_HALF_WIDTH + t)):
+		for sign in (-1, 1):
+			xa, xb = sorted((sign * GATE_HALF_WIDTH, sign * outer))
+			build_wall_box(stone, rng, xa, xb, zc - t / 2, zc + t / 2, 0.0, h, broken=0.6)
+		# 門の上の壁（アーチの上）と、門の両わきの太い柱
+		build_wall_box(stone, rng, -GATE_HALF_WIDTH, GATE_HALF_WIDTH, zc - t / 2, zc + t / 2, 7.0, h)
+		pointed_arch(stone, zc, t + 0.2, 0.7, GATE_HALF_WIDTH, 4.2, 0.95)
+		for sign in (-1, 1):
+			stone.add_box((sign * (GATE_HALF_WIDTH + 0.6), h / 2 + 0.5, zc), (1.4, h + 1.0, t + 0.6), STONE_TILE_METER,
+				shade=0.95, bottom_shade=0.5)
+		build_crenellations(stone, rng, -hw - 1, hw + 1, zc - t / 2, zc + t / 2, h)
+	# 両わきの壁
+	for sign in (-1, 1):
+		xa, xb = sorted((sign * hw, sign * (hw + t)))
+		build_wall_box(stone, rng, xa, xb, z0, z1, 0.0, h)
+	# 屋根（門楼の中は少し暗い通路になる）
+	stone.add_box((0.0, h + 0.4, (z0 + z1) / 2), (hw * 2 + t * 2, 0.8, GATEHOUSE_DEPTH + t), STONE_TILE_METER,
+		shade=0.7, bottom_shade=0.4)
+	# 門の前の、吊るした格子の名残（上に引き上げられた鉄の格子）
+	for i in range(-4, 5):
+		iron.add_box((i * GATE_HALF_WIDTH / 4.5, 6.4, z0 - t / 2 - 0.15), (0.12, 1.4, 0.12), 0.5, shade=0.8)
+	iron.add_box((0.0, 5.8, z0 - t / 2 - 0.15), (GATE_HALF_WIDTH * 2, 0.14, 0.14), 0.5, shade=0.8)
+	# 光：門の前の両わきにかがり火、中の壁に松明
+	for sign in (-1, 1):
+		add_brazier(stone, iron, sign * (GATE_HALF_WIDTH + 3.0), z0 - 3.0, 1.2)
+		add_wall_torch(stone, iron, sign * hw, 2.6, (z0 + z1) / 2, -sign, 0.0)
+
+
+def build_courtyard(road, stone, iron, rng):
+	"""中庭：高い城壁に囲まれた広場。四隅に崩れた塔、ところどころに折れた柱。
+	真ん中は空けておく（後で闇のクリスタルを置く）"""
+	t = 1.6
+	hw = COURT_HALF_WIDTH
+	h = COURT_WALL_HEIGHT
+	z0, z1 = COURT_START_Z, COURT_END_Z
+	build_floor(road, rng, -hw, hw, z0, z1, shade_range=(0.6, 0.85))
+	# 左右の城壁（上にぎざぎざ。真ん中あたりに、後で左右の部屋へつなげる扉の跡）
+	for sign in (-1, 1):
+		xa, xb = sorted((sign * hw, sign * (hw + t)))
+		z = z0
+		while z < z1 - 1e-6:
+			zz = min(z + 6.0, z1)
+			build_wall_box(stone, rng, xa, xb, z, zz, 0.0, h + rng.uniform(-1.0, 0.3), broken=0.4)
+			z = zz
+		build_crenellations(stone, rng, xa, xb, z0, z1, h, along_x=False)
+		# 閉ざされた扉（左右の部屋へ続く。今は開かない）
+		zc = (z0 + z1) / 2
+		stone.add_box((sign * (hw - 0.2), 2.4, zc), (0.5, 4.8, 4.4), STONE_TILE_METER, shade=0.35, bottom_shade=0.25)
+		for k in (-1, 1):
+			stone.add_box((sign * (hw - 0.4), 2.8, zc + k * 2.6), (0.9, 5.6, 0.9), STONE_TILE_METER, shade=0.95)
+		# 壁の松明
+		for zz in (z0 + 8.0, z1 - 8.0):
+			add_wall_torch(stone, iron, sign * hw, 2.8, zz, -sign, 0.0)
+	# 四隅の崩れた塔（太い八角形の柱）
+	for sx in (-1, 1):
+		for zc in (z0 + 3.0, z1 - 3.0):
+			x = sx * (hw - 3.0)
+			stone.add_column((x, zc), 0.0, rng.uniform(10.0, 14.0), 3.2, STONE_TILE_METER, sides=8, broken=1.5, rng=rng)
+			pillar_guards.append((x, zc, 6.4))
+			add_brazier(stone, iron, x - sx * 5.0, zc + (4.5 if zc < (z0 + z1) / 2 else -4.5), 1.3)
+	# 折れた柱（戦う場所の目印。真ん中は空ける）
+	for (x, zc) in ((-9.0, z0 + 12.0), (9.0, z0 + 12.0), (-9.0, z1 - 12.0), (9.0, z1 - 12.0)):
+		stone.add_box((x, 0.3, zc), (2.0, 0.6, 2.0), STONE_TILE_METER, shade=0.85, bottom_shade=0.45)
+		stone.add_column((x, zc), 0.6, rng.uniform(1.5, 4.5), 0.75, STONE_TILE_METER, broken=0.6, rng=rng)
+		pillar_guards.append((x, zc, 2.0))
+	# 真ん中の丸い石の台（後で闇のクリスタルを置く場所）
+	road.add_column((0.0, (z0 + z1) / 2), ROAD_TOP_Y - 0.1, 0.25, 4.0, PAVE_TILE_METER, sides=16, shade=0.7)
+
+
+def build_throne_room(road, stone, iron, rng):
+	"""玉座の間：大聖堂の奥。両側に柱、奥に一段高い台と玉座。奥の壁は崩れて夜空が見える"""
+	t = 1.6
+	hw = THRONE_HALF_WIDTH
+	z0, z1 = THRONE_START_Z, THRONE_END_Z
+	build_floor(road, rng, -hw, hw, z0, z1 + t / 2, shade_range=(0.7, 0.9))
+	# 左右の壁（高い）
+	for sign in (-1, 1):
+		xa, xb = sorted((sign * hw, sign * (hw + t)))
+		z = z0
+		while z < z1 - 1e-6:
+			zz = min(z + 4.0, z1)
+			build_wall_box(stone, rng, xa, xb, z, zz, 0.0, rng.uniform(11.0, 14.0), broken=1.0)
+			z = zz
+	# 奥の壁：真ん中が大きく崩れて、外の夜空が見える（下は乗り越えられない高さを残す）
+	for sign in (-1, 1):
+		xa, xb = sorted((sign * 5.0, sign * (hw + t)))
+		build_wall_box(stone, rng, xa, xb, z1 - t / 2, z1 + t / 2, 0.0, rng.uniform(10.0, 13.0), broken=3.0)
+	build_wall_box(stone, rng, -5.0, 5.0, z1 - t / 2, z1 + t / 2, 0.0, WALL_MIN_HEIGHT + 1.0, broken=0.8)
+	# 柱（2列）と燭台
+	for zc in (z0 + 6.0, z0 + 14.0, z0 + 22.0):
+		for sign in (-1, 1):
+			x = sign * (hw - 4.0)
+			stone.add_box((x, 0.3, zc), (2.2, 0.6, 2.2), STONE_TILE_METER, shade=0.85, bottom_shade=0.45)
+			stone.add_column((x, zc), 0.6, rng.uniform(9.0, 11.0), 0.85, STONE_TILE_METER)
+			pillar_guards.append((x, zc, 2.2))
+			add_candelabra(stone, iron, x - sign * 2.2, zc)
+	# 奥の台（段差は乗り越えられる高さ）と玉座
+	for i, (w, d) in enumerate(((14.0, 8.0), (10.0, 6.0))):
+		y = ROAD_TOP_Y + 0.18 * (i + 1)
+		road.add_box((0.0, y - 0.1, z1 - 1.0 - d / 2), (w, 0.2, d), PAVE_TILE_METER, shade=0.8, bottom_shade=0.5)
+	ty = ROAD_TOP_Y + 0.36
+	tz = z1 - 3.0
+	stone.add_box((0.0, ty + 0.5, tz), (2.4, 1.0, 1.8), STONE_TILE_METER, shade=0.9, bottom_shade=0.6)		# 座面
+	stone.add_box((0.0, ty + 2.4, tz + 0.75), (2.4, 3.8, 0.4), STONE_TILE_METER, shade=0.9, bottom_shade=0.6,
+		top_offsets=[0.8, 0.8, 0.8, 0.8])																		# 背もたれ
+	for sign in (-1, 1):
+		stone.add_box((sign * 1.3, ty + 0.9, tz), (0.3, 0.8, 1.8), STONE_TILE_METER, shade=0.85)			# ひじ掛け
+	pillar_guards.append((0.0, tz, 2.6))
+	# 玉座の両わきの大きなかがり火
+	for sign in (-1, 1):
+		add_brazier(stone, iron, sign * 5.5, tz, 1.6)
+
+
+def build_cathedral(road, stone, iron, rng):
+	"""中庭の先の、崩れた大聖堂の広間（玉座の間の手前）"""
 	hw = NAVE_HALF_WIDTH
 	t = NAVE_WALL_THICK
 
 	# 床（石畳）
 	step = 2.0
 	z = NAVE_START_Z
-	while z < NAVE_END_Z + hw * 0.6 + 1.0 - 1e-6:	# 奥の半円の壁の内側まで床を敷く
+	while z < NAVE_END_Z - 1e-6:
 		x = -hw
 		while x < hw - 1e-6:
 			shade = rng.uniform(0.75, 0.95)
@@ -649,22 +852,15 @@ def build_cathedral(road, stone, rng):
 		stone.add_box((x_in + sign * 0.9, 6.0, NAVE_START_Z), (1.8, 12.0, 2.4), STONE_TILE_METER, shade=0.95, bottom_shade=0.5,
 			top_offsets=[rng.uniform(-1.5, 0.0) for _ in range(4)])
 
-	# 奥の半円の壁（後陣）
-	apse_r = hw
-	segments = 14
-	for i in range(segments):
-		a0 = math.pi * i / segments
-		a1 = math.pi * (i + 1) / segments
-		am = (a0 + a1) / 2
-		cx = math.cos(am) * apse_r
-		cz = NAVE_END_Z + math.sin(am) * apse_r * 0.6
-		length = apse_r * (a1 - a0) * 1.15
-		h = rng.uniform(4.0, 11.0)
-		stone.add_box((cx, h / 2, cz), (length, h, t), STONE_TILE_METER, rot_y=-(am - math.pi / 2) * 0.9,
-			shade=rng.uniform(0.8, 0.95), bottom_shade=0.45, top_offsets=[rng.uniform(-1.0, 0.0) for _ in range(4)])
-	# 奥の壁と半円の間をふさぐ柱
+	# 奥の壁（真ん中に玉座の間への入口。上は崩れている）
+	z0, z1 = NAVE_END_Z - t / 2, NAVE_END_Z + t / 2
 	for sign in (-1, 1):
-		stone.add_box((sign * hw, 5.0, NAVE_END_Z), (t + 1.0, 10.0, 2.0), STONE_TILE_METER, shade=0.9, bottom_shade=0.5)
+		x_in = sign * NAVE_BACK_DOOR_HALF_WIDTH
+		x_out = sign * (hw + t / 2)
+		wall_piece(min(x_in, x_out), max(x_in, x_out), z0, z1, 0.0, rng.uniform(9.0, 12.0), broken=2.0)
+		stone.add_box((x_in + sign * 0.9, 6.5, NAVE_END_Z), (1.8, 13.0, 2.4), STONE_TILE_METER, shade=0.95, bottom_shade=0.5)
+	wall_piece(-NAVE_BACK_DOOR_HALF_WIDTH, NAVE_BACK_DOOR_HALF_WIDTH, z0, z1, 8.0, 11.0)
+	pointed_arch(stone, NAVE_END_Z, t + 0.2, 0.8, NAVE_BACK_DOOR_HALF_WIDTH, 4.0, 0.95)
 
 	# 中の柱（2列。折れているものも）
 	z = NAVE_START_Z + 6.0
@@ -682,10 +878,18 @@ def build_cathedral(road, stone, rng):
 				stone.add_box((x, 0.6 + h + 0.3, z), (1.9, 0.6, 1.9), STONE_TILE_METER, shade=0.9, bottom_shade=0.7)
 		z += NAVE_BAY
 
-	# 奥の祭壇（一段高い台。段差は乗り越えられる高さ 0.2 以下にする）
-	for i, (w, d) in enumerate(((10.0, 5.0), (8.0, 3.6))):
-		y = ROAD_TOP_Y + 0.18 * (i + 1)
-		road.add_box((0.0, y - 0.1, NAVE_END_Z + 1.5), (w, 0.2, d), PAVE_TILE_METER, shade=0.8, bottom_shade=0.5)
+	# 柱の内側に燭台（柱2本ごと）、入口の内側に松明
+	z = NAVE_START_Z + 6.0
+	k = 0
+	while z < NAVE_END_Z - 2.0:
+		if k % 2 == 1:
+			for sign in (-1, 1):
+				add_candelabra(stone, iron, sign * (NAVE_PILLAR_X - 2.5), z)
+		z += NAVE_BAY
+		k += 1
+	for sign in (-1, 1):
+		add_wall_torch(stone, iron, sign * (ENTRANCE_HALF_WIDTH + 1.8), 3.0, NAVE_START_Z + t / 2 + 1.2, 0.0, 1.0)
+		add_wall_torch(stone, iron, sign * (NAVE_BACK_DOOR_HALF_WIDTH + 1.8), 3.0, NAVE_END_Z - t / 2 - 1.2, 0.0, -1.0)
 
 	# 広間の瓦礫（置かない）
 	for _ in range(40):
@@ -912,11 +1116,22 @@ def main():
 	build_pillars(stone, rng)
 	build_walls(stone, rng)
 	build_rubble(discard, rng)	# 瓦礫は置かない
-	build_gate(stone, rng)
-	build_cathedral(road, stone, rng)
 	door = MeshBuilder()
 	iron = MeshBuilder()
 	build_entrance_door(stone, door, iron, random.Random(SEED + 2))	# 扉は別の乱数を使う（ほかの形が変わらないように）
+	build_gatehouse(road, stone, iron, random.Random(SEED + 10))
+	build_courtyard(road, stone, iron, random.Random(SEED + 11))
+	build_cathedral(road, stone, iron, rng)
+	build_throne_room(road, stone, iron, random.Random(SEED + 12))
+	# 城の中の道：両わきの壁に松明
+	z = ROAD_START_Z + 6.0
+	while z < GATE_Z - 4.0:
+		for sign in (-1, 1):
+			add_wall_torch(stone, iron, sign * WALL_X, 2.4, z, -sign, 0.0)
+		z += 9.0
+	# スタート地点の扉の両わきにかがり火
+	for sign in (-1, 1):
+		add_brazier(stone, iron, sign * 5.5, ROAD_START_Z + 2.5, 1.1)
 
 	write_gltf(out_dir, "RuinedRoad", [(road, 0), (stone, 1), (door, 2), (iron, 3)])
 
@@ -926,6 +1141,13 @@ def main():
 		w = size + PILLAR_GUARD_MARGIN * 2
 		guard.add_box((x, PILLAR_GUARD_HEIGHT / 2, z), (w, PILLAR_GUARD_HEIGHT, w), STONE_TILE_METER)
 	write_gltf(out_dir, "RuinedRoadCollision", [(guard, 1)])
+
+	# 光源の位置（ゲーム側の StageLights が読む。モデルの座標。ゲームの中では拡大率 1.25 倍になる）
+	with open(os.path.join(out_dir, "RuinedRoadLights.csv"), "w", encoding="utf-8") as f:
+		f.write("# x,y,z,r,g,b,radius,flame（Tools/MakeStageModel.py が作る）\n")
+		for light in stage_lights:
+			f.write(",".join(f"{v:.3f}" for v in light) + "\n")
+	print("光源:", len(stage_lights), "個")
 
 	# テクスチャ（青みがかった灰色の石。夜の廃墟に合う暗めの色）
 	pave = make_stone_texture(np_rng, rows=6, cols_per_row=4, base_color=(0.42, 0.42, 0.45),

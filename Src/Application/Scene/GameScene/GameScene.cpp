@@ -20,6 +20,7 @@
 #include "../../GameObject/Stage/Object/CathedralRuins/CathedralRuins.h"
 #include "../../GameObject/Stage/Object/RuinedRoad/RuinedRoad.h"
 #include "../../GameObject/Stage/Object/Barrier/Barrier.h"
+#include "../../GameObject/Stage/Object/StageLights/StageLights.h"
 
 // Effekseer関連
 #include "../../../Framework/Effekseer/KdEffekseerManager.h"
@@ -34,10 +35,32 @@ namespace
 	constexpr float	kDebugSpawnDistance	= 6.0f;		// Shift ＋ F9 で敵を出す、プレイヤーの前方の距離
 	constexpr float	kDebugWarpBossDistance	= 12.0f;	// Shift ＋ F11 でボスの手前のどこへ移動するか（ボスから入口の方へ）
 
-	// ボスが待っている位置（大聖堂の広間の奥。祭壇の手前）
-	// 広間はゲームの中では z = 65（入口・バリア）～ 125（奥の壁）。祭壇は z = 124 あたりから
-	// （Tools/MakeStageModel.py の NAVE_START_Z = 52 / NAVE_END_Z = 100 に、ステージの拡大率 1.25 をかけた値）
-	const Math::Vector3 kBossPos		= { 0.0f, 0.0f, 90.0f };
+	// ステージの部屋の並び（ゲームの中の z。Tools/MakeStageModel.py の値 × ステージの拡大率 1.25）
+	//   -15～57.5 城の中の道 ／ 57.5～70 門楼 ／ 70～115 中庭 ／ 115～175 大聖堂の広間 ／ 175～215 玉座の間
+
+	// バリア（置く場所：下の真ん中、大きさ：幅・高さ）
+	const Math::Vector3 kGateBarrierPos			= { 0.0f, 0.0f, 57.5f };	// 門楼の入口（城の中の道の敵を全滅させると開く）
+	const Math::Vector2 kGateBarrierSize		= { 13.5f, 9.0f };
+	const Math::Vector3 kCathedralBarrierPos	= { 0.0f, 0.0f, 115.0f };	// 大聖堂の入口（中庭の敵を全滅させると開く）
+	const Math::Vector2 kCathedralBarrierSize	= { 23.0f, 10.0f };
+
+	// ボスが待っている位置（玉座の間。玉座の台の手前）
+	const Math::Vector3 kBossPos		= { 0.0f, 0.0f, 194.0f };
+
+	// 敵の配置
+	const std::vector<Math::Vector3> kRoadEnemies =		// 城の中の道
+	{
+		{  0.0f, 0.0f, 10.0f },
+		{  0.0f, 0.0f, 25.0f },
+		{ -4.0f, 0.0f, 27.0f },
+		{  5.0f, 0.0f, 42.0f },
+	};
+	const std::vector<Math::Vector3> kCourtyardEnemies =	// 中庭
+	{
+		{ -7.0f, 0.0f, 86.0f },
+		{  7.0f, 0.0f, 88.0f },
+		{  0.0f, 0.0f, 101.0f },
+	};
 }
 
 void GameScene::Event()
@@ -55,17 +78,23 @@ void GameScene::Event()
 
 void GameScene::UpdateBarrier()
 {
-	auto barrier = m_wpBarrier.lock();
-	if (!barrier || barrier->IsOpen()) return;
-
-	// ザコ敵を全員倒したら、ボスの広間のバリアを開ける
-	for (const auto& obj : m_objList)
+	// 部屋ごとに、手前の敵を全員倒したら、その先のバリアを開ける
+	for (Gate& gate : m_gates)
 	{
-		auto enemy = std::dynamic_pointer_cast<Enemy>(obj);
-		if (enemy && !enemy->IsBoss() && enemy->IsAlive() && !enemy->IsExpired()) return;
+		auto barrier = gate.barrier.lock();
+		if (!barrier || barrier->IsOpen()) continue;
+
+		bool isAllDead = true;
+		for (const auto& wpEnemy : gate.enemies)
+		{
+			auto enemy = wpEnemy.lock();
+			if (enemy && enemy->IsAlive() && !enemy->IsExpired()) { isAllDead = false; break; }
+		}
+		if (!isAllDead) continue;
+
+		barrier->Open();
+		KdDebugGUI::Instance().AddLog("%s のバリアが開いた\n", gate.name.c_str());
 	}
-	barrier->Open();
-	KdDebugGUI::Instance().AddLog("ボスの広間のバリアが開いた\n");
 }
 
 void GameScene::UpdateDebugKeys()
@@ -210,8 +239,20 @@ void GameScene::Init()
 	// ※前の大聖堂の廃墟（CathedralRuins）と重なるので、そちらは置かない
 	//CreateObject<CathedralRuins>();
 	CreateObject<RuinedRoad>();
-	// ボスの広間の入口のバリア（ザコ敵を全員倒すと消える）
-	m_wpBarrier = CreateObject<Barrier>();
+	// 松明・かがり火・燭台の光（点光源と炎の光）
+	CreateObject<StageLights>();
+
+	// 部屋の入口のバリア（門楼・大聖堂）
+	auto createBarrier = [this](const Math::Vector3& pos, const Math::Vector2& size)
+	{
+		std::shared_ptr<Barrier> barrier = std::make_shared<Barrier>();
+		barrier->SetArea(pos, size);
+		barrier->Init();
+		m_objList.push_back(barrier);
+		return barrier;
+	};
+	std::shared_ptr<Barrier> gateBarrier = createBarrier(kGateBarrierPos, kGateBarrierSize);
+	std::shared_ptr<Barrier> cathedralBarrier = createBarrier(kCathedralBarrierPos, kCathedralBarrierSize);
 
 	// プレイヤー（Init内でHPゲージを追加するため、先にオーナーをセットする）
 	std::shared_ptr<Player> player = std::make_shared<Player>();
@@ -220,26 +261,20 @@ void GameScene::Init()
 	m_objList.push_back(player);
 	m_wpPlayer = player;
 
-	// 敵グループの配置
-	const std::vector<Math::Vector3> enemyPosList =
-	{
-		// グループ1
-		{  0.0f, 0.0f, 10.0f },
-		//{ -3.0f, 0.0f, 12.0f },
-		//{  3.0f, 0.0f, 12.0f },
+	// 敵の配置（部屋ごと。その部屋の敵を全員倒すと、先のバリアが開く）
+	Gate gate;
+	gate.barrier = gateBarrier;
+	gate.name = "門楼";
+	for (const auto& pos : kRoadEnemies) gate.enemies.push_back(SpawnEnemy(pos, false, player));
+	m_gates.push_back(gate);
 
-		// グループ2
-		{  0.0f, 0.0f, 25.0f },
-		{ -4.0f, 0.0f, 27.0f },
-		//{  4.0f, 0.0f, 27.0f },
-	};
+	Gate cathedralGate;
+	cathedralGate.barrier = cathedralBarrier;
+	cathedralGate.name = "大聖堂";
+	for (const auto& pos : kCourtyardEnemies) cathedralGate.enemies.push_back(SpawnEnemy(pos, false, player));
+	m_gates.push_back(cathedralGate);
 
-	for (const auto& pos : enemyPosList)
-	{
-		SpawnEnemy(pos, false, player);
-	}
-
-	// ボス：大聖堂の広間の奥で待っている（プレイヤーが近づくと動き出す）
+	// ボス：一番奥の玉座の間で待っている（プレイヤーが近づくと動き出す）
 	SpawnEnemy(kBossPos, true, player);
 
 	// カメラ
@@ -253,7 +288,7 @@ void GameScene::Init()
 	controlsGuide->SetPlayer(player);
 }
 
-void GameScene::SpawnEnemy(const Math::Vector3& pos, bool isBoss, const std::shared_ptr<Player>& target)
+std::shared_ptr<Enemy> GameScene::SpawnEnemy(const Math::Vector3& pos, bool isBoss, const std::shared_ptr<Player>& target)
 {
 	std::shared_ptr<Enemy> enemy = std::make_shared<Enemy>();
 	enemy->SetBoss(isBoss);
@@ -261,4 +296,5 @@ void GameScene::SpawnEnemy(const Math::Vector3& pos, bool isBoss, const std::sha
 	enemy->SetPos(pos);
 	enemy->SetTarget(target);
 	m_objList.push_back(enemy);
+	return enemy;
 }
