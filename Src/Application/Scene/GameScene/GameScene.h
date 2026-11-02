@@ -40,15 +40,18 @@ private:
 	// 生き残っている敵の数
 	int GetAliveEnemyCount() const;
 
-	// デバッグキー（F1：ATB全開、F2：HP全開、F3：敵をプレイヤーの前に出す、F5：HPを1にする、F6：無敵の切り替え、F7：ボス以外を倒してボスの手前へ移動）
-	// ※F4 はデバッグ表示の切り替え（main.cpp）
+	// デバッグキー（F12 でデバッグ表示を出している間だけ効く）
+	// F9：ATB全開、F10：HP全開、F11：HPを1にする
+	// Shift ＋ F9：敵をプレイヤーの前に出す、Shift ＋ F10：無敵の切り替え、Shift ＋ F11：ボス以外を消してボスの手前へ移動、Shift ＋ F12：タイトルへ
+	// ※F12 はデバッグ表示の切り替え（main.cpp）
 	void UpdateDebugKeys();
-	InputHelper::KeyTrigger	m_debugAtbKey{ VK_F1 };
-	InputHelper::KeyTrigger	m_debugHpKey{ VK_F2 };
-	InputHelper::KeyTrigger	m_debugSpawnKey{ VK_F3 };
-	InputHelper::KeyTrigger	m_debugHpOneKey{ VK_F5 };
-	InputHelper::KeyTrigger	m_debugInvincibleKey{ VK_F6 };
-	InputHelper::KeyTrigger	m_debugWarpKey{ VK_F7 };
+	InputHelper::KeyTrigger	m_debugAtbKey{ InputHelper::Bind::DebugAtb };
+	InputHelper::KeyTrigger	m_debugHpKey{ InputHelper::Bind::DebugHpFull };
+	InputHelper::KeyTrigger	m_debugSpawnKey{ InputHelper::Bind::DebugSpawn };
+	InputHelper::KeyTrigger	m_debugHpOneKey{ InputHelper::Bind::DebugHpOne };
+	InputHelper::KeyTrigger	m_debugInvincibleKey{ InputHelper::Bind::DebugInvincible };
+	InputHelper::KeyTrigger	m_debugWarpKey{ InputHelper::Bind::DebugWarpBoss };
+	InputHelper::KeyTrigger	m_debugTitleKey{ InputHelper::Bind::DebugToTitle };
 
 	std::weak_ptr<Player>	m_wpPlayer;
 	std::weak_ptr<Barrier>	m_wpBarrier;

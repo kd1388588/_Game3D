@@ -96,7 +96,7 @@ namespace
 	// アビリティの攻撃は、ボタンを押さなくても最後の段まで自動で出る
 	constexpr float kAbilityDamageRate		= 1.5f;		// 普通の攻撃（倍率1.0）の何倍のダメージか。モードの倍率はかからない
 
-	// ガード（止まっている時に Shift を押している間）
+	// ガード（止まっている時に ガード・ダッシュのキー（Ctrl ／ RB）を押している間）
 	// アニメーション：Sequence2/08_Hit/14_Block の Block_Start / Loop / Hit / End
 	const std::string kGuardStartAnimName	= "GuardStart";
 	const std::string kGuardLoopAnimName	= "GuardLoop";
@@ -109,7 +109,7 @@ namespace
 	constexpr float kGuardTurnAngle			= 12.0f;	// ガード中にカメラの方へ向きを変える速さ（度/フレーム）
 	const std::string kGuardBreakAnimName	= "GuardBreak";
 
-	// ダッシュ（移動中に Shift を押している間）
+	// ダッシュ（移動中に ガード・ダッシュのキー（Ctrl ／ RB）を押している間）
 	constexpr float kDashSpeedRate			= 1.6f;		// 走る速さの何倍か
 
 	// 回避
@@ -201,12 +201,12 @@ void PlayerStateIdle::Update(Player* player)
 
 	if (player->CheckMoveInput())
 	{
-		// 移動（Shift を押していればダッシュ）
+		// 移動（ガード・ダッシュのキー（Ctrl ／ RB）を押していればダッシュ）
 		player->ChangeState(std::make_shared<PlayerStateRun>());
 	}
-	else if (player->IsShiftDown() && player->CanGuard())
+	else if (player->IsGuardDashDown() && player->CanGuard())
 	{
-		// 止まっている時に Shift：ガード（構えた後は、移動キーでガードしたまま歩ける）
+		// 止まっている時に Ctrl ／ RB：ガード（構えた後は、移動キーでガードしたまま歩ける）
 		player->ChangeState(std::make_shared<PlayerStateGuard>());
 	}
 }
@@ -254,8 +254,8 @@ void PlayerStateGuard::Update(Player* player)
 	// 構えを解いている途中
 	if (m_phase == Phase::End)
 	{
-		// もう一度 Shift を押したら、すぐ構え直す
-		if (player->IsShiftDown() && player->CanGuard() && !player->CheckMoveInput())
+		// もう一度 Ctrl ／ RB を押したら、すぐ構え直す
+		if (player->IsGuardDashDown() && player->CanGuard() && !player->CheckMoveInput())
 		{
 			ChangePhase(player, Phase::Start);
 			return;
@@ -289,16 +289,16 @@ void PlayerStateGuard::Update(Player* player)
 	switch (m_phase)
 	{
 	case Phase::Start:
-		// 構え終わったら、構えたままのループへ（Shift を離していたら、そのまま構えを解く）
+		// 構え終わったら、構えたままのループへ（Ctrl ／ RB を離していたら、そのまま構えを解く）
 		if (player->IsAnimEnd())
 		{
-			ChangePhase(player, player->IsShiftDown() ? Phase::Loop : Phase::End);
+			ChangePhase(player, player->IsGuardDashDown() ? Phase::Loop : Phase::End);
 		}
 		break;
 
 	case Phase::Loop:
-		// Shift を離したら構えを解く（移動キーを押していれば、そのまま走り出す）
-		if (!player->IsShiftDown())
+		// Ctrl ／ RB を離したら構えを解く（移動キーを押していれば、そのまま走り出す）
+		if (!player->IsGuardDashDown())
 		{
 			if (player->CheckMoveInput())	player->ChangeState(std::make_shared<PlayerStateRun>());
 			else							ChangePhase(player, Phase::End);
@@ -310,10 +310,10 @@ void PlayerStateGuard::Update(Player* player)
 		break;
 
 	case Phase::Hit:
-		// 受け止める動きが終わったら、Shift を押していれば構えたまま、離していれば構えを解く
+		// 受け止める動きが終わったら、ガード・ダッシュのキー（Ctrl ／ RB）を押していれば構えたまま、離していれば構えを解く
 		if (player->IsAnimEnd())
 		{
-			ChangePhase(player, player->IsShiftDown() ? Phase::Loop : Phase::End);
+			ChangePhase(player, player->IsGuardDashDown() ? Phase::Loop : Phase::End);
 		}
 		break;
 
@@ -400,13 +400,13 @@ void PlayerStateRun::Update(Player* player)
 	if (TryCommonTransition(player)) return;
 
 	// ダッシュのアニメーションの切り替え（アニメーションが無い時は、普段の走りのままダッシュする）
-	// 一度ダッシュを始めたら、Shift を離しても移動キーを離すまで全力で走り続ける
+	// 一度ダッシュを始めたら、Ctrl ／ RB を離しても移動キーを離すまで全力で走り続ける
 	if (player->HasAnimation(kDashAnimName))
 	{
 		switch (m_dashPhase)
 		{
 		case DashPhase::None:
-			if (player->IsShiftDown()) ChangeDashPhase(player, player->HasAnimation(kRunSheatheAnimName) ? DashPhase::Sheathe : DashPhase::Dash);
+			if (player->IsGuardDashDown()) ChangeDashPhase(player, player->HasAnimation(kRunSheatheAnimName) ? DashPhase::Sheathe : DashPhase::Dash);
 			break;
 		case DashPhase::Sheathe:
 			if (player->IsAnimEnd()) ChangeDashPhase(player, DashPhase::Dash);
@@ -415,7 +415,7 @@ void PlayerStateRun::Update(Player* player)
 			break;
 		}
 	}
-	bool isDash = (m_dashPhase != DashPhase::None) || player->IsShiftDown();
+	bool isDash = (m_dashPhase != DashPhase::None) || player->IsGuardDashDown();
 
 	// アニメーションに前へ進む動きがあれば、その動きで移動する
 	// （その場で足踏みするだけのアニメーションなら、プログラムで移動する）
@@ -429,7 +429,7 @@ void PlayerStateRun::Update(Player* player)
 	{
 		float speedRate = Player::s_runSpeedRate;
 		speedRate *= player->GetModeMoveRate();								// パニッシャーの時は遅く
-		if (isDash) speedRate *= kDashSpeedRate;							// Shift を押している間はダッシュ
+		if (isDash) speedRate *= kDashSpeedRate;							// ガード・ダッシュのキー（Ctrl ／ RB）を押している間はダッシュ
 		// 全力疾走のアニメーションは、それ自体が普段の走りより速いので、その分を割り引く
 		if (m_dashPhase == DashPhase::Dash) speedRate /= player->GetDashAnimSpeedRatio();
 

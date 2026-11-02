@@ -72,8 +72,8 @@ public:
 	// ロックオン中の敵の方へすぐ向く（攻撃・技を出す瞬間に呼ぶ。出した後は向きを変えない）
 	void FaceLockTarget();
 
-	// Shift を押している間（移動中はダッシュ、止まっている時はガード）
-	bool IsShiftDown() const;
+	// ガード・ダッシュのキー（Ctrl ／ RB）を押している間（移動中はダッシュ、止まっている時はガード）
+	bool IsGuardDashDown() const;	// ガード・ダッシュのキー（Ctrl ／ パッド RB）を押しているか
 	// 入力方向へ向きを変え、moveByCode が true なら決まった速さで移動する
 	// （false の時は向きを変えるだけ。移動はルートモーションに任せる）
 	// 入力が無ければ false を返す
@@ -488,20 +488,20 @@ private:
 
 	// フラグ関係
 
-	// 入力（押した瞬間の判定用）
-	InputHelper::KeyTrigger			m_attackKey{ VK_LBUTTON };
-	InputHelper::KeyTrigger			m_evadeKey{ VK_RBUTTON };
-	InputHelper::KeyTrigger			m_abilityKeys[static_cast<int>(AbilitySlot::Num)] = { InputHelper::KeyTrigger{ '1' }, InputHelper::KeyTrigger{ '2' } };	// メニューで直接選ぶ
+	// 入力（押した瞬間の判定用。割り当ては InputHelper.h の Bind にまとめてある）
+	InputHelper::KeyTrigger			m_attackKey{ InputHelper::Bind::Attack };
+	InputHelper::KeyTrigger			m_evadeKey{ InputHelper::Bind::Evade };
+	// 必殺技（ATBコマンドの技を、メニューを開かずにすぐ出す。メニューの中では、その技をすぐ決定する）
+	InputHelper::KeyTrigger			m_abilityKeys[static_cast<int>(AbilitySlot::Num)] = { InputHelper::KeyTrigger{ InputHelper::Bind::Special1 }, InputHelper::KeyTrigger{ InputHelper::Bind::Special2 } };
 
 	// ATBコマンドメニューの操作
-	InputHelper::KeyTrigger			m_commandKey{ 'F' };		// 開く・閉じる
-	InputHelper::KeyTrigger			m_menuUpKey{ 'W' };
-	InputHelper::KeyTrigger			m_menuDownKey{ 'S' };
-	InputHelper::KeyTrigger			m_menuUpArrowKey{ VK_UP };
-	InputHelper::KeyTrigger			m_menuDownArrowKey{ VK_DOWN };
-	InputHelper::KeyTrigger			m_menuDecideKey{ VK_RETURN };
-	InputHelper::KeyTrigger			m_menuBackKey{ VK_BACK };
-	InputHelper::KeyTrigger			m_modeKey{ 'E' };
+	InputHelper::KeyTrigger			m_commandKey{ InputHelper::Bind::CommandKey };	// キーボード：開く・閉じる
+	InputHelper::KeyTrigger			m_commandPadKey{ InputHelper::Bind::CommandPad };	// パッド：開く（開いている間の A は決定）
+	InputHelper::KeyTrigger			m_menuUpKey{ InputHelper::Bind::MenuUp };
+	InputHelper::KeyTrigger			m_menuDownKey{ InputHelper::Bind::MenuDown };
+	InputHelper::KeyTrigger			m_menuDecideKey{ InputHelper::Bind::MenuDecide };
+	InputHelper::KeyTrigger			m_menuBackKey{ InputHelper::Bind::MenuBack };
+	InputHelper::KeyTrigger			m_modeKey{ InputHelper::Bind::ModeChange };
 
 	// 先行入力の残りフレーム（0 なら押されていない）
 	int								m_attackBuffer = 0;

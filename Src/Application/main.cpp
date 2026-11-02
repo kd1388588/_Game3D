@@ -60,6 +60,9 @@ void Application::KdPostUpdate()
 // ///// ///// ///// ///// ///// ///// ///// ///// ///// ///// ///// ///// ///// ///// /////
 void Application::PreUpdate()
 {
+	// パッド（Xbox コントローラー）の状態を読む（毎フレーム最初に1回だけ）
+	InputHelper::GamePad::Update();
+
 	SceneManager::Instance().PreUpdate();
 }
 
@@ -77,8 +80,9 @@ void Application::Update()
 
 void Application::UpdateDebugToggle()
 {
-	// F4：デバッグ表示（ImGui のウィンドウ・当たり判定のワイヤー）の表示・非表示を切り替える
-	static InputHelper::KeyTrigger debugKey{ VK_F4 };
+	// F12：デバッグ表示（ImGui のウィンドウ・当たり判定のワイヤー）の表示・非表示を切り替える
+	// （ほかのデバッグキー F9～F11・Shift ＋ F9～F12 は、デバッグ表示を出している間だけ効く）
+	static InputHelper::KeyTrigger debugKey{ VK_F12 };
 	if (debugKey.Update())
 	{
 		KdDebugGUI::Instance().ToggleVisible();

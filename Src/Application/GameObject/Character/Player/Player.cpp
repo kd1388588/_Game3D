@@ -1002,36 +1002,49 @@ bool Player::UpdateCommandMenu()
 {
 	// キーの状態は毎フレーム更新する（開いていない時も。押した瞬間を正しく判定するため）
 	bool toggle		= m_commandKey.Update();
+	bool togglePad	= m_commandPadKey.Update();
 	bool up			= m_menuUpKey.Update();
 	bool down		= m_menuDownKey.Update();
-	bool upArrow	= m_menuUpArrowKey.Update();
-	bool downArrow	= m_menuDownArrowKey.Update();
 	bool enter		= m_menuDecideKey.Update();
 	bool back		= m_menuBackKey.Update();
 
 	if (!m_isCommandOpen)
 	{
-		// F キーで開く（倒れている時・アビリティの技を出している途中は開けない）
-		if (toggle && !IsDead() && !m_isAbilityAttack)
+		// 倒れている時・アビリティの技を出している途中は、開けない・必殺技も出せない
+		if (IsDead() || m_isAbilityAttack) return false;
+
+		// Space ／ パッド A で開く
+		if (toggle || togglePad)
 		{
 			OpenCommandMenu();
+			return m_isCommandOpen;
+		}
+
+		// 必殺技：1・2 ／ パッド LB ＋ X・Y で、メニューを開かずにすぐ出す（ゲージ・CT はメニューから出した時と同じ）
+		for (int i = 0; i < static_cast<int>(AbilitySlot::Num); ++i)
+		{
+			if (ConsumeInput(m_abilityBuffer[i]))
+			{
+				DecideCommand(i);
+				break;
+			}
 		}
 		return m_isCommandOpen;
 	}
 
-	// 閉じる：F キー・右クリック・BackSpace
+	// 閉じる：Space・右クリック・R・BackSpace ／ パッド B（パッドの A は、開いている間は決定）
 	if (toggle || back || ConsumeInput(m_evadeBuffer))
 	{
 		CloseCommandMenu();
 		return false;
 	}
 
-	// 選ぶ：W / S・矢印キー
+	// 選ぶ：W / S・方向キー ／ パッドの十字キー・左スティック
 	constexpr int itemNum = static_cast<int>(AbilitySlot::Num);
-	if (up || upArrow)		m_commandCursor = (m_commandCursor + itemNum - 1) % itemNum;
-	if (down || downArrow)	m_commandCursor = (m_commandCursor + 1) % itemNum;
+	if (up)		m_commandCursor = (m_commandCursor + itemNum - 1) % itemNum;
+	if (down)	m_commandCursor = (m_commandCursor + 1) % itemNum;
 
-	// メニューを開いている時に 1・2キーを押したら、その技をすぐ決定
+	// メニューを開いている時に必殺技のキー（1・2 ／ LB ＋ X・Y）を押したら、その技をすぐ決定
 	for (int i = 0; i < itemNum; ++i)
 	{
 		if (ConsumeInput(m_abilityBuffer[i]))
@@ -1042,7 +1055,7 @@ bool Player::UpdateCommandMenu()
 		}
 	}
 
-	// 決定：左クリック・Enter
+	// 決定：Enter・左クリック・F ／ パッド A・X
 	if (enter || ConsumeInput(m_attackBuffer))
 	{
 		DecideCommand(m_commandCursor);
@@ -1867,9 +1880,9 @@ void Player::TurnTowardCameraForward(float maxAngle)
 	TurnToward(forward, maxAngle);
 }
 
-bool Player::IsShiftDown() const
+bool Player::IsGuardDashDown() const
 {
-	return IsKeyDown(VK_SHIFT);
+	return InputHelper::Bind::GuardDash.IsDown();
 }
 
 void Player::UpdateAtb()
@@ -1942,6 +1955,11 @@ Math::Vector3 Player::GetInputDir() const
 	if (IsKeyDown('S')) dir.z -= 1.0f;
 	if (IsKeyDown('A')) dir.x -= 1.0f;
 	if (IsKeyDown('D')) dir.x += 1.0f;
+
+	// パッドの左スティック
+	const Math::Vector2& stick = InputHelper::GamePad::GetLeftStick();
+	dir.x += stick.x;
+	dir.z += stick.y;
 
 	return dir;
 }
@@ -2251,7 +2269,7 @@ bool Player::MoveProcess(bool moveByCode)
 	if (moveByCode)
 	{
 		float moveSpeed = kMoveSpeed * GetModeMoveRate();
-		if (IsShiftDown()) moveSpeed *= kDashMoveRate;	// Shift を押している間はダッシュ
+		if (IsGuardDashDown()) moveSpeed *= kDashMoveRate;	// ガード・ダッシュのキー（Ctrl ／ RB）を押している間はダッシュ
 		m_pos += dir * moveSpeed;
 	}
 	return true;

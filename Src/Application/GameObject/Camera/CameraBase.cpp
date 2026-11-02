@@ -1,4 +1,12 @@
 ﻿#include "CameraBase.h"
+#include "../../Utility/InputHelper.h"
+
+namespace
+{
+	// パッドの右スティックでカメラを回す速さ（スティックを倒しきった時に、1フレームに回す角度）
+	constexpr float kPadCameraYawSpeed		= 3.0f;
+	constexpr float kPadCameraPitchSpeed	= 2.0f;
+}
 
 void CameraBase::Init()
 {
@@ -41,6 +49,11 @@ void CameraBase::UpdateRotateByMouse()
 	// 実際にカメラを回転させる処理(0.15はただの補正値)
 	m_DegAng.x += _mouseMove.y * 0.15f;
 	m_DegAng.y += _mouseMove.x * 0.15f;
+
+	// パッドの右スティック（上に倒すと上を向く）
+	const Math::Vector2& stick = InputHelper::GamePad::GetRightStick();
+	m_DegAng.x -= stick.y * kPadCameraPitchSpeed;
+	m_DegAng.y += stick.x * kPadCameraYawSpeed;
 
 	// 回転制御
 	m_DegAng.x = std::clamp(m_DegAng.x, -45.f, 45.f);

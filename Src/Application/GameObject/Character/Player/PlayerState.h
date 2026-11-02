@@ -58,8 +58,8 @@ public:
 
 private:
 	// ダッシュの流れ
-	// Shift を押して走る → 走りながら納刀 → 剣を納めて全力で走る
-	// （Shift を離しても、移動キーを離すまで全力で走り続ける。止まったら PlayerStateDashStop へ）
+	// Ctrl ／ RB を押して走る → 走りながら納刀 → 剣を納めて全力で走る
+	// （Ctrl ／ RB を離しても、移動キーを離すまで全力で走り続ける。止まったら PlayerStateDashStop へ）
 	enum class DashPhase
 	{
 		None,		// 普段の走り（剣を抜いている）
@@ -91,7 +91,7 @@ private:
 	Phase m_phase = Phase::Brake;
 };
 
-// ガード（止まっている時に Shift を押している間。受けるダメージが減り、のけぞらない）
+// ガード（止まっている時に ガード・ダッシュのキー（Ctrl ／ RB）を押している間。受けるダメージが減り、のけぞらない）
 // 構える（Start）→ 構えたまま（Loop）→ 下ろす（End）。攻撃を受けた時は Hit を再生する
 class PlayerStateGuard : public PlayerState
 {

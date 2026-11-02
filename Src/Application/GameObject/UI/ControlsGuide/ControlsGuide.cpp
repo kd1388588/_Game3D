@@ -1,58 +1,81 @@
 ﻿#include "ControlsGuide.h"
 #include "../Text/UIText.h"
 #include "../../Character/Player/Player.h"
+#include "../../../Utility/InputHelper.h"
 
 namespace
 {
 	// 画面の右下（画面中央が原点、右が+X・上が+Y。画面は 1280x720）
 	constexpr float		kRightX			= 625.0f;	// パネルの右端
 	constexpr float		kBottomY		= -345.0f;	// パネルの下端
-	constexpr float		kPanelWidth		= 250.0f;
+	constexpr float		kPanelWidth		= 300.0f;
 	constexpr float		kPadding		= 10.0f;	// パネルの内側の余白
 	constexpr float		kRowSpacing		= 20.0f;	// 行と行の間
 	constexpr float		kTextScale		= 0.75f;	// 文字の大きさ（Small の 24px を 18px にする）
-	constexpr float		kActionOffsetX	= 105.0f;	// キーの左端から、操作の左端までの距離
+	constexpr float		kActionOffsetX	= 150.0f;	// キーの左端から、操作の左端までの距離
 	constexpr float		kFadeSpeed		= 0.1f;		// 出たり消えたりする速さ
 
 	const Math::Color	kPanelColor		= { 0.02f, 0.03f, 0.08f, 0.55f };
 	const Math::Color	kKeyColor		= { 1.0f, 0.85f, 0.4f, 1.0f };	// キーの名前（タイトルの操作説明と同じような金色）
 	const Math::Color	kActionColor	= { 0.9f, 0.9f, 0.9f, 1.0f };
 
-	const std::vector<std::pair<std::string, std::string>> kControls =
+	// キーボード・マウスの時（操作の割り当ては InputHelper.h の Bind）
+	const std::vector<std::pair<std::string, std::string>> kKeyboardControls =
 	{
 		{ "WASD",			"移動" },
-		{ "左クリック",		"攻撃" },
-		{ "右クリック",		"回避" },
-		{ "Shift",			"ダッシュ / ガード" },
+		{ "F / 左クリック",	"攻撃" },
+		{ "R / 右クリック",	"回避" },
+		{ "Ctrl",			"ダッシュ / ガード" },
 		{ "E",				"モード切り替え" },
-		{ "F",				"ATBコマンド" },
+		{ "Space",			"ATBコマンド" },
+		{ "1 / 2",			"必殺技" },
+	};
+
+	// パッド（Xbox コントローラー）がつながっている時
+	const std::vector<std::pair<std::string, std::string>> kPadControls =
+	{
+		{ "左スティック",	"移動" },
+		{ "X",				"攻撃" },
+		{ "B",				"回避" },
+		{ "RB",				"ダッシュ / ガード" },
+		{ "Y",				"モード切り替え" },
+		{ "A",				"ATBコマンド" },
+		{ "LB + X / Y",		"必殺技" },
 	};
 }
 
 void ControlsGuide::Init()
 {
+	m_keyboardRows = CreateRows(kKeyboardControls);
+	m_padRows = CreateRows(kPadControls);
+}
+
+std::vector<ControlsGuide::Row> ControlsGuide::CreateRows(const std::vector<std::pair<std::string, std::string>>& controls)
+{
 	float panelLeft = kRightX - kPanelWidth;
 	float keyLeft = panelLeft + kPadding;
-	float topRowY = kBottomY + kPadding + kRowSpacing * (static_cast<float>(kControls.size()) - 0.5f);
+	float topRowY = kBottomY + kPadding + kRowSpacing * (static_cast<float>(controls.size()) - 0.5f);
 
-	for (size_t i = 0; i < kControls.size(); ++i)
+	std::vector<Row> rows;
+	for (size_t i = 0; i < controls.size(); ++i)
 	{
 		float y = topRowY - kRowSpacing * static_cast<float>(i);
 
 		// UIText は中心の位置で表示するので、左端の位置に文字の幅の半分を足して左揃えにする
 		Row row;
 		row.key = std::make_shared<UIText>();
-		row.key->SetText(kControls[i].first, UIText::FontSize::Small);
+		row.key->SetText(controls[i].first, UIText::FontSize::Small);
 		row.key->SetScale(kTextScale);
 		row.key->SetCenterPos({ keyLeft + row.key->GetSize().x * kTextScale * 0.5f, y });
 
 		row.action = std::make_shared<UIText>();
-		row.action->SetText(kControls[i].second, UIText::FontSize::Small);
+		row.action->SetText(controls[i].second, UIText::FontSize::Small);
 		row.action->SetScale(kTextScale);
 		row.action->SetCenterPos({ keyLeft + kActionOffsetX + row.action->GetSize().x * kTextScale * 0.5f, y });
 
-		m_rows.push_back(row);
+		rows.push_back(row);
 	}
+	return rows;
 }
 
 void ControlsGuide::Update()
@@ -73,8 +96,11 @@ void ControlsGuide::DrawSprite()
 {
 	if (m_alpha <= 0.0f) return;
 
+	// パッドがつながっていればパッドのボタン、無ければキーボードのキーを出す
+	const std::vector<Row>& rows = InputHelper::GamePad::IsConnected() ? m_padRows : m_keyboardRows;
+
 	// うしろの半透明の板
-	float height = kPadding * 2.0f + kRowSpacing * static_cast<float>(kControls.size());
+	float height = kPadding * 2.0f + kRowSpacing * static_cast<float>(rows.size());
 	int centerX = static_cast<int>(kRightX - kPanelWidth * 0.5f);
 	int centerY = static_cast<int>(kBottomY + height * 0.5f);
 	Math::Color panelColor = kPanelColor;
@@ -83,7 +109,7 @@ void ControlsGuide::DrawSprite()
 		static_cast<int>(kPanelWidth * 0.5f), static_cast<int>(height * 0.5f), &panelColor);
 
 	// 文字
-	for (const Row& row : m_rows)
+	for (const Row& row : rows)
 	{
 		Math::Color keyColor = kKeyColor;
 		keyColor.w *= m_alpha;

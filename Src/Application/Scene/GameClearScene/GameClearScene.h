@@ -16,6 +16,6 @@ private :
 	void Event() override;
 	void Init()  override;
 
-	InputHelper::KeyTrigger m_decideKey{ VK_RETURN };
+	InputHelper::KeyTrigger m_decideKey{ InputHelper::Bind::MenuDecide };	// パッドの A も
 	InputHelper::KeyTrigger m_clickKey{ VK_LBUTTON };	// 左クリックでも決定
 };

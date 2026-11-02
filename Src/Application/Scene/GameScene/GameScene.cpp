@@ -31,8 +31,8 @@ namespace
 
 	// デバッグキー（発表などで使わない時は false にする）
 	constexpr bool	kEnableDebugKeys	= true;
-	constexpr float	kDebugSpawnDistance	= 6.0f;		// F3 で敵を出す、プレイヤーの前方の距離
-	constexpr float	kDebugWarpBossDistance	= 12.0f;	// F7 でボスの手前のどこへ移動するか（ボスから入口の方へ）
+	constexpr float	kDebugSpawnDistance	= 6.0f;		// Shift ＋ F9 で敵を出す、プレイヤーの前方の距離
+	constexpr float	kDebugWarpBossDistance	= 12.0f;	// Shift ＋ F11 でボスの手前のどこへ移動するか（ボスから入口の方へ）
 
 	// ボスが待っている位置（大聖堂の広間の奥。祭壇の手前）
 	// 広間はゲームの中では z = 65（入口・バリア）～ 125（奥の壁）。祭壇は z = 124 あたりから
@@ -42,15 +42,6 @@ namespace
 
 void GameScene::Event()
 {
-	// デバッグ用：Tキーでタイトルへ
-	if (GetAsyncKeyState('T') & 0x8000)
-	{
-		SceneManager::Instance().SetNextScene
-		(
-			SceneManager::SceneType::Title
-		);
-	}
-
 	// 影はプレイヤーのまわりに作る（カメラのまわりだと、カメラを引いた時にプレイヤーの影が範囲から外れる）
 	if (auto player = m_wpPlayer.lock())
 	{
@@ -86,40 +77,51 @@ void GameScene::UpdateDebugKeys()
 	bool isHpOne = m_debugHpOneKey.Update();
 	bool isInvincible = m_debugInvincibleKey.Update();
 	bool isWarp = m_debugWarpKey.Update();
+	bool isTitle = m_debugTitleKey.Update();
 	if (!kEnableDebugKeys) return;
+
+	// デバッグ表示（F12）を出している間だけ効く（遊んでいる時にうっかり押しても何も起きないように）
+	if (!KdDebugGUI::Instance().IsVisible()) return;
+
+	// Shift ＋ F12：タイトルへ
+	if (isTitle)
+	{
+		SceneManager::Instance().SetNextScene(SceneManager::SceneType::Title);
+		return;
+	}
 
 	auto player = m_wpPlayer.lock();
 	if (!player) return;
 
-	// F1：ATBゲージ全開
+	// F9：ATBゲージ全開
 	if (isAtb)
 	{
 		player->DebugFillAtb();
 		KdDebugGUI::Instance().AddLog("[Debug] ATBゲージ全開\n");
 	}
 
-	// F2：HP全開
+	// F10：HP全開
 	if (isHp)
 	{
 		player->DebugFillHp();
 		KdDebugGUI::Instance().AddLog("[Debug] HP全開\n");
 	}
 
-	// F5：HPを1にする（あと1発で倒れる状態。ゲームオーバーの確認用）
+	// F11：HPを1にする（あと1発で倒れる状態。ゲームオーバーの確認用）
 	if (isHpOne)
 	{
 		player->DebugSetHpOne();
 		KdDebugGUI::Instance().AddLog("[Debug] HPを1にした\n");
 	}
 
-	// F6：無敵の切り替え（もう一度押すと元に戻る）
+	// Shift ＋ F10：無敵の切り替え（もう一度押すと元に戻る）
 	if (isInvincible)
 	{
 		bool on = player->DebugToggleInvincible();
 		KdDebugGUI::Instance().AddLog(on ? "[Debug] 無敵 ON\n" : "[Debug] 無敵 OFF\n");
 	}
 
-	// F7：ボス以外の敵を全員倒し（バリアも開く）、ボスの手前（広間の中）へ瞬間移動して、ボスの方を向く
+	// Shift ＋ F11：ボス以外の敵を全員消し（バリアも開く）、ボスの手前（広間の中）へ瞬間移動して、ボスの方を向く
 	if (isWarp)
 	{
 		Math::Vector3 pos = kBossPos;
@@ -135,7 +137,7 @@ void GameScene::UpdateDebugKeys()
 		KdDebugGUI::Instance().AddLog("[Debug] ボス以外の敵を倒して、ボスの手前へ移動\n");
 	}
 
-	// F3：プレイヤーの前方にザコ敵を出す
+	// Shift ＋ F9：プレイヤーの前方にザコ敵を出す
 	if (isSpawn)
 	{
 		Math::Matrix rot = Math::Matrix::CreateRotationY(player->GetAngleRad());

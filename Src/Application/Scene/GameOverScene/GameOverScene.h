@@ -35,11 +35,11 @@ private :
 	std::shared_ptr<UIText>	m_menuTexts[static_cast<int>(Menu::Num)];
 	Menu					m_select = Menu::Retry;
 
-	InputHelper::KeyTrigger m_upKey{ 'W' };
-	InputHelper::KeyTrigger m_downKey{ 'S' };
+	InputHelper::KeyTrigger m_upKey{ InputHelper::Bind::MenuUp };		// パッドの十字キー・左スティックも
+	InputHelper::KeyTrigger m_downKey{ InputHelper::Bind::MenuDown };
 	InputHelper::KeyTrigger m_upArrowKey{ VK_UP };
 	InputHelper::KeyTrigger m_downArrowKey{ VK_DOWN };
-	InputHelper::KeyTrigger m_decideKey{ VK_RETURN };
+	InputHelper::KeyTrigger m_decideKey{ InputHelper::Bind::MenuDecide };	// パッドの A も
 	InputHelper::KeyTrigger m_clickKey{ VK_LBUTTON };	// 左クリックで決定
 
 	// マウスが乗っている項目（無ければ -1）

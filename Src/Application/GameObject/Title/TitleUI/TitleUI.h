@@ -130,14 +130,14 @@ private:
 	std::vector<float>						m_menuScales;			// 項目ごとの拡大率（選択中の項目を少し大きくする）
 	float									m_controlsOpen = 0.0f;	// 操作説明の開き具合（0～1）
 
-	// 入力（押した瞬間の判定用）
-	InputHelper::KeyTrigger					m_upKey{ 'W' };
+	// 入力（押した瞬間の判定用。パッドの十字キー・左スティック・A・B も Bind に入っている）
+	InputHelper::KeyTrigger					m_upKey{ InputHelper::Bind::MenuUp };
 	InputHelper::KeyTrigger					m_upArrowKey{ VK_UP };
-	InputHelper::KeyTrigger					m_downKey{ 'S' };
+	InputHelper::KeyTrigger					m_downKey{ InputHelper::Bind::MenuDown };
 	InputHelper::KeyTrigger					m_downArrowKey{ VK_DOWN };
-	InputHelper::KeyTrigger					m_enterKey{ VK_RETURN };
+	InputHelper::KeyTrigger					m_enterKey{ InputHelper::Bind::MenuDecide };
 	InputHelper::KeyTrigger					m_spaceKey{ VK_SPACE };
 	InputHelper::KeyTrigger					m_clickKey{ VK_LBUTTON };
-	InputHelper::KeyTrigger					m_backKey{ VK_BACK };
+	InputHelper::KeyTrigger					m_backKey{ InputHelper::Bind::MenuBack };
 	InputHelper::KeyTrigger					m_rightClickKey{ VK_RBUTTON };
 };

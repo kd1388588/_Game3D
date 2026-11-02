@@ -55,10 +55,10 @@ namespace
 	constexpr int		kFadeOutFrame		= 40;			// 黒へのフェードアウト
 
 	// ===== 操作説明 =====
-	constexpr float		kControlsHalfWidth	= 380.0f;
+	constexpr float		kControlsHalfWidth	= 460.0f;
 	constexpr float		kControlsHalfHeight	= 235.0f;
-	constexpr float		kControlsKeyX		= -330.0f;		// キーの列の左端
-	constexpr float		kControlsActionX	= -110.0f;		// 動作の列の左端
+	constexpr float		kControlsKeyX		= -430.0f;		// キーの列の左端（キーボード ／ パッドの2つを並べるので広め）
+	constexpr float		kControlsActionX	= -50.0f;		// 動作の列の左端
 	constexpr float		kControlsTopY		= 120.0f;
 	constexpr float		kControlsRowSpacing	= 34.0f;
 
@@ -130,7 +130,7 @@ void TitleUI::Init()
 	// 操作案内（画面の下）
 	m_selectGuide = CreateText("W / S : SELECT        ENTER : DECIDE", UIText::FontSize::Small);
 	m_selectGuide->SetCenterPos({ 0.0f, kGuideY });
-	m_controlsGuide = CreateText("Enter / BackSpace：戻る", UIText::FontSize::Small);
+	m_controlsGuide = CreateText("Enter / BackSpace ／ A / B：戻る", UIText::FontSize::Small);
 	m_controlsGuide->SetCenterPos({ 0.0f, kGuideY });
 
 	// 操作説明
@@ -139,13 +139,14 @@ void TitleUI::Init()
 
 	const std::vector<std::pair<std::string, std::string>> controls =
 	{
-		{ "W A S D",		"移動" },
-		{ "マウス",			"カメラを回す" },
-		{ "E",				"バトルモード切り替え" },
-		{ "左クリック",		"攻撃（続けて押すとコンボ）" },
-		{ "右クリック",		"回避" },
-		{ "F",				"ATBコマンド（スローにして技を選ぶ）" },
-		{ "Shift",			"走りながら：ダッシュ　止まって：ガード" },
+		{ "WASD ／ 左スティック",		"移動" },
+		{ "マウス ／ 右スティック",	"カメラを回す" },
+		{ "F・左クリック ／ X",		"攻撃（続けて押すとコンボ）" },
+		{ "R・右クリック ／ B",		"回避" },
+		{ "E ／ Y",					"バトルモード切り替え" },
+		{ "Space ／ A",				"ATBコマンド（スローにして技を選ぶ）" },
+		{ "1・2 ／ LB ＋ X・Y",		"必殺技（ATBゲージを使う）" },
+		{ "Ctrl ／ RB",				"走りながら：ダッシュ　止まって：ガード" },
 	};
 	for (size_t i = 0; i < controls.size(); ++i)
 	{

@@ -25,7 +25,10 @@ private:
 		std::shared_ptr<UIText>	key;
 		std::shared_ptr<UIText>	action;
 	};
-	std::vector<Row>		m_rows;
+	std::vector<Row>		m_keyboardRows;		// キーボード・マウスの時
+	std::vector<Row>		m_padRows;			// パッドの時
+
+	static std::vector<Row> CreateRows(const std::vector<std::pair<std::string, std::string>>& controls);
 
 	std::weak_ptr<Player>	m_wpPlayer;
 	float					m_alpha = 1.0f;		// 表示の濃さ（メニューを開くと薄くなって消える）
