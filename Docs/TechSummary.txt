@@ -126,7 +126,7 @@
   ・二重に高くならないように：プログラムで飛ばしているので、空中ではアニメーションで
           腰が上がりすぎないよう上限を付けた。
   ・ふわふわしないように：落ちる時だけ重力を 1.5倍 にした。
-  【場所】  PlayerState.cpp の PlayerStateJump、BaseChara の CalcFootLiftFrame /
+  【場所】  PlayerStateMove.cpp の PlayerStateJump、BaseChara の CalcFootLiftFrame /
             CalcFootPlantFrame / PredictLandingFrames
 
 
@@ -138,7 +138,7 @@
   【何か】  ボタンを押してから 10フレームの間は「押された」ことを覚えておく。
   【理由】  技の終わり際に少し早めに押した入力が無視されると、操作が「もっさり」する。
             アクションゲームでよく使われる方法。
-  【場所】  Player.cpp の UpdateInputBuffer
+  【場所】  PlayerInput.cpp の UpdateInputBuffer
 
 ■ キャンセル
   【何か】  攻撃や回避の途中でも、決まったフレームを過ぎたら次の行動に移れる。
@@ -217,7 +217,7 @@
     ・攻撃05の後は5秒間オペレーターに固定（モードを切り替えられない）。
     ・技を受けた敵は、のけぞり続けて反撃してこない。
   【理由】  FF7リメイクのように、落ち着いて技を選べて、技を出す瞬間が目立つため。
-  【場所】  Src/Application/Utility/GameTime.h、Player.cpp の UpdateCommandMenu、
+  【場所】  Src/Application/Utility/GameTime.h、PlayerBattle.cpp の UpdateCommandMenu、
             UI/Gage/ATB/ATBCommandMenu
 
 
@@ -232,7 +232,7 @@
             どのアニメーションがどの方向へ進むかは、起動時にアニメーションの動きを
             計算して決めている（左右の取り違えを防ぐため）。
   ・ガードの耐久値：受け止めるたびに減り、0 になると「ガード崩し」でよろけ、2秒ガードできない。
-  【場所】  PlayerState.cpp の PlayerStateGuard / PlayerStateGuardBreak
+  【場所】  PlayerStateGuard.cpp の PlayerStateGuard / PlayerStateGuardBreak
 
 
 ============================================================
@@ -292,7 +292,7 @@
             ※普通の「半透明」を使わない理由：このゲームの3D用シェーダーは
               「透明度が55%より薄い所は描かない」作りなので、ぼかした部分が全部消えてしまうため。
   ・軌跡の長さは15フレーム分。裏側からでも見え、後ろの物を隠さないように描いている。
-  【場所】  Player.cpp（AddSwordTrailSample・CreateSwordTrailTexture など）
+  【場所】  PlayerWeapon.cpp（AddSwordTrailSample・CreateSwordTrailTexture など）
 
 ■ ヒットエフェクト（Effekseer）
   ・Effekseer は、エフェクト（光・火花など）を作って再生するツール。

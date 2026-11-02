@@ -282,6 +282,8 @@
     <ClInclude Include="Src\Application\GameObject\Character\Player\Player.h" />
     <ClInclude Include="Src\Application\GameObject\Character\Player\PlayerParamManager.h" />
     <ClInclude Include="Src\Application\GameObject\Character\Player\PlayerState.h" />
+    <ClInclude Include="Src\Application\GameObject\Character\Player\PlayerConstants.h" />
+    <ClInclude Include="Src\Application\GameObject\Character\Player\PlayerStateConstants.h" />
     <ClInclude Include="Src\Application\GameObject\Character\TestModel\TestModel.h" />
     <ClInclude Include="Src\Application\GameObject\Character\UI\Gage\Base\BaseGage.h" />
     <ClInclude Include="Src\Application\GameObject\Character\UI\Gage\HP\HPGage.h" />
@@ -374,6 +376,15 @@
     <ClCompile Include="Src\Application\GameObject\Character\Player\Player.cpp" />
     <ClCompile Include="Src\Application\GameObject\Character\Player\PlayerParamManager.cpp" />
     <ClCompile Include="Src\Application\GameObject\Character\Player\PlayerState.cpp" />
+    <ClCompile Include="Src\Application\GameObject\Character\Player\PlayerInput.cpp" />
+    <ClCompile Include="Src\Application\GameObject\Character\Player\PlayerBattle.cpp" />
+    <ClCompile Include="Src\Application\GameObject\Character\Player\PlayerMove.cpp" />
+    <ClCompile Include="Src\Application\GameObject\Character\Player\PlayerWeapon.cpp" />
+    <ClCompile Include="Src\Application\GameObject\Character\Player\PlayerAttack.cpp" />
+    <ClCompile Include="Src\Application\GameObject\Character\Player\PlayerDraw.cpp" />
+    <ClCompile Include="Src\Application\GameObject\Character\Player\PlayerStateMove.cpp" />
+    <ClCompile Include="Src\Application\GameObject\Character\Player\PlayerStateGuard.cpp" />
+    <ClCompile Include="Src\Application\GameObject\Character\Player\PlayerStateAttack.cpp" />
     <ClCompile Include="Src\Application\GameObject\Character\TestModel\TestModel.cpp" />
     <ClCompile Include="Src\Application\GameObject\Character\UI\Gage\Base\BaseGage.cpp" />
     <ClCompile Include="Src\Application\GameObject\Character\UI\Gage\HP\HPGage.cpp" />

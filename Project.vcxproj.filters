@@ -432,6 +432,12 @@
     <ClInclude Include="Src\Application\GameObject\Character\Player\PlayerState.h">
       <Filter>Src\Application\GameObject\Character\Player</Filter>
     </ClInclude>
+    <ClInclude Include="Src\Application\GameObject\Character\Player\PlayerConstants.h">
+      <Filter>Src\Application\GameObject\Character\Player</Filter>
+    </ClInclude>
+    <ClInclude Include="Src\Application\GameObject\Character\Player\PlayerStateConstants.h">
+      <Filter>Src\Application\GameObject\Character\Player</Filter>
+    </ClInclude>
     <ClInclude Include="Src\Application\GameObject\Character\Enemy\EnemyState.h">
       <Filter>Src\Application\GameObject\Character\Enemy</Filter>
     </ClInclude>
@@ -678,6 +684,33 @@
       <Filter>Src\Application\GameObject\Character\Enemy</Filter>
     </ClCompile>
     <ClCompile Include="Src\Application\GameObject\Character\Player\PlayerState.cpp">
+      <Filter>Src\Application\GameObject\Character\Player</Filter>
+    </ClCompile>
+    <ClCompile Include="Src\Application\GameObject\Character\Player\PlayerInput.cpp">
+      <Filter>Src\Application\GameObject\Character\Player</Filter>
+    </ClCompile>
+    <ClCompile Include="Src\Application\GameObject\Character\Player\PlayerBattle.cpp">
+      <Filter>Src\Application\GameObject\Character\Player</Filter>
+    </ClCompile>
+    <ClCompile Include="Src\Application\GameObject\Character\Player\PlayerMove.cpp">
+      <Filter>Src\Application\GameObject\Character\Player</Filter>
+    </ClCompile>
+    <ClCompile Include="Src\Application\GameObject\Character\Player\PlayerWeapon.cpp">
+      <Filter>Src\Application\GameObject\Character\Player</Filter>
+    </ClCompile>
+    <ClCompile Include="Src\Application\GameObject\Character\Player\PlayerAttack.cpp">
+      <Filter>Src\Application\GameObject\Character\Player</Filter>
+    </ClCompile>
+    <ClCompile Include="Src\Application\GameObject\Character\Player\PlayerDraw.cpp">
+      <Filter>Src\Application\GameObject\Character\Player</Filter>
+    </ClCompile>
+    <ClCompile Include="Src\Application\GameObject\Character\Player\PlayerStateMove.cpp">
+      <Filter>Src\Application\GameObject\Character\Player</Filter>
+    </ClCompile>
+    <ClCompile Include="Src\Application\GameObject\Character\Player\PlayerStateGuard.cpp">
+      <Filter>Src\Application\GameObject\Character\Player</Filter>
+    </ClCompile>
+    <ClCompile Include="Src\Application\GameObject\Character\Player\PlayerStateAttack.cpp">
       <Filter>Src\Application\GameObject\Character\Player</Filter>
     </ClCompile>
     <ClCompile Include="Src\Application\GameObject\Character\Enemy\EnemyState.cpp">

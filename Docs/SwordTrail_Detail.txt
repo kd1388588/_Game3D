@@ -5,8 +5,8 @@
 ※ かんたんな説明は SwordTrail.txt。こちらはコードの名前や専門用語を使った説明。
 
 ■ 関係するファイル
-  Src/Application/GameObject/Character/Player/Player.cpp / Player.h   … 軌跡の処理のほとんど
-  Src/Application/GameObject/Character/Player/PlayerState.cpp          … 攻撃中に軌跡を伸ばす側
+  Src/Application/GameObject/Character/Player/PlayerWeapon.cpp / Player.h … 軌跡の処理のほとんど
+  Src/Application/GameObject/Character/Player/PlayerStateAttack.cpp    … 攻撃中に軌跡を伸ばす側
   Src/Framework/Direct3D/Polygon/KdTrailPolygon.h / .cpp               … 帯を作るフレームワークのクラス
   Tools/MakeTrailTexture.py                                            … 帯に貼る画像を作るスクリプト
 

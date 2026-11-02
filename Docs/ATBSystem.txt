@@ -20,7 +20,7 @@
   E　　　　　：モード切り替え（オペレーター ⇔ パニッシャー）
   左クリック ：攻撃（オペレーターは攻撃01、パニッシャーは攻撃02のコンボ）
   右クリック ：回避（パニッシャーのままでも回避できる。そのかわりパニッシャーは攻撃が遅く、受けるダメージが多い。
-                     PlayerState.cpp の kEvadeReturnsToOperator を true にすると、FF7R のクラウドと同じく
+                     PlayerStateConstants.h の kEvadeReturnsToOperator を true にすると、FF7R のクラウドと同じく
                      オペレーターに戻ってから回避する）
   ホイール / R：ロックオン（近くの敵に視点を合わせる。もう一度押すと外す）
   F　　　　　：ATB コマンドを開く・閉じる（開いている間は時間がゆっくりになる）
@@ -109,7 +109,7 @@
 ------------------------------------------------------------
  8. 調整したい時（数字を変える場所）
 ------------------------------------------------------------
-  Player.cpp の上の方
+  PlayerConstants.h
     kOperatorAttackType / kPunisherAttackType ：モードごとの左クリックの攻撃（01・02）
     kAbilityInfos         ：アビリティの攻撃・使うゲージの本数・CT
     kCommandTimeScale     ：ATB コマンドを開いている間の時間の速さ（0.1）
@@ -122,7 +122,7 @@
     kGuardBreakFrame      ：崩された後、ガードできない時間（2秒）
     kPunisherMoveRate     ：パニッシャーの移動の速さ（0.7）
 
-  PlayerState.cpp の上の方
+  PlayerStateConstants.h
     kAbilityDamageRate    ：アビリティのダメージ倍率（1.5）
     kAttack5_3AnimSpeed   ：攻撃05の3段目の再生速度（0.9）
     kDashSpeedRate        ：ダッシュの速さ（1.6）

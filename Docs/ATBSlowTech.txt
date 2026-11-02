@@ -125,10 +125,10 @@ F キーで ATB コマンドを開くと、ゲーム全体が 10 分の 1 の速
     ・技を受けた敵は、のけぞり続けて反撃してこない。
 
   ■ どこで決めているか
-    ・技の順番・使うゲージ・CT：Player.cpp の kAbilityInfos（上から順番に並んでいる）
+    ・技の順番・使うゲージ・CT：PlayerConstants.h の kAbilityInfos（上から順番に並んでいる）
     ・メニューに出す名前：ATBCommandMenu.cpp の kItemNames（kAbilityInfos と同じ順番にする）
-    ・技の威力：PlayerState.cpp の kAbilityDamageRate
-    ・ゲージのたまる量：Player.cpp の kAtbHitGain / kAtbEvadeGain など
+    ・技の威力：PlayerStateConstants.h の kAbilityDamageRate
+    ・ゲージのたまる量：PlayerConstants.h の kAtbHitGain / kAtbEvadeGain など
 
 
 ------------------------------------------------------------
