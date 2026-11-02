@@ -196,14 +196,15 @@ namespace InputHelper
 		inline const InputBinding MenuDecide	= { { VK_RETURN },			{ PadButton::A } };
 		inline const InputBinding MenuBack		= { { VK_BACK },			{ PadButton::B } };
 
-		// デバッグ（キーボードだけ。F12 でデバッグ表示を出している間だけ効く）
+		// デバッグ（キーボードだけ。F8 でデバッグ表示を出している間だけ効く）
+		inline const InputBinding DebugToggle		= { { VK_F8 },	{}, PadButton::None, false, VK_SHIFT, false };	// デバッグ表示の切り替え（F12 は VS のデバッグ中にブレークになるので使わない）
 		inline const InputBinding DebugAtb			= { { VK_F9 },	{}, PadButton::None, false, VK_SHIFT, false };
 		inline const InputBinding DebugHpFull		= { { VK_F10 },	{}, PadButton::None, false, VK_SHIFT, false };
 		inline const InputBinding DebugHpOne		= { { VK_F11 },	{}, PadButton::None, false, VK_SHIFT, false };
 		inline const InputBinding DebugSpawn		= { { VK_F9 },	{}, PadButton::None, false, VK_SHIFT, true };
 		inline const InputBinding DebugInvincible	= { { VK_F10 },	{}, PadButton::None, false, VK_SHIFT, true };
 		inline const InputBinding DebugWarpBoss		= { { VK_F11 },	{}, PadButton::None, false, VK_SHIFT, true };
-		inline const InputBinding DebugToTitle		= { { VK_F12 },	{}, PadButton::None, false, VK_SHIFT, true };
+		inline const InputBinding DebugToTitle		= { { VK_F8 },	{}, PadButton::None, false, VK_SHIFT, true };
 	}
 
 	// マウスの位置を、UIの座標（画面の中央が原点、上が＋Y。1280x720）で取得する

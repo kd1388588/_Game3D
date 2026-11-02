@@ -50,10 +50,10 @@ private:
 	// 生き残っている敵の数
 	int GetAliveEnemyCount() const;
 
-	// デバッグキー（F12 でデバッグ表示を出している間だけ効く）
+	// デバッグキー（F8 でデバッグ表示を出している間だけ効く）
 	// F9：ATB全開、F10：HP全開、F11：HPを1にする
-	// Shift ＋ F9：敵をプレイヤーの前に出す、Shift ＋ F10：無敵の切り替え、Shift ＋ F11：ボス以外を消してボスの手前へ移動、Shift ＋ F12：タイトルへ
-	// ※F12 はデバッグ表示の切り替え（main.cpp）
+	// Shift ＋ F9：敵をプレイヤーの前に出す、Shift ＋ F10：無敵の切り替え、Shift ＋ F11：ボス以外を消してボスの手前へ移動、Shift ＋ F8：タイトルへ
+	// ※F8 はデバッグ表示の切り替え（main.cpp）。F12 は Visual Studio のデバッグ中に「止める」キーになるので使わない
 	void UpdateDebugKeys();
 	InputHelper::KeyTrigger	m_debugAtbKey{ InputHelper::Bind::DebugAtb };
 	InputHelper::KeyTrigger	m_debugHpKey{ InputHelper::Bind::DebugHpFull };

@@ -109,10 +109,10 @@ void GameScene::UpdateDebugKeys()
 	bool isTitle = m_debugTitleKey.Update();
 	if (!kEnableDebugKeys) return;
 
-	// デバッグ表示（F12）を出している間だけ効く（遊んでいる時にうっかり押しても何も起きないように）
+	// デバッグ表示（F8）を出している間だけ効く（遊んでいる時にうっかり押しても何も起きないように）
 	if (!KdDebugGUI::Instance().IsVisible()) return;
 
-	// Shift ＋ F12：タイトルへ
+	// Shift ＋ F8：タイトルへ
 	if (isTitle)
 	{
 		SceneManager::Instance().SetNextScene(SceneManager::SceneType::Title);

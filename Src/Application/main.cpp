@@ -80,9 +80,11 @@ void Application::Update()
 
 void Application::UpdateDebugToggle()
 {
-	// F12：デバッグ表示（ImGui のウィンドウ・当たり判定のワイヤー）の表示・非表示を切り替える
-	// （ほかのデバッグキー F9～F11・Shift ＋ F9～F12 は、デバッグ表示を出している間だけ効く）
-	static InputHelper::KeyTrigger debugKey{ VK_F12 };
+	// F8：デバッグ表示（ImGui のウィンドウ・当たり判定のワイヤー）の表示・非表示を切り替える
+	// （F12 は Visual Studio でデバッグ実行中に、プログラムを止める（ブレーク）キーになっているので使わない）
+	// （ほかのデバッグキー F9～F11・Shift ＋ F8～F11 は、デバッグ表示を出している間だけ効く）
+	// （Shift ＋ F8 はタイトルへ戻るデバッグキーなので、Shift を押している時は切り替えない）
+	static InputHelper::KeyTrigger debugKey{ InputHelper::Bind::DebugToggle };
 	if (debugKey.Update())
 	{
 		KdDebugGUI::Instance().ToggleVisible();
