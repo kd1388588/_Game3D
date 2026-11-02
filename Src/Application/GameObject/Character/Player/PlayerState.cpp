@@ -84,12 +84,12 @@ void PlayerStateIdle::Update(Player* player)
 
 	if (player->CheckMoveInput())
 	{
-		// 移動（ガード・ダッシュのキー（Ctrl ／ RB）を押していればダッシュ）
+		// 移動（ガード・ダッシュのキー（Shift ／ RB）を押していればダッシュ）
 		player->ChangeState(std::make_shared<PlayerStateRun>());
 	}
 	else if (player->IsGuardDashDown() && player->CanGuard())
 	{
-		// 止まっている時に Ctrl ／ RB：ガード（構えた後は、移動キーでガードしたまま歩ける）
+		// 止まっている時に Shift ／ RB：ガード（構えた後は、移動キーでガードしたまま歩ける）
 		player->ChangeState(std::make_shared<PlayerStateGuard>());
 	}
 }

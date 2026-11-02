@@ -57,7 +57,7 @@ void PlayerStateGuard::Update(Player* player)
 	// 構えを解いている途中
 	if (m_phase == Phase::End)
 	{
-		// もう一度 Ctrl ／ RB を押したら、すぐ構え直す
+		// もう一度 Shift ／ RB を押したら、すぐ構え直す
 		if (player->IsGuardDashDown() && player->CanGuard() && !player->CheckMoveInput())
 		{
 			ChangePhase(player, Phase::Start);
@@ -92,7 +92,7 @@ void PlayerStateGuard::Update(Player* player)
 	switch (m_phase)
 	{
 	case Phase::Start:
-		// 構え終わったら、構えたままのループへ（Ctrl ／ RB を離していたら、そのまま構えを解く）
+		// 構え終わったら、構えたままのループへ（Shift ／ RB を離していたら、そのまま構えを解く）
 		if (player->IsAnimEnd())
 		{
 			ChangePhase(player, player->IsGuardDashDown() ? Phase::Loop : Phase::End);
@@ -100,7 +100,7 @@ void PlayerStateGuard::Update(Player* player)
 		break;
 
 	case Phase::Loop:
-		// Ctrl ／ RB を離したら構えを解く（移動キーを押していれば、そのまま走り出す）
+		// Shift ／ RB を離したら構えを解く（移動キーを押していれば、そのまま走り出す）
 		if (!player->IsGuardDashDown())
 		{
 			if (player->CheckMoveInput())	player->ChangeState(std::make_shared<PlayerStateRun>());
@@ -113,7 +113,7 @@ void PlayerStateGuard::Update(Player* player)
 		break;
 
 	case Phase::Hit:
-		// 受け止める動きが終わったら、ガード・ダッシュのキー（Ctrl ／ RB）を押していれば構えたまま、離していれば構えを解く
+		// 受け止める動きが終わったら、ガード・ダッシュのキー（Shift ／ RB）を押していれば構えたまま、離していれば構えを解く
 		if (player->IsAnimEnd())
 		{
 			ChangePhase(player, player->IsGuardDashDown() ? Phase::Loop : Phase::End);

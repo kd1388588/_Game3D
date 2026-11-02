@@ -15,7 +15,7 @@
 //   モード切り替え　：Y ／ E・ホイールクリック
 //   ATBコマンド　　 ：A ／ Space
 //   必殺技1・2　　　：LB ＋ X・LB ＋ Y ／ 1・2
-//   ガード・ダッシュ：RB ／ Ctrl（止まっていればガード、走っていればダッシュ）
+//   ガード・ダッシュ：RB ／ Shift（止まっていればガード、走っていればダッシュ）
 //   メニュー　　　　：十字キー・左スティック、A で決定、B で戻る ／ W・S・方向キー、Enter・左クリックで決定、BackSpace・右クリックで戻る
 namespace InputHelper
 {
@@ -188,7 +188,7 @@ namespace InputHelper
 		inline const InputBinding CommandPad	= { {},						{ PadButton::A } };	// パッド：開く（メニュー中は決定）
 		inline const InputBinding Special1		= { { '1' },				{ PadButton::X },	PadButton::LB, true };
 		inline const InputBinding Special2		= { { '2' },				{ PadButton::Y },	PadButton::LB, true };
-		inline const InputBinding GuardDash		= { { VK_CONTROL },			{ PadButton::RB } };
+		inline const InputBinding GuardDash		= { { VK_SHIFT },			{ PadButton::RB } };
 
 		// メニュー（ATBコマンド・タイトル・リザルト）
 		inline const InputBinding MenuUp		= { { 'W', VK_UP },			{ PadButton::DPadUp, PadButton::LStickUp } };

@@ -62,6 +62,9 @@ public:
 	// 落下中の重力の倍率（1.0 で普通。大きくすると、上がる時より落ちる時が速くなる）
 	void SetFallGravityRate(float rate) { m_fallGravityRate = rate; }
 
+	// 壁・柱に当たる体の半径（大きい敵は大きくする。小さいと体が柱にめり込んで見える）
+	void SetBumpRadius(float radius) { m_bumpRadius = radius; }
+
 	// アニメーションに「前へ進む動き」（腰の水平移動）が入っているか
 	// （その場で足踏みするだけのアニメーションなら false）
 	bool HasHorizontalMotion(const std::string& animName) const;
@@ -97,6 +100,9 @@ protected:
 
 	// 無敵時間を1フレーム分進める
 	void UpdateInvincibleTimer();
+
+	// from から dir の方向（水平）へ range まで調べて、一番近い壁・柱までの距離を返す（無ければ range）
+	float FindWallDistance(const Math::Vector3& from, const Math::Vector3& dir, float range) const;
 
 	// ルートモーションの移動量をY軸回転(ラジアン)で向きを合わせて座標に加算する
 	void ApplyRootMotion(float scale, float rotYRad);
@@ -141,6 +147,7 @@ protected:
 	// 壁のすり抜け防止（前のフレームで押し出し済みの位置）
 	Math::Vector3					m_lastBumpPos = Math::Vector3::Zero;
 	bool							m_hasLastBumpPos = false;
+	float							m_bumpRadius = 0.35f;			// 壁・柱に当たる体の半径
 
 	std::unordered_map<std::string, std::shared_ptr<KdAnimationData>> m_animMap;
 	std::string						m_currentAnimName = "";

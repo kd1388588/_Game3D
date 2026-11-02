@@ -93,7 +93,7 @@ namespace PlayerStateConst
 	// アビリティの攻撃は、ボタンを押さなくても最後の段まで自動で出る
 	constexpr float kAbilityDamageRate		= 1.5f;		// 普通の攻撃（倍率1.0）の何倍のダメージか。モードの倍率はかからない
 
-	// ガード（止まっている時に ガード・ダッシュのキー（Ctrl ／ RB）を押している間）
+	// ガード（止まっている時に ガード・ダッシュのキー（Shift ／ RB）を押している間）
 	// アニメーション：Sequence2/08_Hit/14_Block の Block_Start / Loop / Hit / End
 	const std::string kGuardStartAnimName	= "GuardStart";
 	const std::string kGuardLoopAnimName	= "GuardLoop";
@@ -106,7 +106,7 @@ namespace PlayerStateConst
 	constexpr float kGuardTurnAngle			= 12.0f;	// ガード中にカメラの方へ向きを変える速さ（度/フレーム）
 	const std::string kGuardBreakAnimName	= "GuardBreak";
 
-	// ダッシュ（移動中に ガード・ダッシュのキー（Ctrl ／ RB）を押している間）
+	// ダッシュ（移動中に ガード・ダッシュのキー（Shift ／ RB）を押している間）
 	constexpr float kDashSpeedRate			= 1.6f;		// 走る速さの何倍か
 
 	// 回避

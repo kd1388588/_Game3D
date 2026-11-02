@@ -35,6 +35,8 @@ namespace
 	constexpr int	kDamageInvincibleFrame	= 0;
 	constexpr int	kAttackDamage			= 5;
 	constexpr int	kCriticalAttackDamage	= 10;
+	constexpr float	kBumpRadiusRate			= 0.4f;		// 壁・柱に当たる体の半径（体の大きさに掛ける。ザコ 0.5m・ボス 1.0m くらい）
+	constexpr float	kLeapWallCheckHeight	= 0.9f;		// 飛びかかる前に、着地点までの間に柱が無いかを調べる高さ
 	constexpr float	kPushStrength			= 0.1f;		// 敵同士の押し出しの強さ（毎フレームの割合）
 	constexpr float	kHitEffectScale			= 0.22f;	// プレイヤーに攻撃が当たった時のエフェクトの大きさ（大きいと前が見えなくなる）
 	const Math::Color kHitEffectColor		= { 1.0f, 0.3f, 0.25f, 1.0f };	// その色（エフェクトの元の色にかけ算される。白なら元の色のまま）
@@ -112,6 +114,7 @@ void Enemy::Init()
 		KdDebugGUI::Instance().AddLog("[Enemy] 飛びかかり攻撃のアニメーションが読み込めていません\n");
 	}
 	m_scale = param.scale;
+	SetBumpRadius(m_scale * kBumpRadiusRate);	// 体の大きさに合わせて、柱にめり込まないようにする
 	m_searchRange = param.searchRange;
 	m_attackRange = param.attackRange;
 
@@ -380,6 +383,15 @@ void Enemy::StartLeap(const Math::Vector3& target)
 	float dist = toTarget.Length();
 	if (dist > 0.0f) toTarget /= dist;
 	float leapDist = std::clamp(dist - kLeapLandOffset * m_scale * 0.5f, 0.0f, kMaxLeapDistance);
+
+	// 着地点までの間に柱や壁があれば、その手前に着地する
+	// （空中では低い柱の上を越えてしまい、柱の中に着地して出られなくなっていたため）
+	if (leapDist > 0.0f)
+	{
+		Math::Vector3 from = m_pos + Math::Vector3(0.0f, kLeapWallCheckHeight, 0.0f);
+		float wallDist = FindWallDistance(from, toTarget, leapDist + m_bumpRadius);
+		leapDist = std::min(leapDist, std::max(wallDist - m_bumpRadius, 0.0f));
+	}
 
 	// 空中にいる時間 ＝ 上がる時間（強さ ÷ 重力）＋ 落ちる時間（落ちる時は重力が強いので短い）
 	float riseFrames = GetLeapRiseFrames();

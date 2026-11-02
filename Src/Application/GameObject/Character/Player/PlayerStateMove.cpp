@@ -46,7 +46,7 @@ void PlayerStateRun::Update(Player* player)
 	if (TryCommonTransition(player)) return;
 
 	// ダッシュのアニメーションの切り替え（アニメーションが無い時は、普段の走りのままダッシュする）
-	// 一度ダッシュを始めたら、Ctrl ／ RB を離しても移動キーを離すまで全力で走り続ける
+	// 一度ダッシュを始めたら、Shift ／ RB を離しても移動キーを離すまで全力で走り続ける
 	if (player->HasAnimation(kDashAnimName))
 	{
 		switch (m_dashPhase)
@@ -75,7 +75,7 @@ void PlayerStateRun::Update(Player* player)
 	{
 		float speedRate = Player::s_runSpeedRate;
 		speedRate *= player->GetModeMoveRate();								// パニッシャーの時は遅く
-		if (isDash) speedRate *= kDashSpeedRate;							// ガード・ダッシュのキー（Ctrl ／ RB）を押している間はダッシュ
+		if (isDash) speedRate *= kDashSpeedRate;							// ガード・ダッシュのキー（Shift ／ RB）を押している間はダッシュ
 		// 全力疾走のアニメーションは、それ自体が普段の走りより速いので、その分を割り引く
 		if (m_dashPhase == DashPhase::Dash) speedRate /= player->GetDashAnimSpeedRatio();
 

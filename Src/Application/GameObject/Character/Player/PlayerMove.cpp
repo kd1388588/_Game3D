@@ -386,7 +386,7 @@ bool Player::MoveProcess(bool moveByCode)
 	if (moveByCode)
 	{
 		float moveSpeed = kMoveSpeed * GetModeMoveRate();
-		if (IsGuardDashDown()) moveSpeed *= kDashMoveRate;	// ガード・ダッシュのキー（Ctrl ／ RB）を押している間はダッシュ
+		if (IsGuardDashDown()) moveSpeed *= kDashMoveRate;	// ガード・ダッシュのキー（Shift ／ RB）を押している間はダッシュ
 		m_pos += dir * moveSpeed;
 	}
 	return true;

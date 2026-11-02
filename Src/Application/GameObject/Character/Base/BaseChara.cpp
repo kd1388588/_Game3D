@@ -28,7 +28,6 @@ namespace
 	// 体の高さの違う所に球を置いて調べる（腰だけだと、頭の高さの壁にめり込むため）
 	// ※一番下の球は足元から 0.4 より上だけを調べる（階段の段差で止まらないように）
 	constexpr float kBumpHeights[]			= { 0.75f, 1.3f };
-	constexpr float kBumpRadius				= 0.35f;
 	constexpr float kBumpIgnoreHitDirY		= 0.3f;		// これより上向きの衝突は床とみなして押し出さない
 	constexpr int	kBumpIterations			= 3;		// 押し出しを繰り返す回数（角で2つの壁に当たった時も抜けないように）
 	constexpr float kBumpRayHeight			= 0.9f;		// すり抜け防止のレイを飛ばす高さ
@@ -463,7 +462,7 @@ void BaseChara::BumpHit()
 			KdCollider::RayInfo ray;
 			ray.m_pos = { m_lastBumpPos.x, m_pos.y + kBumpRayHeight, m_lastBumpPos.z };
 			ray.m_dir = dir;
-			ray.m_range = moveLength + kBumpRadius;
+			ray.m_range = moveLength + m_bumpRadius;
 			ray.m_type = KdCollider::TypeBump;
 
 			// 一番手前の壁
@@ -476,9 +475,9 @@ void BaseChara::BumpHit()
 			}
 
 			// 壁から体の半径分だけ手前で止める
-			if (nearest < moveLength + kBumpRadius)
+			if (nearest < moveLength + m_bumpRadius)
 			{
-				float allowed = std::max(nearest - kBumpRadius, 0.0f);
+				float allowed = std::max(nearest - m_bumpRadius, 0.0f);
 				m_pos.x = m_lastBumpPos.x + dir.x * allowed;
 				m_pos.z = m_lastBumpPos.z + dir.z * allowed;
 			}
@@ -494,7 +493,7 @@ void BaseChara::BumpHit()
 			Math::Vector3 center = m_pos;
 			center.y += height;
 
-			KdCollider::SphereInfo sphere(KdCollider::TypeBump, center, kBumpRadius);
+			KdCollider::SphereInfo sphere(KdCollider::TypeBump, center, m_bumpRadius);
 
 			// 一番深くめり込んでいる所だけを押し出す（同じ壁の三角形ごとに何度も押し出さないように）
 			float maxOverlap = 0.0f;
@@ -527,6 +526,24 @@ void BaseChara::BumpHit()
 
 	m_lastBumpPos = m_pos;
 	m_hasLastBumpPos = true;
+}
+
+float BaseChara::FindWallDistance(const Math::Vector3& from, const Math::Vector3& dir, float range) const
+{
+	KdCollider::RayInfo ray;
+	ray.m_pos = from;
+	ray.m_dir = dir;
+	ray.m_range = range;
+	ray.m_type = KdCollider::TypeBump;
+
+	float nearest = range;
+	for (auto& ret : IntersectsOthers(ray))
+	{
+		Math::Vector3 diff = ret.m_hitPos - from;
+		diff.y = 0.0f;
+		nearest = std::min(nearest, diff.Length());
+	}
+	return nearest;
 }
 
 void BaseChara::Release()
