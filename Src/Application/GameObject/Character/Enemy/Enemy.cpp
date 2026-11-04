@@ -42,13 +42,12 @@ namespace
 	constexpr float	kLeapWallCheckHeight	= 0.9f;		// 飛びかかる前に、着地点までの間に柱が無いかを調べる高さ
 	constexpr float	kPushStrength			= 0.1f;		// 敵同士の押し出しの強さ（毎フレームの割合）
 	constexpr float	kHitEffectScale			= 0.22f;	// プレイヤーに攻撃が当たった時のエフェクトの大きさ（大きいと前が見えなくなる）
-	const Math::Color kHitEffectColor		= { 1.0f, 0.3f, 0.25f, 1.0f };	// その色（エフェクトの元の色にかけ算される。白なら元の色のまま）
+	// ※エフェクトの色（赤）は、エフェクトエディタ（EffectSettings）で _Claw2.efkefc に付けている
 
 	// プレイヤーに攻撃が当たった時のエフェクト（小さめ・赤っぽい色にして、プレイヤーの攻撃のエフェクトと見分けやすくする）
 	void PlayHitPlayerEffect(const Math::Vector3& pos)
 	{
-		std::shared_ptr<KdEffekseerObject> effect = EffectPlayer::Play(EffectName::HitPlayer, pos, kHitEffectScale);
-		if (effect) effect->SetColor(kHitEffectColor);
+		EffectPlayer::Play(EffectName::HitPlayer, pos, kHitEffectScale);
 	}
 
 	const std::string kModelDir = "Asset/Models/GameObject/Enemy/Monster2/";
@@ -446,8 +445,7 @@ void Enemy::PlaySlamEffect()
 	}
 	pos.y += kSlamEffectHeightRate * m_scale;
 
-	std::shared_ptr<KdEffekseerObject> effect = EffectPlayer::Play(EffectName::HitPlayer, pos, kSlamEffectScaleRate * m_scale);
-	if (effect) effect->SetColor(kHitEffectColor);
+	EffectPlayer::Play(EffectName::HitPlayer, pos, kSlamEffectScaleRate * m_scale);
 }
 
 void Enemy::AttackHitNear(bool isCritical)
@@ -488,9 +486,8 @@ void Enemy::GroundSmash()
 	if (!EffectPlayer::Play(EffectName::BossGroundSmash, m_pos, kSmashEffectScaleRate * m_scale))
 	{
 		// _GroundSmash.efkefc がまだ無い時は、爪のエフェクトで代わりにする
-		std::shared_ptr<KdEffekseerObject> effect = EffectPlayer::Play(EffectName::HitPlayer,
+		EffectPlayer::Play(EffectName::HitPlayer,
 			m_pos + Math::Vector3(0.0f, kSlamEffectHeightRate * m_scale, 0.0f), kSmashClawScaleRate * m_scale);
-		if (effect) effect->SetColor(kHitEffectColor);
 	}
 	SoundPlayer::PlaySE(SoundName::HeavyHit, 1.0f, -0.5f);	// 地面を叩きつけた、低い音
 

@@ -462,6 +462,9 @@
     <ClInclude Include="Src\Application\Utility\StageSettings.h">
       <Filter>Src\Application\Utility</Filter>
     </ClInclude>
+    <ClInclude Include="Src\Application\Utility\EffectSettings.h">
+      <Filter>Src\Application\Utility</Filter>
+    </ClInclude>
     <ClInclude Include="Src\Application\GameObject\Stage\Object\Barrier\Barrier.h">
       <Filter>Src\Application\GameObject\Stage\Object\Barrier</Filter>
     </ClInclude>
@@ -741,6 +744,9 @@
       <Filter>Src\Application\GameObject\Stage\Object\GroundMist</Filter>
     </ClCompile>
     <ClCompile Include="Src\Application\Utility\StageSettings.cpp">
+      <Filter>Src\Application\Utility</Filter>
+    </ClCompile>
+    <ClCompile Include="Src\Application\Utility\EffectSettings.cpp">
       <Filter>Src\Application\Utility</Filter>
     </ClCompile>
     <ClCompile Include="Src\Application\GameObject\Stage\Object\Barrier\Barrier.cpp">

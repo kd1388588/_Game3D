@@ -76,6 +76,10 @@ private:
 
 	static inline bool s_isEnabled = true;
 
+	// エフェクトエディタの大きさ・速さ・高さはかけずに出す（色だけかける）。Play の中で使う
+	static std::shared_ptr<KdEffekseerObject> PlayRaw(const std::string& fileName, const Math::Vector3& pos,
+		float scale, float speed);
+
 	// エフェクトファイルが存在するか（無い場合は1度だけログを出す）
 	static bool Exists(const std::string& fileName);
 };

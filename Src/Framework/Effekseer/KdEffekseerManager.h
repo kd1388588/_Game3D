@@ -62,6 +62,20 @@ public:
 		m_wpCamera = camera;
 	}
 
+	//==================================================
+	// Effekseer エディタとの同期（ネットワーク）
+	// ・StartServer で待ち受けを始め、Effekseer エディタの「ネットワーク」から接続すると、
+	//   エディタで編集したエフェクトが、動いているゲームの中ですぐ差し替わる
+	// ・どのエフェクトかは「ファイル名」で見分ける（エディタで開いたファイルと同じ名前のエフェクトが変わる）
+	//==================================================
+	bool StartServer(uint16_t port);
+	void StopServer();
+	bool IsServerRunning() const { return m_efkServer != nullptr; }
+
+	// Asset/Data/Effect の .efkefc を全部読み込んでおく（同期できるように・初めて出す時に止まらないように）
+	// 戻り値：新しく読み込んだ数
+	int PreloadAll();
+
 private:
 
 	const Effekseer::Vector3D GetEfkVec3D(const Math::Vector3& vec) const
@@ -75,6 +89,16 @@ private:
 
 	void UpdateEffekseerEffect();
 	void UpdateEkfCameraMatrix();
+
+	// エフェクトファイルを読み込む（失敗したら nullptr）
+	Effekseer::EffectRef LoadEffect(const std::string& fileName);
+
+	// 同期のサーバーに、エフェクトを登録する・外す
+	void RegisterToServer(const std::string& fileName, const Effekseer::EffectRef& effect);
+	void UnregisterAllFromServer();
+
+	// Effekseer エディタとの同期のサーバー（同期していない時は nullptr）
+	Effekseer::ServerRef m_efkServer = nullptr;
 
 	// エフェクトのレンダラー
 	EffekseerRendererDX11::RendererRef m_efkRenderer = nullptr;

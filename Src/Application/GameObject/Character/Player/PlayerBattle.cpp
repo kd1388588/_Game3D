@@ -6,6 +6,7 @@
 #include "Player.h"
 #include "PlayerState.h"
 #include "PlayerParamManager.h"
+#include "../../../Utility/EffectSettings.h"
 
 // Effect
 #include "../../../../Framework/Direct3D/Polygon/KdTrailPolygon.h"
@@ -155,6 +156,9 @@ void Player::SetBattleMode(BattleMode mode)
 
 	m_battleMode = mode;
 
+	// エフェクトの色をモードの色にする（エフェクトエディタ。攻撃・モード切り替えのエフェクト）
+	EffectSettings::Instance().SetPlayerPunisher(mode == BattleMode::Punisher);
+
 	// 左クリックの攻撃：オペレーターは攻撃01、パニッシャーは攻撃02
 	m_currentAttackType = (mode == BattleMode::Punisher) ? kPunisherAttackType : kOperatorAttackType;
 	s_currentAttackType = m_currentAttackType;
@@ -203,13 +207,8 @@ void Player::UpdateModeSwitch()
 	bool toPunisher = (m_battleMode == BattleMode::Operator);
 	SetBattleMode(toPunisher ? BattleMode::Punisher : BattleMode::Operator);
 
-	// 切り替えた合図のエフェクト（足元）。白く作ってあるので、モードの色をかけて青・オレンジにする
-	std::shared_ptr<KdEffekseerObject> modeEffect = EffectPlayer::Play(EffectName::ModeChange, m_pos, 1.0f);
-	if (modeEffect)
-	{
-		const Math::Vector3& color = toPunisher ? kPunisherLimColor : kOperatorLimColor;
-		modeEffect->SetColor({ color.x * 0.5f + 0.5f, color.y * 0.5f + 0.5f, color.z * 0.5f + 0.5f, 1.0f });
-	}
+	// 切り替えた合図のエフェクト（足元）。白く作ってあり、エフェクトエディタ（EffectSettings）のモードの色で青・オレンジになる
+	EffectPlayer::Play(EffectName::ModeChange, m_pos, 1.0f);
 
 	KdDebugGUI::Instance().AddLog
 	(

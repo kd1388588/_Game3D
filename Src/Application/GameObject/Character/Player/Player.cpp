@@ -34,6 +34,7 @@
 #include "../../../Scene/BaseScene/BaseScene.h"
 
 #include "PlayerConstants.h"
+#include "../../../Utility/EffectSettings.h"
 
 using InputHelper::IsKeyDown;
 using namespace PlayerConst;
@@ -340,6 +341,9 @@ Player::~Player()
 
 void Player::Update()
 {
+	// エフェクトの色に使う、今のモード（エフェクトエディタ。シーンをやり直した時も合うように毎フレーム教える）
+	EffectSettings::Instance().SetPlayerPunisher(IsPunisherMode());
+
 	// ボタンの入力は、ヒットストップ中も受け付ける（止まっている間に押した入力を取りこぼさないように）
 	UpdateInputBuffer();
 

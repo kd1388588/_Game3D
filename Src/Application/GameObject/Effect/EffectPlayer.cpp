@@ -1,23 +1,49 @@
 ﻿#include "EffectPlayer.h"
+#include "../../Utility/EffectSettings.h"
 #include <filesystem>
 
-std::shared_ptr<KdEffekseerObject> EffectPlayer::Play(const std::string& fileName, const Math::Vector3& pos,
+// ※どの Play も、エフェクトエディタの設定（EffectSettings：大きさ・再生速度・高さのずれ・色）を自動でかける
+
+std::shared_ptr<KdEffekseerObject> EffectPlayer::PlayRaw(const std::string& fileName, const Math::Vector3& pos,
 	float scale, float speed)
 {
 	if (!s_isEnabled) return nullptr;
 	if (!Exists(fileName)) return nullptr;
 
-	return KdEffekseerManager::GetInstance().Play(fileName, pos, scale, speed, false).lock();
+	std::shared_ptr<KdEffekseerObject> effect = KdEffekseerManager::GetInstance().Play(fileName, pos, scale, speed, false).lock();
+	if (effect)
+	{
+		// 色（白なら元の色のまま）
+		Math::Color color = EffectSettings::Instance().GetColor(fileName);
+		if (color.x != 1.0f || color.y != 1.0f || color.z != 1.0f || color.w != 1.0f)
+		{
+			effect->SetColor(color);
+		}
+	}
+	return effect;
+}
+
+std::shared_ptr<KdEffekseerObject> EffectPlayer::Play(const std::string& fileName, const Math::Vector3& pos,
+	float scale, float speed)
+{
+	const EffectSettings::Entry& setting = EffectSettings::Instance().Get(fileName);
+	Math::Vector3 p = pos + Math::Vector3(0.0f, setting.heightOffset, 0.0f);
+	return PlayRaw(fileName, p, scale * setting.scale, speed * setting.speed);
 }
 
 std::shared_ptr<KdEffekseerObject> EffectPlayer::Play(const std::string& fileName, const Math::Matrix& mWorld,
 	float speed)
 {
-	std::shared_ptr<KdEffekseerObject> effect = Play(fileName, mWorld.Translation(), 1.0f, speed);
+	// 大きさの倍率は行列の前に掛け、高さのずれは位置に足す
+	const EffectSettings::Entry& setting = EffectSettings::Instance().Get(fileName);
+	Math::Matrix m = Math::Matrix::CreateScale(setting.scale) * mWorld;
+	m.Translation(m.Translation() + Math::Vector3(0.0f, setting.heightOffset, 0.0f));
+
+	std::shared_ptr<KdEffekseerObject> effect = PlayRaw(fileName, m.Translation(), 1.0f, speed * setting.speed);
 	if (effect)
 	{
 		// 位置だけでなく向き・大きさも行列で上書きする
-		effect->SetWorldMatrix(mWorld);
+		effect->SetWorldMatrix(m);
 	}
 	return effect;
 }

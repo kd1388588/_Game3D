@@ -19,6 +19,7 @@
 #include "../../GameObject/Stage/Sky/Sky.h"
 #include "../../GameObject/Stage/Object/GroundMist/GroundMist.h"
 #include "../../Utility/StageSettings.h"
+#include "../../Utility/EffectSettings.h"
 #include "../../GameObject/Stage/Object/CathedralRuins/CathedralRuins.h"
 #include "../../GameObject/Stage/Object/RuinedRoad/RuinedRoad.h"
 #include "../../GameObject/Stage/Object/Barrier/Barrier.h"
@@ -245,6 +246,7 @@ void GameScene::Init()
 	// 光・フォグ・影
 	StageEnvironment::Apply(true);	// ゲームはタイトルより明るくする
 	StageSettings::Instance().Load();	// ステージエディタで保存した値（霧など）があれば読み込む
+	EffectSettings::Instance().OnGameStart();	// エフェクトエディタで保存した値を読み込む（設定によっては Effekseer との同期も始める）
 
 	// ステージ
 	CreateObject<Ground>();
