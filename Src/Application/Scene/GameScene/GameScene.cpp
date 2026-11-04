@@ -17,6 +17,8 @@
 // Stage関連
 #include "../../GameObject/Stage/Ground/Ground.h"
 #include "../../GameObject/Stage/Sky/Sky.h"
+#include "../../GameObject/Stage/Object/GroundMist/GroundMist.h"
+#include "../../Utility/StageSettings.h"
 #include "../../GameObject/Stage/Object/CathedralRuins/CathedralRuins.h"
 #include "../../GameObject/Stage/Object/RuinedRoad/RuinedRoad.h"
 #include "../../GameObject/Stage/Object/Barrier/Barrier.h"
@@ -73,6 +75,9 @@ namespace
 
 void GameScene::Event()
 {
+	// 霧（ステージエディタで変えた値を、毎フレームすぐに反映する）
+	StageSettings::Instance().ApplyFog();
+
 	// 影はプレイヤーのまわりに作る（カメラのまわりだと、カメラを引いた時にプレイヤーの影が範囲から外れる）
 	if (auto player = m_wpPlayer.lock())
 	{
@@ -239,6 +244,7 @@ void GameScene::Init()
 
 	// 光・フォグ・影
 	StageEnvironment::Apply(true);	// ゲームはタイトルより明るくする
+	StageSettings::Instance().Load();	// ステージエディタで保存した値（霧など）があれば読み込む
 
 	// ステージ
 	CreateObject<Ground>();
@@ -249,6 +255,8 @@ void GameScene::Init()
 	CreateObject<RuinedRoad>();
 	// 松明・かがり火・燭台の光（点光源と炎の光）
 	CreateObject<StageLights>();
+	// 地面の霧（濃さなどはステージエディタで調整する）
+	CreateObject<GroundMist>();
 
 	// 部屋の入口のバリア（門楼・大聖堂）
 	auto createBarrier = [this](const Math::Vector3& pos, const Math::Vector2& size)

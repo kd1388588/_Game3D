@@ -1,6 +1,7 @@
 ﻿#include "../../../Application/main.h"
 #include "../../../Application/GameObject/Character/Player/Player.h"
 #include "../../../Application/GameObject/Character/Player/PlayerParamManager.h"
+#include "../../../Application/Utility/StageSettings.h"
 #include "KdDebugGUI.h"
 
 KdDebugGUI::KdDebugGUI()
@@ -157,6 +158,9 @@ void KdDebugGUI::GuiProcess()
 	}
 
 	ImGui::End();
+
+	// ステージエディタ（霧などのステージの見た目を、ゲームを動かしたまま調整する）
+	StageSettings::Instance().DrawEditor();
 
 	// ログウィンドウ
 	// m_uqLog->Draw("Log Window");

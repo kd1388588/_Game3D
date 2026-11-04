@@ -151,6 +151,9 @@
     <Filter Include="Src\Application\GameObject\Stage\Object\StageLights">
       <UniqueIdentifier>{b14104d0-c5c0-484a-947b-5ce71d47bccc}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Src\Application\GameObject\Stage\Object\GroundMist">
+      <UniqueIdentifier>{6ddafacd-d0b9-47ff-9d51-a384acc5d21d}</UniqueIdentifier>
+    </Filter>
     <Filter Include="Src\Application\GameObject\Stage\Object\Barrier">
       <UniqueIdentifier>{9a37dcd1-d5ed-49c1-b1c8-50fb443e84ae}</UniqueIdentifier>
     </Filter>
@@ -453,6 +456,12 @@
     <ClInclude Include="Src\Application\GameObject\Stage\Object\StageLights\StageLights.h">
       <Filter>Src\Application\GameObject\Stage\Object\StageLights</Filter>
     </ClInclude>
+    <ClInclude Include="Src\Application\GameObject\Stage\Object\GroundMist\GroundMist.h">
+      <Filter>Src\Application\GameObject\Stage\Object\GroundMist</Filter>
+    </ClInclude>
+    <ClInclude Include="Src\Application\Utility\StageSettings.h">
+      <Filter>Src\Application\Utility</Filter>
+    </ClInclude>
     <ClInclude Include="Src\Application\GameObject\Stage\Object\Barrier\Barrier.h">
       <Filter>Src\Application\GameObject\Stage\Object\Barrier</Filter>
     </ClInclude>
@@ -727,6 +736,12 @@
     </ClCompile>
     <ClCompile Include="Src\Application\GameObject\Stage\Object\StageLights\StageLights.cpp">
       <Filter>Src\Application\GameObject\Stage\Object\StageLights</Filter>
+    </ClCompile>
+    <ClCompile Include="Src\Application\GameObject\Stage\Object\GroundMist\GroundMist.cpp">
+      <Filter>Src\Application\GameObject\Stage\Object\GroundMist</Filter>
+    </ClCompile>
+    <ClCompile Include="Src\Application\Utility\StageSettings.cpp">
+      <Filter>Src\Application\Utility</Filter>
     </ClCompile>
     <ClCompile Include="Src\Application\GameObject\Stage\Object\Barrier\Barrier.cpp">
       <Filter>Src\Application\GameObject\Stage\Object\Barrier</Filter>
