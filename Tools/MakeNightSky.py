@@ -9,6 +9,7 @@
                     上は黒に近い紺、地平線に向かって霧の色に近づく。星をまばらに散らす（雲は無し）
     Moon.png      … 少し赤い月（球に貼る。クレーターと海（暗い所））
     MoonGlow.png  … 月のまわりの、ごく薄い光のにじみ（加算で重ねる）
+    NightSky.gltf・Moon.gltf … Sky.gltf（半径 10 の球）の形をそのまま使い、貼る画像だけを変えたモデル
   作るもの（Asset/Textures/Stage/）
     GroundMist.png … 地面の霧の1かたまり（白黒。白いほど濃い、もやもやした形。加算で重ねる）
 """
@@ -157,12 +158,27 @@ def make_ground_mist(rng):
 	save(os.path.join(TEX_DIR, "GroundMist.png"), np.repeat(a[..., None], 3, axis=2))
 
 
+def make_sphere_models():
+	"""Sky.gltf と同じ球（Sky.bin）に、別の画像を貼ったモデルを書き出す（形は作り直さない）"""
+	import json
+	with open(os.path.join(SKY_DIR, "Sky.gltf"), encoding="utf-8") as f:
+		base = json.load(f)
+	for name, image in (("NightSky", "NightSky.png"), ("Moon", "Moon.png")):
+		g = json.loads(json.dumps(base))
+		g["images"][0]["uri"] = image
+		g["images"][0]["name"] = image
+		with open(os.path.join(SKY_DIR, name + ".gltf"), "w", encoding="utf-8") as f:
+			json.dump(g, f, ensure_ascii=False, indent=1)
+		print("wrote", os.path.relpath(os.path.join(SKY_DIR, name + ".gltf"), ROOT))
+
+
 def main():
 	rng = np.random.default_rng(SEED)
 	make_night_sky(rng)
 	make_moon(rng)
 	make_moon_glow()
 	make_ground_mist(rng)
+	make_sphere_models()
 
 
 if __name__ == "__main__":
