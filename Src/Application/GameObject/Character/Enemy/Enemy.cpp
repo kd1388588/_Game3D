@@ -35,6 +35,9 @@ namespace
 	constexpr int	kDamageInvincibleFrame	= 0;
 	constexpr int	kAttackDamage			= 5;
 	constexpr int	kCriticalAttackDamage	= 10;
+	// リムライト（体のふちを薄く赤く光らせて、暗い背景に溶けないようにする）
+	const Math::Vector3 kLimColor			= { 0.55f, 0.12f, 0.08f };
+	constexpr float	kLimPow					= 2.5f;		// 鋭さ（大きいほどふちだけが光る）
 	constexpr float	kBumpRadiusRate			= 0.4f;		// 壁・柱に当たる体の半径（体の大きさに掛ける。ザコ 0.5m・ボス 1.0m くらい）
 	constexpr float	kLeapWallCheckHeight	= 0.9f;		// 飛びかかる前に、着地点までの間に柱が無いかを調べる高さ
 	constexpr float	kPushStrength			= 0.1f;		// 敵同士の押し出しの強さ（毎フレームの割合）
@@ -195,7 +198,11 @@ void Enemy::DrawLit()
 {
 	if (m_model)
 	{
-		KdShaderManager::Instance().m_StandardShader.DrawModel(*m_model, m_mWorld);
+		// リムライトは DrawModel の後に自動で元に戻る（ほかの物には付かない）
+		auto& shader = KdShaderManager::Instance().m_StandardShader;
+		shader.SetLimLightEnable(true);
+		shader.SetLimLight(kLimColor, kLimPow);
+		shader.DrawModel(*m_model, m_mWorld);
 	}
 }
 

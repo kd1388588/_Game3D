@@ -1,6 +1,6 @@
 ﻿#pragma once
 
-// 廃墟のステージの光・フォグ・影の設定（タイトルとゲームで同じ見た目にする）
+// 廃墟のステージの光・フォグ・影の設定（タイトルとゲームで同じ見た目にする。ゲームは環境光を明るく、霧を薄くする）
 namespace StageEnvironment
 {
 	// 平行光（月明かり）：斜め横から当てて、体や柱の凹凸に陰影を付ける（真後ろ・真上からだとのっぺりする）
@@ -8,12 +8,14 @@ namespace StageEnvironment
 	const Math::Vector3	kDirLightColor		= { 1.8f, 1.75f, 1.65f };
 
 	// 環境光：少し暗めの青にして、光の当たらない側との差を付ける
-	const Math::Vector4	kAmbientLight		= { 0.22f, 0.24f, 0.32f, 1.0f };
+	const Math::Vector4	kAmbientLight		= { 0.22f, 0.24f, 0.32f, 1.0f };		// タイトル（暗いほうが雰囲気が出る）
+	const Math::Vector4	kGameAmbientLight	= { 0.36f, 0.38f, 0.48f, 1.0f };		// ゲーム（影の中の敵や壁も見えるように明るく）
 
 	// 距離フォグ：遠くを夜の空気の色に溶かして奥行きを出す（近くのキャラはほぼかからない）
 	// 見え方：1 / exp(距離 × 濃さ) → 20m で約 0.79、50m で約 0.55 だけ元の色が残る
 	const Math::Vector3	kDistanceFogColor	= { 0.10f, 0.11f, 0.16f };
 	constexpr float		kDistanceFogDensity	= 0.012f;
+	constexpr float		kGameDistanceFogDensity	= 0.007f;	// ゲームでは薄くする（部屋の奥の敵が霧に溶けないように）
 
 	// 高さフォグ：地面の近くにうっすら霧（遠くほど濃い。近くのキャラの足元は隠さない）
 	const Math::Vector3	kHeightFogColor		= { 0.12f, 0.13f, 0.18f };
@@ -25,14 +27,14 @@ namespace StageEnvironment
 	const Math::Vector2	kShadowArea			= { 30.0f, 30.0f };
 	constexpr float		kShadowLightHeight	= 40.0f;
 
-	// シーンの初期化で呼ぶ
-	inline void Apply()
+	// シーンの初期化で呼ぶ（isGame：ゲームの画面なら true。戦いやすいように明るくする）
+	inline void Apply(bool isGame = false)
 	{
 		KdAmbientController& ambient = KdShaderManager::Instance().WorkAmbientController();
 		ambient.SetDirLight(kDirLightDir, kDirLightColor);
-		ambient.SetAmbientLight(kAmbientLight);
+		ambient.SetAmbientLight(isGame ? kGameAmbientLight : kAmbientLight);
 		ambient.SetFogEnable(true, true);
-		ambient.SetDistanceFog(kDistanceFogColor, kDistanceFogDensity);
+		ambient.SetDistanceFog(kDistanceFogColor, isGame ? kGameDistanceFogDensity : kDistanceFogDensity);
 		ambient.SetheightFog(kHeightFogColor, kHeightFogTop, kHeightFogBottom, kHeightFogDistance);
 		ambient.SetDirLightShadowArea(kShadowArea, kShadowLightHeight);
 		ambient.ClearShadowCenter();

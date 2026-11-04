@@ -238,7 +238,7 @@ void GameScene::Init()
 	SoundPlayer::PlayBGM(SoundName::GameBGM);
 
 	// 光・フォグ・影
-	StageEnvironment::Apply();
+	StageEnvironment::Apply(true);	// ゲームはタイトルより明るくする
 
 	// ステージ
 	CreateObject<Ground>();

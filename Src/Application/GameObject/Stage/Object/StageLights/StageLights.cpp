@@ -11,7 +11,8 @@ namespace
 	// 点光源として登録する光
 	constexpr int		kMaxActiveLights	= 60;		// 一度に登録する数（シェーダーの上限は 100）
 	constexpr float		kActiveRange		= 45.0f;	// カメラからこの距離までの光だけを登録する
-	constexpr float		kLightIntensity		= 2.2f;		// 光の色に掛ける明るさ
+	constexpr float		kLightIntensity		= 3.0f;		// 光の色に掛ける明るさ
+	constexpr float		kLightRadiusRate	= 1.3f;		// 光の届く半径に掛ける倍率（松明のまわりだけでなく、少し離れた所も照らす）
 
 	// 炎のゆらめき
 	constexpr float		kFlickerSpeed1		= 0.21f;
@@ -53,7 +54,7 @@ void StageLights::Init()
 		Light light;
 		light.pos = Math::Vector3(v[0], v[1], v[2]) * kStageScale;
 		light.color = { v[3], v[4], v[5] };
-		light.radius = v[6] * kStageScale;
+		light.radius = v[6] * kStageScale * kLightRadiusRate;
 		light.flameSize = v[7] * kStageScale;
 		light.phase = static_cast<float>(m_lights.size()) * 1.7f;
 		m_lights.push_back(light);
