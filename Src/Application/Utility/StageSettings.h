@@ -46,6 +46,20 @@ public:
 		float			swayRange		= 0.3f;		// 濃さのゆらぎの強さ（0：ゆらがない）
 	};
 
+	// HP が少ない時の画面（白黒・暗く・周辺減光）。HP が start の割合より少なくなると始まり、HP 0 で一番強くなる
+	struct LowHpScreen
+	{
+		bool	enable			= true;
+		float	startRate		= 0.3f;		// この HP の割合（0～1）より少なくなると始まる
+		float	grayscale		= 1.0f;		// HP 0 の時の白黒の強さ（1 で完全な白黒）
+		float	darken			= 0.35f;	// HP 0 の時に、全体を暗くする強さ
+		float	vignette		= 0.97f;	// HP 0 の時の周辺減光の強さ（1 でふちが真っ黒）
+		float	vignetteStart	= 0.25f;	// 周辺減光が始まる位置（0：真ん中、1：上下左右のふち）
+		float	followRate		= 0.05f;	// HP が変わった時に、画面がその強さに近づく速さ（1フレームに近づく割合。小さいほどゆっくり）
+		float	blinkRate		= 0.3f;		// HP ゲージが赤く点滅し始める HP の割合
+		float	blinkSpeed		= 0.12f;	// 点滅の速さ
+	};
+
 	static StageSettings& Instance()
 	{
 		static StageSettings instance;
@@ -55,6 +69,7 @@ public:
 	Fog&				WorkFog()			{ return m_fog; }
 	const Fog&			GetFog() const		{ return m_fog; }
 	const GroundMist&	GetGroundMist() const { return m_groundMist; }
+	const LowHpScreen&	GetLowHpScreen() const { return m_lowHp; }
 
 	// 霧の設定を、シェーダー（KdAmbientController）に渡す（ゲームの画面で毎フレーム呼ぶ）
 	void ApplyFog() const;
@@ -67,7 +82,7 @@ public:
 	bool Load(const std::string& path = kDefaultPath);
 
 	// すべて初期値に戻す
-	void ResetAll() { m_fog = Fog(); m_groundMist = GroundMist(); }
+	void ResetAll() { m_fog = Fog(); m_groundMist = GroundMist(); m_lowHp = LowHpScreen(); }
 
 	static inline const std::string kDefaultPath = "Asset/Data/StageSettings.json";
 
@@ -75,9 +90,11 @@ private:
 
 	void DrawFogEditor();
 	void DrawGroundMistEditor();
+	void DrawLowHpEditor();
 
 	Fog			m_fog;
 	GroundMist	m_groundMist;
+	LowHpScreen	m_lowHp;
 	std::string	m_message;		// 保存・読み込みの結果（エディタに表示する）
 
 	StageSettings() {}

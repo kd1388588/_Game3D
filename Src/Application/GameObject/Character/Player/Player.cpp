@@ -35,6 +35,7 @@
 
 #include "PlayerConstants.h"
 #include "../../../Utility/EffectSettings.h"
+#include "../../../Utility/StageSettings.h"
 
 using InputHelper::IsKeyDown;
 using namespace PlayerConst;
@@ -472,11 +473,23 @@ void Player::UpdateWorldMatrix()
 
 void Player::UpdateHpGage()
 {
+	float ratio = std::max(static_cast<float>(m_hp) / static_cast<float>(m_maxHp), 0.0f);
+
+	// HP が少ない時の画面：HP が「始まる HP」より少ないほど、白黒・暗く・周辺減光を強くする（HP 0 で一番強い）
+	// 急に変わらないように、毎フレーム少しずつ近づける（設定はステージエディタの「画面」タブ）
+	const StageSettings::LowHpScreen& low = StageSettings::Instance().GetLowHpScreen();
+	float target = 0.0f;
+	if (low.enable && low.startRate > 0.0f)
+	{
+		target = std::clamp((low.startRate - ratio) / low.startRate, 0.0f, 1.0f);
+	}
+	m_lowHpScreenRate += (target - m_lowHpScreenRate) * std::clamp(low.followRate, 0.0f, 1.0f);
+	KdShaderManager::Instance().m_postProcessShader.SetScreenColor(
+		low.grayscale * m_lowHpScreenRate, low.darken * m_lowHpScreenRate, low.vignette * m_lowHpScreenRate, low.vignetteStart);
+
 	auto hpGage = m_wpHpGage.lock();
 	if (!hpGage) return;
-
-	float ratio = static_cast<float>(m_hp) / static_cast<float>(m_maxHp);
-	hpGage->SetHpRatio(std::max(ratio, 0.0f));
+	hpGage->SetHpRatio(ratio);
 }
 
 void Player::Release()

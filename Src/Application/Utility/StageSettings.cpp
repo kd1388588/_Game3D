@@ -93,6 +93,20 @@ bool StageSettings::Save(const std::string& path) const
 		{ "SwayRange",			m.swayRange },
 	};
 
+	const LowHpScreen& l = m_lowHp;
+	j["LowHpScreen"] =
+	{
+		{ "Enable",			l.enable },
+		{ "StartRate",		l.startRate },
+		{ "Grayscale",		l.grayscale },
+		{ "Darken",			l.darken },
+		{ "Vignette",		l.vignette },
+		{ "VignetteStart",	l.vignetteStart },
+		{ "FollowRate",		l.followRate },
+		{ "BlinkRate",		l.blinkRate },
+		{ "BlinkSpeed",		l.blinkSpeed },
+	};
+
 	std::ofstream file(path);
 	if (!file) return false;
 	file << j.dump(4);
@@ -142,6 +156,20 @@ bool StageSettings::Load(const std::string& path)
 		Read(g, "SwaySpeed",		m.swaySpeed);
 		Read(g, "SwayRange",		m.swayRange);
 	}
+	if (j.contains("LowHpScreen"))
+	{
+		const json& h = j["LowHpScreen"];
+		LowHpScreen& l = m_lowHp;
+		Read(h, "Enable",			l.enable);
+		Read(h, "StartRate",		l.startRate);
+		Read(h, "Grayscale",		l.grayscale);
+		Read(h, "Darken",			l.darken);
+		Read(h, "Vignette",			l.vignette);
+		Read(h, "VignetteStart",	l.vignetteStart);
+		Read(h, "FollowRate",		l.followRate);
+		Read(h, "BlinkRate",		l.blinkRate);
+		Read(h, "BlinkSpeed",		l.blinkSpeed);
+	}
 	return true;
 }
 
@@ -185,6 +213,11 @@ void StageSettings::DrawEditor()
 		{
 			DrawFogEditor();
 			DrawGroundMistEditor();
+			ImGui::EndTabItem();
+		}
+		if (ImGui::BeginTabItem(U8("画面")))
+		{
+			DrawLowHpEditor();
 			ImGui::EndTabItem();
 		}
 		ImGui::EndTabBar();
@@ -273,5 +306,30 @@ void StageSettings::DrawGroundMistEditor()
 	Drag(U8("ゆらぎの強さ"), m.swayRange, 0.005f, 0.0f, 1.0f, "%.3f", U8("0 でゆらがない。1 で 0 ～ 2 倍の間でゆらぐ"));
 
 	if (ImGui::Button(U8("地面の霧を初期値に戻す"))) m = GroundMist();
+	ImGui::PopID();
+}
+
+void StageSettings::DrawLowHpEditor()
+{
+	LowHpScreen& l = m_lowHp;
+
+	if (!ImGui::CollapsingHeader(U8("HP が少ない時（白黒・暗く・周辺減光）"), ImGuiTreeNodeFlags_DefaultOpen)) return;
+
+	ImGui::PushID("LowHp");
+	ImGui::Checkbox(U8("使う"), &l.enable);
+	Drag(U8("始まる HP"), l.startRate, 0.005f, 0.0f, 1.0f, "%.3f", U8("HP の割合（0～1）がこれより少なくなると始まり、HP 0 で一番強くなる。0.3 なら HP 30%"));
+
+	ImGui::SeparatorText(U8("HP 0 の時の強さ"));
+	Drag(U8("白黒"), l.grayscale, 0.005f, 0.0f, 1.0f, "%.3f", U8("1 で完全な白黒。0.7 くらいにすると、少し色が残る"));
+	Drag(U8("暗さ"), l.darken, 0.005f, 0.0f, 1.0f, "%.3f", U8("画面全体を暗くする強さ"));
+	Drag(U8("周辺減光"), l.vignette, 0.005f, 0.0f, 1.0f, "%.3f", U8("画面のふちを暗くする強さ。1 でふちが真っ黒"));
+	Drag(U8("周辺減光の始まる位置"), l.vignetteStart, 0.005f, 0.0f, 1.5f, "%.3f", U8("画面の真ん中からの距離。0 で真ん中から、1 で上下左右のふちから暗くし始める"));
+
+	ImGui::SeparatorText(U8("動き"));
+	Drag(U8("変わる速さ"), l.followRate, 0.001f, 0.001f, 1.0f, "%.3f", U8("HP が変わった時に、画面がその強さに近づく速さ（1 ですぐ変わる。0.05 で約1秒）"));
+	Drag(U8("HP が点滅し始める HP"), l.blinkRate, 0.005f, 0.0f, 1.0f, "%.3f", U8("HP ゲージが赤く点滅し始める HP の割合"));
+	Drag(U8("点滅の速さ"), l.blinkSpeed, 0.001f, 0.0f, 1.0f, "%.3f", U8("大きいほど速く点滅する"));
+
+	if (ImGui::Button(U8("HP が少ない時の画面を初期値に戻す"))) l = LowHpScreen();
 	ImGui::PopID();
 }

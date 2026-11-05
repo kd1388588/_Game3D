@@ -425,6 +425,7 @@ private:
 	float										 m_airPelvisMaxY = -1.0f;	// 空中で腰が上がってよい高さ
 
 	std::weak_ptr<HPGage>			m_wpHpGage;
+	float							m_lowHpScreenRate = 0.0f;	// HP が少ない時の画面（白黒・暗く）の今の強さ（0～1）
 	std::weak_ptr<ATBGage>			m_wpAtbGage;
 	std::weak_ptr<ATBCommandMenu>	m_wpCommandMenu;
 	std::weak_ptr<Enemy>			m_wpLockTarget;			// ロックオン中の敵

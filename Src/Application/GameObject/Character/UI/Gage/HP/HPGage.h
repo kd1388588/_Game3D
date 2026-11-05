@@ -18,5 +18,6 @@ private:
 	void Release();
 
 	float m_hpRatio = 1.0f;
+	int m_frame = 0;		// 点滅に使う、経過フレーム数
 	int m_gageWidth = 200;
 };

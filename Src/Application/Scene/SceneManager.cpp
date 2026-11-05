@@ -68,6 +68,9 @@ void SceneManager::ChangeScene(SceneType _sceneType)
 	// 前のシーンの音（BGM・効果音）も止める（BGM はシーンの Init で流し直す）
 	SoundPlayer::StopAll();
 
+	// HP が少ない時の画面の色（白黒・暗さ・周辺減光）を元に戻す
+	KdShaderManager::Instance().m_postProcessShader.ResetScreenColor();
+
 	// 次のシーンを作成し、現在のシーンにする
 	switch (_sceneType)
 	{
