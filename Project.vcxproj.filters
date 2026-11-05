@@ -486,6 +486,9 @@
     <ClInclude Include="Src\Application\GameObject\Character\UI\Gage\Base\BaseGage.h">
       <Filter>Src\Application\GameObject\UI\Gage\Base</Filter>
     </ClInclude>
+    <ClInclude Include="Src\Application\GameObject\Character\UI\Gage\Base\HudDraw.h">
+      <Filter>Src\Application\GameObject\UI\Gage\Base</Filter>
+    </ClInclude>
     <ClInclude Include="Src\Application\GameObject\Character\TestModel\TestModel.h">
       <Filter>Src\Application\GameObject\Character\TestModel</Filter>
     </ClInclude>

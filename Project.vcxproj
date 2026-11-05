@@ -286,6 +286,7 @@
     <ClInclude Include="Src\Application\GameObject\Character\Player\PlayerStateConstants.h" />
     <ClInclude Include="Src\Application\GameObject\Character\TestModel\TestModel.h" />
     <ClInclude Include="Src\Application\GameObject\Character\UI\Gage\Base\BaseGage.h" />
+    <ClInclude Include="Src\Application\GameObject\Character\UI\Gage\Base\HudDraw.h" />
     <ClInclude Include="Src\Application\GameObject\Character\UI\Gage\HP\HPGage.h" />
     <ClInclude Include="Src\Application\GameObject\Character\UI\Gage\ATB\ATBGage.h" />
     <ClInclude Include="Src\Application\GameObject\Character\UI\Gage\ATB\ATBCommandMenu.h" />
