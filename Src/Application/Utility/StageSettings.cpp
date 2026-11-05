@@ -105,6 +105,7 @@ bool StageSettings::Save(const std::string& path) const
 		{ "FollowRate",		l.followRate },
 		{ "BlinkRate",		l.blinkRate },
 		{ "BlinkSpeed",		l.blinkSpeed },
+		{ "DeathFadeSec",	l.deathFadeSec },
 	};
 
 	std::ofstream file(path);
@@ -169,6 +170,7 @@ bool StageSettings::Load(const std::string& path)
 		Read(h, "FollowRate",		l.followRate);
 		Read(h, "BlinkRate",		l.blinkRate);
 		Read(h, "BlinkSpeed",		l.blinkSpeed);
+		Read(h, "DeathFadeSec",		l.deathFadeSec);
 	}
 	return true;
 }
@@ -329,6 +331,7 @@ void StageSettings::DrawLowHpEditor()
 	Drag(U8("変わる速さ"), l.followRate, 0.001f, 0.001f, 1.0f, "%.3f", U8("HP が変わった時に、画面がその強さに近づく速さ（1 ですぐ変わる。0.05 で約1秒）"));
 	Drag(U8("HP が点滅し始める HP"), l.blinkRate, 0.005f, 0.0f, 1.0f, "%.3f", U8("HP ゲージが赤く点滅し始める HP の割合"));
 	Drag(U8("点滅の速さ"), l.blinkSpeed, 0.001f, 0.0f, 1.0f, "%.3f", U8("大きいほど速く点滅する"));
+	Drag(U8("倒れて真っ黒になるまで"), l.deathFadeSec, 0.01f, 0.1f, 10.0f, "%.2f s", U8("HP 0 で倒れてから、画面が真っ黒になるまでの時間。真っ黒になったらゲームオーバー画面へ移る"));
 
 	if (ImGui::Button(U8("HP が少ない時の画面を初期値に戻す"))) l = LowHpScreen();
 	ImGui::PopID();

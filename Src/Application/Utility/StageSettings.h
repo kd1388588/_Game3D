@@ -47,10 +47,11 @@ public:
 	};
 
 	// HP が少ない時の画面（白黒・暗く・周辺減光）。HP が start の割合より少なくなると始まり、HP 0 で一番強くなる
+	// 倒れた時は、そこからさらに真っ黒になるまで暗くして、ゲームオーバーへ移る
 	struct LowHpScreen
 	{
 		bool	enable			= true;
-		float	startRate		= 0.3f;		// この HP の割合（0～1）より少なくなると始まる
+		float	startRate		= 0.1f;		// この HP の割合（0～1）より少なくなると始まる
 		float	grayscale		= 0.85f;	// HP 0 の時の白黒の強さ（1 で完全な白黒。少しだけ色を残すため 0.85）
 		float	darken			= 0.35f;	// HP 0 の時に、全体を暗くする強さ
 		float	vignette		= 0.97f;	// HP 0 の時の周辺減光の強さ（1 でふちが真っ黒）
@@ -58,6 +59,7 @@ public:
 		float	followRate		= 0.05f;	// HP が変わった時に、画面がその強さに近づく速さ（1フレームに近づく割合。小さいほどゆっくり）
 		float	blinkRate		= 0.3f;		// HP ゲージが赤く点滅し始める HP の割合
 		float	blinkSpeed		= 0.12f;	// 点滅の速さ
+		float	deathFadeSec	= 1.5f;		// 倒れてから、画面が真っ黒になるまでの時間（秒）。真っ黒になったらゲームオーバーへ
 	};
 
 	static StageSettings& Instance()

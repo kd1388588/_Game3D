@@ -30,7 +30,7 @@
 
 namespace
 {
-	constexpr int kGameOverWaitFrame	= 60;	// 死亡モーション後、ゲームオーバー画面に移るまでのフレーム数
+	constexpr int kGameOverWaitFrame	= 20;	// 倒れて画面が真っ黒になってから、ゲームオーバー画面に移るまでのフレーム数
 	constexpr int kClearWaitFrame		= 90;	// 敵が全滅してから、クリア画面に移るまでのフレーム数
 
 	// デバッグキー（発表などで使わない時は false にする）
@@ -194,11 +194,12 @@ void GameScene::UpdateDebugKeys()
 
 void GameScene::CheckGameEnd()
 {
-	// ゲームオーバー：プレイヤーが倒れて、死亡モーションが終わってから少し待つ
+	// ゲームオーバー：プレイヤーが倒れて、画面が真っ黒になってから少し待つ
+	// （真っ黒にするのは Player。かかる時間はステージエディタの「画面」タブの「倒れて真っ黒になるまで」）
 	auto player = m_wpPlayer.lock();
 	if (player && player->IsDead())
 	{
-		if (player->IsAnimEnd())
+		if (player->IsDeathFadeEnd())
 		{
 			m_gameOverTimer++;
 		}

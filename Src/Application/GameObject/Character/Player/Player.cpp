@@ -484,8 +484,17 @@ void Player::UpdateHpGage()
 		target = std::clamp((low.startRate - ratio) / low.startRate, 0.0f, 1.0f);
 	}
 	m_lowHpScreenRate += (target - m_lowHpScreenRate) * std::clamp(low.followRate, 0.0f, 1.0f);
+
+	// 倒れた時：途中まで暗くなっていた画面を、決めた時間をかけて真っ黒にする（真っ黒になったら GameScene がゲームオーバーへ移す）
+	if (IsDead())
+	{
+		float fadeFrames = std::max(low.deathFadeSec, 0.01f) * 60.0f;
+		m_deathFadeRate = std::min(m_deathFadeRate + 1.0f / fadeFrames, 1.0f);
+	}
+	float fade = m_deathFadeRate * m_deathFadeRate * (3.0f - 2.0f * m_deathFadeRate);	// 始めと終わりをなめらかに
+	float darken = low.darken * m_lowHpScreenRate;
 	KdShaderManager::Instance().m_postProcessShader.SetScreenColor(
-		low.grayscale * m_lowHpScreenRate, low.darken * m_lowHpScreenRate, low.vignette * m_lowHpScreenRate, low.vignetteStart);
+		low.grayscale * m_lowHpScreenRate, darken + (1.0f - darken) * fade, low.vignette * m_lowHpScreenRate, low.vignetteStart);
 
 	auto hpGage = m_wpHpGage.lock();
 	if (!hpGage) return;

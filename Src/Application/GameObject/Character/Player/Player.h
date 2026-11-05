@@ -180,6 +180,7 @@ public:
 
 	// HPが0になったかどうか
 	bool IsDead() const { return m_hp <= 0; }
+	bool IsDeathFadeEnd() const { return m_deathFadeRate >= 1.0f; }	// 倒れた後、画面が真っ黒になったか（ゲームオーバーへ移る合図）
 
 	// ボックス（OBB）による攻撃判定
 	// 敵に当たったら、その位置に剣を振った向きの斬撃のヒットエフェクトを出す
@@ -426,6 +427,7 @@ private:
 
 	std::weak_ptr<HPGage>			m_wpHpGage;
 	float							m_lowHpScreenRate = 0.0f;	// HP が少ない時の画面（白黒・暗く）の今の強さ（0～1）
+	float							m_deathFadeRate = 0.0f;		// 倒れてから真っ黒になるまでの進み具合（0～1。1 で真っ黒）
 	std::weak_ptr<ATBGage>			m_wpAtbGage;
 	std::weak_ptr<ATBCommandMenu>	m_wpCommandMenu;
 	std::weak_ptr<Enemy>			m_wpLockTarget;			// ロックオン中の敵
