@@ -51,7 +51,7 @@ public:
 	{
 		bool	enable			= true;
 		float	startRate		= 0.3f;		// この HP の割合（0～1）より少なくなると始まる
-		float	grayscale		= 1.0f;		// HP 0 の時の白黒の強さ（1 で完全な白黒）
+		float	grayscale		= 0.85f;	// HP 0 の時の白黒の強さ（1 で完全な白黒。少しだけ色を残すため 0.85）
 		float	darken			= 0.35f;	// HP 0 の時に、全体を暗くする強さ
 		float	vignette		= 0.97f;	// HP 0 の時の周辺減光の強さ（1 でふちが真っ黒）
 		float	vignetteStart	= 0.25f;	// 周辺減光が始まる位置（0：真ん中、1：上下左右のふち）
