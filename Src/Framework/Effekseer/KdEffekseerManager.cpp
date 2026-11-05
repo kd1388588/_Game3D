@@ -37,7 +37,7 @@ void KdEffekseerManager::Update()
 	if (m_efkManager == nullptr) { return; }
 
 	// Effekseer エディタから届いた編集を反映する（同期している時だけ）
-	if (m_efkServer)
+	if (m_efkServer != nullptr)
 	{
 		m_efkServer->Update(&m_efkManager, 1);
 	}
@@ -257,7 +257,7 @@ Effekseer::EffectRef KdEffekseerManager::LoadEffect(const std::string& fileName)
 
 bool KdEffekseerManager::StartServer(uint16_t port)
 {
-	if (m_efkServer) return true;
+	if (m_efkServer != nullptr) return true;
 	if (m_efkManager == nullptr) return false;
 
 	m_efkServer = Effekseer::Server::Create();
@@ -280,7 +280,7 @@ bool KdEffekseerManager::StartServer(uint16_t port)
 
 void KdEffekseerManager::StopServer()
 {
-	if (!m_efkServer) return;
+	if (m_efkServer == nullptr) return;
 
 	UnregisterAllFromServer();
 	m_efkServer->Stop();
@@ -289,7 +289,7 @@ void KdEffekseerManager::StopServer()
 
 void KdEffekseerManager::RegisterToServer(const std::string& fileName, const Effekseer::EffectRef& effect)
 {
-	if (!m_efkServer || effect == nullptr) return;
+	if (m_efkServer == nullptr || effect == nullptr) return;
 
 	// エディタがどの名前で送ってきても見つかるように、「拡張子なしの名前」と「ファイル名」の両方で登録する
 	std::filesystem::path path(fileName);
@@ -300,7 +300,7 @@ void KdEffekseerManager::RegisterToServer(const std::string& fileName, const Eff
 
 void KdEffekseerManager::UnregisterAllFromServer()
 {
-	if (!m_efkServer) return;
+	if (m_efkServer == nullptr) return;
 
 	for (auto& [fileName, spObject] : m_effectMap)
 	{
