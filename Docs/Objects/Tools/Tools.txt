@@ -1,0 +1,24 @@
+﻿============================================================
+Tools（ステージ・画像・音・エフェクトを作る Python のスクリプト）
+============================================================
+分類：Python のツール
+ファイル：Tools/
+
+■ 使った技術
+  ・プロシージャル生成：ノイズでテクスチャを作る、三角形を組み立てて glTF で書き出す
+
+■ スクリプトの一覧
+  ・MakeStageModel.py：ステージ（道・門楼・中庭・左右の部屋・大聖堂・玉座の間）の形と当たり判定を作る
+  ・MakeNightSky.py：夜空と月の画像を作り、空のモデルに貼って書き出す
+  ・MakeFlameTexture.py：松明の炎の画像
+  ・MakeHeadingImages.py：GAME CLEAR / GAME OVER の見出しの画像
+  ・MakeSoundAssets.py：mp3 を wav に変換する
+  ・MakeEffekseerProjects.py：モード切り替え・アビリティ・ガードのエフェクト（.efkproj）を作る
+  ・AdjustExistingEffects.py：もとのエフェクトの数を減らす・短くする
+  ・MakeGroundSmashEffect.py：ボスの着地のエフェクト
+  ・MakeTrailTexture.py：剣の軌跡の画像
+  ・MakeBarrierTexture.py / MakeShieldTexture.py / MakeImpactTexture.py：バリア・オーラ・衝撃の画像
+  ・MakeUITexture.py / MakeResultBackground.py / MakeHeadingFont.py：UI の画像・結果画面の背景・見出しの文字
+
+■ 追加・変更の記録
+  （このオブジェクトに技術を足した・変えた時は、ここに「日付：内容」を書き足す）
