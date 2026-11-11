@@ -25,7 +25,7 @@ private:
 
 	DWORD		m_frameStartTime = 0;		// フレームの開始時間
 
-	// 細かい時間（マイクロ秒単位）でフレームの間隔を合わせる
+	// 【BRAVER で足した所】細かい時間（マイクロ秒単位）でフレームの間隔を合わせる
 	// （Sleep だけだと 1ミリ秒単位で長く待ってしまい、60 ではなく 58～59 FPS になるため）
 	LARGE_INTEGER	m_qpcFrequency = {};		// 1秒あたりのカウント数
 	LARGE_INTEGER	m_nextFrameTime = {};		// 次のフレームを始める時刻

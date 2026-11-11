@@ -118,12 +118,17 @@ public:
 	void AddLog(const char* fmt, ...);
 	void ClearLog();
 
-	// デバッグ表示（ImGui のウィンドウ・当たり判定のワイヤー）を出すか（最初は出さない）
+	// ============================================================
+	// 【BRAVER で足した所】デバッグ表示（ImGui のウィンドウ・当たり判定のワイヤー）を出すか（最初は出さない）
+	// 【なぜ】最初から出ていると、遊ぶ時や発表の時に邪魔になる
+	//         main.cpp の UpdateDebugToggle が F8 で切り替え、
+	//         IsVisible() を見て、当たり判定のワイヤー（DrawDebug）・マウスカーソル・デバッグキーも出す・効かせる
+	// ============================================================
 	void ToggleVisible() { m_isVisible = !m_isVisible; }
 	bool IsVisible() const { return m_isVisible; }
 	
 private:
-	bool m_isVisible = false;
+	bool m_isVisible = false;	// 【BRAVER で足した所】デバッグ表示を出しているか
 
 	void GuiRelease();
 

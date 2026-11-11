@@ -3,16 +3,38 @@
 #include "Scene/SceneManager.h"
 #include "Utility/InputHelper.h"
 
+// ============================================================
+// 【役割】プログラムの入口（WinMain）と、Application の中身（初期化・ゲームループ・解放）
+//
+// 【構成】WinMain → Application::Execute
+//           ├ Init（ウィンドウ → Direct3D → imgui → シェーダー → 音 → フォント → Effekseer）
+//           ├ ゲームループ（while）：メッセージ処理 → 更新 → 描画 → FPS を 60 に保つ
+//           └ Release（作った物を片付ける）
+//
+// 【元のテンプレートから変えた所】（e01ded2 と比べて）
+//   ・PreUpdate でパッドの状態を読む（InputHelper::GamePad::Update）
+//   ・F8 でデバッグ表示を切り替え、シーンに合わせてマウスカーソルを出す・消す（UpdateDebugToggle）
+//   ・当たり判定のワイヤー（DrawDebug）は、デバッグ表示を出している時だけ描く
+//   ・ウィンドウの名前を「BRAVER」にした
+//   ・WindowSettings.csv が読めない時は、落ちる前にメッセージを出す
+//   ・ウィンドウのタイトルの FPS は、変わった時だけ書き換える
+//
+// 【参考】WinMain（Windows のプログラムの入口）
+//         https://learn.microsoft.com/ja-jp/windows/win32/learnwin32/winmain--the-application-entry-point
+// ============================================================
+
 // ///// ///// ///// ///// ///// ///// ///// ///// ///// ///// ///// ///// ///// ///// /////
 // エントリーポイント
 // アプリケーションはこの関数から進行する
 // ///// ///// ///// ///// ///// ///// ///// ///// ///// ///// ///// ///// ///// ///// /////
 int WINAPI WinMain(_In_ HINSTANCE, _In_opt_  HINSTANCE, _In_ LPSTR , _In_ int)
 {
-	// メモリリークを知らせる
+	// メモリリークを知らせる（終わった時に、解放し忘れたメモリを出力ウィンドウに出す）
+	// 【参考】https://learn.microsoft.com/ja-jp/cpp/c-runtime-library/reference/crtsetdbgflag
 	_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
 
-	// COM初期化
+	// COM初期化（DirectXTK の画像・音の読み込みなどが、中で COM を使うため）
+	// 【参考】https://learn.microsoft.com/ja-jp/windows/win32/api/combaseapi/nf-combaseapi-coinitializeex
 	if (FAILED(CoInitializeEx(nullptr, COINIT_MULTITHREADED)))
 	{
 		CoUninitialize();
@@ -42,7 +64,7 @@ void Application::KdBeginUpdate()
 	// 入力状況の更新
 	KdInputManager::Instance().Update();
 
-	// 空間環境の更新
+	// 空間環境の更新（光・霧。点光源はここで毎フレーム空になるので、StageLights が毎フレーム登録し直す）
 	KdShaderManager::Instance().WorkAmbientController().Update();
 }
 
@@ -52,6 +74,7 @@ void Application::KdBeginUpdate()
 void Application::KdPostUpdate()
 {
 	// 3DSoundListnerの行列を更新
+	// （3D の音を聞く位置をカメラにする。カメラの行列＝ビュー行列の逆行列）
 	KdAudioManager::Instance().SetListnerMatrix(KdShaderManager::Instance().GetCameraCB().mView.Invert());
 }
 
@@ -75,6 +98,7 @@ void Application::Update()
 
 	SceneManager::Instance().Update();
 
+	// エフェクトの更新は、シーンの更新の後（シーンで出したエフェクトを、同じフレームで動かす）
 	KdEffekseerManager::GetInstance().Update();
 }
 
@@ -84,6 +108,8 @@ void Application::UpdateDebugToggle()
 	// （F12 は Visual Studio でデバッグ実行中に、プログラムを止める（ブレーク）キーになっているので使わない）
 	// （ほかのデバッグキー F9～F11・Shift ＋ F8～F11 は、デバッグ表示を出している間だけ効く）
 	// （Shift ＋ F8 はタイトルへ戻るデバッグキーなので、Shift を押している時は切り替えない）
+	// 【なぜ static か】押した瞬間を判定するには、前のフレームの状態を覚えておく必要がある
+	//                   関数の中の static 変数は、関数を抜けても値が残る
 	static InputHelper::KeyTrigger debugKey{ InputHelper::Bind::DebugToggle };
 	if (debugKey.Update())
 	{
@@ -100,6 +126,8 @@ void Application::UpdateDebugToggle()
 void Application::SetCursorVisible(bool isVisible)
 {
 	// ShowCursor は呼んだ回数を数えるしくみなので、見える・見えないが変わる時だけ、0 をまたぐまで呼ぶ
+	// （TRUE で +1、FALSE で -1 して、0 以上なら見える。1 回呼ぶだけだと、前に何回呼ばれたかで結果が変わる）
+	// 【参考】https://learn.microsoft.com/ja-jp/windows/win32/api/winuser/nf-winuser-showcursor
 	if (isVisible == m_isCursorVisible) return;
 	m_isCursorVisible = isVisible;
 	if (isVisible)	{ while (ShowCursor(TRUE) < 0) {} }
@@ -119,11 +147,15 @@ void Application::PostUpdate()
 // ///// ///// ///// ///// ///// ///// ///// ///// ///// ///// ///// ///// ///// ///// /////
 void Application::KdBeginDraw(bool usePostProcess)
 {
+	// 前のフレームの絵を消す
 	KdDirect3D::Instance().ClearBackBuffer();
 
+	// 光・霧の設定をシェーダーへ送る
 	KdShaderManager::Instance().WorkAmbientController().Draw();
 
 	if (!usePostProcess) return;
+
+	// 描き先を、画面ではなくポストエフェクト用の画像に切り替える（PostDraw でまとめて加工するため）
 	KdShaderManager::Instance().m_postProcessShader.Draw();
 }
 
@@ -135,7 +167,7 @@ void Application::KdPostDraw()
 	// Imguiのレンダリング
 	KdDebugGUI::Instance().GuiProcess();
 
-	// BackBuffer -> 画面表示
+	// BackBuffer -> 画面表示（描き終わった裏の画面と、表の画面を入れかえる。ダブルバッファ）
 	KdDirect3D::Instance().WorkSwapChain()->Present(0, 0);
 }
 
@@ -153,6 +185,8 @@ void Application::PreDraw()
 void Application::Draw()
 {
 	SceneManager::Instance().Draw();
+
+	// エフェクトは 3D の物を描いた後（物の奥・手前を、深度で正しく重ねるため）
 	KdEffekseerManager::GetInstance().Draw();
 }
 
@@ -162,6 +196,7 @@ void Application::Draw()
 void Application::PostDraw()
 {
 	// 画面のぼかしや被写界深度処理の実施
+	// （光のにじみ・ぼかし。HP が少ない時の白黒・暗さ・周辺減光も、ここ（DoF のシェーダー）でかける）
 	KdShaderManager::Instance().m_postProcessShader.PostEffectProcess();
 
 	// 現在のシーンのデバッグ描画（当たり判定のワイヤーなど。デバッグ表示を出している時だけ）
@@ -174,6 +209,7 @@ void Application::PostDraw()
 // ///// ///// ///// ///// ///// ///// ///// ///// ///// ///// ///// ///// ///// ///// /////
 // 2Dスプライトの描画
 // ///// ///// ///// ///// ///// ///// ///// ///// ///// ///// ///// ///// ///// ///// /////
+// 【なぜ最後か】ポストエフェクトの後に描くので、HUD は白黒やぼかしの影響を受けない
 void Application::DrawSprite()
 {
 	SceneManager::Instance().DrawSprite();
@@ -182,6 +218,8 @@ void Application::DrawSprite()
 // ///// ///// ///// ///// ///// ///// ///// ///// ///// ///// ///// ///// ///// ///// /////
 // アプリケーション初期設定
 // ///// ///// ///// ///// ///// ///// ///// ///// ///// ///// ///// ///// ///// ///// /////
+// 【なぜこの順番か】後の物が、前の物を使うから
+//   ウィンドウ → Direct3D（ウィンドウに描く）→ imgui・シェーダー（Direct3D を使う）→ 音・フォント・Effekseer
 bool Application::Init(int w, int h)
 {
 	//===================================================================
@@ -272,6 +310,7 @@ void Application::Execute()
 	const std::vector<std::string>& sizeData = windowData.GetLine(0);
 
 	// 設定ファイルが読めない（Assetフォルダが無い・作業ディレクトリが違う）場合は落ちる前に知らせる
+	// （そのままだと sizeData[0] で落ちて、原因が分かりにくいため）
 	if (sizeData.size() < 2)
 	{
 		MessageBoxA(nullptr,
@@ -375,6 +414,7 @@ void Application::Execute()
 		m_fpsController.Update();
 
 		// ウィンドウのタイトル（FPS が変わった時だけ書き換える）
+	// （SetWindowTextA は Windows にメッセージを送るので、毎フレーム呼ぶ必要はない）
 		static int prevFps = -1;
 		if (m_fpsController.m_nowfps != prevFps)
 		{
@@ -390,7 +430,7 @@ void Application::Execute()
 	Release();
 }
 
-// アプリケーション終了
+// アプリケーション終了（Init で作った物を片付ける）
 void Application::Release()
 {
 	KdInputManager::Instance().Release();

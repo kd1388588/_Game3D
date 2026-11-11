@@ -49,7 +49,11 @@ void KdDebugGUI::GuiProcess()
 	ImGui_ImplWin32_NewFrame();
 	ImGui::NewFrame();
 
-	// デバッグ表示を消している時は、ウィンドウを何も出さない
+	// 【BRAVER で足した所】デバッグ表示を消している時は、ウィンドウを何も出さない
+	// 【なぜ Render を呼んでから return するのか】
+	//   ImGui は「NewFrame を呼んだら、そのフレームの中で必ず Render まで呼ぶ」決まりになっている
+	//   途中で抜けると、次のフレームの NewFrame でエラー（assert）になる
+	// 【参考】Dear ImGui https://github.com/ocornut/imgui （NewFrame → ウィンドウを作る → Render の流れ）
 	if (!m_isVisible)
 	{
 		ImGui::Render();
