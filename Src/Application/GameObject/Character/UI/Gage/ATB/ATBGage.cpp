@@ -1,43 +1,32 @@
 ﻿#include "ATBGage.h"
 #include "../../../Player/Player.h"
 #include "../../../../UI/Text/UIText.h"
-#include "../Base/HudDraw.h"
-#include "../HP/HPGage.h"
 
 namespace
 {
-	// 位置・大きさ（FF7R 風。画面の右下のステータスパネル（HPGage が描く）の中に並べる）
-	// パネル：中心 (371, -293)、幅 470・高さ 66。左から「モード」「HP（HPGage）」「ATB」
-	constexpr int		kGageLeft			= 525;		// ATBゲージ1本目の左端
-	constexpr int		kGageY				= -300;		// ATBゲージの中心の高さ
-	constexpr int		kBarWidth			= 34;		// ATBゲージ1本の幅
-	constexpr int		kBarHeight			= 8;		// ATBゲージ1本の高さ
-	constexpr int		kBarSpace			= 6;		// ゲージとゲージの間
-	constexpr float		kAtbLabelY			= -280.0f;	// 「ATB」の文字の高さ
-	constexpr float		kAtbLabelScale		= 0.55f;
-	constexpr float		kModeLeftX			= 176.0f;	// モードの文字（BLADE / SLASH）の左端
-	constexpr float		kModeTextY			= -281.0f;	// モードの文字の高さ
-	constexpr float		kModeTextScale		= 0.9f;
-	constexpr int		kModeLockBarY		= -297;		// モードの固定の残り時間のバーの高さ
+	// 位置・大きさ（HPゲージ（左端 -500、高さ -300、幅 200）のまわりに並べる）
+	constexpr int		kGageLeft			= -500;		// ATBゲージ1本目の左端
+	constexpr int		kGageY				= -322;		// ATBゲージの中心の高さ
+	constexpr int		kBarWidth			= 96;		// ATBゲージ1本の幅
+	constexpr int		kBarHeight			= 10;		// ATBゲージ1本の高さ
+	constexpr int		kBarSpace			= 8;		// ゲージとゲージの間
+	constexpr float		kModeTextY			= -268.0f;	// モード表示の高さ（HPゲージの上）
+	constexpr int		kModeLockBarY		= -283;		// モードの固定の残り時間のバーの高さ
 	constexpr int		kModeLockBarHeight	= 2;
-	constexpr float		kAccentX			= 158.0f;	// パネルの左の、モードの色の斜めの線
-	constexpr float		kSubTextY			= -308.0f;	// GUARD / BREAK の文字の高さ
-	constexpr float		kSubTextScale		= 0.6f;
 
-	// アビリティの枠（ステータスパネルの右上）
-	constexpr int		kSlotCenterX		= 548;		// 1つ目の枠の中心
+	// アビリティの枠（HPゲージ・ATBゲージの右）
+	constexpr int		kSlotCenterX		= -270;		// 1つ目の枠の中心
 	constexpr int		kSlotSpace			= 42;		// 枠と枠の間隔
-	constexpr int		kSlotCenterY		= -238;
+	constexpr int		kSlotCenterY		= -311;
 	constexpr int		kSlotHalfSize		= 17;
 	constexpr int		kSlotCostDotSize	= 2;		// 使うゲージの本数を表す点の大きさ（半分）
 
 
 	// 色
-	const Math::Color	kBackColor			= { 0.02f, 0.06f, 0.14f, 0.8f };	// 背景
-	const Math::Color	kFrameColor			= { 0.55f, 0.78f, 1.0f, 0.45f };	// 枠
-	const Math::Color	kFillColor			= { 0.16f, 0.4f, 0.85f, 1.0f };		// たまっている途中（暗めの青）
-	const Math::Color	kFullColor			= { 0.45f, 0.85f, 1.0f, 1.0f };		// 満タン（明るい水色。光らせる）
-	const Math::Color	kAtbLabelColor		= { 0.65f, 0.85f, 1.0f, 0.8f };
+	const Math::Color	kBackColor			= { 0.05f, 0.05f, 0.1f, 0.75f };	// 背景
+	const Math::Color	kFrameColor			= { 0.6f, 0.7f, 0.85f, 0.9f };		// 枠
+	const Math::Color	kFillColor			= { 0.2f, 0.6f, 1.0f, 1.0f };		// たまっている途中
+	const Math::Color	kFullColor			= { 1.0f, 0.85f, 0.3f, 1.0f };		// 満タン（アビリティが使える）
 	const Math::Color	kOperatorColor		= { 0.45f, 0.8f, 1.0f, 1.0f };		// OPERATOR の文字
 	const Math::Color	kPunisherColor		= { 1.0f, 0.6f, 0.2f, 1.0f };		// PUNISHER の文字
 	const Math::Color	kLockColor			= { 0.9f, 0.3f, 0.3f, 1.0f };		// モードの固定の残り時間
@@ -48,9 +37,9 @@ namespace
 	const Math::Color	kBreakColor			= { 1.0f, 0.3f, 0.25f, 1.0f };		// BREAK の文字
 	const Math::Color	kGuardBarColor		= { 0.6f, 0.85f, 1.0f, 1.0f };		// ガードの耐久値
 	const Math::Color	kGuardBarLowColor	= { 1.0f, 0.4f, 0.3f, 1.0f };		// ガードの耐久値（残り少ない）
-	constexpr int		kGuardBarLeft		= 236;		// ガードの耐久値のバー（GUARD の文字の右）
+	constexpr int		kGuardBarLeft		= -360;		// ガードの耐久値のバー（GUARD の文字の下）
 	constexpr int		kGuardBarWidth		= 70;
-	constexpr int		kGuardBarY			= -308;
+	constexpr int		kGuardBarY			= -283;
 	constexpr int		kGuardBarHeight		= 4;
 	constexpr float		kGuardLowRatio		= 0.35f;	// これより少ないと赤くする
 
@@ -85,34 +74,23 @@ void ATBGage::Init()
 	m_operatorText = std::make_shared<UIText>();
 	m_operatorText->SetText("BLADE", UIText::FontSize::Small);
 	m_operatorText->SetColor(kOperatorColor);
-	m_operatorText->SetScale(kModeTextScale);
-	SetTextLeft(m_operatorText, kModeLeftX, kModeTextY);
+	SetTextLeft(m_operatorText, static_cast<float>(kGageLeft), kModeTextY);
 
 	m_punisherText = std::make_shared<UIText>();
 	m_punisherText->SetText("SLASH", UIText::FontSize::Small);
 	m_punisherText->SetColor(kPunisherColor);
-	m_punisherText->SetScale(kModeTextScale);
-	SetTextLeft(m_punisherText, kModeLeftX, kModeTextY);
+	SetTextLeft(m_punisherText, static_cast<float>(kGageLeft), kModeTextY);
 
-	// ガード中（モードの文字の下）
+	// ガード中（モードの文字の右）
 	m_guardText = std::make_shared<UIText>();
 	m_guardText->SetText("GUARD", UIText::FontSize::Small);
 	m_guardText->SetColor(kGuardColor);
-	m_guardText->SetScale(kSubTextScale);
-	m_guardText->SetCenterPos({ kModeLeftX + m_guardText->GetSize().x * kSubTextScale * 0.5f, kSubTextY });
+	SetTextLeft(m_guardText, static_cast<float>(kGageLeft + 140), kModeTextY);
 
 	m_breakText = std::make_shared<UIText>();
 	m_breakText->SetText("BREAK", UIText::FontSize::Small);
 	m_breakText->SetColor(kBreakColor);
-	m_breakText->SetScale(kSubTextScale);
-	m_breakText->SetCenterPos({ kModeLeftX + m_breakText->GetSize().x * kSubTextScale * 0.5f, kSubTextY });
-
-	// 「ATB」の文字（ATBゲージの上）
-	m_atbLabel = std::make_shared<UIText>();
-	m_atbLabel->SetText("ATB", UIText::FontSize::Small);
-	m_atbLabel->SetColor(kAtbLabelColor);
-	m_atbLabel->SetScale(kAtbLabelScale);
-	m_atbLabel->SetCenterPos({ kGageLeft + m_atbLabel->GetSize().x * kAtbLabelScale * 0.5f, kAtbLabelY });
+	SetTextLeft(m_breakText, static_cast<float>(kGageLeft + 140), kModeTextY);
 
 	// アビリティの枠の「04」「05」
 	const char* const slotNames[] = { "05", "04" };
@@ -203,8 +181,8 @@ void ATBGage::Update()
 		float t = static_cast<float>(m_modeFlashTimer) / kModeFlashFrame;
 		scale = 1.0f + (kModeFlashScale - 1.0f) * t;
 	}
-	m_operatorText->SetScale(scale * kModeTextScale);
-	m_punisherText->SetScale(scale * kModeTextScale);
+	m_operatorText->SetScale(scale);
+	m_punisherText->SetScale(scale);
 }
 
 Math::Color ATBGage::GetGlowColor(const Math::Color& baseColor) const
@@ -219,26 +197,32 @@ Math::Color ATBGage::GetGlowColor(const Math::Color& baseColor) const
 
 void ATBGage::DrawGaugeBar(int left, int centerY, int width, int height, float ratio, const Math::Color& fillColor)
 {
-	// FF7R 風の斜めのゲージ（背景・たまっている部分・枠）
-	float l = static_cast<float>(left), cy = static_cast<float>(centerY);
-	float w = static_cast<float>(width), h = static_cast<float>(height);
-	HudDraw::SlantGauge(l, cy, w, h, ratio, fillColor, kBackColor);
-	HudDraw::SlantRect(l + w * 0.5f, cy, w * 0.5f, h * 0.5f, kFrameColor, HudDraw::kGaugeSlant, cy, false);
+	auto& spriteShader = KdShaderManager::Instance().m_spriteShader;
+
+	int halfW = width / 2;
+	int halfH = height / 2;
+	int centerX = left + halfW;
+
+	// 背景
+	spriteShader.DrawBox(centerX, centerY, halfW, halfH, &kBackColor, true);
+
+	// たまっている部分（左から伸びる）
+	int fillHalfW = static_cast<int>(width * std::clamp(ratio, 0.0f, 1.0f) * 0.5f);
+	if (fillHalfW > 0)
+	{
+		spriteShader.DrawBox(left + fillHalfW, centerY, fillHalfW, halfH, &fillColor, true);
+	}
+
+	// 枠
+	spriteShader.DrawBox(centerX, centerY, halfW, halfH, &kFrameColor, false);
 }
 
 void ATBGage::DrawBar(int index, int left, float ratio) const
 {
 	ratio = std::clamp(ratio, 0.0f, 1.0f);
 
-	// 満タンのゲージは、明るくなったり暗くなったりして「使える」ことを知らせる（まわりにうっすら光も出す）
+	// 満タンのゲージは、明るくなったり暗くなったりして「使える」ことを知らせる
 	Math::Color color = (ratio >= 1.0f) ? GetGlowColor(kFullColor) : kFillColor;
-	if (ratio >= 1.0f)
-	{
-		float wave = std::sin(m_frame * DirectX::XM_2PI / kGlowCycle) * 0.5f + 0.5f;
-		Math::Color glow = { kFullColor.x, kFullColor.y, kFullColor.z, 0.15f + 0.2f * wave };
-		HudDraw::SlantRect(left + kBarWidth * 0.5f, static_cast<float>(kGageY), kBarWidth * 0.5f + 3.0f, kBarHeight * 0.5f + 3.0f,
-			glow, HudDraw::kGaugeSlant, static_cast<float>(kGageY));
-	}
 
 	// たまった瞬間は白っぽくする
 	if (m_barFlashTimers[index] > 0)
@@ -296,15 +280,6 @@ void ATBGage::DrawSprite()
 	auto& spriteShader = KdShaderManager::Instance().m_spriteShader;
 	spriteShader.SetMatrix(Math::Matrix::Identity);
 
-	// パネルの左の、モードの色の斜めの線（オペレーターは水色、パニッシャーはオレンジ）
-	{
-		const Math::Color& mode = m_isPunisher ? kPunisherColor : kOperatorColor;
-		Math::Color glow = { mode.x, mode.y, mode.z, 0.35f };
-		HudDraw::SlantRect(kAccentX, HPGage::kPanelCenterY, 5.0f, HPGage::kPanelHalfH - 8.0f, glow, HudDraw::kPanelSlant, HPGage::kPanelCenterY);
-		HudDraw::SlantRect(kAccentX, HPGage::kPanelCenterY, 2.0f, HPGage::kPanelHalfH - 8.0f, mode, HudDraw::kPanelSlant, HPGage::kPanelCenterY);
-	}
-	m_atbLabel->DrawSprite();
-
 	// ATBゲージ（1本目は 0～1、2本目は 1～2 の分を表示する）
 	for (int i = 0; i < Player::kAtbBarNum; ++i)
 	{
@@ -316,10 +291,10 @@ void ATBGage::DrawSprite()
 	if (m_modeLockRatio > 0.0f)
 	{
 		const auto& modeText = m_isPunisher ? m_punisherText : m_operatorText;
-		int width = static_cast<int>(modeText->GetSize().x * kModeTextScale * std::clamp(m_modeLockRatio, 0.0f, 1.0f));
+		int width = static_cast<int>(modeText->GetSize().x * std::clamp(m_modeLockRatio, 0.0f, 1.0f));
 		if (width >= 2)
 		{
-			spriteShader.DrawBox(static_cast<int>(kModeLeftX) + width / 2, kModeLockBarY, width / 2, kModeLockBarHeight / 2 + 1, &kLockColor, true);
+			spriteShader.DrawBox(kGageLeft + width / 2, kModeLockBarY, width / 2, kModeLockBarHeight / 2 + 1, &kLockColor, true);
 		}
 	}
 

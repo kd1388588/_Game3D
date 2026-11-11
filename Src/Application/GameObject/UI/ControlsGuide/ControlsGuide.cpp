@@ -5,10 +5,9 @@
 
 namespace
 {
-	// 画面の右上（画面中央が原点、右が+X・上が+Y。画面は 1280x720）
-	// ※右下には FF7R 風のステータスパネル（HP・ATB）があるので、右上に置く
+	// 画面の右下（画面中央が原点、右が+X・上が+Y。画面は 1280x720）
 	constexpr float		kRightX			= 625.0f;	// パネルの右端
-	constexpr float		kBottomY		= 185.0f;	// パネルの下端（7行なら上端が 345）
+	constexpr float		kBottomY		= -345.0f;	// パネルの下端
 	constexpr float		kPanelWidth		= 300.0f;
 	constexpr float		kPadding		= 10.0f;	// パネルの内側の余白
 	constexpr float		kRowSpacing		= 20.0f;	// 行と行の間
@@ -81,7 +80,7 @@ std::vector<ControlsGuide::Row> ControlsGuide::CreateRows(const std::vector<std:
 
 void ControlsGuide::Update()
 {
-	// ATBコマンドメニューを開いている間（画面をすっきりさせる）と、プレイヤーが倒れた後は消す
+	// ATBコマンドメニューを開いている間（メニューが右下に出る）と、プレイヤーが倒れた後は消す
 	bool isShow = true;
 	if (auto player = m_wpPlayer.lock())
 	{

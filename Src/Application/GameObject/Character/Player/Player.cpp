@@ -499,7 +499,6 @@ void Player::UpdateHpGage()
 	auto hpGage = m_wpHpGage.lock();
 	if (!hpGage) return;
 	hpGage->SetHpRatio(ratio);
-	hpGage->SetHp(m_hp, m_maxHp);
 }
 
 void Player::Release()

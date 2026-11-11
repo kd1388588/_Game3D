@@ -79,7 +79,6 @@ private:
 	std::shared_ptr<UIText>					m_punisherText = nullptr;
 	std::shared_ptr<UIText>					m_guardText = nullptr;
 	std::shared_ptr<UIText>					m_breakText = nullptr;	// ガードを崩された時の「BREAK」
-	std::shared_ptr<UIText>					m_atbLabel = nullptr;	// 「ATB」の文字
 	std::vector<std::shared_ptr<UIText>>	m_slotKeyTexts;				// アビリティの枠の「04」「05」
 
 	// どのキーで使えるかの表示（四角い枠の中にキーの名前）
