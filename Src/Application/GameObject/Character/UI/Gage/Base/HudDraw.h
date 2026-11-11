@@ -26,24 +26,16 @@ namespace HudDraw
 	}
 
 	// 左から右へ色が変わる、傾いた帯（細い帯を並べてグラデーションにする）
-	// ※DrawBox は幅を整数（の半分）でしか描けないので、帯の幅は 2 ピクセル単位の整数にして、すき間も重なりも無くぴったり並べる
-	//   （少数の幅のまま並べると切り捨てですき間ができ、重ねると半透明の所がしま模様になる）
 	inline void SlantGradient(float cx, float cy, float hw, float hh, const Math::Color& left, const Math::Color& right,
 		float slant, float pivotY, int steps = 16)
 	{
-		int total = static_cast<int>(std::lround(hw)) * 2;	// 全体の幅（偶数）
-		if (total <= 0 || steps <= 0) return;
-		steps = std::min(steps, total / 2);
-		int baseHalf = total / steps / 2;					// 帯1本の幅の半分（全部の帯がこれ以上）
-		int extraPairs = (total - baseHalf * 2 * steps) / 2;	// あまりの幅（2 ピクセルずつ、左の帯から足す）
-
-		float x = cx - static_cast<float>(total) * 0.5f;		// 次の帯の左端
+		float stepW = hw * 2.0f / steps;
 		for (int i = 0; i < steps; ++i)
 		{
-			int half = baseHalf + (i < extraPairs ? 1 : 0);
 			float t = (i + 0.5f) / steps;
-			SlantRect(x + half, cy, static_cast<float>(half), hh, Math::Color::Lerp(left, right, t), slant, pivotY);
-			x += half * 2;
+			float x = cx - hw + stepW * (i + 0.5f);
+			// 帯と帯のすき間が出ないように、少しだけ重ねる
+			SlantRect(x, cy, stepW * 0.5f + 0.6f, hh, Math::Color::Lerp(left, right, t), slant, pivotY);
 		}
 	}
 
