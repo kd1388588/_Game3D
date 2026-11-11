@@ -52,12 +52,11 @@ BRAVER　オブジェクトごとの技術のファイル（目次と書き方�
       EffectPlayer.txt          EffectPlayer（Effekseer のエフェクトを出す補助）
       EffectSettings.txt        EffectSettings（エフェクトエディタ）
   [UI] 戦闘の HUD・UI
-      ATBCommandMenu.txt        ATBCommandMenu（左下の ATB コマンド）
-      ATBGage.txt               ATBGage（モード・ガード・ATB ゲージ・アビリティ）
+      ATBCommandMenu.txt        ATBCommandMenu（右下の ATB コマンド）
+      ATBGage.txt               ATBGage（左下のモード・ガード・ATB ゲージ・技の枠）
       BaseGage.txt              BaseGage（ゲージの共通部分）
-      ControlsGuide.txt         ControlsGuide（右上の操作の一覧）
-      HPGage.txt                HPGage（右下のステータスパネルと HP）
-      HudDraw.txt               HudDraw（斜めの形を描く道具）
+      ControlsGuide.txt         ControlsGuide（右下の操作の一覧）
+      HPGage.txt                HPGage（左下の HP ゲージ）
       UIBackground.txt          UIBackground（画面いっぱいの背景）
       UIHeading.txt             UIHeading（見出しの画像）
       UIText.txt                UIText（文字）
