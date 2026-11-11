@@ -5,7 +5,7 @@
 namespace
 {
 	// 選べる技（並びは AbilitySlot と同じ）
-	const char* const	kItemNames[]		= { "Attack1", "Attack2" };	// 上から（PlayerConstants.h の kAbilityInfos と同じ順番）
+	const char* const	kItemNames[]		= { "HIGH SPEED EDGE", "SLASH RUSH" };	// 上から（PlayerConstants.h の kAbilityInfos と同じ順番）
 
 	// 位置・大きさ（画面の右下）
 	constexpr int		kPanelCenterX		= 420;

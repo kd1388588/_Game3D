@@ -2,16 +2,9 @@
 
 #include "BaseScene/BaseScene.h"
 #include "TitleScene/TitleScene.h"
-#include "GameScene/GameScene.h"
-#include "GameClearScene/GameClearScene.h"
-#include "GameOverScene/GameOverScene.h"
-
-#include "../GameObject/Effect/EffectPlayer.h"
-#include "../Utility/SoundPlayer.h"
 
 void SceneManager::PreUpdate()
 {
-	// シーン切替
 	if (m_currentSceneType != m_nextSceneType)
 	{
 		ChangeScene(m_nextSceneType);
@@ -20,74 +13,44 @@ void SceneManager::PreUpdate()
 	m_currentScene->PreUpdate();
 }
 
-void SceneManager::Update()
-{
-	m_currentScene->Update();
-}
+void SceneManager::Update() { m_currentScene->Update(); }
 
-void SceneManager::PostUpdate()
-{
-	m_currentScene->PostUpdate();
-}
+void SceneManager::PostUpdate() { m_currentScene->PostUpdate(); }
 
-void SceneManager::PreDraw()
-{
-	m_currentScene->PreDraw();
-}
+void SceneManager::PreDraw() { m_currentScene->PreDraw(); }
 
-void SceneManager::Draw()
-{
-	m_currentScene->Draw();
-}
+void SceneManager::Draw() { m_currentScene->Draw(); }
 
-void SceneManager::DrawSprite()
-{
-	m_currentScene->DrawSprite();
-}
+void SceneManager::DrawSprite() { m_currentScene->DrawSprite(); }
 
-void SceneManager::DrawDebug()
-{
-	m_currentScene->DrawDebug();
-}
+void SceneManager::DrawDebug() { m_currentScene->DrawDebug(); }
 
-const std::list<std::shared_ptr<KdGameObject>>& SceneManager::GetObjList()
+const std::list<std::shared_ptr<KdGameObject>>& SceneManager::GetObjlist()
 {
 	return m_currentScene->GetObjList();
 }
 
-void SceneManager::AddObject(const std::shared_ptr<KdGameObject>& _obj)
+void SceneManager::AddObject(const std::shared_ptr<KdGameObject>& obj)
 {
-	m_currentScene->AddObject(_obj);
+	m_currentScene->AddObject(obj);
 }
 
-void SceneManager::ChangeScene(SceneType _sceneType)
+void SceneManager::ChangeScene(SceneType sceneType)
 {
-	// 前のシーンのエフェクトが残らないように全て止める
-	EffectPlayer::StopAll();
-
-	// 前のシーンの音（BGM・効果音）も止める（BGM はシーンの Init で流し直す）
-	SoundPlayer::StopAll();
-
-	// HP が少ない時の画面の色（白黒・暗さ・周辺減光）を元に戻す
-	KdShaderManager::Instance().m_postProcessShader.ResetScreenColor();
-
-	// 次のシーンを作成し、現在のシーンにする
-	switch (_sceneType)
+	switch (sceneType)
 	{
-	case SceneType::Title:
+	case SceneManager::Title:
 		m_currentScene = std::make_shared<TitleScene>();
 		break;
-	case SceneType::Game:
-		m_currentScene = std::make_shared<GameScene>();
+	case SceneManager::Game:
 		break;
-	case SceneType::GameClear:
-		m_currentScene = std::make_shared<GameClearScene>();
+	case SceneManager::GameClear:
 		break;
-	case SceneType::GameOver:
-		m_currentScene = std::make_shared<GameOverScene>();
+	case SceneManager::GameOver:
+		break;
+	default:
 		break;
 	}
 
-	// 現在のシーン情報を更新
-	m_currentSceneType = _sceneType;
+	m_currentSceneType = sceneType;
 }

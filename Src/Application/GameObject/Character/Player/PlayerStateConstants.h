@@ -115,10 +115,10 @@ namespace PlayerStateConst
 	constexpr float kEvadeBlendFrame		= 3.0f;		// 前の動き→回避のブレンドフレーム数
 
 	// 攻撃
-	constexpr float kAttackAnimSpeed		= 1.15f;	// 攻撃の再生速度（少し速くして、もっさりしないようにする）
-	constexpr float kAttack5_3AnimSpeed		= 0.9f;		// 攻撃05の3段目だけは、少しゆっくり再生する
-	constexpr float kAttackEvadeCancelFrame	= 12.0f;	// 攻撃のこのフレーム以降なら、回避でキャンセルできる
-	constexpr float kAttackRecoveryFrame	= 6.0f;		// 次の攻撃に移れるフレームから、さらにこれだけたったら、移動で攻撃の後のすきをキャンセルできる
+	constexpr float kAttackAnimSpeed		= 1.3f; 	// 攻撃の再生速度（少し速くして、もっさりしないようにする）
+	constexpr float kAttack5_3AnimSpeed		= 0.75f;	// 攻撃05の3段目だけは、少しゆっくり再生する
+	constexpr float kAttackEvadeCancelFrame	= 10.0f;	// 攻撃のこのフレーム以降なら、回避でキャンセルできる
+	constexpr float kAttackRecoveryFrame	= 3.0f;		// 次の攻撃に移れるフレームから、さらにこれだけたったら、移動で攻撃の後のすきをキャンセルできる
 
 	// 回避した時に、パニッシャーからオペレーターに戻すか（true で FF7リメイクのクラウドと同じ動き）
 	// false にすると、回避してもモードはそのまま

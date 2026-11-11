@@ -35,9 +35,9 @@ struct KdAnimationData
 		std::vector<KdAnimKeyVector3>		m_scales;		// 拡縮キーリスト
 
 		void Interpolate(Math::Matrix& rDst, float time);
-		bool InterpolateTranslations(Math::Vector3& result, float time) const;
-		bool InterpolateRotations(Math::Quaternion& result, float time) const;
-		bool InterpolateScales(Math::Vector3& result, float time) const;
+		bool InterpolateTranslations(Math::Vector3& result, float time);
+		bool InterpolateRotations(Math::Quaternion& result, float time);
+		bool InterpolateScales(Math::Vector3& result, float time);
 	};
 
 	// 全ノード用アニメーションデータ
@@ -97,16 +97,6 @@ public:
 	void AdvanceTime(std::vector<KdModelWork::Node>& rNodes, float speed = 1.0f);
 
 	float GetTime() const { return m_time; }
-
-	// 再生位置を指定する（途中のフレームから再生したい場合に使用）
-	void SetTime(float time)
-	{
-		m_time = time;
-		if (m_spAnimation && m_time > m_spAnimation->m_maxLength)
-		{
-			m_time = m_spAnimation->m_maxLength;
-		}
-	}
 
 private:
 

@@ -4,10 +4,9 @@ class BaseScene;
 
 class SceneManager
 {
-public :
+public:
 
-	// シーン情報
-	enum class SceneType
+	enum SceneType
 	{
 		Title,
 		Game,
@@ -15,63 +14,49 @@ public :
 		GameOver,
 	};
 
+	// 初期設定
+	void Init()
+	{
+		ChangeScene(m_currentSceneType);
+	}
+
+	// ゲーム内更新
 	void PreUpdate();
 	void Update();
 	void PostUpdate();
 
+	// ゲーム内描画
 	void PreDraw();
 	void Draw();
 	void DrawSprite();
 	void DrawDebug();
 
-	// 次のシーンをセット (次のフレームから切り替わる)
-	void SetNextScene(SceneType _nextScene)
-	{
-		m_nextSceneType = _nextScene;
-	}
+	// 次のシーンをセットする（次フレームで遷移）
+	void SetNextScene(SceneType nextScene) { m_nextSceneType = nextScene; }
 
-	// 現在のシーンの種類
+	// 描画中のシーンを取得
 	SceneType GetCurrentSceneType() const { return m_currentSceneType; }
 
-	// 現在のシーンのオブジェクトリストを取得
-	const std::list<std::shared_ptr<KdGameObject>>& GetObjList();
+	// 描画中のシーン内のオブジェクトリスト
+	const std::list<std::shared_ptr<KdGameObject>>& GetObjlist();
 
-	// 現在のシーンにオブジェクトを追加
-	void AddObject(const std::shared_ptr<KdGameObject>& _obj);
-
-private :
-
-	// マネージャーの初期化
-	// インスタンス生成(アプリ起動)時にコンストラクタで自動実行
-	void Init()
-	{
-		// 開始シーンに切り替え
-		ChangeScene(m_currentSceneType);
-	}
-
-	// シーン切り替え関数
-	void ChangeScene(SceneType _sceneType);
-
-	// 現在のシーンのインスタンスを保持しているポインタ
-	std::shared_ptr<BaseScene> m_currentScene = nullptr;
-
-	// 現在のシーンの種類を保持している変数
-	SceneType m_currentSceneType = SceneType::Title;	// 起動時のシーン
-	
-	// 次のシーンの種類を保持している変数
-	SceneType m_nextSceneType = m_currentSceneType;
+	// オブジェクト追加
+	void AddObject(const std::shared_ptr<KdGameObject>& obj);
 
 private:
 
-	SceneManager() { Init(); }
+	SceneManager() {}
 	~SceneManager() {}
 
-public:
+	void ChangeScene(SceneType scenetype);
 
-	// シングルトンパターン
-	// 常に存在する && 必ず1つしか存在しない(1つしか存在出来ない)
-	// どこからでもアクセスが可能で便利だが
-	// 何でもかんでもシングルトンという思考はNG
+	std::shared_ptr<BaseScene>	m_currentScene = nullptr;			// 描画中のシーン
+	SceneType					m_currentSceneType = SceneType::Title;  // そのシーンの種類
+
+	SceneType					m_nextSceneType = m_currentSceneType;	// 次のシーンの種類
+
+public: 
+
 	static SceneManager& Instance()
 	{
 		static SceneManager instance;

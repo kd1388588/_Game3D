@@ -1,8 +1,6 @@
 ﻿#include "../../../Application/main.h"
 #include "../../../Application/GameObject/Character/Player/Player.h"
 #include "../../../Application/GameObject/Character/Player/PlayerParamManager.h"
-#include "../../../Application/Utility/StageSettings.h"
-#include "../../../Application/Utility/EffectSettings.h"
 #include "KdDebugGUI.h"
 
 KdDebugGUI::KdDebugGUI()
@@ -48,14 +46,6 @@ void KdDebugGUI::GuiProcess()
 	ImGui_ImplDX11_NewFrame();
 	ImGui_ImplWin32_NewFrame();
 	ImGui::NewFrame();
-
-	// デバッグ表示を消している時は、ウィンドウを何も出さない
-	if (!m_isVisible)
-	{
-		ImGui::Render();
-		ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
-		return;
-	}
 
 	//===========================================================
 	// 以下にImGui描画処理を記述
@@ -114,12 +104,8 @@ void KdDebugGUI::GuiProcess()
 		if (ImGui::BeginTabItem("Animation Move"))
 		{
 			ImGui::SliderFloat("Evade Speed", &PlayerParamManager::Instance().m_evadeSpeed, 0.01f, 0.5f);
-
-			// 見た目の確認用の切り替え
-			ImGui::Checkbox("Root Motion", &Player::s_useRootMotion);
-			ImGui::Checkbox("Hitbox/Trail Along Blade", &Player::s_bladeShapeHitbox);
-			ImGui::SliderFloat("Throw Angle Offset", &Player::s_throwAngleOffset, -90.0f, 90.0f);
-			ImGui::SliderFloat("Run Speed", &Player::s_runSpeedRate, 1.0f, 2.5f);
+			ImGui::SliderFloat("Dash Speed", &PlayerParamManager::Instance().m_dashSpeed, 0.01f, 0.5f);
+			ImGui::SliderFloat("Attack Step", &PlayerParamManager::Instance().m_attackRootScale, 0.001f, 0.5f);
 
 			if (ImGui::Button("Save Params"))
 			{
@@ -152,6 +138,14 @@ void KdDebugGUI::GuiProcess()
 			ImGui::DragFloat3("Rotation (Left)", &Player::s_weaponRotL.x, 0.1f);
 			ImGui::DragFloat3("Position (Left)", &Player::s_weaponPosL.x, 0.001f);
 
+			ImGui::Separator();
+			ImGui::Text("--- Sheathed (Back) ---");
+
+			ImGui::DragFloat3("Sheath Rot (R)", &Player::s_sheathedRotR.x, 0.1f);
+			ImGui::DragFloat3("Sheath Pos (R)", &Player::s_sheathedPosR.x, 0.001f);
+			ImGui::DragFloat3("Sheath Rot (L)", &Player::s_sheathedRotL.x, 0.1f);
+			ImGui::DragFloat3("Sheath Pos (L)", &Player::s_sheathedPosL.x, 0.001f);
+
 			ImGui::EndTabItem();
 		}
 
@@ -159,12 +153,6 @@ void KdDebugGUI::GuiProcess()
 	}
 
 	ImGui::End();
-
-	// ステージエディタ（霧などのステージの見た目を、ゲームを動かしたまま調整する）
-	StageSettings::Instance().DrawEditor();
-
-	// エフェクトエディタ（エフェクトの大きさ・速さ・色（モードの色）・Effekseer エディタとの同期）
-	EffectSettings::Instance().DrawEditor();
 
 	// ログウィンドウ
 	// m_uqLog->Draw("Log Window");

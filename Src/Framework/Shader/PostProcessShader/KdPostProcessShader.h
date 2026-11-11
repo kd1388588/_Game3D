@@ -16,19 +16,6 @@ public:
 
 	void SetBrightThreshold(float threshold) { m_cb0_BrightInfo.Work().Threshold = threshold; }
 
-	// 画面の色（HP が少ない時など。すべて 0 で何もしない）
-	// grayscale：白黒にする強さ、darken：暗くする強さ、vignette：周辺減光の強さ（すべて 0～1）
-	// vignetteStart：周辺減光が始まる位置（0：真ん中、1：上下左右のふち）
-	void SetScreenColor(float grayscale, float darken, float vignette, float vignetteStart)
-	{
-		auto& cb = m_cb0_DoFInfo.Work();
-		cb.Grayscale = grayscale;
-		cb.Darken = darken;
-		cb.Vignette = vignette;
-		cb.VignetteStart = vignetteStart;
-	}
-	void ResetScreenColor() { SetScreenColor(0.0f, 0.0f, 0.0f, 0.25f); }
-
 	struct Vertex
 	{
 		Math::Vector3 Pos;
@@ -93,12 +80,6 @@ private:
 		float FocusDistance = 0.0f;
 		float FocusForeRange = 0.0f;
 		float FocusBackRange = 1000.0f;
-
-		// 画面の色（KdPostProcessShader_PS_DoF.hlsl の cbuffer と同じ並び）
-		float Grayscale = 0.0f;
-		float Darken = 0.0f;
-		float Vignette = 0.0f;
-		float VignetteStart = 0.25f;
 		int   _blank[3] = { 0, 0, 0 };
 	};
 	KdConstantBuffer<cbDepthOfField>	m_cb0_DoFInfo;

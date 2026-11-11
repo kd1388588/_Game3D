@@ -21,7 +21,7 @@ int BinarySearchNextAnimKey(const std::vector<T>& list, float time)
 	return low;
 }
 
-bool KdAnimationData::Node::InterpolateTranslations(Math::Vector3& result, float time) const
+bool KdAnimationData::Node::InterpolateTranslations(Math::Vector3& result, float time)
 {
 	if (m_translations.size() == 0)return false;
 
@@ -55,7 +55,7 @@ bool KdAnimationData::Node::InterpolateTranslations(Math::Vector3& result, float
 	return true;
 }
 
-bool KdAnimationData::Node::InterpolateRotations(Math::Quaternion& result, float time) const
+bool KdAnimationData::Node::InterpolateRotations(Math::Quaternion& result, float time)
 {
 	if (m_rotations.size() == 0)return false;
 
@@ -86,7 +86,7 @@ bool KdAnimationData::Node::InterpolateRotations(Math::Quaternion& result, float
 	return true;
 }
 
-bool KdAnimationData::Node::InterpolateScales(Math::Vector3& result, float time) const
+bool KdAnimationData::Node::InterpolateScales(Math::Vector3& result, float time)
 {
 	if (m_scales.size() == 0)return false;
 
@@ -122,44 +122,36 @@ bool KdAnimationData::Node::InterpolateScales(Math::Vector3& result, float time)
 
 void KdAnimationData::Node::Interpolate(Math::Matrix& rDst, float time)
 {
-	// キーが無い成分（位置・回転・拡縮）は、元の行列の値をそのまま使う
-	// （UE5などで書き出したファイルは、変化しない骨の位置のキーが省かれていることがあり、
-	//   その骨の位置を0にすると体が潰れてしまうため）
-	Math::Vector3		scale;
-	Math::Quaternion	rotation;
-	Math::Vector3		translation;
-	rDst.Decompose(scale, rotation, translation);
-
-	bool isChange = false;
-
 	// ベクターによる拡縮補間
+	bool isChange = false;
+	Math::Matrix scale;
 	Math::Vector3 resultVec;
 	if (InterpolateScales(resultVec, time))
 	{
-		scale = resultVec;
+		scale = scale.CreateScale(resultVec);
 		isChange = true;
 	}
 
 	// クォタニオンによる回転補間
+	Math::Matrix rotate;
 	Math::Quaternion resultQuat;
 	if (InterpolateRotations(resultQuat, time))
 	{
-		rotation = resultQuat;
+		rotate = rotate.CreateFromQuaternion(resultQuat);
 		isChange = true;
 	}
 
 	// ベクターによる座標補間
+	Math::Matrix trans;
 	if (InterpolateTranslations(resultVec, time))
 	{
-		translation = resultVec;
+		trans = trans.CreateTranslation(resultVec);
 		isChange = true;
 	}
 
 	if (isChange)
 	{
-		rDst = Math::Matrix::CreateScale(scale)
-			* Math::Matrix::CreateFromQuaternion(rotation)
-			* Math::Matrix::CreateTranslation(translation);
+		rDst = scale * rotate * trans;
 	}
 }
 

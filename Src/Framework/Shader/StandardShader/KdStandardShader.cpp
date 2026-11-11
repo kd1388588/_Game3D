@@ -147,12 +147,6 @@ void KdStandardShader::DrawMesh(const KdMesh* mesh, const Math::Matrix& mWorld,
 	m_cb1_Mesh.Work().mW = mWorld;
 	m_cb1_Mesh.Write();
 
-	// マテリアルごとのリムライト：使う時は、元の（全体の）リムライトの設定を覚えておく
-	const bool useMaterialLim = !m_materialLimFilter.empty();
-	const int baseLimEnable = m_cb0_Obj.Work().LimLightEnable;
-	const Math::Vector3 baseLimColor = m_cb0_Obj.Work().limLightColor;
-	const float baseLimPow = m_cb0_Obj.Work().limLightPow;
-
 	// 全サブセット
 	for (UINT subi = 0; subi < mesh->GetSubsets().size(); subi++)
 	{
@@ -163,31 +157,10 @@ void KdStandardShader::DrawMesh(const KdMesh* mesh, const Math::Matrix& mWorld,
 		const KdMaterial& material = materials[mesh->GetSubsets()[subi].MaterialNo];
 		WriteMaterial(material, colRate, emissive);
 
-		// 名前が合うマテリアルだけ、マテリアルごとのリムライトにする
-		if (useMaterialLim)
-		{
-			bool isMatch = material.m_name.find(m_materialLimFilter) != std::string::npos;
-			auto& cbObj = m_cb0_Obj.Work();
-			cbObj.LimLightEnable = isMatch ? 1 : baseLimEnable;
-			cbObj.limLightColor = isMatch ? m_materialLimColor : baseLimColor;
-			cbObj.limLightPow = isMatch ? m_materialLimPow : baseLimPow;
-			m_cb0_Obj.Write();
-		}
-
 		//-----------------------
 		// サブセット描画
 		//-----------------------
 		mesh->DrawSubset(subi);
-	}
-
-	// 次のメッシュのために、全体のリムライトの設定に戻す
-	if (useMaterialLim)
-	{
-		auto& cbObj = m_cb0_Obj.Work();
-		cbObj.LimLightEnable = baseLimEnable;
-		cbObj.limLightColor = baseLimColor;
-		cbObj.limLightPow = baseLimPow;
-		m_cb0_Obj.Write();
 	}
 }
 
@@ -274,15 +247,6 @@ void KdStandardShader::DrawModel(KdModelWork& rModel, const Math::Matrix& mWorld
 	// 全描画用メッシュノードを描画
 	for (auto& nodeIdx : data->GetDrawMeshNodeIndices())
 	{
-		// スキンメッシュのモデルに含まれる「骨に付いているだけの静的メッシュ」（武器など）は
-		// スキニングせずにノードの行列で描画する（メッシュごとに切り替える）
-		bool isSkinMeshNode = dataNodes[nodeIdx].m_isSkinMesh;
-		if (m_cb0_Obj.Work().IsSkinMeshObj != (int)isSkinMeshNode)
-		{
-			SetIsSkinMeshObj(isSkinMeshNode);
-			m_cb0_Obj.Write();
-		}
-
 		// 描画
 		DrawMesh(dataNodes[nodeIdx].m_spMesh.get(), workNodes[nodeIdx].m_worldTransform * mWorld,
 			data->GetMaterials(), colRate, emissive);
@@ -639,7 +603,6 @@ void KdStandardShader::ConvertNormalsFor2D(std::vector<KdPolygon::Vertex>& targe
 void KdStandardShader::ResetCBObject()
 {
 	m_cb0_Obj.Work() = cbObject();
-	m_materialLimFilter.clear();
 
 	m_cb0_Obj.Write();
 

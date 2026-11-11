@@ -1,0 +1,390 @@
+{
+    "Effects": {
+        "": {
+            "Color": [
+                1.0,
+                1.0,
+                1.0,
+                1.0
+            ],
+            "HeightOffset": 0.0,
+            "OperatorColor": [
+                0.550000011920929,
+                0.800000011920929,
+                1.0,
+                1.0
+            ],
+            "PunisherColor": [
+                1.0,
+                0.6000000238418579,
+                0.30000001192092896,
+                1.0
+            ],
+            "Scale": 1.0,
+            "Speed": 1.0,
+            "UseModeColor": false
+        },
+        "ModeChange.efkefc": {
+            "Color": [
+                1.0,
+                1.0,
+                1.0,
+                1.0
+            ],
+            "HeightOffset": 0.0,
+            "OperatorColor": [
+                0.5,
+                0.75,
+                1.0,
+                1.0
+            ],
+            "PunisherColor": [
+                1.0,
+                0.6499999761581421,
+                0.5,
+                1.0
+            ],
+            "Scale": 1.0,
+            "Speed": 1.0,
+            "UseModeColor": true
+        },
+        "_Claw2.efkefc": {
+            "Color": [
+                1.0,
+                0.30000001192092896,
+                0.25,
+                1.0
+            ],
+            "HeightOffset": 0.0,
+            "OperatorColor": [
+                0.550000011920929,
+                0.800000011920929,
+                1.0,
+                1.0
+            ],
+            "PunisherColor": [
+                1.0,
+                0.6000000238418579,
+                0.30000001192092896,
+                1.0
+            ],
+            "Scale": 1.0,
+            "Speed": 1.0,
+            "UseModeColor": false
+        },
+        "_GroundSmash.efkefc": {
+            "Color": [
+                1.0,
+                1.0,
+                1.0,
+                1.0
+            ],
+            "HeightOffset": 0.0,
+            "OperatorColor": [
+                0.550000011920929,
+                0.800000011920929,
+                1.0,
+                1.0
+            ],
+            "PunisherColor": [
+                1.0,
+                0.6000000238418579,
+                0.30000001192092896,
+                1.0
+            ],
+            "Scale": 3.0,
+            "Speed": 1.0,
+            "UseModeColor": false
+        },
+        "_Guard.efkefc": {
+            "Color": [
+                1.0,
+                1.0,
+                1.0,
+                1.0
+            ],
+            "HeightOffset": 0.0,
+            "OperatorColor": [
+                0.550000011920929,
+                0.800000011920929,
+                1.0,
+                1.0
+            ],
+            "PunisherColor": [
+                1.0,
+                0.6000000238418579,
+                0.30000001192092896,
+                1.0
+            ],
+            "Scale": 1.0,
+            "Speed": 1.0,
+            "UseModeColor": false
+        },
+        "_GuardBreak.efkefc": {
+            "Color": [
+                1.0,
+                1.0,
+                1.0,
+                1.0
+            ],
+            "HeightOffset": 0.0,
+            "OperatorColor": [
+                0.550000011920929,
+                0.800000011920929,
+                1.0,
+                1.0
+            ],
+            "PunisherColor": [
+                1.0,
+                0.6000000238418579,
+                0.30000001192092896,
+                1.0
+            ],
+            "Scale": 1.0,
+            "Speed": 1.0,
+            "UseModeColor": false
+        },
+        "_Sword1-1.efkefc": {
+            "Color": [
+                1.0,
+                1.0,
+                1.0,
+                1.0
+            ],
+            "HeightOffset": 0.0,
+            "OperatorColor": [
+                0.550000011920929,
+                0.800000011920929,
+                1.0,
+                1.0
+            ],
+            "PunisherColor": [
+                1.0,
+                0.2750000059604645,
+                0.0,
+                1.0
+            ],
+            "Scale": 1.0,
+            "Speed": 1.0,
+            "UseModeColor": true
+        },
+        "_Sword1-2.efkefc": {
+            "Color": [
+                1.0,
+                1.0,
+                1.0,
+                1.0
+            ],
+            "HeightOffset": 0.0,
+            "OperatorColor": [
+                0.550000011920929,
+                0.800000011920929,
+                1.0,
+                1.0
+            ],
+            "PunisherColor": [
+                1.0,
+                0.210999995470047,
+                0.0,
+                1.0
+            ],
+            "Scale": 1.0,
+            "Speed": 1.0,
+            "UseModeColor": true
+        },
+        "_Sword1-3.efkefc": {
+            "Color": [
+                1.0,
+                1.0,
+                1.0,
+                1.0
+            ],
+            "HeightOffset": 0.0,
+            "OperatorColor": [
+                0.550000011920929,
+                0.800000011920929,
+                1.0,
+                1.0
+            ],
+            "PunisherColor": [
+                1.0,
+                0.23499999940395355,
+                0.0,
+                1.0
+            ],
+            "Scale": 1.0,
+            "Speed": 1.0,
+            "UseModeColor": true
+        },
+        "_Sword1-4.efkefc": {
+            "Color": [
+                1.0,
+                1.0,
+                1.0,
+                1.0
+            ],
+            "HeightOffset": 0.0,
+            "OperatorColor": [
+                0.550000011920929,
+                0.800000011920929,
+                1.0,
+                1.0
+            ],
+            "PunisherColor": [
+                1.0,
+                0.20000000298023224,
+                0.0,
+                1.0
+            ],
+            "Scale": 1.0,
+            "Speed": 1.0,
+            "UseModeColor": true
+        },
+        "_Sword4.efkefc": {
+            "Color": [
+                1.0,
+                1.0,
+                1.0,
+                1.0
+            ],
+            "HeightOffset": 0.0,
+            "OperatorColor": [
+                0.550000011920929,
+                0.800000011920929,
+                1.0,
+                1.0
+            ],
+            "PunisherColor": [
+                1.0,
+                0.6000000238418579,
+                0.30000001192092896,
+                1.0
+            ],
+            "Scale": 1.0,
+            "Speed": 1.0,
+            "UseModeColor": true
+        },
+        "_Sword5-1.efkefc": {
+            "Color": [
+                1.0,
+                1.0,
+                1.0,
+                1.0
+            ],
+            "HeightOffset": 0.0,
+            "OperatorColor": [
+                0.550000011920929,
+                0.800000011920929,
+                1.0,
+                1.0
+            ],
+            "PunisherColor": [
+                1.0,
+                0.28999999165534973,
+                0.0,
+                1.0
+            ],
+            "Scale": 1.0,
+            "Speed": 1.0,
+            "UseModeColor": true
+        },
+        "_Sword5-3.efkefc": {
+            "Color": [
+                1.0,
+                1.0,
+                1.0,
+                1.0
+            ],
+            "HeightOffset": 0.0,
+            "OperatorColor": [
+                0.550000011920929,
+                0.800000011920929,
+                1.0,
+                1.0
+            ],
+            "PunisherColor": [
+                1.0,
+                0.18799999356269836,
+                0.0,
+                1.0
+            ],
+            "Scale": 1.0,
+            "Speed": 1.0,
+            "UseModeColor": true
+        },
+        "_Sword5-4.efkefc": {
+            "Color": [
+                1.0,
+                1.0,
+                1.0,
+                1.0
+            ],
+            "HeightOffset": 0.0,
+            "OperatorColor": [
+                0.550000011920929,
+                0.800000011920929,
+                1.0,
+                1.0
+            ],
+            "PunisherColor": [
+                1.0,
+                0.23499999940395355,
+                0.0,
+                1.0
+            ],
+            "Scale": 1.0,
+            "Speed": 1.0,
+            "UseModeColor": true
+        },
+        "_Sword5.efkefc": {
+            "Color": [
+                1.0,
+                1.0,
+                1.0,
+                1.0
+            ],
+            "HeightOffset": 0.0,
+            "OperatorColor": [
+                0.550000011920929,
+                0.800000011920929,
+                1.0,
+                1.0
+            ],
+            "PunisherColor": [
+                1.0,
+                0.3019999861717224,
+                0.0,
+                1.0
+            ],
+            "Scale": 1.0,
+            "Speed": 1.0,
+            "UseModeColor": true
+        },
+        "_boss_death.efkefc": {
+            "Color": [
+                1.0,
+                1.0,
+                1.0,
+                1.0
+            ],
+            "HeightOffset": 0.0,
+            "OperatorColor": [
+                0.550000011920929,
+                0.800000011920929,
+                1.0,
+                1.0
+            ],
+            "PunisherColor": [
+                1.0,
+                0.6000000238418579,
+                0.30000001192092896,
+                1.0
+            ],
+            "Scale": 1.0,
+            "Speed": 1.0,
+            "UseModeColor": false
+        }
+    },
+    "SyncAutoStart": false,
+    "SyncPort": 60000
+}

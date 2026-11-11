@@ -273,16 +273,7 @@ float4 main(VSOutput In) : SV_Target0
 	
 	totalBrightness = saturate( totalBrightness );
 	outColor *= totalBrightness;
-
-	// リムライト
-	if (g_LimLightEnable)
-	{
-		float limPow = dot(normalize(g_CamPos - In.wPos), wN);
-		limPow = 1 - limPow;
-		outColor.rgb += g_LimLightColor * pow(limPow, g_LimLightPow);
-		// pow関数=累乗してくれる関数
-	}
-
+	
 	//------------------------------------------
 	// 出力
 	//------------------------------------------

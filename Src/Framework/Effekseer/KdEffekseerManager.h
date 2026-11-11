@@ -45,13 +45,7 @@ public:
 
 	void SetSpeed(const int handle, const float speed = 1.0f);
 
-	// 色を設定（エフェクトの元の色にかけ算される。白 = 元の色のまま）
-	void SetColor(const int handle, const Math::Color& color);
-
 	void SetPause(const int handle, const bool isPause);
-
-	// すべてのエフェクトの再生速度（スローモーション用。1.0 で普通の速さ）
-	void SetUpdateSpeed(const float speed) { m_updateSpeed = speed; }
 
 	// 再生中かどうか
 	const bool IsPlaying(const int handle) const;
@@ -61,20 +55,6 @@ public:
 	{
 		m_wpCamera = camera;
 	}
-
-	//==================================================
-	// Effekseer エディタとの同期（ネットワーク）
-	// ・StartServer で待ち受けを始め、Effekseer エディタの「ネットワーク」から接続すると、
-	//   エディタで編集したエフェクトが、動いているゲームの中ですぐ差し替わる
-	// ・どのエフェクトかは「ファイル名」で見分ける（エディタで開いたファイルと同じ名前のエフェクトが変わる）
-	//==================================================
-	bool StartServer(uint16_t port);
-	void StopServer();
-	bool IsServerRunning() const { return m_efkServer != nullptr; }
-
-	// Asset/Data/Effect の .efkefc を全部読み込んでおく（同期できるように・初めて出す時に止まらないように）
-	// 戻り値：新しく読み込んだ数
-	int PreloadAll();
 
 private:
 
@@ -90,16 +70,6 @@ private:
 	void UpdateEffekseerEffect();
 	void UpdateEkfCameraMatrix();
 
-	// エフェクトファイルを読み込む（失敗したら nullptr）
-	Effekseer::EffectRef LoadEffect(const std::string& fileName);
-
-	// 同期のサーバーに、エフェクトを登録する・外す
-	void RegisterToServer(const std::string& fileName, const Effekseer::EffectRef& effect);
-	void UnregisterAllFromServer();
-
-	// Effekseer エディタとの同期のサーバー（同期していない時は nullptr）
-	Effekseer::ServerRef m_efkServer = nullptr;
-
 	// エフェクトのレンダラー
 	EffekseerRendererDX11::RendererRef m_efkRenderer = nullptr;
 
@@ -114,7 +84,6 @@ private:
 	std::weak_ptr<KdCamera> m_wpCamera;
 
 	bool m_isPause = false;
-	float m_updateSpeed = 1.0f;		// すべてのエフェクトの再生速度
 
 public:
 
@@ -166,9 +135,6 @@ public:
 
 	// 速度設定
 	void SetSpeed(const float speed = 1.0f);
-
-	// 色設定（エフェクトの元の色にかけ算される）
-	void SetColor(const Math::Color& color);
 
 	// ワールド行列設定
 	void SetWorldMatrix(const Math::Matrix& mWorld);

@@ -29,18 +29,9 @@ void KdEffekseerManager::Create(int w, int h)
 			90.0f / 180.0f * 3.14f, (float)w / (float)h, 1.0f, 500.0f));
 }
 
-// Effekseer エディタとの同期（ネットワーク）に Windows のソケットを使う
-#pragma comment(lib, "ws2_32.lib")
-
 void KdEffekseerManager::Update()
 {
 	if (m_efkManager == nullptr) { return; }
-
-	// Effekseer エディタから届いた編集を反映する（同期している時だけ）
-	if (m_efkServer != nullptr)
-	{
-		m_efkServer->Update(&m_efkManager, 1);
-	}
 
 	UpdateEffekseerEffect();
 
@@ -113,7 +104,6 @@ void KdEffekseerManager::StopEffect(const Effekseer::Handle& handle)
 
 void KdEffekseerManager::Release()
 {
-	StopServer();
 	Reset();
 
 	m_efkManager.Reset();
@@ -124,7 +114,6 @@ void KdEffekseerManager::Reset()
 {
 	StopAllEffect();
 
-	UnregisterAllFromServer();
 	m_effectMap.clear();
 	m_nowEffectPlayList.clear();
 
@@ -179,13 +168,6 @@ void KdEffekseerManager::SetSpeed(const int handle, const float speed)
 	m_efkManager->SetSpeed(handle, speed);
 }
 
-void KdEffekseerManager::SetColor(const int handle, const Math::Color& color)
-{
-	// Effekseer の色は 0～255
-	auto toByte = [](float v) { return static_cast<uint8_t>(std::clamp(v, 0.0f, 1.0f) * 255.0f); };
-	m_efkManager->SetAllColor(handle, Effekseer::Color(toByte(color.x), toByte(color.y), toByte(color.z), toByte(color.w)));
-}
-
 void KdEffekseerManager::SetPause(const int handle, const bool isPause)
 {
 	m_efkManager->SetPaused(handle, isPause);
@@ -215,8 +197,11 @@ std::weak_ptr<KdEffekseerObject> KdEffekseerManager::Play(const PlayEfkInfo& inf
 	// エフェクト新規生成
 	else
 	{
+		std::string loadFileName = EffekseerPath + info.FileName;
+
 		// エフェクト新規生成
-		auto effect = LoadEffect(info.FileName);
+		auto effect = Effekseer::Effect::Create(m_efkManager,
+			(const EFK_CHAR*)sjis_to_wide(loadFileName).c_str());
 
 		if (effect == nullptr)
 		{
@@ -229,7 +214,6 @@ std::weak_ptr<KdEffekseerObject> KdEffekseerManager::Play(const PlayEfkInfo& inf
 		handle = m_efkManager->Play(effect, efkPos);
 		spEfkObject->SetEffect(effect);
 		m_effectMap[info.FileName] = spEfkObject;
-		RegisterToServer(info.FileName, effect);
 	}
 
 	m_efkManager->SetScale(handle, info.Size.x, info.Size.y, info.Size.z);
@@ -249,96 +233,11 @@ std::weak_ptr<KdEffekseerObject> KdEffekseerManager::Play(
 	return Play(spObject->GetPlayEfkInfo());
 }
 
-Effekseer::EffectRef KdEffekseerManager::LoadEffect(const std::string& fileName)
-{
-	std::string loadFileName = EffekseerPath + fileName;
-	return Effekseer::Effect::Create(m_efkManager, (const EFK_CHAR*)sjis_to_wide(loadFileName).c_str());
-}
-
-bool KdEffekseerManager::StartServer(uint16_t port)
-{
-	if (m_efkServer != nullptr) return true;
-	if (m_efkManager == nullptr) return false;
-
-	m_efkServer = Effekseer::Server::Create();
-	if (m_efkServer == nullptr || !m_efkServer->Start(port))
-	{
-		m_efkServer = nullptr;
-		return false;
-	}
-
-	// エフェクトの中の画像などを探す場所
-	m_efkServer->SetMaterialPath((const EFK_CHAR*)sjis_to_wide(EffekseerPath).c_str());
-
-	// もう読み込んであるエフェクトを登録する（これから読み込むものは、読み込んだ時に登録する）
-	for (auto& [fileName, spObject] : m_effectMap)
-	{
-		if (spObject) RegisterToServer(fileName, spObject->GetEffect());
-	}
-	return true;
-}
-
-void KdEffekseerManager::StopServer()
-{
-	if (m_efkServer == nullptr) return;
-
-	UnregisterAllFromServer();
-	m_efkServer->Stop();
-	m_efkServer = nullptr;
-}
-
-void KdEffekseerManager::RegisterToServer(const std::string& fileName, const Effekseer::EffectRef& effect)
-{
-	if (m_efkServer == nullptr || effect == nullptr) return;
-
-	// エディタがどの名前で送ってきても見つかるように、「拡張子なしの名前」と「ファイル名」の両方で登録する
-	std::filesystem::path path(fileName);
-	std::string stem = path.stem().string();
-	m_efkServer->Register((const EFK_CHAR*)sjis_to_wide(stem).c_str(), effect);
-	m_efkServer->Register((const EFK_CHAR*)sjis_to_wide(fileName).c_str(), effect);
-}
-
-void KdEffekseerManager::UnregisterAllFromServer()
-{
-	if (m_efkServer == nullptr) return;
-
-	for (auto& [fileName, spObject] : m_effectMap)
-	{
-		if (spObject && spObject->GetEffect() != nullptr) m_efkServer->Unregister(spObject->GetEffect());
-	}
-}
-
-int KdEffekseerManager::PreloadAll()
-{
-	if (m_efkManager == nullptr) return 0;
-
-	int count = 0;
-	std::error_code ec;
-	for (const auto& file : std::filesystem::directory_iterator(EffekseerPath, ec))
-	{
-		if (!file.is_regular_file() || file.path().extension() != ".efkefc") continue;
-
-		std::string fileName = file.path().filename().string();
-		if (m_effectMap.find(fileName) != m_effectMap.end()) continue;
-
-		Effekseer::EffectRef effect = LoadEffect(fileName);
-		if (effect == nullptr) continue;
-
-		// 再生はしない（読み込んで覚えておくだけ）
-		std::shared_ptr<KdEffekseerObject> spObject = std::make_shared<KdEffekseerObject>();
-		spObject->SetEffect(effect);
-		m_effectMap[fileName] = spObject;
-		RegisterToServer(fileName, effect);
-		++count;
-	}
-	return count;
-}
-
 void KdEffekseerManager::UpdateEffekseerEffect()
 {
 	if (m_isPause) { return; }
 
-	m_efkManager->Update(m_updateSpeed);
+	m_efkManager->Update();
 
 	m_efkManager->BeginUpdate();
 
@@ -444,11 +343,6 @@ void KdEffekseerObject::SetSpeed(const float speed)
 	m_info.Speed = speed;
 
 	KdEffekseerManager::GetInstance().SetSpeed(m_handle, speed);
-}
-
-void KdEffekseerObject::SetColor(const Math::Color& color)
-{
-	KdEffekseerManager::GetInstance().SetColor(m_handle, color);
 }
 
 void KdEffekseerObject::SetWorldMatrix(const Math::Matrix& mWorld)

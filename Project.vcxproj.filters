@@ -40,9 +40,6 @@
     <Filter Include="Src\Framework\Shader\PostProcessShader">
       <UniqueIdentifier>{bfef98c3-f0b2-41b1-b813-6f298072287b}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Src\Framework\GameObject">
-      <UniqueIdentifier>{d45ba257-913b-44e3-a012-888d7b6f2b68}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Src\Framework\Input">
       <UniqueIdentifier>{9bd33b87-53db-4bc0-b98d-80db98f4ba9b}</UniqueIdentifier>
     </Filter>
@@ -190,6 +187,9 @@
     <Filter Include="Src\Application\GameObject\Character\TestModel">
       <UniqueIdentifier>{8cb89a84-5580-41ca-9215-2c12b6f555f4}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Src\Framework\Input\GameObject">
+      <UniqueIdentifier>{d45ba257-913b-44e3-a012-888d7b6f2b68}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Pch.h">
@@ -268,10 +268,10 @@
       <Filter>Src\Framework\Math</Filter>
     </ClInclude>
     <ClInclude Include="Src\Framework\GameObject\KdGameObject.h">
-      <Filter>Src\Framework\GameObject</Filter>
+      <Filter>Src\Framework\Input\GameObject</Filter>
     </ClInclude>
     <ClInclude Include="Src\Framework\GameObject\KdGameObjectFactory.h">
-      <Filter>Src\Framework\GameObject</Filter>
+      <Filter>Src\Framework\Input\GameObject</Filter>
     </ClInclude>
     <ClInclude Include="Src\Framework\Input\KdInput.h">
       <Filter>Src\Framework\Input</Filter>
@@ -558,10 +558,10 @@
       <Filter>Src\Framework\Math</Filter>
     </ClCompile>
     <ClCompile Include="Src\Framework\GameObject\KdGameObject.cpp">
-      <Filter>Src\Framework\GameObject</Filter>
+      <Filter>Src\Framework\Input\GameObject</Filter>
     </ClCompile>
     <ClCompile Include="Src\Framework\GameObject\KdGameObjectFactory.cpp">
-      <Filter>Src\Framework\GameObject</Filter>
+      <Filter>Src\Framework\Input\GameObject</Filter>
     </ClCompile>
     <ClCompile Include="Src\Framework\Input\KdInput.cpp">
       <Filter>Src\Framework\Input</Filter>
