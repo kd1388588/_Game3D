@@ -3,6 +3,7 @@
 namespace
 {
 	// RGBA(0～1) を R8G8B8A8 の1ピクセルに変換
+	// （1 ピクセル＝32 ビット。下から 8 ビットずつ R・G・B・A を並べる。<< はビットをずらす計算）
 	UINT ToPixel(float r, float g, float b, float a)
 	{
 		UINT ur = static_cast<UINT>(std::clamp(r, 0.0f, 1.0f) * 255.0f);
@@ -13,6 +14,7 @@ namespace
 	}
 
 	// ピクセルの配列からテクスチャを作成
+	// （SysMemPitch は 1 行のバイト数。GPU にこの並びで送って、画像を作る）
 	std::shared_ptr<KdTexture> CreateTexture(int width, int height, const std::vector<UINT>& pixels)
 	{
 		D3D11_SUBRESOURCE_DATA initData = {};

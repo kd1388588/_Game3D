@@ -34,6 +34,15 @@ namespace SoundName
 // 音を鳴らす補助クラス
 // ・BGM は1曲だけ持ち、ループで流す（シーンを切り替えると止まる）
 // ・効果音は鳴らしっぱなし（KdAudioManager が、鳴り終わったら片付ける）
+//
+// 【役割】フレームワークの KdAudioManager を、ゲームで使いやすい形にまとめる
+// 【構成】PlayBGM / StopBGM（BGM）、PlaySE（効果音）、PlayFootstep（足音）、StopAll（シーンの切り替え）
+// 【工夫】・ファイルがあるかを先に調べて、無ければ鳴らさない（無いファイルを読むとフレームワークが止まる）
+//           調べた結果は覚えておく（s_exists）ので、同じファイルを何度も調べない
+//         ・効果音の高さ（ピッチ）を少しだけばらつかせる（同じ音の繰り返しが機械的に聞こえないように）
+//         ・足音は 4 つを順番に使う（同じ理由）
+// 【参考】DirectXTK の音（SoundEffect）https://github.com/microsoft/DirectXTK/wiki/Audio
+//         乱数（mt19937・uniform_real_distribution）https://cpprefjp.github.io/reference/random.html
 // ============================================================
 class SoundPlayer
 {

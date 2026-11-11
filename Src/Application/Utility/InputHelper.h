@@ -7,6 +7,21 @@
 
 // キー入力・パッド（Xbox コントローラー）入力の補助関数・クラス
 //
+// 【役割】キーボード・マウス・パッドの入力を、1 つの「操作の名前」（Bind::Attack など）でまとめて扱う
+// 【構成】・IsKeyDown      ：キーが押されているか（GetAsyncKeyState）
+//         ・GamePad        ：パッドの状態を毎フレーム 1 回読み、ボタン・スティックを返す（XInput）
+//         ・InputBinding   ：1 つの操作に、キーとパッドのボタンを複数まとめて割り当てる
+//         ・KeyTrigger     ：「押した瞬間」だけ true を返す（前のフレームの状態を覚える）
+//         ・Bind           ：ゲームで使う操作の割り当ての一覧（変える時はここだけ直す）
+//         ・GetMouseUIPos  ：マウスの位置を、UI の座標（画面の中央が原点）にする
+// 【なぜ】キーボードとパッドを別々に書くと、同じ「攻撃」の判定があちこちに 2 回ずつ出てくる
+//         1 つの名前にまとめておけば、割り当てを変える時も Bind だけ直せばよい
+// 【なぜヘッダーだけか】中身が短い関数ばかりなので、inline でヘッダーに書いている
+//         （.cpp を作らなくてよい。inline static の変数は、どの .cpp から読んでも 1 つだけになる）
+// 【参考】XInput（Xbox コントローラーを読む仕組み）
+//         https://learn.microsoft.com/ja-jp/windows/win32/xinput/getting-started-with-xinput
+//         GetAsyncKeyState https://learn.microsoft.com/ja-jp/windows/win32/api/winuser/nf-winuser-getasynckeystate
+//
 // ■ 操作の割り当て（パッド ／ キーボード・マウス）
 //   移動　　　　　　：左スティック ／ WASD
 //   カメラ　　　　　：右スティック ／ マウス
@@ -20,6 +35,7 @@
 namespace InputHelper
 {
 	// 指定キーが押されているか
+	// （GetAsyncKeyState の一番上のビット（0x8000）が、今押されているかを表す）
 	inline bool IsKeyDown(int vKey)
 	{
 		return (GetAsyncKeyState(vKey) & 0x8000) != 0;
@@ -94,6 +110,9 @@ namespace InputHelper
 		static const Math::Vector2& GetRightStick() { return s_rightStick; }
 
 	private:
+		// スティックの値（-32768～32767）を、-1～1 にする
+		// 【デッドゾーン（遊び）】スティックは手を離しても、少しだけ傾いた値が出ることがある
+		//   ある長さより小さい時は 0 にして、勝手に動かないようにする（XInput がおすすめの値を用意している）
 		static Math::Vector2 NormalizeStick(SHORT x, SHORT y, int deadZone)
 		{
 			Math::Vector2 v = { static_cast<float>(x), static_cast<float>(y) };
@@ -152,6 +171,10 @@ namespace InputHelper
 	};
 
 	// キー・ボタンを「押した瞬間」だけ true を返す
+	// 【しくみ】「今は押している」かつ「前のフレームは押していなかった」時だけ true
+	//   そのため、前のフレームの状態（m_isPrevDown）を覚えておく必要がある
+	//   → 判定したい物ごとに KeyTrigger を 1 つ持ち、毎フレーム必ず 1 回 Update() を呼ぶ
+	//      （呼ばないフレームがあると前の状態が古いままになり、押した瞬間を見逃したり、2 回反応したりする）
 	class KeyTrigger
 	{
 	public:
@@ -208,6 +231,9 @@ namespace InputHelper
 	}
 
 	// マウスの位置を、UIの座標（画面の中央が原点、上が＋Y。1280x720）で取得する
+	// 【しくみ】画面の座標（GetCursorPos）→ ウィンドウの中の座標（ScreenToClient）→
+	//   ウィンドウの幅・高さに対する割合（0～1）→ 中央を 0 にして 1280 × 720 にかける
+	//   （Windows の座標は下が＋Y なので、上を＋Y にするため 0.5 - y にしている）
 	// （ウィンドウの大きさが変わっても合うように、割合で計算する）
 	inline bool GetMouseUIPos(Math::Vector2& outPos)
 	{
