@@ -78,6 +78,14 @@ namespace
 	constexpr float		kBossLockDepth			= 4.0f;
 	const Math::Vector3	kBossLockColor			= { 1.0f, 0.3f, 0.25f };	// 赤（逃げられないことを伝える）
 
+	// 真ん中の部屋（初めて入った時に、プレイヤーから遠い方の側に敵が 1 体わく）
+	//   部屋の広さ：モデルの座標 x -12～12、z 16～36。わく所は、真ん中のかがり火の左右
+	constexpr float		kHubMinX = -12.0f * kStageScale, kHubMaxX = 12.0f * kStageScale;
+	constexpr float		kHubMinZ = 16.0f * kStageScale, kHubMaxZ = 36.0f * kStageScale;
+	constexpr float		kHubEnterMargin			= 2.0f;		// 部屋の端から、これだけ中へ入ったら「入った」とする
+	const Math::Vector3	kHubSpawnPosA			= StagePos(-7.0f, 26.0f);
+	const Math::Vector3	kHubSpawnPosB			= StagePos(7.0f, 26.0f);
+
 	// 泉の小部屋の入口（仕切りの壁の南の端。中ボスの部屋の敵を全員倒すと開く）
 	const Math::Vector3	kFountainBarrierPos		= StagePos(47.0f, -11.0f);
 
@@ -140,6 +148,7 @@ void GameScene::Event()
 
 	UpdateDebugKeys();
 	UpdateBarrier();
+	UpdateHubSpawn();
 	UpdateFountain();
 	UpdateKey();
 	CheckGameEnd();
@@ -165,6 +174,26 @@ void GameScene::UpdateBarrier()
 		KdDebugGUI::Instance().AddLog("%s のバリアが開いた\n", gate.name.c_str());
 		if (auto message = m_wpMessage.lock(); message && !gate.message.empty()) message->Show(gate.message);
 	}
+}
+
+void GameScene::UpdateHubSpawn()
+{
+	if (m_isHubSpawned) return;
+	auto player = m_wpPlayer.lock();
+	if (!player || !player->IsAlive()) return;
+
+	// 真ん中の部屋に入ったか（部屋の端から少し中へ入ったら）
+	const Math::Vector3& pos = player->GetPos();
+	bool isInside = pos.x > kHubMinX + kHubEnterMargin && pos.x < kHubMaxX - kHubEnterMargin
+		&& pos.z > kHubMinZ + kHubEnterMargin && pos.z < kHubMaxZ - kHubEnterMargin;
+	if (!isInside) return;
+
+	// プレイヤーから遠い方に、敵を 1 体わかせる（目の前に急に出ないように）
+	float distA = (kHubSpawnPosA - pos).LengthSquared();
+	float distB = (kHubSpawnPosB - pos).LengthSquared();
+	SpawnEnemy(distA > distB ? kHubSpawnPosA : kHubSpawnPosB, false, player);
+	m_isHubSpawned = true;
+	KdDebugGUI::Instance().AddLog("真ん中の部屋に敵がわいた\n");
 }
 
 void GameScene::UpdateFountain()

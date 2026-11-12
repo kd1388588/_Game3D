@@ -41,6 +41,9 @@ private:
 	// 中ボスの部屋の敵を全員倒したら回復の泉を光らせ、使われたら知らせる
 	void UpdateFountain();
 
+	// 真ん中の部屋に初めて入った時に、敵を 1 体わかせる
+	void UpdateHubSpawn();
+
 	// クリア・ゲームオーバーの判定（条件を満たしてから少し待って画面を切り替える）
 	void CheckGameEnd();
 
@@ -89,6 +92,9 @@ private:
 	std::weak_ptr<HealFountain>			m_wpFountain;
 	std::vector<std::weak_ptr<Enemy>>	m_midRoomEnemies;			// 中ボスの部屋の敵（全員倒すと泉が光る。中ボスの部屋は寄り道）
 	std::weak_ptr<Barrier>				m_wpFountainBarrier;		// 泉の小部屋の入口（中ボスの部屋の敵を全員倒すと開く）
+
+	// 真ん中の部屋の敵（初めて入った時に 1 体わく）
+	bool								m_isHubSpawned = false;
 
 	// ボスの部屋に入ったら、後ろの入口をふさぐ（逃げられないように）
 	bool								m_isBossDoorOpened = false;

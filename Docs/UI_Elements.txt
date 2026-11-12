@@ -186,6 +186,7 @@ BRAVER　画面の要素（UI・HUD・画面の演出）の一覧
         流れ落ちる水：上の皿のまわりに 6 本。縦の筋の模様を下へ流す（加算）
         波紋：水が落ちる所に、14 フレームごとに輪を出して広げる（加算）
         光っている時（使える時）：水が水色に強く光り、光の柱が立ち、まわりを水色の光で照らす
+        使った後：90 フレームで水面が器の底まで下がり、流れ落ちる水も細く暗くなって止まる（干からびた泉）
         Src/Application/GameObject/Stage/Object/Barrier/Barrier.cpp
   ・敵のふちの赤い光（リムライト）：{ 0.55, 0.12, 0.08 }、鋭さ 2.5
         Src/Application/GameObject/Character/Enemy/Enemy.cpp（kLimColor / kLimPow）

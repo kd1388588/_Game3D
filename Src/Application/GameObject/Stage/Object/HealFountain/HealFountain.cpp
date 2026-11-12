@@ -12,6 +12,8 @@ namespace
 
 	// 形（ステージのモデルの器に合わせる。モデルの座標 × 1.25）
 	constexpr float		kWaterHeight	= 0.75f;	// 水面の高さ（ふちの高さ 1.06m より少し低い）
+	constexpr float		kDryHeight		= 0.33f;	// 器の底の高さ（水が引くと、水面がここまで下がる）
+	constexpr float		kDrainSpeed		= 1.0f / 90.0f;	// 水が引く速さ（90 フレーム＝1.5 秒で干からびる）
 	constexpr float		kWaterSize		= 4.2f;		// 水面の直径（ふちの内側。丸く切り抜く）
 	constexpr float		kWaterTurnSpeed	= 0.0015f;	// 水面の模様を回す速さ（ラジアン/フレーム）
 	constexpr float		kShineTurnSpeed	= -0.0025f;	// きらめきは反対へ回す（2 つの模様が重なって、揺らいで見える）
@@ -75,13 +77,19 @@ void HealFountain::Update()
 	float target = (m_state == State::Active) ? 1.0f : kSleepGlow;
 	m_glowRate += (target - m_glowRate) * kGlowFollow;
 
+	// 使った後は、水を少しずつ引かせる（干からびた泉になる）
+	if (m_state == State::Used && m_waterLevel > 0.0f)
+	{
+		m_waterLevel = std::max(m_waterLevel - kDrainSpeed, 0.0f);
+	}
+
 	// 流れ落ちる水の模様を下へずらす（1 を超えたら戻しても、模様は上下でつながっているので見た目は同じ）
 	m_streamScroll += kStreamSpeed;
 	if (m_streamScroll >= 1.0f) m_streamScroll -= 1.0f;
 	if (m_spStream) m_spStream->SetUVRect({ 0.0f, -m_streamScroll }, { 1.0f, 1.0f - m_streamScroll });
 
 	// 波紋：水が落ちる所（皿のふちの真下）に、決まった間隔で出し、古いものから消す
-	if (m_frame % kRippleInterval == 0)
+	if (m_frame % kRippleInterval == 0 && m_waterLevel >= 1.0f)	// 水が引き始めたら、新しい波紋は出さない
 	{
 		int index = KdRandom::GetInt(0, kStreamCount - 1);
 		float angle = DirectX::XM_2PI * index / kStreamCount + KdRandom::GetFloat(-0.2f, 0.2f);
@@ -147,10 +155,13 @@ void HealFountain::EndAdditive() const
 
 void HealFountain::DrawLit()
 {
-	if (!m_spWater) return;
+	if (!m_spWater || m_waterLevel <= 0.0f) return;	// 干からびたら、水面は描かない
 
 	// 水面：ふつうの物と同じように光で照らす（松明の光で水が見える）。光っている時は少し水色を強くする
-	Math::Matrix water = CreateFlatMatrix(kWaterSize, m_frame * kWaterTurnSpeed, m_basePos + Math::Vector3(0.0f, kWaterHeight, 0.0f));
+	// 水が引く時は、水面を器の底へ下げ、少し小さくする（器の内側は下ほど狭く見えるので）
+	float waterY = kDryHeight + (kWaterHeight - kDryHeight) * m_waterLevel;
+	float waterSize = kWaterSize * (0.85f + 0.15f * m_waterLevel);
+	Math::Matrix water = CreateFlatMatrix(waterSize, m_frame * kWaterTurnSpeed, m_basePos + Math::Vector3(0.0f, waterY, 0.0f));
 	float tint = 1.0f + 0.4f * m_glowRate;
 	Math::Color color = { 1.0f, tint, tint, 1.0f };
 
@@ -165,27 +176,37 @@ void HealFountain::DrawEffect()
 	if (!m_spShine || !m_spStream || !m_spRing || !m_spBeam) return;
 
 	auto& shader = KdShaderManager::Instance().m_StandardShader;
+	// 干からびて、光も消えたら、何も描かない
+	if (m_waterLevel <= 0.0f && m_glowRate <= 0.05f) return;
+
 	BeginAdditive();
 
 	float pulse = 0.85f + 0.15f * std::sin(m_frame * 0.06f);
-	Math::Vector3 waterCenter = m_basePos + Math::Vector3(0.0f, kWaterHeight + 0.02f, 0.0f);
+	float waterY = kDryHeight + (kWaterHeight - kDryHeight) * m_waterLevel;
+	float waterSize = kWaterSize * (0.85f + 0.15f * m_waterLevel);
+	Math::Vector3 waterCenter = m_basePos + Math::Vector3(0.0f, waterY + 0.02f, 0.0f);
 
-	// ① 水面のきらめき（ふだんは控えめ、光っている時は強く）
-	float shine = (0.35f + 0.9f * m_glowRate) * pulse;
-	shader.DrawPolygon(*m_spShine, CreateFlatMatrix(kWaterSize, m_frame * kShineTurnSpeed, waterCenter),
-		Math::Color(shine, shine, shine, 1.0f));
+	// ① 水面のきらめき（ふだんは控えめ、光っている時は強く。水が引くと消える）
+	float shine = (0.35f + 0.9f * m_glowRate) * pulse * m_waterLevel;
+	if (shine > 0.0f)
+	{
+		shader.DrawPolygon(*m_spShine, CreateFlatMatrix(waterSize, m_frame * kShineTurnSpeed, waterCenter),
+			Math::Color(shine, shine, shine, 1.0f));
+	}
 
 	// ② 流れ落ちる水：皿のまわりに、カメラの方を向けた縦の板を並べる（Y 軸だけ回して、まっすぐ立てる）
 	Math::Matrix camMat = KdShaderManager::Instance().GetCameraCB().mView.Invert();
 	Math::Vector3 camForward = camMat.Backward();
 	Math::Matrix faceCamera = Math::Matrix::CreateRotationY(std::atan2(camForward.x, camForward.z) + DirectX::XM_PI);
-	float streamHeight = kStreamTop - kWaterHeight;
-	float streamBright = 0.55f + 0.5f * m_glowRate;
-	for (int i = 0; i < kStreamCount; ++i)
+	// 水が引く時は、細く・暗くして止める
+	float streamHeight = kStreamTop - waterY;
+	float streamBright = (0.55f + 0.5f * m_glowRate) * m_waterLevel;
+	float streamWidth = kStreamWidth * (0.3f + 0.7f * m_waterLevel);
+	for (int i = 0; i < kStreamCount && streamBright > 0.0f; ++i)
 	{
 		float angle = DirectX::XM_2PI * i / kStreamCount;
-		Math::Vector3 pos = m_basePos + Math::Vector3(std::cos(angle) * kStreamRadius, kWaterHeight, std::sin(angle) * kStreamRadius);
-		Math::Matrix mWorld = Math::Matrix::CreateScale(kStreamWidth, streamHeight, 1.0f) * faceCamera * Math::Matrix::CreateTranslation(pos);
+		Math::Vector3 pos = m_basePos + Math::Vector3(std::cos(angle) * kStreamRadius, waterY, std::sin(angle) * kStreamRadius);
+		Math::Matrix mWorld = Math::Matrix::CreateScale(streamWidth, streamHeight, 1.0f) * faceCamera * Math::Matrix::CreateTranslation(pos);
 		shader.DrawPolygon(*m_spStream, mWorld, Math::Color(streamBright, streamBright, streamBright, 1.0f));
 	}
 
