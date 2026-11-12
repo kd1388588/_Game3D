@@ -54,8 +54,8 @@ BRAVER　今の状態（迷ったら、まずこれを見る）
   ・Player Parameter Editor（攻撃・武器の位置など）
   ・Stage Editor（霧・HP が少ない時の画面）
   ・Effect Editor（エフェクトの大きさ・速さ・色、試し撃ち、Effekseer エディタとの同期）
-  ・デバッグキー：F9 ATB 満タン／F10 HP 満タン／F11 HP を 1／
-                  Shift＋F9 敵を出す／Shift＋F10 無敵／Shift＋F11 ボスの前へ／Shift＋F8 タイトルへ
+  ・デバッグキー：F7 ボス以外を全員倒す（その場で）／F9 ATB 満タン／F10 HP 満タン／F11 HP を 1／
+                  Shift＋F9 敵を出す／Shift＋F10 無敵／Shift＋F11 ボス以外を倒してボスの前へ／Shift＋F8 タイトルへ
 
 ■ 使っていないクラス（ファイルはあるが、どこからも使っていない）
   Effect、TestModel、FPSCamera、CathedralRuins（GameScene で作る行がコメントになっている）

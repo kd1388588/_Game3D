@@ -129,6 +129,7 @@ void GameScene::UpdateDebugKeys()
 	bool isInvincible = m_debugInvincibleKey.Update();
 	bool isWarp = m_debugWarpKey.Update();
 	bool isTitle = m_debugTitleKey.Update();
+	bool isKillNormal = m_debugKillNormalKey.Update();
 	if (!kEnableDebugKeys) return;
 
 	// デバッグ表示（F8）を出している間だけ効く（遊んでいる時にうっかり押しても何も起きないように）
@@ -186,6 +187,21 @@ void GameScene::UpdateDebugKeys()
 		pos.z -= kDebugWarpBossDistance;
 		player->DebugWarp(pos, 0.0f);
 		KdDebugGUI::Instance().AddLog("[Debug] ボス以外の敵を倒して、ボスの手前へ移動\n");
+	}
+
+	// F7：ボス以外の敵を全員倒す（その場で。プレイヤーは移動しない。部屋のバリアもすべて開く）
+	// （Shift ＋ F11 と同じ倒し方だが、ボスの手前へは移動しない）
+	if (isKillNormal)
+	{
+		int count = 0;
+		for (const auto& obj : m_objList)
+		{
+			auto enemy = std::dynamic_pointer_cast<Enemy>(obj);
+			if (!enemy || !enemy->IsAlive() || enemy->IsBoss()) continue;
+			enemy->DebugKill();
+			++count;
+		}
+		KdDebugGUI::Instance().AddLog("[Debug] ボス以外の敵を %d 体倒した\n", count);
 	}
 
 	// Shift ＋ F9：プレイヤーの前方にザコ敵を出す

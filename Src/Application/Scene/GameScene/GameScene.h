@@ -51,7 +51,7 @@ private:
 	int GetAliveEnemyCount() const;
 
 	// デバッグキー（F8 でデバッグ表示を出している間だけ効く）
-	// F9：ATB全開、F10：HP全開、F11：HPを1にする
+	// F7：ボス以外の敵を全員倒す（その場で）、F9：ATB全開、F10：HP全開、F11：HPを1にする
 	// Shift ＋ F9：敵をプレイヤーの前に出す、Shift ＋ F10：無敵の切り替え、Shift ＋ F11：ボス以外を消してボスの手前へ移動、Shift ＋ F8：タイトルへ
 	// ※F8 はデバッグ表示の切り替え（main.cpp）。F12 は Visual Studio のデバッグ中に「止める」キーになるので使わない
 	void UpdateDebugKeys();
@@ -62,6 +62,7 @@ private:
 	InputHelper::KeyTrigger	m_debugInvincibleKey{ InputHelper::Bind::DebugInvincible };
 	InputHelper::KeyTrigger	m_debugWarpKey{ InputHelper::Bind::DebugWarpBoss };
 	InputHelper::KeyTrigger	m_debugTitleKey{ InputHelper::Bind::DebugToTitle };
+	InputHelper::KeyTrigger	m_debugKillNormalKey{ InputHelper::Bind::DebugKillNormal };
 
 	std::weak_ptr<Player>	m_wpPlayer;
 	int						m_gameOverTimer = 0;	// プレイヤーが倒れてからの経過フレーム

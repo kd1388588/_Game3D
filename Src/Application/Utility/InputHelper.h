@@ -228,6 +228,7 @@ namespace InputHelper
 		inline const InputBinding DebugInvincible	= { { VK_F10 },	{}, PadButton::None, false, VK_SHIFT, true };
 		inline const InputBinding DebugWarpBoss		= { { VK_F11 },	{}, PadButton::None, false, VK_SHIFT, true };
 		inline const InputBinding DebugToTitle		= { { VK_F8 },	{}, PadButton::None, false, VK_SHIFT, true };
+		inline const InputBinding DebugKillNormal	= { { VK_F7 },	{}, PadButton::None, false, VK_SHIFT, false };	// ボス以外の敵を全員倒す（その場で。移動しない）
 	}
 
 	// マウスの位置を、UIの座標（画面の中央が原点、上が＋Y。1280x720）で取得する

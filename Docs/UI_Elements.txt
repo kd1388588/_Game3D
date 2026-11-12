@@ -224,8 +224,8 @@ BRAVER　画面の要素（UI・HUD・画面の演出）の一覧
   ・Stage Editor（Src/Application/Utility/StageSettings.cpp）：「霧」「画面」タブ
   ・Effect Editor（Src/Application/Utility/EffectSettings.cpp）：エフェクトごとの大きさ・速さ・色、試し撃ち、Effekseer との同期
   ・当たり判定のワイヤー表示
-  ・デバッグキー（デバッグ表示中だけ）：F9 ATB 満タン／F10 HP 満タン／F11 HP を 1／
-        Shift＋F9 敵を出す／Shift＋F10 無敵／Shift＋F11 ボスの前へ／Shift＋F8 タイトルへ
+  ・デバッグキー（デバッグ表示中だけ）：F7 ボス以外を全員倒す／F9 ATB 満タン／F10 HP 満タン／F11 HP を 1／
+        Shift＋F9 敵を出す／Shift＋F10 無敵／Shift＋F11 ボス以外を倒してボスの前へ／Shift＋F8 タイトルへ
 
 
 ############################################################
