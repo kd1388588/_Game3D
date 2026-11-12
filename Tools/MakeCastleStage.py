@@ -94,7 +94,8 @@ DOORWAYS = [
 PLAYER_START = (-26.0, -3.0)		# スタートの部屋の下の方（上の入口を向いて始まる）
 KEY_POS = (-34.0, 58.0)			# 鍵が出る所（鍵の部屋の真ん中の床の上。ジャンプしなくても拾えるように、台には置かない）
 FOUNTAIN_POS = (53.0, -3.0)		# 回復の泉（泉の小部屋の真ん中。通路（中ボスの部屋の北の入口）からは、仕切りの壁で見えない）
-FOUNTAIN_RADIUS = 1.8			# 泉の器の半径
+FOUNTAIN_RADIUS = 2.0			# 泉の器の半径（ふちの外側）
+FOUNTAIN_WATER_Y = 0.6			# 水面の高さ（ふちの高さ 0.85 より少し低い。ゲームでは × 1.25 ＝ 0.75m）
 BOSS_THRONE_Z = 104.0
 
 
@@ -304,14 +305,25 @@ def add_pillar(stone, rng, x, z, broken=False, square=False, height=None):
 
 
 def build_fountain(stone, rng):
-	"""回復の泉：八角形の石の器と、真ん中の細い柱・上の小さな皿（水と光はゲーム側の HealFountain が描く）"""
+	"""回復の泉：ふちのある八角形の器（中に水が張る）・真ん中の柱・上の小さな皿・てっぺんの飾り
+	水面・流れ落ちる水・光は、ゲーム側の HealFountain が描く（水面の高さは FOUNTAIN_WATER_Y）"""
 	fx, fz = FOUNTAIN_POS
 	r = FOUNTAIN_RADIUS
-	stone.add_column((fx, fz), 0.0, 0.25, r + 0.4, STONE_TILE_METER, sides=8, shade=0.7)		# 下の段
-	stone.add_column((fx, fz), 0.25, 0.45, r, STONE_TILE_METER, sides=8, shade=0.9)			# 器（上の面に水を描く）
-	stone.add_column((fx, fz), 0.7, 1.0, 0.3, STONE_TILE_METER, sides=8, shade=0.95)			# 真ん中の柱
-	stone.add_column((fx, fz), 1.7, 0.15, 0.7, STONE_TILE_METER, sides=8, shade=0.95)			# 上の小さな皿
-	base.pillar_guards.append((fx, fz, (r + 0.4) * 2))
+	t = 0.35						# ふちの厚さ
+	rim_h = 0.85					# ふちの高さ
+	stone.add_column((fx, fz), 0.0, 0.15, r + 0.5, STONE_TILE_METER, sides=8, shade=0.7)		# 下の段
+	stone.add_column((fx, fz), 0.15, 0.1, r, STONE_TILE_METER, sides=8, shade=0.45)			# 器の底（水の下なので暗く）
+	# ふち：8 つの石を、八角形に並べる（中は空いていて、水が張る）
+	seg = 2.0 * r * math.tan(math.pi / 8) + 0.06
+	for i in range(8):
+		a = 2 * math.pi * i / 8
+		cx, cz = fx + math.cos(a) * (r - t / 2), fz + math.sin(a) * (r - t / 2)
+		stone.add_box((cx, rim_h / 2, cz), (seg, rim_h, t), STONE_TILE_METER, rot_y=math.pi / 2 - a,
+			shade=0.92, bottom_shade=0.55)
+	stone.add_column((fx, fz), 0.25, 1.5, 0.32, STONE_TILE_METER, sides=8, shade=0.95)			# 真ん中の柱
+	stone.add_column((fx, fz), 1.75, 0.22, 0.95, STONE_TILE_METER, sides=8, shade=0.95)		# 上の小さな皿
+	stone.add_column((fx, fz), 1.97, 0.45, 0.12, STONE_TILE_METER, sides=6, shade=1.0)			# てっぺんの飾り
+	base.pillar_guards.append((fx, fz, (r + 0.5) * 2))
 
 
 def decorate(road, stone, iron, rng):

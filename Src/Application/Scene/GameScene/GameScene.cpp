@@ -74,6 +74,13 @@ namespace
 	constexpr float		kBossDoorLockedRange	= 6.0f;		// 鍵を持たずにこの距離まで近づくと、「鍵がかかっている」と出す
 	constexpr int		kLockedMessageInterval	= 60 * 4;	// 「鍵がかかっている」を出した後、次に出せるまでの時間（4秒）
 
+	// ボスの部屋に入ったら、入口をふさぐ（扉より奥へこの距離入ったら。入口に立っている時にふさがないように）
+	constexpr float		kBossLockDepth			= 4.0f;
+	const Math::Vector3	kBossLockColor			= { 1.0f, 0.3f, 0.25f };	// 赤（逃げられないことを伝える）
+
+	// 泉の小部屋の入口（仕切りの壁の南の端。中ボスの部屋の敵を全員倒すと開く）
+	const Math::Vector3	kFountainBarrierPos		= StagePos(47.0f, -11.0f);
+
 	// 鍵（鍵の部屋の真ん中の床の上に浮かぶ。ジャンプしなくても拾えるように、プレイヤーの胸くらいの高さ）
 	const Math::Vector3 kKeyPos					= StagePos(-34.0f, 58.0f, 1.3f);
 
@@ -178,7 +185,8 @@ void GameScene::UpdateFountain()
 		if (isAllDead)
 		{
 			fountain->Activate();
-			if (message) message->Show("どこかで泉が光り始めた");
+			if (auto barrier = m_wpFountainBarrier.lock()) barrier->Open();
+			if (message) message->Show("泉への道が開いた");
 		}
 	}
 
@@ -233,7 +241,19 @@ void GameScene::UpdateKey()
 		}
 	}
 
-	// ③ ボスの部屋の扉：鍵を持って近づくと開く。持たずに近づくと「鍵がかかっている」
+	// ③ ボスの部屋に入ったら、後ろの入口を赤いバリアでふさぐ（ボスを倒すまで逃げられない）
+	if (m_isBossDoorOpened && !m_isBossRoomLocked && player && player->GetPos().z > kBossDoorPos.z + kBossLockDepth)
+	{
+		std::shared_ptr<Barrier> lock = std::make_shared<Barrier>();
+		lock->SetArea(kBossDoorPos, kDoorBarrierSize, 0.0f);
+		lock->SetColor(kBossLockColor);
+		lock->Init();
+		m_objList.push_back(lock);
+		m_isBossRoomLocked = true;
+		if (message) message->Show("もう逃げられない");
+	}
+
+	// ④ ボスの部屋の扉：鍵を持って近づくと開く。持たずに近づくと「鍵がかかっている」
 	auto door = m_wpBossDoor.lock();
 	if (!door || door->IsOpen() || !player) return;
 
@@ -243,6 +263,7 @@ void GameScene::UpdateKey()
 	if (m_hasKey && dist <= kBossDoorOpenRange)
 	{
 		door->Open();
+		m_isBossDoorOpened = true;
 		KdDebugGUI::Instance().AddLog("ボスの部屋の扉が開いた\n");
 		if (message)
 		{
@@ -324,7 +345,9 @@ void GameScene::UpdateDebugKeys()
 		}
 		pos.z -= kDebugWarpBossDistance;
 		player->DebugWarp(pos, 0.0f);
-		if (auto door = m_wpBossDoor.lock()) door->Open();	// ボスの部屋の扉も開けておく（部屋から出られるように）
+		if (auto door = m_wpBossDoor.lock()) door->Open();	// ボスの部屋の扉も開けておく
+		m_isBossDoorOpened = true;
+		m_isBossRoomLocked = true;	// デバッグで移動した時は、入口をふさがない（部屋から出られるように）
 		KdDebugGUI::Instance().AddLog("[Debug] ボス以外の敵を倒して、ボスの手前へ移動\n");
 	}
 
@@ -449,7 +472,10 @@ void GameScene::Init()
 	m_wpPlayer = player;
 
 	// 敵の配置（部屋ごと。その部屋の敵を全員倒すと、先のバリアが開く）
-	// 中ボスの部屋（寄り道。全員倒すと泉が光る。UpdateFountain）
+	// 泉の小部屋の入口（横の向きの通路なので 90 度）
+	m_wpFountainBarrier = createBarrier(kFountainBarrierPos, kDoorBarrierSize, 90.0f);
+
+	// 中ボスの部屋（寄り道。全員倒すと泉の小部屋の入口が開き、泉が光る。UpdateFountain）
 	m_midRoomEnemies.push_back(SpawnEnemy(kMidBossPos, false, player, true));
 	for (const auto& pos : kMidRoomEnemies) m_midRoomEnemies.push_back(SpawnEnemy(pos, false, player));
 

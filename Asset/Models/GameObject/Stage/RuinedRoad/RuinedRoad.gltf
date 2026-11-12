@@ -163,7 +163,7 @@
  "buffers": [
   {
    "uri": "RuinedRoad.bin",
-   "byteLength": 3693936
+   "byteLength": 3706536
   }
  ],
  "bufferViews": [
@@ -200,60 +200,60 @@
   {
    "buffer": 0,
    "byteOffset": 1629312,
-   "byteLength": 328752,
+   "byteLength": 331560,
    "target": 34962
   },
   {
    "buffer": 0,
-   "byteOffset": 1958064,
-   "byteLength": 328752,
+   "byteOffset": 1960872,
+   "byteLength": 331560,
    "target": 34962
   },
   {
    "buffer": 0,
-   "byteOffset": 2286816,
-   "byteLength": 219168,
+   "byteOffset": 2292432,
+   "byteLength": 221040,
    "target": 34962
   },
   {
    "buffer": 0,
-   "byteOffset": 2505984,
-   "byteLength": 438336,
+   "byteOffset": 2513472,
+   "byteLength": 442080,
    "target": 34962
   },
   {
    "buffer": 0,
-   "byteOffset": 2944320,
-   "byteLength": 161568,
+   "byteOffset": 2955552,
+   "byteLength": 162936,
    "target": 34963
   },
   {
    "buffer": 0,
-   "byteOffset": 3105888,
+   "byteOffset": 3118488,
    "byteLength": 131856,
    "target": 34962
   },
   {
    "buffer": 0,
-   "byteOffset": 3237744,
+   "byteOffset": 3250344,
    "byteLength": 131856,
    "target": 34962
   },
   {
    "buffer": 0,
-   "byteOffset": 3369600,
+   "byteOffset": 3382200,
    "byteLength": 87904,
    "target": 34962
   },
   {
    "buffer": 0,
-   "byteOffset": 3457504,
+   "byteOffset": 3470104,
    "byteLength": 175808,
    "target": 34962
   },
   {
    "buffer": 0,
-   "byteOffset": 3633312,
+   "byteOffset": 3645912,
    "byteLength": 60624,
    "target": 34963
   }
@@ -302,7 +302,7 @@
   {
    "bufferView": 5,
    "componentType": 5126,
-   "count": 27396,
+   "count": 27630,
    "type": "VEC3",
    "min": [
     -46.0,
@@ -318,25 +318,25 @@
   {
    "bufferView": 6,
    "componentType": 5126,
-   "count": 27396,
+   "count": 27630,
    "type": "VEC3"
   },
   {
    "bufferView": 7,
    "componentType": 5126,
-   "count": 27396,
+   "count": 27630,
    "type": "VEC2"
   },
   {
    "bufferView": 8,
    "componentType": 5126,
-   "count": 27396,
+   "count": 27630,
    "type": "VEC4"
   },
   {
    "bufferView": 9,
    "componentType": 5125,
-   "count": 40392,
+   "count": 40734,
    "type": "SCALAR"
   },
   {

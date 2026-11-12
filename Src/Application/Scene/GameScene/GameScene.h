@@ -88,6 +88,11 @@ private:
 	// 回復の泉（中ボスの部屋）
 	std::weak_ptr<HealFountain>			m_wpFountain;
 	std::vector<std::weak_ptr<Enemy>>	m_midRoomEnemies;			// 中ボスの部屋の敵（全員倒すと泉が光る。中ボスの部屋は寄り道）
+	std::weak_ptr<Barrier>				m_wpFountainBarrier;		// 泉の小部屋の入口（中ボスの部屋の敵を全員倒すと開く）
+
+	// ボスの部屋に入ったら、後ろの入口をふさぐ（逃げられないように）
+	bool								m_isBossDoorOpened = false;
+	bool								m_isBossRoomLocked = false;
 	int						m_gameOverTimer = 0;	// プレイヤーが倒れてからの経過フレーム
 	int						m_clearTimer = 0;		// 敵が全滅してからの経過フレーム
 };

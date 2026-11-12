@@ -39,5 +39,6 @@ private:
 
 	bool	m_isOpen = false;
 	float	m_alpha = 1.0f;		// 見た目の濃さ（開けると 1 → 0）
+	float	m_appearRate = 0.0f;	// 出てくる時の濃さ（0 → 1。急にパッと出ないように）
 	int		m_frame = 0;		// 点滅用のフレーム数
 };

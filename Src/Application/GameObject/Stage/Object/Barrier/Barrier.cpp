@@ -7,6 +7,7 @@ namespace
 	constexpr float		kPulseSpeed		= 0.05f;	// ゆらめきの速さ
 	constexpr float		kPulseRange		= 0.25f;	// ゆらめきの強さ
 	constexpr float		kFadeSpeed		= 0.02f;	// 開ける時に消える速さ（50フレームで消える）
+	constexpr float		kAppearSpeed	= 0.04f;	// 出てくる速さ（25フレームで出る。当たり判定は最初からある）
 }
 
 void Barrier::Init()
@@ -26,6 +27,7 @@ void Barrier::Init()
 void Barrier::Update()
 {
 	m_frame++;
+	m_appearRate = std::min(m_appearRate + kAppearSpeed, 1.0f);
 
 	if (!m_isOpen) return;
 
@@ -53,7 +55,7 @@ void Barrier::DrawEffect()
 
 	// ゆらゆら明るさを変える
 	float pulse = 1.0f + kPulseRange * std::sin(m_frame * kPulseSpeed);
-	float bright = pulse * m_alpha;
+	float bright = pulse * m_alpha * m_appearRate;
 	Math::Color color = { m_color.x * bright, m_color.y * bright, m_color.z * bright, 1.0f };
 
 	// 光の膜なので、加算合成・両面・深度書き込みなしで描く

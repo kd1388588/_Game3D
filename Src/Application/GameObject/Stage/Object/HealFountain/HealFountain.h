@@ -3,14 +3,22 @@
 class Player;
 
 // ============================================================
-// 【役割】中ボスの部屋の回復の泉。中ボスの部屋の敵を全員倒すと光り、近づくと 1 度だけ HP と ATB ゲージを全回復する
-// 【構成】・状態：眠っている（水が暗い）→ 光っている（使える）→ 使った（暗く戻る）
-//         ・Update    ：光の強さをなめらかに変え、点光源を出す。光っている時にプレイヤーが近づいたら回復する
-//         ・DrawEffect：水面（寝かせた板）と、立ちのぼる光（カメラを向いた板）を加算合成で描く
+// 【役割】中ボスの部屋の右の、泉の小部屋の回復の泉
+//         中ボスの部屋の敵を全員倒すと光り、近づくと 1 度だけ HP と ATB ゲージを全回復する
+// 【構成】・状態：眠っている（ふつうの泉）→ 光っている（使える）→ 使った（ふつうの泉に戻る）
+//         ・DrawLit   ：水面（波の模様の板を寝かせて、松明の光で照らされるように描く。丸く切り抜く）
+//         ・DrawEffect：水面のきらめき・上の皿から流れ落ちる水・落ちた所の波紋・光っている時の光の柱（加算合成）
+//         ・Update    ：水の流れ・波紋・光の強さを動かし、光っている時にプレイヤーが近づいたら回復する
+// 【水らしく見せる工夫】
+//   ・水面：波の模様の画像を、ゆっくり回して揺らぐように見せる（丸く切り抜くので、回しても形は変わらない）
+//           丸の外はアルファ 0 にして、シェーダーのアルファテスト（0.55 未満は描かない）で切り抜く
+//   ・流れ落ちる水：縦の筋の画像の切り出し位置（UV）を毎フレーム下へずらすと、模様が流れて見える
+//           （サンプラーが Wrap なので、0～1 をはみ出した所は繰り返して貼られる）
+//   ・波紋：水が落ちる所に輪を出し、広げながら薄くする
 // 【使い方】GameScene が作り（SetPos・SetTarget の後に Init）、中ボスの部屋の敵を全員倒したら Activate() を呼ぶ
 //          ConsumeUsed() が true を返したフレームに、「回復した」と画面に出す
 // 【石の器】ステージのモデル（Tools/MakeCastleStage.py の build_fountain）。ここでは水と光だけを描く
-// 画像は Tools/MakeKeyTexture.py で作成（FountainGlow.png）
+// 画像は Tools/MakeKeyTexture.py で作成（FountainWater・Shine・Stream・Ring・Glow）
 // ============================================================
 class HealFountain : public KdGameObject
 {
@@ -20,6 +28,7 @@ public:
 
 	void Init() override;
 	void Update() override;
+	void DrawLit() override;
 	void DrawEffect() override;
 
 	// 泉の真ん中（床の高さ）
@@ -50,12 +59,32 @@ private:
 		Used,		// 使った（もう使えない）
 	};
 
-	std::shared_ptr<KdSquarePolygon>	m_spWater = nullptr;	// 水面（寝かせて描く）
-	std::shared_ptr<KdSquarePolygon>	m_spBeam = nullptr;		// 立ちのぼる光（カメラを向けて描く）
+	// 水が落ちた所に広がる波紋 1 つ
+	struct Ripple
+	{
+		Math::Vector3	pos;		// 水面の上の位置
+		int				age = 0;	// 出てからのフレーム数
+	};
+
+	// 板を水面と同じ向き（床と平行）に寝かせる行列
+	Math::Matrix CreateFlatMatrix(float size, float rotY, const Math::Vector3& pos) const;
+
+	// 光る物を描く準備（加算・両面・深度を書かない）と、元に戻す
+	void BeginAdditive() const;
+	void EndAdditive() const;
+
+	std::shared_ptr<KdSquarePolygon>	m_spWater = nullptr;	// 水面（光で照らされる）
+	std::shared_ptr<KdSquarePolygon>	m_spShine = nullptr;	// 水面のきらめき
+	std::shared_ptr<KdSquarePolygon>	m_spStream = nullptr;	// 流れ落ちる水
+	std::shared_ptr<KdSquarePolygon>	m_spRing = nullptr;		// 波紋
+	std::shared_ptr<KdSquarePolygon>	m_spBeam = nullptr;		// 光っている時の光の柱
+
 	std::weak_ptr<Player>				m_wpPlayer;
 	Math::Vector3						m_basePos = Math::Vector3::Zero;
 	State								m_state = State::Sleep;
 	float								m_glowRate = 0.0f;	// 光の強さ（0～1。なめらかに変える）
+	float								m_streamScroll = 0.0f;	// 流れ落ちる水の模様をずらした量
+	std::vector<Ripple>					m_ripples;
 	int									m_frame = 0;
 	bool								m_isJustUsed = false;
 };
