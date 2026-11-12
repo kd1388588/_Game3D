@@ -13,6 +13,7 @@
 // 【月の位置と大きさ】方角（yaw）と高さ（pitch）の角度から向きを作り、その向きに 120m 先に置く
 //   見た目の大きさ（3.5 度）から、半径 ＝ 距離 × tan(角度 ÷ 2) で球の大きさを決める
 //   距離は、空のドーム（半径 150m）より手前の 120m にする（遠くに置くと、先に描いた空に隠れて見えない）
+//   月のモデルも空と同じ「下半分の無いドーム」なので、X 軸で 180 度回したものを下にもう 1 つ描いて、丸い球にする
 // 【参考】スカイボックス・スカイスフィアの考え方（Real-Time Rendering など、3D グラフィックスの本）
 class Sky : public BaseStageObject
 {
@@ -30,6 +31,7 @@ private:
 
 	std::shared_ptr<KdModelData>		m_spMoonModel = nullptr;
 	std::shared_ptr<KdSquarePolygon>	m_spMoonGlow = nullptr;
-	Math::Matrix						m_moonWorld;
+	Math::Matrix						m_moonWorld;		// 月の上半分
+	Math::Matrix						m_moonLowerWorld;	// 月の下半分（モデルがドームなので、上下さかさまにしてもう 1 つ描く）
 	Math::Matrix						m_glowWorld;
 };

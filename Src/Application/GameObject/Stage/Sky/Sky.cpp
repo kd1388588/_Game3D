@@ -60,6 +60,13 @@ void Sky::Update()
 		* Math::Matrix::CreateRotationY(DirectX::XMConvertToRadians(kMoonSpinDeg))
 		* Math::Matrix::CreateTranslation(moonPos);
 
+	// 月のモデルは下半分の無いドーム（高さ 0～10）なので、X 軸で 180 度回して下半分にし、2 つで丸い球にする
+	// （拡大率をマイナスにしてひっくり返すと、面の表と裏が入れかわって描かれない面が出るので、回転で裏返す）
+	m_moonLowerWorld = Math::Matrix::CreateScale(radius / kModelRadius)
+		* Math::Matrix::CreateRotationX(DirectX::XM_PI)
+		* Math::Matrix::CreateRotationY(DirectX::XMConvertToRadians(kMoonSpinDeg))
+		* Math::Matrix::CreateTranslation(moonPos);
+
 	// にじみ：月の位置で、カメラの方を向いた板
 	Math::Matrix camMat = KdShaderManager::Instance().GetCameraCB().mView.Invert();
 	Math::Matrix face = camMat;
@@ -81,6 +88,8 @@ void Sky::DrawUnLit()
 	{
 		shader.SetFogEnable(false);
 		shader.DrawModel(*m_spMoonModel, m_moonWorld);
+		shader.SetFogEnable(false);		// DrawModel の後に設定が元に戻るので、もう一度
+		shader.DrawModel(*m_spMoonModel, m_moonLowerWorld);
 	}
 }
 
