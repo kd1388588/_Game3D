@@ -26,7 +26,8 @@ namespace EffectName
 	inline const std::string HitPlayer			= "_Claw2.efkefc";		// 敵の攻撃がプレイヤーに当たった
 
 	// 撃破
-	inline const std::string EnemyDeath			= "_boss_death.efkefc";	// 敵が倒れた
+	inline const std::string EnemyDeath			= "EnemyDeath.efkefc";		// 敵が倒れた（Tools/MakeEffekseerProjects.py の .efkproj を、Effekseer エディタで .efkefc に保存して使う）
+	inline const std::string EnemyDeathOld		= "_boss_death.efkefc";		// 敵が倒れた（前のエフェクト。EnemyDeath.efkefc がまだ無い時に使う）
 	inline const std::string BossGroundSmash	= "_GroundSmash.efkefc";	// ボスの飛びかかり攻撃の着地（_GroundSmash.efkproj をエディタで保存）
 
 	// プレイヤーの動作（ファイルが用意できたら設定する）

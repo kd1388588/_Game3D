@@ -389,11 +389,73 @@ def guard_break():
 	], end_frame=50)
 
 
+# ===== 敵を倒した時：体が赤い光と火の粉になって崩れ、黒い煙を残して消える =====
+# ゲームでは、敵の体の真ん中に、カメラの方を向けて出す（EnemyState.cpp。大きさは体の大きさ × 0.8）
+# 大きさ 1.0 で、ザコ（高さ約 2.5m）にちょうど合うように作ってある
+def enemy_death():
+	red = (255, 80, 45, 230)
+	return project([
+		# 倒れた瞬間の光（赤オレンジ。パッと広がって消える）
+		node("Flash",
+			common(life=14),
+			scale_single_easing(0.8, 4.2, start_speed=40, end_speed=-20),
+			renderer(texture=SOFT, fade_out=10),
+			sprite(color=(255, 160, 110, 255), color_end=(255, 50, 25, 0)),
+		),
+		# 衝撃の輪（カメラの方を向いた赤い輪が広がる）
+		node("ShockRing",
+			common(life=20),
+			renderer(fade_out=12),
+			ring(outer=(0.5, 3.4), inner=(0.3, 3.05), color=red),
+		),
+		# 放射状に飛ぶ細い光の筋
+		node("Streaks",
+			common(life=14, count=10, gen_time=0.01, life_spread=3),
+			rotation_random_z(),
+			scale_xy_easing((0.18, 0.5), (0.04, 2.6), start_speed=30, end_speed=-30),
+			renderer(texture=LINE, fade_out=8),
+			sprite(color=(255, 210, 170, 255), color_end=(255, 70, 40, 0)),
+		),
+		# 火の粉（外へ飛び散り、少しずつ上へ昇りながら小さくなって消える）
+		node("Embers",
+			common(life=46, count=40, gen_time=0.3, life_spread=16),
+			location_pva(
+				pos=((0, 0.5), (0, 0.6), (0, 0.3)),
+				vel=((0, 0.09), (0.03, 0.06), (0, 0.06)),
+				acc=((0, 0), (0.0025, 0.001), (0, 0)),
+			),
+			scale_single_easing(0.2, 0.0, start_spread=0.08),
+			renderer(texture=SPARK, fade_out=12),
+			sprite(color=(255, 190, 110, 255), color_end=(255, 55, 25, 200)),
+		),
+		# 体の残りの光（少しだけ残って消える）
+		node("CoreGlow",
+			common(life=30, offset=4),
+			scale_single_easing(2.0, 1.2),
+			renderer(texture=SOFT, fade_in=3, fade_out=20),
+			sprite(color=(200, 45, 30, 150), color_end=(90, 15, 10, 0)),
+		),
+		# 黒い煙（光らない半透明。ふわっと広がりながら昇って消える）
+		node("Smoke",
+			common(life=56, count=14, gen_time=0.6, life_spread=10),
+			location_pva(
+				pos=((0, 0.6), (0, 0.5), (0, 0.2)),
+				vel=((0, 0.015), (0.012, 0.006), (0, 0.01)),
+			),
+			rotation_random_z(),
+			scale_single_easing(1.1, 3.2, start_spread=0.3, start_speed=10, end_speed=-10),
+			renderer(texture=SOFT, fade_in=6, fade_out=24, blend=1),
+			sprite(color=(45, 28, 28, 170), color_end=(20, 12, 12, 0)),
+		),
+	], end_frame=80)
+
+
 EFFECTS = {
 	"ModeChange.efkproj": mode_change,
 	"AbilityStart.efkproj": ability_start,
 	"Guard.efkproj": guard,
 	"GuardBreak.efkproj": guard_break,
+	"EnemyDeath.efkproj": enemy_death,
 }
 
 

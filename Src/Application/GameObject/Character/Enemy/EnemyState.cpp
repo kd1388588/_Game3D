@@ -18,7 +18,8 @@ namespace
 	constexpr float kAttackSlamFrame		= 26.0f;	// 振り下ろした手が地面に着くフレーム（ここで爪のエフェクト）
 
 	// 撃破エフェクトの大きさ（敵の体の大きさに掛ける）
-	constexpr float kDeathEffectScaleRate	= 0.15f;
+	constexpr float kDeathEffectScaleRate	= 0.8f;		// 倒した時のエフェクトの大きさ（体の大きさに掛ける。ザコで約 1.0）
+	constexpr float kOldDeathEffectScaleRate = 0.15f;	// 前のエフェクト（_boss_death）を使う時の大きさ
 
 	// 飛びかかり攻撃（ボスもザコも。使った後の CT は Enemy.cpp の敵の種類ごとのパラメータ）
 	constexpr float kJumpAttackMinDist		= 4.0f;		// プレイヤーがこれより遠く、
@@ -361,7 +362,11 @@ void EnemyStateDead::ChangeState(Enemy* enemy)
 	float bodyScale = enemy->GetBodyScale();
 	Math::Vector3 effectPos = enemy->GetPos() + Math::Vector3(0.0f, bodyScale, 0.0f);
 	// ビルボード：エフェクトの板がいつもカメラの方を向くようにする（横から見た時に板が薄く見えないように）
-	EffectPlayer::PlayFacingCamera(EffectName::EnemyDeath, effectPos, bodyScale * kDeathEffectScaleRate);
+	// 新しいエフェクト（EnemyDeath.efkefc）がまだ無い時は、前のエフェクトを使う（エフェクトが出ないままにならないように）
+	bool hasNewEffect = EffectPlayer::Exists(EffectName::EnemyDeath);
+	const std::string& effectName = hasNewEffect ? EffectName::EnemyDeath : EffectName::EnemyDeathOld;
+	float effectScale = bodyScale * (hasNewEffect ? kDeathEffectScaleRate : kOldDeathEffectScaleRate);
+	EffectPlayer::PlayFacingCamera(effectName, effectPos, effectScale);
 }
 
 void EnemyStateDead::Update(Enemy* enemy)

@@ -16,7 +16,8 @@ Tools（ステージ・画像・音・エフェクトを作る Python のスク�
   ・MakeFlameTexture.py：松明の炎の画像
   ・MakeHeadingImages.py：GAME CLEAR / GAME OVER の見出しの画像
   ・MakeSoundAssets.py：mp3 を wav に変換する
-  ・MakeEffekseerProjects.py：モード切り替え・アビリティ・ガードのエフェクト（.efkproj）を作る
+  ・MakeEffekseerProjects.py：モード切り替え・アビリティ・ガード・敵を倒した時のエフェクト（.efkproj）を作る
+    （Effekseer エディタで開いて、同じ名前の .efkefc に保存すると、ゲームで使える）
   ・AdjustExistingEffects.py：もとのエフェクトの数を減らす・短くする
   ・MakeGroundSmashEffect.py：ボスの着地のエフェクト
   ・MakeTrailTexture.py：剣の軌跡の画像
