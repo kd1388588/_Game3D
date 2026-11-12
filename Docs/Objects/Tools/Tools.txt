@@ -10,7 +10,7 @@ Tools（ステージ・画像・音・エフェクトを作る Python のスク�
 ■ スクリプトの一覧
   ・MakeCastleStage.py：今のステージ（6 つの部屋を通路でつなぐ）の形・当たり判定・光の位置と、上から見た地図（Docs/StageMap.png）
     （マス目に歩ける所を塗り、そのまわりを壁にする作り方。部品は MakeStageModel.py の物を使う）
-  ・MakeKeyTexture.py：鍵の画像（光る金色の鍵）
+  ・MakeKeyTexture.py：鍵の画像（光る金色の鍵）と、回復の泉の光の画像（水色の丸いにじみ）
   ・MakeStageModel.py：前のステージ（道・門楼・中庭・左右の部屋・大聖堂・玉座の間）の形と当たり判定を作る
   ・MakeNightSky.py：夜空と月の画像を作り、空のモデルに貼って書き出す
   ・MakeFlameTexture.py：松明の炎の画像

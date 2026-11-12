@@ -8,6 +8,7 @@ class Barrier;
 class Enemy;
 class KeyItem;
 class StageMessage;
+class HealFountain;
 
 class GameScene : public BaseScene
 {
@@ -36,6 +37,9 @@ private:
 
 	// 鍵の部屋の敵を全員倒したら鍵を出し、拾ったらボスの部屋の扉を開けられるようにする
 	void UpdateKey();
+
+	// 中ボスの先のバリアが開いたら回復の泉を光らせ、使われたら知らせる
+	void UpdateFountain();
 
 	// クリア・ゲームオーバーの判定（条件を満たしてから少し待って画面を切り替える）
 	void CheckGameEnd();
@@ -80,6 +84,10 @@ private:
 	std::weak_ptr<Barrier>				m_wpBossDoor;				// ボスの部屋の扉（鍵を持って近づくと開く）
 	std::weak_ptr<StageMessage>			m_wpMessage;				// 画面のメッセージ
 	int									m_lockedMessageTimer = 0;	// 「鍵がかかっている」を、続けて出しすぎないための待ち時間
+
+	// 回復の泉（中ボスの部屋）
+	std::weak_ptr<HealFountain>			m_wpFountain;
+	std::weak_ptr<Barrier>				m_wpMidGateBarrier;			// 中ボスの先のバリア（開いたら泉が光る）
 	int						m_gameOverTimer = 0;	// プレイヤーが倒れてからの経過フレーム
 	int						m_clearTimer = 0;		// 敵が全滅してからの経過フレーム
 };

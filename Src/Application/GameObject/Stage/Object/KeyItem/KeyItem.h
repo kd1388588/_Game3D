@@ -23,7 +23,7 @@ public:
 	void Update() override;
 	void DrawEffect() override;
 
-	// 置く場所（台の上。ここを中心に上下に動く）
+	// 置く場所（鍵の部屋の真ん中の床の上に浮かぶ。ここを中心に上下に動く）
 	void SetPos(const Math::Vector3& pos) override { m_basePos = pos; }
 	Math::Vector3 GetPos() const override { return m_basePos; }
 

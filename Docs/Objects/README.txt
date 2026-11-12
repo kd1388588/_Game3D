@@ -41,6 +41,7 @@ BRAVER　オブジェクトごとの技術のファイル（目次と書き方�
       BaseStageObject.txt       BaseStageObject（ステージの物の親）
       CathedralRuins.txt        CathedralRuins（大聖堂の廃墟のモデル。今は使っていない）
       Ground.txt                Ground（地面）
+      HealFountain.txt          HealFountain（中ボスの部屋の回復の泉）
       KeyItem.txt               KeyItem（鍵の部屋に出てくる鍵）
       GroundMist.txt            GroundMist（地面の霧）
       RuinedRoad.txt            RuinedRoad（ステージのモデル）

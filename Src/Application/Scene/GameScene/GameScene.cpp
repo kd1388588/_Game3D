@@ -26,6 +26,7 @@
 #include "../../GameObject/Stage/Object/Barrier/Barrier.h"
 #include "../../GameObject/Stage/Object/StageLights/StageLights.h"
 #include "../../GameObject/Stage/Object/KeyItem/KeyItem.h"
+#include "../../GameObject/Stage/Object/HealFountain/HealFountain.h"
 
 // Effekseer関連
 #include "../../../Framework/Effekseer/KdEffekseerManager.h"
@@ -73,8 +74,11 @@ namespace
 	constexpr float		kBossDoorLockedRange	= 6.0f;		// 鍵を持たずにこの距離まで近づくと、「鍵がかかっている」と出す
 	constexpr int		kLockedMessageInterval	= 60 * 4;	// 「鍵がかかっている」を出した後、次に出せるまでの時間（4秒）
 
-	// 鍵（鍵の部屋の真ん中の台の上。台の上の面は高さ約 1.5m）
-	const Math::Vector3 kKeyPos					= StagePos(-34.0f, 58.0f, 2.3f);
+	// 鍵（鍵の部屋の真ん中の床の上に浮かぶ。ジャンプしなくても拾えるように、プレイヤーの胸くらいの高さ）
+	const Math::Vector3 kKeyPos					= StagePos(-34.0f, 58.0f, 1.3f);
+
+	// 回復の泉（中ボスの部屋の奥。中ボスの部屋の敵を全員倒すと光り、近づくと 1 度だけ HP と ATB を全回復）
+	const Math::Vector3 kFountainPos			= StagePos(34.0f, -10.0f);
 
 	// 敵の配置
 	const Math::Vector3 kMidBossPos				= StagePos(34.0f, -4.0f);	// 中ボス
@@ -128,6 +132,7 @@ void GameScene::Event()
 
 	UpdateDebugKeys();
 	UpdateBarrier();
+	UpdateFountain();
 	UpdateKey();
 	CheckGameEnd();
 }
@@ -151,6 +156,31 @@ void GameScene::UpdateBarrier()
 		barrier->Open();
 		KdDebugGUI::Instance().AddLog("%s のバリアが開いた\n", gate.name.c_str());
 		if (auto message = m_wpMessage.lock(); message && !gate.message.empty()) message->Show(gate.message);
+	}
+}
+
+void GameScene::UpdateFountain()
+{
+	auto fountain = m_wpFountain.lock();
+	if (!fountain) return;
+	auto message = m_wpMessage.lock();
+
+	// 中ボスの先のバリアが開いたら（開いて消えた後も）、泉を光らせる
+	if (fountain->IsSleeping())
+	{
+		auto barrier = m_wpMidGateBarrier.lock();
+		if (!barrier || barrier->IsOpen())
+		{
+			fountain->Activate();
+			if (message) message->Show("奥への道が開いた。泉が光っている");
+		}
+	}
+
+	// 使われたら知らせる
+	if (fountain->ConsumeUsed())
+	{
+		KdDebugGUI::Instance().AddLog("回復の泉で HP と ATB ゲージを全回復した\n");
+		if (message) message->Show("泉の力で、HP と ATB ゲージが回復した");
 	}
 }
 
@@ -417,10 +447,19 @@ void GameScene::Init()
 	Gate midGate;
 	midGate.barrier = midGateBarrier;
 	midGate.name = "中ボスの先の通路";
-	midGate.message = "奥への道が開いた";
+	midGate.message = "";	// UpdateFountain で、泉のことと一緒に知らせる
 	midGate.enemies.push_back(SpawnEnemy(kMidBossPos, false, player, true));
 	for (const auto& pos : kMidRoomEnemies) midGate.enemies.push_back(SpawnEnemy(pos, false, player));
 	m_gates.push_back(midGate);
+	m_wpMidGateBarrier = midGateBarrier;
+
+	// 回復の泉（中ボスの部屋の奥。光るのは、中ボスの部屋の敵を全員倒した後）
+	std::shared_ptr<HealFountain> fountain = std::make_shared<HealFountain>();
+	fountain->SetPos(kFountainPos);
+	fountain->SetTarget(player);
+	fountain->Init();
+	m_objList.push_back(fountain);
+	m_wpFountain = fountain;
 
 	Gate rightGate;
 	rightGate.barrier = rightGateBarrier;

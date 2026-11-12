@@ -113,6 +113,14 @@ public:
 	// デバッグ用：ATBゲージを全部ためる・HPを満タンにする（倒れている時は何もしない）
 	void DebugFillAtb() { AddAtbGage(kAtbBarMax * kAtbBarNum); }
 	void DebugFillHp() { if (m_hp > 0) m_hp = m_maxHp; }
+
+	// HP と ATB ゲージを全回復する（回復の泉。倒れている時は何もしない）
+	void RecoverAll()
+	{
+		if (m_hp <= 0) return;
+		m_hp = m_maxHp;
+		AddAtbGage(kAtbBarMax * kAtbBarNum);
+	}
 	void DebugSetHpOne() { if (m_hp > 0) m_hp = 1; }	// 倒れている時は何もしない
 
 	// デバッグ：無敵の切り替え（無敵の間は、敵の攻撃を受けてもダメージ・のけぞりが無い）

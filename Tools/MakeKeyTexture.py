@@ -1,5 +1,7 @@
-# 鍵の画像（Asset/Textures/Stage/Key.png）を作るスクリプト
+# 鍵の画像（Asset/Textures/Stage/Key.png）と、回復の泉の光の画像（FountainGlow.png）を作るスクリプト
 # 使い方：python Tools/MakeKeyTexture.py
+#
+# ・FountainGlow.png：泉の水面と、立ちのぼる光に使う丸いにじみ（真ん中ほど明るい水色。加算で重ねる）
 #
 # ・ゲームでは、カメラの方を向いた板（ビルボード）に貼り、加算合成で描く（KeyItem.cpp）
 # ・ゲームのシェーダーはアルファが 0.55 より小さい所を描かないので、アルファは使わず、
@@ -14,6 +16,25 @@ from PIL import Image, ImageDraw, ImageFilter
 SIZE = 256
 GOLD = np.array((1.0, 0.78, 0.32))		# 鍵の色（金色）
 GLOW = np.array((1.0, 0.55, 0.18))		# まわりのにじみの色（少し赤い金色）
+
+
+FOUNTAIN_COLOR = np.array((0.35, 0.85, 1.0))	# 泉の光の色（水色）
+
+
+def make_fountain_glow(root):
+	"""泉の光：真ん中ほど明るい丸。ゆらめくように、少しだけ波の模様を入れる"""
+	ys, xs = np.mgrid[0:SIZE, 0:SIZE]
+	dx = (xs - SIZE / 2 + 0.5) / (SIZE / 2)
+	dy = (ys - SIZE / 2 + 0.5) / (SIZE / 2)
+	d = np.sqrt(dx * dx + dy * dy)
+	a = np.clip(1.0 - d, 0.0, 1.0) ** 1.6
+	ripple = 0.85 + 0.15 * np.cos(d * 22.0)		# 水の輪の模様
+	color = FOUNTAIN_COLOR[None, None, :] * (a * ripple)[..., None]
+	color += (np.clip(1.0 - d * 3.0, 0.0, 1.0) ** 2 * 0.5)[..., None]	# 真ん中は白っぽく
+	color = np.clip(color, 0.0, 1.0)
+	path = os.path.join(root, "Asset", "Textures", "Stage", "FountainGlow.png")
+	Image.fromarray((color * 255).astype(np.uint8), "RGB").save(path)
+	print("作成:", os.path.normpath(path))
 
 
 def main():
@@ -43,6 +64,8 @@ def main():
 	path = os.path.join(root, "Asset", "Textures", "Stage", "Key.png")
 	Image.fromarray((color * 255).astype(np.uint8), "RGB").save(path)
 	print("作成:", os.path.normpath(path))
+
+	make_fountain_glow(root)
 
 
 if __name__ == "__main__":

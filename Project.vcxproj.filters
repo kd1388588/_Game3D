@@ -160,6 +160,9 @@
     <Filter Include="Src\Application\GameObject\Stage\Object\KeyItem">
       <UniqueIdentifier>{3f6b2c1e-8d4a-4f57-9b21-6c0e5a7d1b42}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Src\Application\GameObject\Stage\Object\HealFountain">
+      <UniqueIdentifier>{7d2e9f41-6a3c-4b58-8e17-2f9c0b4a6d73}</UniqueIdentifier>
+    </Filter>
     <Filter Include="Src\Application\GameObject\UI\StageMessage">
       <UniqueIdentifier>{c84e1a52-2b7f-4d6e-a093-5f1d8e7c3a96}</UniqueIdentifier>
     </Filter>
@@ -477,6 +480,9 @@
     <ClInclude Include="Src\Application\GameObject\Stage\Object\KeyItem\KeyItem.h">
       <Filter>Src\Application\GameObject\Stage\Object\KeyItem</Filter>
     </ClInclude>
+    <ClInclude Include="Src\Application\GameObject\Stage\Object\HealFountain\HealFountain.h">
+      <Filter>Src\Application\GameObject\Stage\Object\HealFountain</Filter>
+    </ClInclude>
     <ClInclude Include="Src\Application\GameObject\UI\StageMessage\StageMessage.h">
       <Filter>Src\Application\GameObject\UI\StageMessage</Filter>
     </ClInclude>
@@ -766,6 +772,9 @@
     </ClCompile>
     <ClCompile Include="Src\Application\GameObject\Stage\Object\KeyItem\KeyItem.cpp">
       <Filter>Src\Application\GameObject\Stage\Object\KeyItem</Filter>
+    </ClCompile>
+    <ClCompile Include="Src\Application\GameObject\Stage\Object\HealFountain\HealFountain.cpp">
+      <Filter>Src\Application\GameObject\Stage\Object\HealFountain</Filter>
     </ClCompile>
     <ClCompile Include="Src\Application\GameObject\UI\StageMessage\StageMessage.cpp">
       <Filter>Src\Application\GameObject\UI\StageMessage</Filter>
