@@ -6,13 +6,14 @@ namespace
 	const std::string	kMoonModelPath	= "Asset/Models/GameObject/Stage/Sky/Moon.gltf";
 	const std::string	kMoonGlowPath	= "Asset/Models/GameObject/Stage/Sky/MoonGlow.png";
 
-	// 空の球の大きさ（球のモデルの半径は 10 なので、半径は 10 × kScale = 300）
+	// 空の球の大きさ（球のモデルの半径は 10 なので、半径は 10 × kScale = 150m）
+	// ※モデルは下半分の無いドーム（高さ 0～10）。月などはこの 150m より手前に置かないと、空に隠れる
 	constexpr float		kScale			= 15.0f;
 	constexpr float		kHeight			= -1.0f;	// 球の中心の高さ
 
 	// 月（控えめな大きさ。見た目の大きさ 約 3.5 度 ＝ 本物の月の 7 倍くらい）
 	constexpr float		kModelRadius	= 10.0f;	// 球のモデルの半径
-	constexpr float		kMoonDistance	= 250.0f;	// カメラからの距離（空の球より手前）
+	constexpr float		kMoonDistance	= 120.0f;	// カメラからの距離（空のドーム（半径 150m）より手前に置く。見た目の大きさは角度で決まるので変わらない）
 	constexpr float		kMoonAngleDeg	= 3.5f;		// 見た目の大きさ（度）
 	constexpr float		kMoonYawDeg		= 5.0f;		// 見える方角（度。0 で奥（+Z）、プラスで右）
 	constexpr float		kMoonPitchDeg	= 21.0f;	// 見える高さ（度。地平線から）
