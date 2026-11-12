@@ -41,6 +41,7 @@ BRAVER　オブジェクトごとの技術のファイル（目次と書き方�
       BaseStageObject.txt       BaseStageObject（ステージの物の親）
       CathedralRuins.txt        CathedralRuins（大聖堂の廃墟のモデル。今は使っていない）
       Ground.txt                Ground（地面）
+      KeyItem.txt               KeyItem（鍵の部屋に出てくる鍵）
       GroundMist.txt            GroundMist（地面の霧）
       RuinedRoad.txt            RuinedRoad（ステージのモデル）
       Sky.txt                   Sky（夜空と月）
@@ -57,6 +58,7 @@ BRAVER　オブジェクトごとの技術のファイル（目次と書き方�
       BaseGage.txt              BaseGage（ゲージの共通部分）
       ControlsGuide.txt         ControlsGuide（右下の操作の一覧）
       HPGage.txt                HPGage（左下の HP ゲージ）
+      StageMessage.txt          StageMessage（進み具合のメッセージと、鍵の表示）
       UIBackground.txt          UIBackground（画面いっぱいの背景）
       UIHeading.txt             UIHeading（見出しの画像）
       UIText.txt                UIText（文字）

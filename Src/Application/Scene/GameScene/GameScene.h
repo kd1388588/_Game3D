@@ -6,6 +6,8 @@
 class Player;
 class Barrier;
 class Enemy;
+class KeyItem;
+class StageMessage;
 
 class GameScene : public BaseScene
 {
@@ -29,8 +31,11 @@ private:
 		return obj;
 	}
 
-	// 敵を生成して配置する
-	std::shared_ptr<Enemy> SpawnEnemy(const Math::Vector3& pos, bool isBoss, const std::shared_ptr<Player>& target);
+	// 敵を生成して配置する（isMidBoss：中ボス）
+	std::shared_ptr<Enemy> SpawnEnemy(const Math::Vector3& pos, bool isBoss, const std::shared_ptr<Player>& target, bool isMidBoss = false);
+
+	// 鍵の部屋の敵を全員倒したら鍵を出し、拾ったらボスの部屋の扉を開けられるようにする
+	void UpdateKey();
 
 	// クリア・ゲームオーバーの判定（条件を満たしてから少し待って画面を切り替える）
 	void CheckGameEnd();
@@ -44,6 +49,7 @@ private:
 		std::weak_ptr<Barrier>				barrier;
 		std::vector<std::weak_ptr<Enemy>>	enemies;
 		std::string							name;
+		std::string							message;	// 開いた時に画面に出すメッセージ
 	};
 	std::vector<Gate>	m_gates;
 
@@ -65,6 +71,15 @@ private:
 	InputHelper::KeyTrigger	m_debugKillNormalKey{ InputHelper::Bind::DebugKillNormal };
 
 	std::weak_ptr<Player>	m_wpPlayer;
+
+	// 鍵と、ボスの部屋の扉
+	std::vector<std::weak_ptr<Enemy>>	m_keyRoomEnemies;			// 鍵の部屋の敵（全員倒すと鍵が出る）
+	bool								m_isKeySpawned = false;		// 鍵を出したか
+	bool								m_hasKey = false;			// 鍵を拾ったか
+	std::weak_ptr<KeyItem>				m_wpKey;
+	std::weak_ptr<Barrier>				m_wpBossDoor;				// ボスの部屋の扉（鍵を持って近づくと開く）
+	std::weak_ptr<StageMessage>			m_wpMessage;				// 画面のメッセージ
+	int									m_lockedMessageTimer = 0;	// 「鍵がかかっている」を、続けて出しすぎないための待ち時間
 	int						m_gameOverTimer = 0;	// プレイヤーが倒れてからの経過フレーム
 	int						m_clearTimer = 0;		// 敵が全滅してからの経過フレーム
 };

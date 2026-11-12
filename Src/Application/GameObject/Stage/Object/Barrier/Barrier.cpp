@@ -4,7 +4,6 @@ namespace
 {
 	const std::string	kTexturePath	= "Asset/Textures/Stage/Barrier.png";
 
-	const Math::Vector3	kColor			= { 0.55f, 0.6f, 1.0f };	// 光の色（画像の色にかける）
 	constexpr float		kPulseSpeed		= 0.05f;	// ゆらめきの速さ
 	constexpr float		kPulseRange		= 0.25f;	// ゆらめきの強さ
 	constexpr float		kFadeSpeed		= 0.02f;	// 開ける時に消える速さ（50フレームで消える）
@@ -20,7 +19,8 @@ void Barrier::Init()
 	m_pCollider = std::make_unique<KdCollider>();
 	m_pCollider->RegisterCollisionShape("Barrier", m_spPolygon, KdCollider::TypeBump);
 
-	m_mWorld = Math::Matrix::CreateTranslation(m_pos);
+	// 板の向き（当たり判定も、この行列で同じように回る）
+	m_mWorld = Math::Matrix::CreateRotationY(DirectX::XMConvertToRadians(m_yawDeg)) * Math::Matrix::CreateTranslation(m_pos);
 }
 
 void Barrier::Update()
@@ -54,7 +54,7 @@ void Barrier::DrawEffect()
 	// ゆらゆら明るさを変える
 	float pulse = 1.0f + kPulseRange * std::sin(m_frame * kPulseSpeed);
 	float bright = pulse * m_alpha;
-	Math::Color color = { kColor.x * bright, kColor.y * bright, kColor.z * bright, 1.0f };
+	Math::Color color = { m_color.x * bright, m_color.y * bright, m_color.z * bright, 1.0f };
 
 	// 光の膜なので、加算合成・両面・深度書き込みなしで描く
 	auto& shaderManager = KdShaderManager::Instance();

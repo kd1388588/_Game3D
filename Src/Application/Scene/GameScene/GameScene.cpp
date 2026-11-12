@@ -13,6 +13,7 @@
 
 // UI関連
 #include "../../GameObject/UI/ControlsGuide/ControlsGuide.h"
+#include "../../GameObject/UI/StageMessage/StageMessage.h"
 
 // Stage関連
 #include "../../GameObject/Stage/Ground/Ground.h"
@@ -24,6 +25,7 @@
 #include "../../GameObject/Stage/Object/RuinedRoad/RuinedRoad.h"
 #include "../../GameObject/Stage/Object/Barrier/Barrier.h"
 #include "../../GameObject/Stage/Object/StageLights/StageLights.h"
+#include "../../GameObject/Stage/Object/KeyItem/KeyItem.h"
 
 // Effekseer関連
 #include "../../../Framework/Effekseer/KdEffekseerManager.h"
@@ -38,40 +40,71 @@ namespace
 	constexpr float	kDebugSpawnDistance	= 6.0f;		// Shift ＋ F9 で敵を出す、プレイヤーの前方の距離
 	constexpr float	kDebugWarpBossDistance	= 12.0f;	// Shift ＋ F11 でボスの手前のどこへ移動するか（ボスから入口の方へ）
 
-	// ステージの部屋の並び（ゲームの中の z。Tools/MakeStageModel.py の値 × ステージの拡大率 1.25）
-	//   -15～57.5 城の中の道 ／ 57.5～70 門楼 ／ 70～115 中庭 ／ 115～175 大聖堂の広間 ／ 175～215 玉座の間
-	//   中庭の左右の部屋：x ±27～±49.5、z 79～106（中庭の真ん中の城壁の入口から入る。左：兵舎、右：武器庫）
+	// ============================================================
+	// ステージの部屋の並び（Tools/MakeCastleStage.py の図も見る。モデルの座標 × ステージの拡大率 1.25 ＝ ゲームの座標）
+	//
+	//                    B ボス ── 鍵の扉
+	//    K 鍵の部屋 ═══════ T ════════ R 右の部屋
+	//              H 真ん中 ═══ E ══╗     ║ V（中ボスを倒すまでバリア）
+	//    S スタート ═══╝            ╚═════╡
+	//                                    M 中ボス
+	//
+	//   S → H（敵なし）→ 分かれ道 → M 中ボス（倒すと V のバリアが開く）→ R（全員倒すと左の出口が開く）
+	//   → K 鍵の部屋（全員倒すと鍵が出る）→ 鍵を持って B の扉に近づくと開く → ボス
+	// ============================================================
+	constexpr float kStageScale = 1.25f;	// RuinedRoad.cpp の kScale と同じ
 
-	// バリア（置く場所：下の真ん中、大きさ：幅・高さ）
-	const Math::Vector3 kGateBarrierPos			= { 0.0f, 0.0f, 57.5f };	// 門楼の入口（城の中の道の敵を全滅させると開く）
-	const Math::Vector2 kGateBarrierSize		= { 13.5f, 9.0f };
-	const Math::Vector3 kCathedralBarrierPos	= { 0.0f, 0.0f, 115.0f };	// 大聖堂の入口（中庭の敵を全滅させると開く）
-	const Math::Vector2 kCathedralBarrierSize	= { 23.0f, 10.0f };
+	// モデルの座標（x, z）を、ゲームの座標にする（Tools/MakeCastleStage.py の数字をそのまま書けるように）
+	Math::Vector3 StagePos(float x, float z, float y = 0.0f)
+	{
+		return { x * kStageScale, y, z * kStageScale };
+	}
 
-	// ボスが待っている位置（玉座の間。玉座の台の手前）
-	const Math::Vector3 kBossPos		= { 0.0f, 0.0f, 194.0f };
+	// プレイヤーが始まる所（スタートの部屋の下の方。奥（+Z）の入口を向く）
+	const Math::Vector3 kPlayerStartPos			= StagePos(-26.0f, -3.0f);
+
+	// バリア（置く場所：下の真ん中、大きさ：幅・高さ、向き：度）
+	const Math::Vector3 kMidGateBarrierPos		= StagePos(34.0f, 32.0f);	// 分かれ道の上（中ボスを倒すと開く）
+	const Math::Vector3 kRightGateBarrierPos	= StagePos(24.0f, 59.0f);	// 右の部屋の左の出口（右の部屋の敵を全員倒すと開く）
+	const Math::Vector3 kBossDoorPos			= StagePos(0.0f, 78.0f);	// ボスの部屋の入口（鍵を持って近づくと開く）
+	const Math::Vector2 kDoorBarrierSize		= { 8.0f, 7.5f };			// どれも通路の幅（7.5m）より少し広く
+	const Math::Vector3 kBossDoorColor			= { 1.0f, 0.72f, 0.28f };	// 鍵の扉は金色（普通のバリアは青白い）
+	constexpr float		kBossDoorOpenRange		= 7.0f;		// 鍵を持ってこの距離まで近づくと、扉が開く
+	constexpr float		kBossDoorLockedRange	= 6.0f;		// 鍵を持たずにこの距離まで近づくと、「鍵がかかっている」と出す
+	constexpr int		kLockedMessageInterval	= 60 * 4;	// 「鍵がかかっている」を出した後、次に出せるまでの時間（4秒）
+
+	// 鍵（鍵の部屋の真ん中の台の上。台の上の面は高さ約 1.5m）
+	const Math::Vector3 kKeyPos					= StagePos(-34.0f, 58.0f, 2.3f);
 
 	// 敵の配置
-	const std::vector<Math::Vector3> kRoadEnemies =		// 城の中の道
+	const Math::Vector3 kMidBossPos				= StagePos(34.0f, -4.0f);	// 中ボス
+	const std::vector<Math::Vector3> kMidRoomEnemies =		// 中ボスの部屋のザコ
 	{
-		{  0.0f, 0.0f, 10.0f },
-		{  0.0f, 0.0f, 25.0f },
-		{ -4.0f, 0.0f, 27.0f },
-		{  5.0f, 0.0f, 42.0f },
+		StagePos(28.0f, 0.0f),
+		StagePos(40.0f, -9.0f),
 	};
-	const std::vector<Math::Vector3> kCourtyardEnemies =	// 中庭
+	const std::vector<Math::Vector3> kRightRoomEnemies =	// 右の部屋
 	{
-		{ -7.0f, 0.0f, 86.0f },
-		{  7.0f, 0.0f, 88.0f },
-		{  0.0f, 0.0f, 101.0f },
+		StagePos(31.0f, 54.0f),
+		StagePos(38.0f, 60.0f),
+		StagePos(33.0f, 65.0f),
+		StagePos(41.0f, 57.0f),
 	};
-	const std::vector<Math::Vector3> kWingEnemies =		// 中庭の左右の部屋（兵舎・武器庫）
+	const std::vector<Math::Vector3> kKeyRoomEnemies =		// 鍵の部屋（全員倒すと鍵が出る）
 	{
-		{ -36.0f, 0.0f, 88.0f },
-		{ -42.0f, 0.0f, 99.0f },
-		{  36.0f, 0.0f, 88.0f },
-		{  42.0f, 0.0f, 99.0f },
+		StagePos(-34.0f, 51.5f),
+		StagePos(-34.0f, 64.5f),
+		StagePos(-41.0f, 58.0f),
+		StagePos(-27.0f, 58.0f),
 	};
+	const std::vector<Math::Vector3> kBossRoomEnemies =		// ボスの部屋のザコ（入口の近く）
+	{
+		StagePos(-8.0f, 84.0f),
+		StagePos(8.0f, 84.0f),
+	};
+
+	// ボスが待っている位置（ボスの部屋。玉座の手前）
+	const Math::Vector3 kBossPos				= StagePos(0.0f, 96.0f);
 }
 
 // ============================================================
@@ -95,6 +128,7 @@ void GameScene::Event()
 
 	UpdateDebugKeys();
 	UpdateBarrier();
+	UpdateKey();
 	CheckGameEnd();
 }
 
@@ -116,6 +150,74 @@ void GameScene::UpdateBarrier()
 
 		barrier->Open();
 		KdDebugGUI::Instance().AddLog("%s のバリアが開いた\n", gate.name.c_str());
+		if (auto message = m_wpMessage.lock(); message && !gate.message.empty()) message->Show(gate.message);
+	}
+}
+
+void GameScene::UpdateKey()
+{
+	auto player = m_wpPlayer.lock();
+	auto message = m_wpMessage.lock();
+	if (m_lockedMessageTimer > 0) m_lockedMessageTimer--;
+
+	// ① 鍵の部屋の敵を全員倒したら、真ん中の台の上に鍵を出す
+	if (!m_isKeySpawned && player)
+	{
+		bool isAllDead = true;
+		for (const auto& wpEnemy : m_keyRoomEnemies)
+		{
+			auto enemy = wpEnemy.lock();
+			if (enemy && enemy->IsAlive() && !enemy->IsExpired()) { isAllDead = false; break; }
+		}
+		if (isAllDead)
+		{
+			std::shared_ptr<KeyItem> key = std::make_shared<KeyItem>();
+			key->SetPos(kKeyPos);
+			key->SetTarget(player);
+			key->Init();
+			m_objList.push_back(key);
+			m_wpKey = key;
+			m_isKeySpawned = true;
+			if (message) message->Show("鍵が現れた");
+		}
+	}
+
+	// ② 鍵を拾ったか
+	if (m_isKeySpawned && !m_hasKey)
+	{
+		auto key = m_wpKey.lock();
+		if (!key || key->IsPicked())
+		{
+			m_hasKey = true;
+			if (message)
+			{
+				message->Show("鍵を手に入れた");
+				message->SetHasKey(true);
+			}
+		}
+	}
+
+	// ③ ボスの部屋の扉：鍵を持って近づくと開く。持たずに近づくと「鍵がかかっている」
+	auto door = m_wpBossDoor.lock();
+	if (!door || door->IsOpen() || !player) return;
+
+	Math::Vector3 diff = player->GetPos() - door->GetBasePos();
+	diff.y = 0.0f;
+	float dist = diff.Length();
+	if (m_hasKey && dist <= kBossDoorOpenRange)
+	{
+		door->Open();
+		KdDebugGUI::Instance().AddLog("ボスの部屋の扉が開いた\n");
+		if (message)
+		{
+			message->Show("鍵を使った。扉が開いた");
+			message->SetHasKey(false);
+		}
+	}
+	else if (!m_hasKey && dist <= kBossDoorLockedRange && m_lockedMessageTimer <= 0)
+	{
+		m_lockedMessageTimer = kLockedMessageInterval;
+		if (message) message->Show("扉には鍵がかかっている");
 	}
 }
 
@@ -186,6 +288,7 @@ void GameScene::UpdateDebugKeys()
 		}
 		pos.z -= kDebugWarpBossDistance;
 		player->DebugWarp(pos, 0.0f);
+		if (auto door = m_wpBossDoor.lock()) door->Open();	// ボスの部屋の扉も開けておく（部屋から出られるように）
 		KdDebugGUI::Instance().AddLog("[Debug] ボス以外の敵を倒して、ボスの手前へ移動\n");
 	}
 
@@ -276,7 +379,7 @@ void GameScene::Init()
 	// ステージ
 	CreateObject<Ground>();
 	CreateObject<Sky>();
-	// 廃墟の参道と崩れた大聖堂（Tools/MakeStageModel.py で作ったもの。壁や柱が厚く、すり抜けにくい）
+	// 夜の廃墟の城（Tools/MakeCastleStage.py で作ったもの。6 つの部屋を通路でつなぐ。壁は厚く、すり抜けにくい）
 	// ※前の大聖堂の廃墟（CathedralRuins）と重なるので、そちらは置かない
 	//CreateObject<CathedralRuins>();
 	CreateObject<RuinedRoad>();
@@ -285,40 +388,52 @@ void GameScene::Init()
 	// 地面の霧（濃さなどはステージエディタで調整する）
 	CreateObject<GroundMist>();
 
-	// 部屋の入口のバリア（門楼・大聖堂）
-	auto createBarrier = [this](const Math::Vector3& pos, const Math::Vector2& size)
+	// 部屋の入口のバリア（向き：0 度は奥へ進む通路、90 度は横へ進む通路をふさぐ）
+	auto createBarrier = [this](const Math::Vector3& pos, const Math::Vector2& size, float yawDeg)
 	{
 		std::shared_ptr<Barrier> barrier = std::make_shared<Barrier>();
-		barrier->SetArea(pos, size);
+		barrier->SetArea(pos, size, yawDeg);
 		barrier->Init();
 		m_objList.push_back(barrier);
 		return barrier;
 	};
-	std::shared_ptr<Barrier> gateBarrier = createBarrier(kGateBarrierPos, kGateBarrierSize);
-	std::shared_ptr<Barrier> cathedralBarrier = createBarrier(kCathedralBarrierPos, kCathedralBarrierSize);
+	std::shared_ptr<Barrier> midGateBarrier = createBarrier(kMidGateBarrierPos, kDoorBarrierSize, 0.0f);
+	std::shared_ptr<Barrier> rightGateBarrier = createBarrier(kRightGateBarrierPos, kDoorBarrierSize, 90.0f);
+	std::shared_ptr<Barrier> bossDoor = createBarrier(kBossDoorPos, kDoorBarrierSize, 0.0f);
+	bossDoor->SetColor(kBossDoorColor);
+	m_wpBossDoor = bossDoor;
 
 	// プレイヤー（Init内でHPゲージを追加するため、先にオーナーをセットする）
 	std::shared_ptr<Player> player = std::make_shared<Player>();
 	player->SetOwner(this);
 	player->Init();
+	// 始まる所へ置く（DebugWarp は、位置・向き・前のフレームの位置をまとめて決めるので、
+	// 壁のすり抜け防止の処理で、元の位置から引き戻されない）
+	player->DebugWarp(kPlayerStartPos, 0.0f);
 	m_objList.push_back(player);
 	m_wpPlayer = player;
 
 	// 敵の配置（部屋ごと。その部屋の敵を全員倒すと、先のバリアが開く）
-	Gate gate;
-	gate.barrier = gateBarrier;
-	gate.name = "門楼";
-	for (const auto& pos : kRoadEnemies) gate.enemies.push_back(SpawnEnemy(pos, false, player));
-	m_gates.push_back(gate);
+	Gate midGate;
+	midGate.barrier = midGateBarrier;
+	midGate.name = "中ボスの先の通路";
+	midGate.message = "奥への道が開いた";
+	midGate.enemies.push_back(SpawnEnemy(kMidBossPos, false, player, true));
+	for (const auto& pos : kMidRoomEnemies) midGate.enemies.push_back(SpawnEnemy(pos, false, player));
+	m_gates.push_back(midGate);
 
-	Gate cathedralGate;
-	cathedralGate.barrier = cathedralBarrier;
-	cathedralGate.name = "大聖堂";
-	for (const auto& pos : kCourtyardEnemies) cathedralGate.enemies.push_back(SpawnEnemy(pos, false, player));
-	for (const auto& pos : kWingEnemies) cathedralGate.enemies.push_back(SpawnEnemy(pos, false, player));	// 左右の部屋の敵も倒さないと、大聖堂は開かない
-	m_gates.push_back(cathedralGate);
+	Gate rightGate;
+	rightGate.barrier = rightGateBarrier;
+	rightGate.name = "右の部屋の出口";
+	rightGate.message = "道が開いた";
+	for (const auto& pos : kRightRoomEnemies) rightGate.enemies.push_back(SpawnEnemy(pos, false, player));
+	m_gates.push_back(rightGate);
 
-	// ボス：一番奥の玉座の間で待っている（プレイヤーが近づくと動き出す）
+	// 鍵の部屋（全員倒すと鍵が出る。UpdateKey）
+	for (const auto& pos : kKeyRoomEnemies) m_keyRoomEnemies.push_back(SpawnEnemy(pos, false, player));
+
+	// ボスの部屋：入口の近くにザコ、玉座の手前にボス（プレイヤーが近づくと動き出す）
+	for (const auto& pos : kBossRoomEnemies) SpawnEnemy(pos, false, player);
 	SpawnEnemy(kBossPos, true, player);
 
 	// カメラ
@@ -331,12 +446,18 @@ void GameScene::Init()
 	// 右下の操作キーの一覧
 	std::shared_ptr<ControlsGuide> controlsGuide = CreateObject<ControlsGuide>();
 	controlsGuide->SetPlayer(player);
+
+	// 画面のメッセージ（「鍵を手に入れた」など）と、鍵を持っている表示
+	std::shared_ptr<StageMessage> message = CreateObject<StageMessage>();
+	m_wpMessage = message;
+	message->Show("鍵を見つけて、奥の扉を開けろ", 240);
 }
 
-std::shared_ptr<Enemy> GameScene::SpawnEnemy(const Math::Vector3& pos, bool isBoss, const std::shared_ptr<Player>& target)
+std::shared_ptr<Enemy> GameScene::SpawnEnemy(const Math::Vector3& pos, bool isBoss, const std::shared_ptr<Player>& target, bool isMidBoss)
 {
 	std::shared_ptr<Enemy> enemy = std::make_shared<Enemy>();
 	enemy->SetBoss(isBoss);
+	enemy->SetMidBoss(isMidBoss);
 	enemy->Init();
 	enemy->SetPos(pos);
 	enemy->SetTarget(target);

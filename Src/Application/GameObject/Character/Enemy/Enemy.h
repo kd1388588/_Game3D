@@ -26,6 +26,9 @@ public:
 	void SetBoss(bool isBoss) { m_isBoss = isBoss; }
 	bool IsBoss() const { return m_isBoss; }
 
+	// 中ボス（Init の前に呼ぶ。ザコとボスの間の強さ・大きさになる。IsBoss() は false のまま）
+	void SetMidBoss(bool isMidBoss) { m_isMidBoss = isMidBoss; }
+
 	void ChangeState(const std::shared_ptr<EnemyState>& newState);
 	void AttackHit(const Math::Matrix& hitMatrix, const Math::Vector3& extents, bool isCritical);
 
@@ -104,6 +107,7 @@ private:
 	std::weak_ptr<Player>			m_wpTarget;
 
 	bool							m_isBoss = false;
+	bool							m_isMidBoss = false;
 	float							m_rotY = 0.0f;			// Y軸回転角度（ラジアン）
 	float							m_scale = 3.0f;
 	float							m_searchRange = 15.0f;	// プレイヤーに気づく距離

@@ -157,6 +157,12 @@
     <Filter Include="Src\Application\GameObject\Stage\Object\Barrier">
       <UniqueIdentifier>{9a37dcd1-d5ed-49c1-b1c8-50fb443e84ae}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Src\Application\GameObject\Stage\Object\KeyItem">
+      <UniqueIdentifier>{3f6b2c1e-8d4a-4f57-9b21-6c0e5a7d1b42}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Src\Application\GameObject\UI\StageMessage">
+      <UniqueIdentifier>{c84e1a52-2b7f-4d6e-a093-5f1d8e7c3a96}</UniqueIdentifier>
+    </Filter>
     <Filter Include="Src\Application\GameObject\Stage\Object\RuinedRoad">
       <UniqueIdentifier>{7d3f2a91-5c1e-4b8a-9e60-1018a2b4c6d8}</UniqueIdentifier>
     </Filter>
@@ -468,6 +474,12 @@
     <ClInclude Include="Src\Application\GameObject\Stage\Object\Barrier\Barrier.h">
       <Filter>Src\Application\GameObject\Stage\Object\Barrier</Filter>
     </ClInclude>
+    <ClInclude Include="Src\Application\GameObject\Stage\Object\KeyItem\KeyItem.h">
+      <Filter>Src\Application\GameObject\Stage\Object\KeyItem</Filter>
+    </ClInclude>
+    <ClInclude Include="Src\Application\GameObject\UI\StageMessage\StageMessage.h">
+      <Filter>Src\Application\GameObject\UI\StageMessage</Filter>
+    </ClInclude>
     <ClInclude Include="Src\Application\GameObject\Stage\Object\RuinedRoad\RuinedRoad.h">
       <Filter>Src\Application\GameObject\Stage\Object\RuinedRoad</Filter>
     </ClInclude>
@@ -751,6 +763,12 @@
     </ClCompile>
     <ClCompile Include="Src\Application\GameObject\Stage\Object\Barrier\Barrier.cpp">
       <Filter>Src\Application\GameObject\Stage\Object\Barrier</Filter>
+    </ClCompile>
+    <ClCompile Include="Src\Application\GameObject\Stage\Object\KeyItem\KeyItem.cpp">
+      <Filter>Src\Application\GameObject\Stage\Object\KeyItem</Filter>
+    </ClCompile>
+    <ClCompile Include="Src\Application\GameObject\UI\StageMessage\StageMessage.cpp">
+      <Filter>Src\Application\GameObject\UI\StageMessage</Filter>
     </ClCompile>
     <ClCompile Include="Src\Application\GameObject\Stage\Object\RuinedRoad\RuinedRoad.cpp">
       <Filter>Src\Application\GameObject\Stage\Object\RuinedRoad</Filter>

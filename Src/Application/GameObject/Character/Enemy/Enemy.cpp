@@ -21,6 +21,7 @@ namespace
 
 	constexpr EnemyParam kBossParam		= { 350, 2.6f,  16.0f, 3.5f, 60 * 6 };	// ボス：ザコの2倍くらい大きく、遠くから気づき、リーチが長い
 	constexpr EnemyParam kNormalParam	= { 100,  1.25f, 8.0f,  1.2f, 60 * 10 };	// ザコ敵（飛びかかり攻撃はたまに）
+	constexpr EnemyParam kMidBossParam	= { 220,  1.9f, 12.0f,  2.4f, 60 * 7 };	// 中ボス：ザコとボスの間（中ボスの部屋で、通路のバリアを守る）
 
 	// 最初の飛びかかり攻撃までの時間（全員が同時に飛びかかってこないよう、ばらつかせる）
 	constexpr int	kFirstJumpAttackMinFrame	= 60 * 1;
@@ -104,7 +105,7 @@ void Enemy::Init()
 	});
 
 	// 種類ごとのパラメータ
-	const EnemyParam& param = m_isBoss ? kBossParam : kNormalParam;
+	const EnemyParam& param = m_isBoss ? kBossParam : (m_isMidBoss ? kMidBossParam : kNormalParam);
 	SetHp(param.hp);
 	m_jumpAttackCoolTime = param.jumpAttackCT;
 	m_jumpAttackCT = KdRandom::GetInt(kFirstJumpAttackMinFrame, kFirstJumpAttackMaxFrame);

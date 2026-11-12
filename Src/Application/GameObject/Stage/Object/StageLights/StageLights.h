@@ -1,7 +1,7 @@
 ﻿#pragma once
 
 // ステージの光源（壁掛け松明・かがり火・燭台）
-// ・光の位置は Tools/MakeStageModel.py が書き出す RuinedRoadLights.csv から読む
+// ・光の位置は Tools/MakeCastleStage.py が書き出す RuinedRoadLights.csv から読む
 // ・毎フレーム、カメラの近くの光だけを点光源として登録する（点光源は最大 100 個まで）
 // ・炎の光（Flame.png）を、カメラの方へ向けて加算合成で描く。炎に合わせて明るさ・大きさをゆらす
 //

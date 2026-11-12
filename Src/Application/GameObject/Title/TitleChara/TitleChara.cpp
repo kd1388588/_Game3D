@@ -36,6 +36,9 @@ namespace
 
 	// カメラが注目する高さ（足元から）
 	constexpr float	kLookAtHeight			= 1.1f;
+
+	// 立つ場所（ボスの部屋の真ん中。モデルの座標 (0, 90) × ステージの拡大率 1.25）
+	const Math::Vector3	kStandPos			= { 0.0f, 0.0f, 112.5f };
 }
 
 std::vector<AnimLoadInfo> TitleChara::CreateAnimList()
@@ -128,7 +131,9 @@ void TitleChara::Init()
 	m_showcase = CreateShowcase();
 	StartStep(0);
 
-	m_pos = Math::Vector3::Zero;
+	// ボスの部屋の真ん中に立つ（カメラは手前（-Z）から映すので、後ろに玉座とかがり火が見える）
+	// （ステージの原点 (0, 0) は部屋の外になったため。位置は Tools/MakeCastleStage.py のボスの部屋 × 1.25）
+	m_pos = kStandPos;
 	UpdateWorldMatrix();
 
 	// 剣の軌跡：モデルの剣のメッシュから刃の形を求める（剣が無いモデルなら出さない）

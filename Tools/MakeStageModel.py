@@ -1,4 +1,6 @@
 # ステージのモデル（廃墟の参道）を作るスクリプト
+# ※今のステージは Tools/MakeCastleStage.py で作る（このファイルは部品の置き場として使っている）
+#   このファイルを実行すると、前のステージ（一本道）で上書きされるので注意
 # 使い方：python Tools/MakeStageModel.py
 # Asset/Models/GameObject/Stage/RuinedRoad/ に glTF（.gltf / .bin / テクスチャ）を作る
 #
