@@ -1,6 +1,17 @@
 ﻿#pragma once
 
 // 廃墟のステージの光・フォグ・影の設定（タイトルとゲームで同じ見た目にする。ゲームは環境光を明るく、霧を薄くする）
+//
+// 【役割】シーンを作った時に 1 回、光（平行光・環境光）・霧・影の範囲を設定する
+// 【使う所】TitleScene::Init で Apply()、GameScene::Init で Apply(true)
+//           GameScene::Event で毎フレーム SetShadowCenter（影の中心をプレイヤーにする）
+// 【StageSettings との関係】ゲームの画面では、霧の値は毎フレーム StageSettings::ApplyFog で上書きされる
+//           （ステージエディタで調整できるように）。ここの霧の値は、タイトルの画面で使われる
+// 【なぜ平行光を斜め横からにするのか】
+//   光が面に当たる角度で明るさが変わる（ランバート反射：明るさ ＝ 面の向き・光の向き）
+//   真上や真後ろからだと、どの面も同じくらいの明るさになり、凹凸が見えない
+// 【参考】ランバート反射・平行光・環境光の考え方
+//   https://learn.microsoft.com/ja-jp/windows/win32/direct3d9/diffuse-lighting
 namespace StageEnvironment
 {
 	// 平行光（月明かり）：斜め横から当てて、体や柱の凹凸に陰影を付ける（真後ろ・真上からだとのっぺりする）
@@ -24,6 +35,10 @@ namespace StageEnvironment
 	constexpr float		kHeightFogDistance	= 45.0f;	// カメラからこの距離で一番濃くなる
 
 	// 影を作る範囲（幅・奥行きと、光の高さ）。プレイヤーを中心にする
+	// 【なぜ 30m にしぼるのか】影は「光から見た深度の画像（シャドウマップ）」に描いて作る
+	//   画像の大きさは決まっているので、範囲を広げるほど 1 ピクセルが大きくなり、影の形が粗くなる
+	//   戦う所（プレイヤーのまわり）だけにしぼると、影がくっきりする
+	// 【参考】シャドウマップ https://learn.microsoft.com/ja-jp/windows/win32/dxtecharts/common-techniques-to-improve-shadow-depth-maps
 	const Math::Vector2	kShadowArea			= { 30.0f, 30.0f };
 	constexpr float		kShadowLightHeight	= 40.0f;
 

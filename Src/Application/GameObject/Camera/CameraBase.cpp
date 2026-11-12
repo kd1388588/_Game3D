@@ -15,6 +15,8 @@ void CameraBase::Init()
 		m_spCamera = std::make_shared<KdCamera>();
 	}
 	// ↓画面中央座標
+	// （SetCursorPos は「パソコンの画面全体」の座標なので、ウィンドウの真ん中とは限らない。
+	//   ずれていても、差だけを使うので回る動きは同じ）
 	m_FixMousePos.x = 640;
 	m_FixMousePos.y = 360;
 }
@@ -55,6 +57,6 @@ void CameraBase::UpdateRotateByMouse()
 	m_DegAng.x -= stick.y * kPadCameraPitchSpeed;
 	m_DegAng.y += stick.x * kPadCameraYawSpeed;
 
-	// 回転制御
+	// 回転制御（上下は ±45 度まで。真上・真下まで回ると、上下が逆さまになって操作しにくいため）
 	m_DegAng.x = std::clamp(m_DegAng.x, -45.f, 45.f);
 }

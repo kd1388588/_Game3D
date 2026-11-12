@@ -176,6 +176,7 @@ void KdAmbientController::WriteLightParams()
 	}
 
 	// 影描画エリアの更新
+	// 【BRAVER で変えた所】影の中心を渡す（設定していなければ nullptr ＝ カメラの位置）
 	KdShaderManager::Instance().WriteCBShadowArea(m_shadowProj, m_dirLightHeight, m_useShadowCenter ? &m_shadowCenter : nullptr);
 }
 

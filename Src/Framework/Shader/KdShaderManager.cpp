@@ -454,7 +454,8 @@ void KdShaderManager::WriteCBDirectionalLight(const Math::Vector3& dir, const Ma
 // ///// ///// ///// ///// ///// ///// ///// ///// ///// ///// ///// ///// ///// ///// /////
 void KdShaderManager::WriteCBShadowArea(const Math::Matrix& proj, float dirLightHeight, const Math::Vector3* pCenter)
 {
-	// 影を作る範囲の中心：指定があればその位置（プレイヤーなど）、無ければカメラの位置
+	// 【BRAVER で変えた所】影を作る範囲の中心：指定があればその位置（プレイヤーなど）、無ければカメラの位置
+	// （光の位置 ＝ 中心から光の向きの反対へ dirLightHeight だけ下がった所。そこから中心を見る行列で影を作る）
 	Math::Vector3 lightDir = m_cb9_Light.Get().DirLight_Dir;
 	Math::Vector3 lightPos = pCenter ? *pCenter : m_cb7_Camera.Get().CamPos;
 	Math::Vector3 upVec = (lightDir == Math::Vector3::Up) ? Math::Vector3::Right : Math::Vector3::Up ;

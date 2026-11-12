@@ -5,6 +5,18 @@
 // ・F8 のデバッグ表示を出すと「Stage Editor」のウィンドウが出て、ゲームを動かしたまま調整できる
 // ・「保存」で Asset/Data/StageSettings.json に書き出し、次にゲームを始めた時に読み込む
 // ・今は「霧」の項目だけ（距離の霧・高さの霧・地面の霧）。項目はここに足していく
+// ・「画面」タブには、HP が少ない時の画面（白黒・暗さ・周辺減光）の設定もある
+//
+// 【役割】見た目の数値を 1 か所に持ち、ゲームを動かしたまま imgui で調整し、JSON に保存・読み込みする
+// 【構成】・Fog / GroundMist / LowHpScreen：設定のまとまり（struct。初期値もここに書く）
+//         ・ApplyFog   ：霧の値をシェーダーへ渡す（GameScene::Event で毎フレーム）
+//         ・DrawEditor ：Stage Editor のウィンドウ（KdDebugGUI がデバッグ表示中に呼ぶ）
+//         ・Save / Load：Asset/Data/StageSettings.json
+// 【なぜエディタを作ったのか】霧は少しの数値の違いで見た目が大きく変わる
+//         ビルドし直さずに、見ながら調整して、良い値を保存できるようにするため
+// 【なぜシングルトンか】ステージ・HP ゲージ・Player・KdDebugGUI など、あちこちから同じ設定を読むため
+// 【参考】nlohmann/json（JSON の読み書き）https://github.com/nlohmann/json
+//         Dear ImGui https://github.com/ocornut/imgui
 // ============================================================
 class StageSettings
 {

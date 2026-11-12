@@ -120,6 +120,9 @@ bool StageSettings::Load(const std::string& path)
 	if (!file) return false;
 
 	// 書き方がおかしいファイルでも止まらないように、例外を出さずに読む
+	// （parse の 3 つ目の引数を false にすると、失敗した時に is_discarded() が true になる）
+	// 【なぜ Read で 1 つずつ読むのか】ファイルに無い項目は、今の値（初期値）のまま残すため
+	//   新しい項目を足しても、古い JSON ファイルがそのまま使える
 	json j = json::parse(file, nullptr, false);
 	if (j.is_discarded()) return false;
 

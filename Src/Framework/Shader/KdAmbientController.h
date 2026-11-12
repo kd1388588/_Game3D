@@ -50,7 +50,9 @@ public:
 	// 平行光の影生成用の射影行列設定：エリアを指定 x:幅 y:奥行
 	void SetDirLightShadowArea(const Math::Vector2& lightingArea, float dirLightHeight);
 
-	// 影を作る範囲の中心を設定（設定しない時はカメラの位置）
+	// 【BRAVER で足した所】影を作る範囲の中心を設定（設定しない時はカメラの位置）
+	// 【なぜ】元はカメラの位置が中心だったので、カメラを引くとプレイヤーの影が範囲から外れていた
+	//         GameScene が毎フレーム、プレイヤーの位置を渡す
 	void SetShadowCenter(const Math::Vector3& center) { m_shadowCenter = center; m_useShadowCenter = true; }
 	void ClearShadowCenter() { m_useShadowCenter = false; }
 
@@ -84,7 +86,7 @@ private:
 	// 平行光源の高さ(実際には存在しない影生成用の仮の位置)
 	float		m_dirLightHeight = 0.0f;
 
-	// 影を作る範囲の中心（m_useShadowCenter が false の時はカメラの位置）
+	// 【BRAVER で足した所】影を作る範囲の中心（m_useShadowCenter が false の時はカメラの位置）
 	Math::Vector3	m_shadowCenter = Math::Vector3::Zero;
 	bool			m_useShadowCenter = false;
 

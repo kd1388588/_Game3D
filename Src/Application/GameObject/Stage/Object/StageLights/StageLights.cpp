@@ -84,6 +84,7 @@ void StageLights::Update()
 		float distSq = (m_lights[i].pos - camPos).LengthSquared();
 		if (distSq <= kActiveRange * kActiveRange) candidates.push_back({ distSq, i });
 	}
+	// （距離の 2 乗で比べる。ルートの計算をしなくても、近い・遠いの順番は同じになる）
 	std::sort(candidates.begin(), candidates.end());
 	if (static_cast<int>(candidates.size()) > kMaxActiveLights) candidates.resize(kMaxActiveLights);
 
@@ -104,6 +105,7 @@ void StageLights::DrawEffect()
 	// カメラの向き（ビュー行列の逆）。炎の板をカメラの方へ向ける（上下はまっすぐ立てたまま）
 	Math::Matrix camMat = KdShaderManager::Instance().GetCameraCB().mView.Invert();
 	Math::Vector3 camForward = camMat.Backward();
+	// （atan2 で、カメラの前の向きを Y 軸の角度にする。+180 度で、板の表をカメラに向ける）
 	float yaw = std::atan2(camForward.x, camForward.z);
 	Math::Matrix faceCamera = Math::Matrix::CreateRotationY(yaw + DirectX::XM_PI);
 

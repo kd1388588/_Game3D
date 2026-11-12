@@ -1,5 +1,12 @@
 ﻿#pragma once
 
+// ============================================================
+// 【役割】カメラの親クラス。KdCamera を持ち、毎フレーム PreDraw でシェーダーにカメラの行列を渡す
+// 【子のクラス】TPSCamera（ゲーム中）、TitleCamera（タイトル）、FPSCamera（今は使っていない）
+// 【マウスで回すしくみ】UpdateRotateByMouse：マウスの位置と m_FixMousePos の差を回す角度にし、
+//   マウスを m_FixMousePos に戻す（毎フレーム戻すので、画面の端で止まらずにいくらでも回せる）
+// 【元のテンプレートから変えた所】パッドの右スティックでも回せるようにした（CameraBase.cpp）
+// ============================================================
 class CameraBase : public KdGameObject
 {
 public:

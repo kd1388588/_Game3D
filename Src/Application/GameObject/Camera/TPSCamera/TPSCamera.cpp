@@ -70,13 +70,18 @@ void TPSCamera::PostUpdate()
 
 		_targetMat = Math::Matrix::CreateTranslation(targetPos);
 	}
-	// カメラの回転
+	// カメラの回転（Q を押している間は、マウスで回さない。デバッグ中にマウスを使う時のため）
 	if (!(GetAsyncKeyState('Q') & 0x8000))
 	{
 		UpdateRotateByMouse();
 	}
 
 	m_mRotation = GetRotationMatrix();
+	// 行列は「左から順に」かかる：
+	//   ① m_mLocalPos：注視点から見たカメラの位置（上に 1.3m、後ろに 5.5m）
+	//   ② m_mRotation：その位置を、注視点を中心に回す
+	//   ③ _targetMat ：注視点（プレイヤー）の場所へ動かす
+	//   順番を変えると、回る中心がずれる（例：③を先にすると、ステージの原点を中心に回ってしまう）
 	m_mWorld = m_mLocalPos * m_mRotation * _targetMat;
 
 
@@ -95,7 +100,7 @@ void TPSCamera::PostUpdate()
 			rayInfo.m_pos = start;
 			rayInfo.m_dir = toCamera / distance;
 			rayInfo.m_range = distance;
-			rayInfo.m_type = KdCollider::TypeGround;
+			rayInfo.m_type = KdCollider::TypeGround;	// 地面として登録した物（ステージの壁・柱も含む）にだけ当てる
 
 			float nearest = distance;
 			for (auto& obj : SceneManager::Instance().GetObjList())
@@ -149,6 +154,8 @@ void TPSCamera::UpdateLockOnFollow(const Math::Vector3& playerPos, const Math::V
 	if (dir.LengthSquared() <= 0.0001f) return;
 
 	// 敵の方向の角度（度）へ、近い回り方でなめらかに回す
+	// （差を -180～180 度に直す。例：350 度と 10 度の差は 340 度ではなく -20 度。遠回りしないように）
+	// （差 × 0.04 ずつ近づける：離れているほど速く、近づくほどゆっくりになる）
 	float targetYaw = DirectX::XMConvertToDegrees(std::atan2(dir.x, dir.z));
 	float diff = targetYaw - m_DegAng.y;
 	while (diff > 180.0f)	diff -= 360.0f;
