@@ -46,12 +46,13 @@ namespace
 	//
 	//                    B ボス ── 鍵の扉
 	//    K 鍵の部屋 ═══════ T ════════ R 右の部屋
-	//              H 真ん中 ═══ E ══╗     ║ V（中ボスを倒すまでバリア）
+	//              H 真ん中 ═══ E ══╗     ║ V
 	//    S スタート ═══╝            ╚═════╡
-	//                                    M 中ボス
+	//                                    M 中ボス（寄り道）║ F 泉の小部屋
 	//
-	//   S → H（敵なし）→ 分かれ道 → M 中ボス（倒すと V のバリアが開く）→ R（全員倒すと左の出口が開く）
+	//   S → H（敵なし）→ 分かれ道 → 上の R（全員倒すと左の出口が開く）
 	//   → K 鍵の部屋（全員倒すと鍵が出る）→ 鍵を持って B の扉に近づくと開く → ボス
+	//   寄り道：分かれ道の下の M 中ボス（全員倒すと、右の F の回復の泉が光る。倒さなくても先へ進める）
 	// ============================================================
 	constexpr float kStageScale = 1.25f;	// RuinedRoad.cpp の kScale と同じ
 
@@ -65,7 +66,6 @@ namespace
 	const Math::Vector3 kPlayerStartPos			= StagePos(-26.0f, -3.0f);
 
 	// バリア（置く場所：下の真ん中、大きさ：幅・高さ、向き：度）
-	const Math::Vector3 kMidGateBarrierPos		= StagePos(34.0f, 32.0f);	// 分かれ道の上（中ボスを倒すと開く）
 	const Math::Vector3 kRightGateBarrierPos	= StagePos(24.0f, 59.0f);	// 右の部屋の左の出口（右の部屋の敵を全員倒すと開く）
 	const Math::Vector3 kBossDoorPos			= StagePos(0.0f, 78.0f);	// ボスの部屋の入口（鍵を持って近づくと開く）
 	const Math::Vector2 kDoorBarrierSize		= { 8.0f, 7.5f };			// どれも通路の幅（7.5m）より少し広く
@@ -77,15 +77,16 @@ namespace
 	// 鍵（鍵の部屋の真ん中の床の上に浮かぶ。ジャンプしなくても拾えるように、プレイヤーの胸くらいの高さ）
 	const Math::Vector3 kKeyPos					= StagePos(-34.0f, 58.0f, 1.3f);
 
-	// 回復の泉（中ボスの部屋の奥。中ボスの部屋の敵を全員倒すと光り、近づくと 1 度だけ HP と ATB を全回復）
-	const Math::Vector3 kFountainPos			= StagePos(34.0f, -10.0f);
+	// 回復の泉（中ボスの部屋の右の、泉の小部屋の真ん中。中ボスの部屋の敵を全員倒すと光り、
+	// 近づくと 1 度だけ HP と ATB を全回復。通路からは仕切りの壁で見えない）
+	const Math::Vector3 kFountainPos			= StagePos(53.0f, -3.0f);
 
 	// 敵の配置
-	const Math::Vector3 kMidBossPos				= StagePos(34.0f, -4.0f);	// 中ボス
+	const Math::Vector3 kMidBossPos				= StagePos(30.0f, -4.0f);	// 中ボス
 	const std::vector<Math::Vector3> kMidRoomEnemies =		// 中ボスの部屋のザコ
 	{
-		StagePos(28.0f, 0.0f),
-		StagePos(40.0f, -9.0f),
+		StagePos(22.0f, 0.0f),
+		StagePos(38.0f, -9.0f),
 	};
 	const std::vector<Math::Vector3> kRightRoomEnemies =	// 右の部屋
 	{
@@ -165,14 +166,19 @@ void GameScene::UpdateFountain()
 	if (!fountain) return;
 	auto message = m_wpMessage.lock();
 
-	// 中ボスの先のバリアが開いたら（開いて消えた後も）、泉を光らせる
+	// 中ボスの部屋の敵を全員倒したら、泉を光らせる
 	if (fountain->IsSleeping())
 	{
-		auto barrier = m_wpMidGateBarrier.lock();
-		if (!barrier || barrier->IsOpen())
+		bool isAllDead = true;
+		for (const auto& wpEnemy : m_midRoomEnemies)
+		{
+			auto enemy = wpEnemy.lock();
+			if (enemy && enemy->IsAlive() && !enemy->IsExpired()) { isAllDead = false; break; }
+		}
+		if (isAllDead)
 		{
 			fountain->Activate();
-			if (message) message->Show("奥への道が開いた。泉が光っている");
+			if (message) message->Show("どこかで泉が光り始めた");
 		}
 	}
 
@@ -427,7 +433,6 @@ void GameScene::Init()
 		m_objList.push_back(barrier);
 		return barrier;
 	};
-	std::shared_ptr<Barrier> midGateBarrier = createBarrier(kMidGateBarrierPos, kDoorBarrierSize, 0.0f);
 	std::shared_ptr<Barrier> rightGateBarrier = createBarrier(kRightGateBarrierPos, kDoorBarrierSize, 90.0f);
 	std::shared_ptr<Barrier> bossDoor = createBarrier(kBossDoorPos, kDoorBarrierSize, 0.0f);
 	bossDoor->SetColor(kBossDoorColor);
@@ -444,14 +449,9 @@ void GameScene::Init()
 	m_wpPlayer = player;
 
 	// 敵の配置（部屋ごと。その部屋の敵を全員倒すと、先のバリアが開く）
-	Gate midGate;
-	midGate.barrier = midGateBarrier;
-	midGate.name = "中ボスの先の通路";
-	midGate.message = "";	// UpdateFountain で、泉のことと一緒に知らせる
-	midGate.enemies.push_back(SpawnEnemy(kMidBossPos, false, player, true));
-	for (const auto& pos : kMidRoomEnemies) midGate.enemies.push_back(SpawnEnemy(pos, false, player));
-	m_gates.push_back(midGate);
-	m_wpMidGateBarrier = midGateBarrier;
+	// 中ボスの部屋（寄り道。全員倒すと泉が光る。UpdateFountain）
+	m_midRoomEnemies.push_back(SpawnEnemy(kMidBossPos, false, player, true));
+	for (const auto& pos : kMidRoomEnemies) m_midRoomEnemies.push_back(SpawnEnemy(pos, false, player));
 
 	// 回復の泉（中ボスの部屋の奥。光るのは、中ボスの部屋の敵を全員倒した後）
 	std::shared_ptr<HealFountain> fountain = std::make_shared<HealFountain>();

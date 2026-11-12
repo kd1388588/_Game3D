@@ -7,7 +7,7 @@ class Player;
 // 【構成】・状態：眠っている（水が暗い）→ 光っている（使える）→ 使った（暗く戻る）
 //         ・Update    ：光の強さをなめらかに変え、点光源を出す。光っている時にプレイヤーが近づいたら回復する
 //         ・DrawEffect：水面（寝かせた板）と、立ちのぼる光（カメラを向いた板）を加算合成で描く
-// 【使い方】GameScene が作り（SetPos・SetTarget の後に Init）、中ボスの先のバリアが開いたら Activate() を呼ぶ
+// 【使い方】GameScene が作り（SetPos・SetTarget の後に Init）、中ボスの部屋の敵を全員倒したら Activate() を呼ぶ
 //          ConsumeUsed() が true を返したフレームに、「回復した」と画面に出す
 // 【石の器】ステージのモデル（Tools/MakeCastleStage.py の build_fountain）。ここでは水と光だけを描く
 // 画像は Tools/MakeKeyTexture.py で作成（FountainGlow.png）
