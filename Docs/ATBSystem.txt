@@ -136,7 +136,7 @@
     kOperatorAttackSpeedRate / kPunisherAttackSpeedRate ：モードの攻撃の速さ（1.2・0.8）
     kPunisherTakenDamageRate：パニッシャーの時に受けるダメージの倍率（1.3）
     kPunisherMoveRate     ：パニッシャーの移動の速さ（0.6）
-    kAtbHitGain / kAtbEvadeGain ：ATB ゲージのたまり方（当てた時 2.5・回避 5）
+    atbHitGain / atbEvadeGain   ：ATB ゲージのたまり方（当てた時 2.5・回避 5。StageSettings::PlayerTuning。Object Editor の「Player」タブで変える）
     kAbilityInfos         ：技の攻撃・使うゲージの本数・CT
     kCommandTimeScale     ：ATB コマンドを開いている間の時間の速さ（0.1）
     kModeLockFrame        ：攻撃05の後にオペレーターに固定する時間（5秒）

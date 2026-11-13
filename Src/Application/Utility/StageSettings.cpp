@@ -52,6 +52,73 @@ namespace
 		ImGui::DragFloat(label, &value, speed, min, max, format, ImGuiSliderFlags_AlwaysClamp);
 		Help(help);
 	}
+
+	// 整数の数値（HP・ダメージ・フレーム数など）
+	void DragI(const char* label, int& value, float speed, int min, int max, const char* help)
+	{
+		ImGui::DragInt(label, &value, speed, min, max, "%d", ImGuiSliderFlags_AlwaysClamp);
+		Help(help);
+	}
+
+	// ---- 戦闘の数値の項目の一覧（保存と読み込みで、同じ一覧を使う） ----
+	// 【なぜ一覧にするのか】保存と読み込みで別々に書くと、片方だけ書き忘れることがあるため
+	//   f(JSON の名前, 値) を項目の数だけ呼ぶ。保存では「値を書く」、読み込みでは「値を読む」関数を渡す
+	template <class T, class F>
+	void VisitPlayerTuning(T& t, F&& f)
+	{
+		f("MaxHp", t.maxHp);						f("AttackDamage", t.attackDamage);
+		f("CriticalAttackDamage", t.criticalAttackDamage);	f("CritRate", t.critRate);
+		f("OperatorDamageRate", t.operatorDamageRate);	f("PunisherDamageRate", t.punisherDamageRate);
+		f("AbilityDamageRate", t.abilityDamageRate);	f("MultiHitInterval", t.multiHitInterval);
+		f("AbilityStunFrame", t.abilityStunFrame);
+		f("OperatorAttackSpeedRate", t.operatorAttackSpeedRate);	f("PunisherAttackSpeedRate", t.punisherAttackSpeedRate);
+		f("PunisherMoveRate", t.punisherMoveRate);		f("PunisherTakenDamageRate", t.punisherTakenDamageRate);
+		f("DamageInvincibleFrame", t.damageInvincibleFrame);	f("HeavyDamage", t.heavyDamage);
+		f("EvadeDamageRate", t.evadeDamageRate);		f("GuardDamageRate", t.guardDamageRate);
+		f("AtbHitGain", t.atbHitGain);				f("OperatorAtbHitRate", t.operatorAtbHitRate);
+		f("PunisherAtbHitRate", t.punisherAtbHitRate);	f("AtbCriticalRate", t.atbCriticalRate);
+		f("AtbEvadeGain", t.atbEvadeGain);
+		f("GuardDurabilityMax", t.guardDurabilityMax);	f("GuardCostPerDamage", t.guardCostPerDamage);
+		f("GuardCriticalCostRate", t.guardCriticalCostRate);	f("GuardRegenDelay", t.guardRegenDelay);
+		f("GuardRegenSpeed", t.guardRegenSpeed);		f("GuardBreakFrame", t.guardBreakFrame);
+		f("LockOnRange", t.lockOnRange);
+	}
+
+	template <class T, class F>
+	void VisitEnemyType(T& e, F&& f)
+	{
+		f("Hp", e.hp);	f("Scale", e.scale);	f("SearchRange", e.searchRange);
+		f("AttackRange", e.attackRange);	f("JumpAttackCT", e.jumpAttackCT);
+	}
+
+	template <class T, class F>
+	void VisitEnemyTuning(T& t, F&& f)
+	{
+		f("AttackDamage", t.attackDamage);			f("CriticalAttackDamage", t.criticalAttackDamage);
+		f("SmashDamage", t.smashDamage);			f("AttackRecoverFrame", t.attackRecoverFrame);
+		f("BossAttackRecoverFrame", t.bossAttackRecoverFrame);	f("AttackRecoverRandom", t.attackRecoverRandom);
+		f("JumpAttackRecoverFrame", t.jumpAttackRecoverFrame);	f("JumpAttackChance", t.jumpAttackChance);
+		f("JumpAttackMinDist", t.jumpAttackMinDist);	f("JumpAttackMaxDist", t.jumpAttackMaxDist);
+		f("ChaseSpeed", t.chaseSpeed);
+		f("KnockbackSpeed", t.knockbackSpeed);		f("KnockbackCriticalRate", t.knockbackCriticalRate);
+		f("KnockbackDecay", t.knockbackDecay);		f("KnockbackArmorRate", t.knockbackArmorRate);
+		f("KnockbackStunRate", t.knockbackStunRate);	f("KnockbackMidBossRate", t.knockbackMidBossRate);
+		f("KnockbackBossRate", t.knockbackBossRate);
+	}
+
+	// 一覧を JSON に書く・JSON から読む
+	template <class T, class V>
+	json WriteList(const T& t, V visit)
+	{
+		json j = json::object();
+		visit(t, [&](const char* key, const auto& value) { j[key] = value; });
+		return j;
+	}
+	template <class T, class V>
+	void ReadList(const json& j, T& t, V visit)
+	{
+		visit(t, [&](const char* key, auto& value) { Read(j, key, value); });
+	}
 }
 
 void StageSettings::ApplyFog() const
@@ -130,9 +197,6 @@ bool StageSettings::Save(const std::string& path) const
 	const Battle& b = m_battle;
 	j["Battle"] =
 	{
-		{ "NormalHpRate",		b.normalHpRate },
-		{ "MidBossHpRate",		b.midBossHpRate },
-		{ "BossHpRate",			b.bossHpRate },
 		{ "BreakEnable",		b.breakEnable },
 		{ "NormalBreak",		b.normalBreak },
 		{ "MidBossBreak",		b.midBossBreak },
@@ -147,6 +211,16 @@ bool StageSettings::Save(const std::string& path) const
 		{ "BreakSec",			b.breakSec },
 		{ "BreakDamageRate",	b.breakDamageRate },
 	};
+
+	// プレイヤー・敵の戦闘の数値
+	auto visitPlayer = [](auto& t, auto&& f) { VisitPlayerTuning(t, f); };
+	auto visitType = [](auto& t, auto&& f) { VisitEnemyType(t, f); };
+	auto visitEnemy = [](auto& t, auto&& f) { VisitEnemyTuning(t, f); };
+	j["PlayerTuning"] = WriteList(m_player, visitPlayer);
+	j["EnemyTuning"] = WriteList(m_enemy, visitEnemy);
+	j["EnemyTuning"]["Normal"] = WriteList(m_enemy.normal, visitType);
+	j["EnemyTuning"]["MidBoss"] = WriteList(m_enemy.midBoss, visitType);
+	j["EnemyTuning"]["Boss"] = WriteList(m_enemy.boss, visitType);
 
 	std::ofstream file(path);
 	if (!file) return false;
@@ -225,13 +299,22 @@ bool StageSettings::Load(const std::string& path)
 		Read(p, "BladeShapeHitbox",	Player::s_bladeShapeHitbox);
 		Read(p, "ThrowAngleOffset",	Player::s_throwAngleOffset);
 	}
+	auto visitPlayer = [](auto& t, auto&& f) { VisitPlayerTuning(t, f); };
+	auto visitType = [](auto& t, auto&& f) { VisitEnemyType(t, f); };
+	auto visitEnemy = [](auto& t, auto&& f) { VisitEnemyTuning(t, f); };
+	if (j.contains("PlayerTuning")) ReadList(j["PlayerTuning"], m_player, visitPlayer);
+	if (j.contains("EnemyTuning"))
+	{
+		const json& e = j["EnemyTuning"];
+		ReadList(e, m_enemy, visitEnemy);
+		if (e.contains("Normal"))	ReadList(e["Normal"], m_enemy.normal, visitType);
+		if (e.contains("MidBoss"))	ReadList(e["MidBoss"], m_enemy.midBoss, visitType);
+		if (e.contains("Boss"))		ReadList(e["Boss"], m_enemy.boss, visitType);
+	}
 	if (j.contains("Battle"))
 	{
 		const json& t = j["Battle"];
 		Battle& b = m_battle;
-		Read(t, "NormalHpRate",		b.normalHpRate);
-		Read(t, "MidBossHpRate",	b.midBossHpRate);
-		Read(t, "BossHpRate",		b.bossHpRate);
 		Read(t, "BreakEnable",		b.breakEnable);
 		Read(t, "NormalBreak",		b.normalBreak);
 		Read(t, "MidBossBreak",		b.midBossBreak);
@@ -444,20 +527,64 @@ void StageSettings::DrawBattleEditor()
 	Battle& b = m_battle;
 	ImGui::PushID("Battle");
 
-	if (ImGui::CollapsingHeader(U8("敵の HP"), ImGuiTreeNodeFlags_DefaultOpen))
+	DrawLiveEnemyEditor();
+
+	StageSettings::EnemyTuning& t = m_enemy;
+	if (ImGui::CollapsingHeader(U8("種類ごとの数値（HP・大きさ・距離）"), ImGuiTreeNodeFlags_DefaultOpen))
 	{
-		Drag(U8("ザコの HP の倍率"), b.normalHpRate, 0.01f, 0.1f, 10.0f, "%.2f", U8("元の HP（100）に掛ける。敵を作った時に使う"));
-		Drag(U8("中ボスの HP の倍率"), b.midBossHpRate, 0.01f, 0.1f, 10.0f, "%.2f", U8("元の HP（220）に掛ける"));
-		Drag(U8("ボスの HP の倍率"), b.bossHpRate, 0.01f, 0.1f, 10.0f, "%.2f", U8("元の HP（350）に掛ける"));
+		auto drawType = [](const char* name, StageSettings::EnemyType& e)
+		{
+			ImGui::SeparatorText(name);
+			ImGui::PushID(name);
+			DragI(U8("最大 HP"), e.hp, 1.0f, 1, 99999, U8("敵を作った時の HP"));
+			Drag(U8("体の大きさ"), e.scale, 0.01f, 0.2f, 10.0f, "%.2f", U8("モデル・当たり判定・壁に当たる体の大きさ"));
+			Drag(U8("気づく距離"), e.searchRange, 0.1f, 0.0f, 100.0f, "%.1f m", U8("プレイヤーがこれより近づくと、追いかけてくる"));
+			Drag(U8("攻撃を始める距離"), e.attackRange, 0.05f, 0.0f, 20.0f, "%.2f m", U8("プレイヤーがこれより近いと、殴ってくる"));
+			DragI(U8("飛びかかりの CT"), e.jumpAttackCT, 1.0f, 0, 60 * 120, U8("飛びかかり攻撃を使った後、次に使えるまでのフレーム数（60 で 1 秒）"));
+			ImGui::PopID();
+		};
+		drawType(U8("ザコ"), t.normal);
+		drawType(U8("中ボス"), t.midBoss);
+		drawType(U8("ボス"), t.boss);
+
 		if (ImGui::Button(U8("今いる敵に反映")))
 		{
-			// HP の残りの割合はそのままで、最大 HP だけを今の倍率に直す
+			// HP の残りの割合はそのままで、最大 HP・大きさ・距離を今の値に直す
 			for (auto& obj : SceneManager::Instance().GetObjList())
 			{
-				if (auto enemy = std::dynamic_pointer_cast<Enemy>(obj)) enemy->ApplyHpRate();
+				if (auto enemy = std::dynamic_pointer_cast<Enemy>(obj)) enemy->ApplyTypeParam();
 			}
 		}
-		Help(U8("倍率を変えただけでは、もういる敵の HP は変わらない。押すと、残りの割合はそのままで、最大 HP を直す"));
+		Help(U8("ここの数値は、敵を作った時に使う。押すと、もういる敵にも反映する（HP の残りの割合はそのまま）"));
+	}
+
+	if (ImGui::CollapsingHeader(U8("攻撃・動き")))
+	{
+		ImGui::PushID("EnemyAttack");
+		DragI(U8("腕の攻撃のダメージ"), t.attackDamage, 0.2f, 0, 999, U8("普通の攻撃が当たった時のダメージ"));
+		DragI(U8("着地の衝撃のダメージ"), t.smashDamage, 0.2f, 0, 999, U8("飛びかかり攻撃の着地で、円の中にいた時のダメージ"));
+		DragI(U8("攻撃の後のすき（ザコ・中ボス）"), t.attackRecoverFrame, 0.5f, 0, 600, U8("攻撃の後、次の攻撃をしてこないフレーム数"));
+		DragI(U8("攻撃の後のすき（ボス）"), t.bossAttackRecoverFrame, 0.5f, 0, 600, U8("ボスの攻撃の後、次の攻撃をしてこないフレーム数"));
+		DragI(U8("すきのばらつき"), t.attackRecoverRandom, 0.5f, 0, 600, U8("すきに 0 ～ この値を足す（全員が同じリズムで殴ってこないように）"));
+		DragI(U8("飛びかかりの後のすき"), t.jumpAttackRecoverFrame, 0.5f, 0, 600, U8("飛びかかり攻撃の後、次の攻撃をしてこないフレーム数"));
+		DragI(U8("飛びかかる確率"), t.jumpAttackChance, 0.2f, 0, 100, U8("飛びかかれる距離にいる時、1 フレームに使う確率（％）"));
+		Drag(U8("飛びかかる距離（近い方）"), t.jumpAttackMinDist, 0.1f, 0.0f, 50.0f, "%.1f m", U8("プレイヤーがこれより遠い時に飛びかかる"));
+		Drag(U8("飛びかかる距離（遠い方）"), t.jumpAttackMaxDist, 0.1f, 0.0f, 50.0f, "%.1f m", U8("プレイヤーがこれより近い時に飛びかかる"));
+		Drag(U8("追いかける速さ"), t.chaseSpeed, 0.002f, 0.0f, 1.0f, "%.3f", U8("1 フレームに進む距離（m）"));
+		ImGui::PopID();
+	}
+
+	if (ImGui::CollapsingHeader(U8("ノックバック（殴られた時に後ろへすべる）")))
+	{
+		ImGui::PushID("Knockback");
+		Drag(U8("強さ"), t.knockbackSpeed, 0.002f, 0.0f, 1.0f, "%.3f", U8("殴られた瞬間の、1 フレームに進む距離。進む距離の合計 ＝ 強さ ÷ (1 − 止まり方)"));
+		Drag(U8("止まり方"), t.knockbackDecay, 0.005f, 0.0f, 0.99f, "%.3f", U8("1 フレームごとに速さに掛ける。小さいほど早く止まる"));
+		Drag(U8("クリティカルの倍率"), t.knockbackCriticalRate, 0.05f, 0.0f, 10.0f, "%.2f", U8("クリティカルの時、強さに掛ける"));
+		Drag(U8("攻撃中の倍率"), t.knockbackArmorRate, 0.05f, 0.0f, 10.0f, "%.2f", U8("攻撃中（スーパーアーマー）の時"));
+		Drag(U8("ATB の技を受けている時の倍率"), t.knockbackStunRate, 0.05f, 0.0f, 10.0f, "%.2f", U8("技の途中で、届かなくならないように弱め"));
+		Drag(U8("中ボスの倍率"), t.knockbackMidBossRate, 0.05f, 0.0f, 10.0f, "%.2f", U8("中ボスは重いので飛びにくくする"));
+		Drag(U8("ボスの倍率"), t.knockbackBossRate, 0.05f, 0.0f, 10.0f, "%.2f", U8("ボスはもっと飛びにくくする"));
+		ImGui::PopID();
 	}
 
 	if (ImGui::CollapsingHeader(U8("ブレイク"), ImGuiTreeNodeFlags_DefaultOpen))
@@ -500,6 +627,56 @@ void StageSettings::DrawPlayerEditor()
 	ImGui::PushID("Player");
 	ImGui::Text(U8("今の攻撃の種類：0%d"), Player::s_currentAttackType);
 
+	DrawLivePlayerEditor();
+
+	PlayerTuning& t = m_player;
+	if (ImGui::CollapsingHeader(U8("HP・攻撃力"), ImGuiTreeNodeFlags_DefaultOpen))
+	{
+		DragI(U8("最大 HP（始めた時）"), t.maxHp, 1.0f, 1, 99999, U8("ゲームを始めた時の最大 HP。今の HP は上の「今のプレイヤー」で変える"));
+		DragI(U8("攻撃力"), t.attackDamage, 0.2f, 0, 999, U8("1 回当たった時のダメージ（このあとモードの倍率を掛ける）"));
+		DragI(U8("攻撃力（クリティカル）"), t.criticalAttackDamage, 0.2f, 0, 999, U8("クリティカルの時のダメージ（このあとモードの倍率を掛ける）"));
+		DragI(U8("クリティカル率"), t.critRate, 0.2f, 0, 100, U8("1 振りごとに、クリティカルになる確率（％）"));
+		Drag(U8("オペレーターのダメージの倍率"), t.operatorDamageRate, 0.01f, 0.0f, 10.0f, "%.2f", U8("オペレーターの攻撃のダメージに掛ける"));
+		Drag(U8("パニッシャーのダメージの倍率"), t.punisherDamageRate, 0.01f, 0.0f, 10.0f, "%.2f", U8("パニッシャーの攻撃のダメージに掛ける"));
+		Drag(U8("ATB の技のダメージの倍率"), t.abilityDamageRate, 0.01f, 0.0f, 10.0f, "%.2f", U8("ATB の技のダメージに掛ける（モードの倍率はかからない）"));
+		DragI(U8("多段ヒットの間隔"), t.multiHitInterval, 0.2f, 1, 120, U8("同じ剣が同じ敵に、もう一度当たれるまでのフレーム数"));
+		DragI(U8("ATB の技で、のけぞらせる長さ"), t.abilityStunFrame, 0.5f, 0, 600, U8("ATB の技が当たった敵が、のけぞり続けるフレーム数（当たるたびに延びる）"));
+		ImGui::TextDisabled(U8("ダメージ ＝ 攻撃力 × モードの倍率（ブレイク中の敵には、さらにブレイクの倍率）"));
+	}
+
+	if (ImGui::CollapsingHeader(U8("モード")))
+	{
+		Drag(U8("オペレーターの攻撃の速さ"), t.operatorAttackSpeedRate, 0.01f, 0.1f, 5.0f, "%.2f", U8("攻撃のアニメーションの再生速度に掛ける"));
+		Drag(U8("パニッシャーの攻撃の速さ"), t.punisherAttackSpeedRate, 0.01f, 0.1f, 5.0f, "%.2f", U8("攻撃のアニメーションの再生速度に掛ける"));
+		Drag(U8("パニッシャーの移動の速さ"), t.punisherMoveRate, 0.01f, 0.1f, 5.0f, "%.2f", U8("オペレーターを 1.0 とした倍率"));
+		Drag(U8("パニッシャーで受けるダメージ"), t.punisherTakenDamageRate, 0.01f, 0.0f, 10.0f, "%.2f", U8("パニッシャーの時に受けるダメージに掛ける"));
+	}
+
+	if (ImGui::CollapsingHeader(U8("受けるダメージ・ガード")))
+	{
+		DragI(U8("攻撃を受けた後の無敵"), t.damageInvincibleFrame, 0.5f, 0, 600, U8("攻撃を受けた後、次の攻撃を受けないフレーム数"));
+		DragI(U8("大きくのけぞるダメージ"), t.heavyDamage, 0.2f, 0, 999, U8("これ以上のダメージを受けると、大きくのけぞる"));
+		Drag(U8("回避中のダメージの倍率"), t.evadeDamageRate, 0.01f, 0.0f, 10.0f, "%.2f", U8("回避中に当たった時のダメージに掛ける"));
+		Drag(U8("ガード中のダメージの倍率"), t.guardDamageRate, 0.01f, 0.0f, 10.0f, "%.2f", U8("ガード中に受けるダメージに掛ける"));
+		ImGui::SeparatorText(U8("盾の耐久値"));
+		Drag(U8("耐久値の最大"), t.guardDurabilityMax, 1.0f, 1.0f, 9999.0f, "%.0f", U8("0 になるとガードを崩される"));
+		Drag(U8("ダメージ 1 で減る量"), t.guardCostPerDamage, 0.05f, 0.0f, 100.0f, "%.2f", U8("受け止めたダメージ × これだけ減る"));
+		Drag(U8("クリティカルで減る倍率"), t.guardCriticalCostRate, 0.05f, 0.0f, 10.0f, "%.2f", U8("クリティカルの攻撃を受け止めた時に掛ける"));
+		DragI(U8("回復し始めるまで"), t.guardRegenDelay, 0.5f, 0, 600, U8("最後に受け止めてから、回復し始めるまでのフレーム数"));
+		Drag(U8("1 フレームに回復する量"), t.guardRegenSpeed, 0.005f, 0.0f, 10.0f, "%.3f", U8("盾の耐久値が、1 フレームに回復する量"));
+		DragI(U8("崩された後、ガードできない時間"), t.guardBreakFrame, 0.5f, 0, 600, U8("フレーム数（60 で 1 秒）"));
+	}
+
+	if (ImGui::CollapsingHeader(U8("ATB ゲージ・ロックオン")))
+	{
+		Drag(U8("当てた時にたまる量"), t.atbHitGain, 0.05f, 0.0f, 100.0f, "%.2f", U8("1 本 = 100。このあとモードの倍率を掛ける"));
+		Drag(U8("オペレーターの倍率"), t.operatorAtbHitRate, 0.01f, 0.0f, 10.0f, "%.2f", U8("オペレーターの時、たまる量に掛ける"));
+		Drag(U8("パニッシャーの倍率"), t.punisherAtbHitRate, 0.01f, 0.0f, 10.0f, "%.2f", U8("パニッシャーの時、たまる量に掛ける"));
+		Drag(U8("クリティカルの倍率"), t.atbCriticalRate, 0.01f, 0.0f, 10.0f, "%.2f", U8("クリティカルの時、たまる量に掛ける"));
+		Drag(U8("回避した時にたまる量"), t.atbEvadeGain, 0.1f, 0.0f, 100.0f, "%.1f", U8("回避するたびにたまる量"));
+		Drag(U8("ロックオンの距離"), t.lockOnRange, 0.1f, 0.0f, 50.0f, "%.1f m", U8("この距離に近づいた敵に、自動でロックオンする"));
+	}
+
 	if (ImGui::CollapsingHeader(U8("動き"), ImGuiTreeNodeFlags_DefaultOpen))
 	{
 		Drag(U8("回避の速さ"), PlayerParamManager::Instance().m_evadeSpeed, 0.002f, 0.01f, 0.5f, "%.3f", U8("回避の 1 フレームに進む距離（だんだん遅くなる）。PlayerParams.txt に保存する"));
@@ -521,4 +698,103 @@ void StageSettings::DrawPlayerEditor()
 		ImGui::DragFloat3(U8("左の位置"), &Player::s_weaponPosL.x, 0.001f);
 	}
 	ImGui::PopID();
+}
+
+// ============================================================
+// 今のプレイヤー・今いる敵（数値を直接変える。保存はしない）
+// ============================================================
+void StageSettings::DrawLivePlayerEditor()
+{
+	if (!ImGui::CollapsingHeader(U8("今のプレイヤー（保存しない）"), ImGuiTreeNodeFlags_DefaultOpen)) return;
+
+	std::shared_ptr<Player> player = nullptr;
+	for (auto& obj : SceneManager::Instance().GetObjList())
+	{
+		player = std::dynamic_pointer_cast<Player>(obj);
+		if (player) break;
+	}
+	if (!player)
+	{
+		ImGui::TextDisabled(U8("ゲームの画面にいる時だけ使える"));
+		return;
+	}
+
+	int hp = player->GetHp();
+	int maxHp = player->GetMaxHp();
+	bool isChanged = false;
+	isChanged |= ImGui::DragInt(U8("今の HP"), &hp, 1.0f, 1, maxHp, "%d", ImGuiSliderFlags_AlwaysClamp);
+	isChanged |= ImGui::DragInt(U8("今の最大 HP"), &maxHp, 1.0f, 1, 99999, "%d", ImGuiSliderFlags_AlwaysClamp);
+	if (isChanged) player->DebugSetHp(hp, maxHp);
+	if (ImGui::Button(U8("全回復"))) player->DebugSetHp(player->GetMaxHp(), player->GetMaxHp());
+	ImGui::SameLine();
+	if (ImGui::Button(U8("HP を 1 にする"))) player->DebugSetHp(1, player->GetMaxHp());
+
+	float atb = player->GetAtbGage();
+	if (ImGui::DragFloat(U8("ATB ゲージ"), &atb, 1.0f, 0.0f, Player::kAtbBarMax * Player::kAtbBarNum, "%.0f", ImGuiSliderFlags_AlwaysClamp))
+	{
+		player->DebugSetAtb(atb);
+	}
+	Help(U8("1 本 = 100。2 本まで"));
+}
+
+void StageSettings::DrawLiveEnemyEditor()
+{
+	if (!ImGui::CollapsingHeader(U8("今いる敵（保存しない）"))) return;
+
+	auto player = [&]() -> std::shared_ptr<Player>
+	{
+		for (auto& obj : SceneManager::Instance().GetObjList())
+		{
+			if (auto p = std::dynamic_pointer_cast<Player>(obj)) return p;
+		}
+		return nullptr;
+	}();
+
+	// 近い順に並べる（目の前の敵を見つけやすいように）
+	std::vector<std::shared_ptr<Enemy>> enemies;
+	for (auto& obj : SceneManager::Instance().GetObjList())
+	{
+		if (auto enemy = std::dynamic_pointer_cast<Enemy>(obj); enemy && enemy->IsAlive()) enemies.push_back(enemy);
+	}
+	auto distOf = [&](const std::shared_ptr<Enemy>& e) { return player ? (e->GetPos() - player->GetPos()).Length() : 0.0f; };
+	std::sort(enemies.begin(), enemies.end(), [&](const auto& a, const auto& b) { return distOf(a) < distOf(b); });
+
+	if (enemies.empty())
+	{
+		ImGui::TextDisabled(U8("生きている敵がいない"));
+		return;
+	}
+
+	for (size_t i = 0; i < enemies.size(); ++i)
+	{
+		const auto& enemy = enemies[i];
+		const char* typeName = enemy->IsBoss() ? U8("ボス") : (enemy->IsMidBoss() ? U8("中ボス") : U8("ザコ"));
+		ImGui::PushID(static_cast<int>(i));
+
+		std::string label = std::string(typeName) + "  " + std::to_string(static_cast<int>(distOf(enemy))) + "m  HP "
+			+ std::to_string(enemy->GetHp()) + " / " + std::to_string(enemy->GetMaxHp());
+		if (ImGui::TreeNode(label.c_str()))
+		{
+			int hp = enemy->GetHp();
+			if (ImGui::DragInt(U8("今の HP"), &hp, 1.0f, 1, enemy->GetMaxHp(), "%d", ImGuiSliderFlags_AlwaysClamp))
+			{
+				enemy->DebugSetHp(hp);
+			}
+			if (enemy->CanBreak())
+			{
+				float breakValue = enemy->GetBreakRatio() * m_battle.breakMax;
+				if (enemy->IsBroken())
+				{
+					ImGui::Text(U8("ブレイク中（残り %.0f%%）"), enemy->GetBreakRatio() * 100.0f);
+				}
+				else if (ImGui::DragFloat(U8("ブレイクゲージ"), &breakValue, 0.5f, 0.0f, m_battle.breakMax, "%.1f", ImGuiSliderFlags_AlwaysClamp))
+				{
+					enemy->DebugSetBreak(breakValue);
+				}
+			}
+			if (ImGui::Button(U8("HP を 1 にする"))) enemy->DebugSetHp(1);
+			ImGui::TreePop();
+		}
+		ImGui::PopID();
+	}
 }

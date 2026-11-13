@@ -112,6 +112,12 @@ public:
 
 	// デバッグ用：ATBゲージを全部ためる・HPを満タンにする（倒れている時は何もしない）
 	void DebugFillAtb() { AddAtbGage(kAtbBarMax * kAtbBarNum); }
+
+	// デバッグ：Object Editor から、今の HP・最大 HP・ATB ゲージを直接変える
+	int GetHp() const { return m_hp; }
+	int GetMaxHp() const { return m_maxHp; }
+	void DebugSetHp(int hp, int maxHp) { m_maxHp = std::max(maxHp, 1); m_hp = std::clamp(hp, 0, m_maxHp); }
+	void DebugSetAtb(float value) { m_atbGage = std::clamp(value, 0.0f, kAtbBarMax * kAtbBarNum); }
 	void DebugFillHp() { if (m_hp > 0) m_hp = m_maxHp; }
 
 	// HP と ATB ゲージを全回復する（回復の泉。倒れている時は何もしない）
@@ -212,7 +218,7 @@ public:
 
 
 	// 被弾判定
-	int GetCritRate() const { return m_critRate; }
+	int GetCritRate() const;	// クリティカルになる確率（％。Object Editor の「Player」タブ）
 	void OnDamage(int damage, bool isCritical = false) override;
 
 
@@ -479,7 +485,7 @@ private:
 
 	// ステータス系
 	float							m_angle = 0;				// Y軸回転角度（度）
-	int								m_critRate = 10;			// クリティカル率（％）
+	// （クリティカル率は PlayerTune().critRate に移した）
 	int								m_currentAttackType = 1;	// 攻撃アニメーションの番号
 
 	// バトルモード・ATB

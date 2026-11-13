@@ -293,7 +293,7 @@ void Player::Init()
 	m_cameraHeight = pelvisHeight + kCameraTargetOffsetY;
 	m_cameraTargetY = m_pos.y + m_cameraHeight;
 
-	m_maxHp = kMaxHp;
+	m_maxHp = PlayerTune().maxHp;
 	m_hp = m_maxHp;
 
 	// HPゲージ
@@ -538,27 +538,27 @@ void Player::OnDamage(int damage, bool isCritical)
 	// パニッシャーの時は、受けるダメージが増える
 	if (m_battleMode == BattleMode::Punisher)
 	{
-		damage = static_cast<int>(std::round(damage * kPunisherTakenDamageRate));
+		damage = static_cast<int>(std::round(damage * PlayerTune().punisherTakenDamageRate));
 	}
 
 	// 回避中はダメージを半分にする（1 より小さくはしない）
 	if (std::dynamic_pointer_cast<PlayerStateEvade>(m_state))
 	{
-		damage = std::max(static_cast<int>(std::round(damage * kEvadeDamageRate)), 1);
+		damage = std::max(static_cast<int>(std::round(damage * PlayerTune().evadeDamageRate)), 1);
 	}
 
 	// ガード中：ダメージを減らし、のけぞらない
 	if (m_isGuarding)
 	{
-		m_hp -= std::max(static_cast<int>(std::round(damage * kGuardDamageRate)), 1);
-		m_invincibleTimer = kDamageInvincibleFrame;
+		m_hp -= std::max(static_cast<int>(std::round(damage * PlayerTune().guardDamageRate)), 1);
+		m_invincibleTimer = PlayerTune().damageInvincibleFrame;
 		EffectPlayer::Play(EffectName::Guard, CreateGuardEffectMatrix());
 		SoundPlayer::PlaySE(SoundName::HeavyHit, kGuardSEVolume, kGuardSEPitch, 0.05f);	// 盾で受け止めた、軽く高い音
 
 		// ガードの耐久値を減らす（受けすぎると崩される）
-		float cost = damage * kGuardCostPerDamage * (isCritical ? kGuardCriticalCostRate : 1.0f);
+		float cost = damage * PlayerTune().guardCostPerDamage * (isCritical ? PlayerTune().guardCriticalCostRate : 1.0f);
 		m_guardDurability = std::max(m_guardDurability - cost, 0.0f);
-		m_guardRegenDelay = kGuardRegenDelay;
+		m_guardRegenDelay = PlayerTune().guardRegenDelay;
 
 		if (m_hp <= 0)
 		{
@@ -567,7 +567,7 @@ void Player::OnDamage(int damage, bool isCritical)
 		else if (m_guardDurability <= 0.0f)
 		{
 			// ガードを崩された：しばらくガードできず、よろける
-			m_guardBreakTimer = kGuardBreakFrame;
+			m_guardBreakTimer = PlayerTune().guardBreakFrame;
 			HitStop::Request(kGuardBreakHitStopFrame, kGuardBreakShakePower);
 			EffectPlayer::Play(EffectName::GuardBreak, CreateGuardEffectMatrix());
 			SoundPlayer::PlaySE(SoundName::HeavyHit, 1.0f, kGuardBreakSEPitch);				// 盾が砕けた、重く低い音
@@ -584,7 +584,7 @@ void Player::OnDamage(int damage, bool isCritical)
 	}
 
 	m_hp -= damage;
-	m_invincibleTimer = kDamageInvincibleFrame;
+	m_invincibleTimer = PlayerTune().damageInvincibleFrame;
 	HitStop::Request(kDamageHitStopFrame, kDamageShakePower);
 	SoundPlayer::PlaySE(SoundName::HeavyHit, 1.0f, 0.0f, 0.05f);
 
@@ -592,7 +592,7 @@ void Player::OnDamage(int damage, bool isCritical)
 	{
 		ChangeState(std::make_shared<PlayerStateDead>());
 	}
-	else if (isCritical || damage >= kHeavyDamage)
+	else if (isCritical || damage >= PlayerTune().heavyDamage)
 	{
 		ChangeState(std::make_shared<PlayerStateDamage>());
 	}
@@ -605,4 +605,9 @@ Math::Vector3 Player::GetCameraTargetPos() const
 	Math::Vector3 targetPos = m_pos;
 	targetPos.y = m_cameraTargetY;
 	return targetPos;
+}
+
+int Player::GetCritRate() const
+{
+	return PlayerTune().critRate;
 }

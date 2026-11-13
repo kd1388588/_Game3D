@@ -4,6 +4,7 @@
 
 // Player
 #include "Player.h"
+#include "../../../Utility/StageSettings.h"
 #include "PlayerState.h"
 #include "PlayerParamManager.h"
 
@@ -68,7 +69,7 @@ void Player::UpdateLockOn()
 	{
 		Math::Vector3 diff = target->GetPos() - m_pos;
 		diff.y = 0.0f;
-		if (!target->IsAlive() || target->IsExpired() || diff.Length() > kLockOnRange + kLockOnLoseMargin)
+		if (!target->IsAlive() || target->IsExpired() || diff.Length() > PlayerTune().lockOnRange + kLockOnLoseMargin)
 		{
 			m_wpLockTarget.reset();
 			target = nullptr;
@@ -77,7 +78,7 @@ void Player::UpdateLockOn()
 
 	if (!target)
 	{
-		m_wpLockTarget = FindLockTarget(kLockOnRange);
+		m_wpLockTarget = FindLockTarget(PlayerTune().lockOnRange);
 	}
 }
 

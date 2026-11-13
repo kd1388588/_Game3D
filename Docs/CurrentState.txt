@@ -66,7 +66,7 @@ BRAVER　今の状態（迷ったら、まずこれを見る）
   ・HP ゲージは HP 30% 以下で赤く点滅
 
 ■ エディタ（F8 でデバッグ表示を出す）
-  ・Object Editor（Player：回避・走る速さ・剣の持ち方／Enemy：HP の倍率・ブレイク／Stage：霧／UI：HP が少ない時の画面）
+  ・Object Editor（Player：今の HP・攻撃力・モード・ガード・ATB・回避・剣の持ち方／Enemy：今いる敵の HP・種類ごとの HP と大きさ・攻撃力・ノックバック・ブレイク／Stage：霧／UI：HP が少ない時の画面）
   ・Effect Editor（エフェクトの大きさ・速さ・色、試し撃ち、Effekseer エディタとの同期）
   ・デバッグキー：F7 ボス以外を全員倒す（その場で）／F9 ATB 満タン／F10 HP 満タン／F11 HP を 1／
                   Shift＋F9 敵を出す／Shift＋F10 無敵／Shift＋F11 ボス以外を倒してボスの前へ／Shift＋F8 タイトルへ

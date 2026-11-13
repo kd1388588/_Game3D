@@ -1,5 +1,6 @@
 ﻿#pragma once
 #include "../Base/BaseChara.h"
+#include "../../../Utility/StageSettings.h"
 
 class Player;
 class EnemyState;
@@ -35,8 +36,12 @@ public:
 	int GetMaxHp() const { return m_maxHp; }
 	float GetHpRatio() const { return (m_maxHp > 0) ? static_cast<float>(std::max(m_hp, 0)) / m_maxHp : 0.0f; }
 
-	// HP の倍率（オブジェクトエディタの「Enemy」タブ）を、今いる敵に掛け直す（残りの HP の割合はそのまま）
-	void ApplyHpRate();
+	// 種類ごとの数値（Object Editor の「Enemy」タブ）を、今いる敵に掛け直す（残りの HP の割合はそのまま）
+	void ApplyTypeParam();
+
+	// デバッグ：Object Editor から、今の HP・ブレイクゲージを直接変える
+	void DebugSetHp(int hp);
+	void DebugSetBreak(float value);
 
 	// ---- ブレイク（設定はオブジェクトエディタの「Enemy」タブ。ザコ・中ボスもブレイクさせるかを選べる） ----
 	// 攻撃を当てるとたまり、満タンになるとブレイクして、しばらく攻撃が通りやすくなる
@@ -151,8 +156,6 @@ private:
 	bool							m_isSuperArmor = false;		// のけぞらない
 	int								m_stunTimer = 0;			// のけぞりを続ける残りフレーム
 
-	// HP の元の値（敵の種類ごとの表の値。倍率を掛ける前）
-	int								m_baseHp = 100;
 
 	// ブレイク
 	float							m_break = 0.0f;				// ゲージの量（0 ～ 設定の最大）
@@ -163,6 +166,9 @@ private:
 
 	// 毎フレーム：ブレイクのゲージを減らす・ブレイクを終わらせる
 	void UpdateBreak();
+
+	// 種類（ザコ・中ボス・ボス）ごとの数値
+	const StageSettings::EnemyType& GetTypeParam() const;
 
 	// 殴られた時の反応
 	Math::Vector3					m_knockbackVel = Math::Vector3::Zero;	// ノックバックの 1 フレームの移動量（だんだん小さくなる）

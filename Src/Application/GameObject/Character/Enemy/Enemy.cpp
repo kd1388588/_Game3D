@@ -10,19 +10,8 @@
 
 namespace
 {
-	// 敵の種類ごとのパラメータ
-	struct EnemyParam
-	{
-		int		hp;
-		float	scale;
-		float	searchRange;	// プレイヤーに気づく距離
-		float	attackRange;	// 攻撃を開始する距離
-		int		jumpAttackCT;	// 飛びかかり攻撃を使った後、次に使えるまでのフレーム数
-	};
-
-	constexpr EnemyParam kBossParam		= { 350, 2.6f,  16.0f, 3.5f, 60 * 6 };	// ボス：ザコの2倍くらい大きく、遠くから気づき、リーチが長い
-	constexpr EnemyParam kNormalParam	= { 100,  1.25f, 8.0f,  1.2f, 60 * 10 };	// ザコ敵（飛びかかり攻撃はたまに）
-	constexpr EnemyParam kMidBossParam	= { 220,  1.9f, 12.0f,  2.4f, 60 * 7 };	// 中ボス：ザコとボスの間（中ボスの部屋で、通路のバリアを守る）
+	// 敵の種類ごとの数値（HP・大きさ・気づく距離・攻撃の距離・飛びかかりの CT）は、
+	// StageSettings::EnemyTuning に移した（Object Editor の「Enemy」タブ。EnemyTune().boss.hp のように読む）
 
 	// 最初の飛びかかり攻撃までの時間（全員が同時に飛びかかってこないよう、ばらつかせる）
 	constexpr int	kFirstJumpAttackMinFrame	= 60 * 1;
@@ -35,8 +24,6 @@ namespace
 	// ※プレイヤーの攻撃は、剣ごとに「同じ敵には少し間をあけてしか当たらない」ようにしているので、
 	//   敵の側では無敵にしない（無敵があると、二刀流の2本目や多段ヒットが当たらなくなる）
 	constexpr int	kDamageInvincibleFrame	= 0;
-	constexpr int	kAttackDamage			= 5;
-	constexpr int	kCriticalAttackDamage	= 10;
 	// リムライト（体のふちを薄く赤く光らせて、暗い背景に溶けないようにする）
 	const Math::Vector3 kLimColor			= { 0.55f, 0.12f, 0.08f };
 	constexpr float	kLimPow					= 2.5f;		// 鋭さ（大きいほどふちだけが光る）
@@ -67,7 +54,6 @@ namespace
 	// 着地の衝撃
 	constexpr float	kSmashRadius			= 1.8f;		// 攻撃の範囲（体の大きさに掛ける）
 	constexpr float	kSmashHeight			= 2.0f;		// 上下にこれだけ離れていたら当たらない（ジャンプでかわせる）
-	constexpr int	kSmashDamage			= 20;		// のけぞるダメージ
 	constexpr int	kSmashHitStopFrame		= 4;		// 着地の時のヒットストップ（当たらなくても、地面が揺れる感じを出す）
 	constexpr float	kSmashShakePower		= 0.2f;
 	constexpr float	kSmashEffectScaleRate	= 1.0f;		// 着地のエフェクトの大きさ（体の大きさに掛ける。攻撃の範囲と同じくらいに広がる）
@@ -83,16 +69,9 @@ namespace
 	constexpr float	kNearHitBackDot			= -0.3f;	// 体の向きとの内積がこれより小さい（真後ろ）なら当たらない
 
 	// ---- 殴られた時の反応 ----
-	// ノックバック：殴られた瞬間に後ろへの速さを与え、毎フレーム kKnockbackDecay 倍にして止める
+	// ノックバック：殴られた瞬間に後ろへの速さを与え、毎フレーム EnemyTune().knockbackDecay 倍にして止める
 	//   進む距離の合計 ＝ 速さ ÷ (1 − 減り方)（例：0.12 ÷ 0.22 ≒ 0.55m）
 	//   （遠くへ飛ばしすぎると、二刀流の連続攻撃が届かなくなるので短め）
-	constexpr float	kKnockbackSpeed			= 0.12f;	// 普通の攻撃
-	constexpr float	kKnockbackCriticalRate	= 1.6f;		// クリティカルはこれだけ強く飛ばす
-	constexpr float	kKnockbackDecay			= 0.78f;	// 1 フレームごとに掛ける（小さいほど早く止まる）
-	constexpr float	kKnockbackArmorRate		= 0.3f;		// スーパーアーマー中（攻撃中）は少しだけ押される
-	constexpr float	kKnockbackStunRate		= 0.5f;		// ATB の技を受けている間（技の途中で届かなくならないよう弱め）
-	constexpr float	kKnockbackMidBossRate	= 0.5f;		// 中ボスは重いので飛びにくい
-	constexpr float	kKnockbackBossRate		= 0.25f;	// ボスはもっと飛びにくい
 	constexpr float	kKnockbackStopSpeed		= 0.002f;	// これより遅くなったら止める
 	constexpr float	kKnockbackWallHeight	= 0.9f;		// 壁があるかを調べるレイの高さ
 
@@ -137,11 +116,8 @@ void Enemy::Init()
 		{ "JumpAttackEnd",		kModelDir + "Animation/Special/Ability_GroundSmash_End/Ability_GroundSmash_End.gltf" },
 	});
 
-	// 種類ごとのパラメータ
-	const EnemyParam& param = m_isBoss ? kBossParam : (m_isMidBoss ? kMidBossParam : kNormalParam);
-	m_baseHp = param.hp;
-	ApplyHpRate();
-	m_jumpAttackCoolTime = param.jumpAttackCT;
+	// 種類ごとの数値（HP・大きさ・気づく距離など。Object Editor の「Enemy」タブ）
+	ApplyTypeParam();
 	m_jumpAttackCT = KdRandom::GetInt(kFirstJumpAttackMinFrame, kFirstJumpAttackMaxFrame);
 
 	// 飛びかかり攻撃のアニメーションが読み込めたか（読み込めていないと、この攻撃は使われない）
@@ -150,10 +126,6 @@ void Enemy::Init()
 		OutputDebugStringA("【飛びかかり攻撃のアニメーションが読み込めていません】Monster2/Animation/Special/Ability_GroundSmash_Start を確認してください\n");
 		KdDebugGUI::Instance().AddLog("[Enemy] 飛びかかり攻撃のアニメーションが読み込めていません\n");
 	}
-	m_scale = param.scale;
-	SetBumpRadius(m_scale * kBumpRadiusRate);	// 体の大きさに合わせて、柱にめり込まないようにする
-	m_searchRange = param.searchRange;
-	m_attackRange = param.attackRange;
 
 	// 初期ステートをIdleに設定
 	ChangeState(std::make_shared<EnemyStateIdle>());
@@ -298,12 +270,12 @@ void Enemy::StartHitReaction(bool isCritical, bool isFlinch)
 	dir.Normalize();
 
 	// 強さ：重い敵ほど、攻撃中ほど、飛びにくくする
-	float speed = kKnockbackSpeed;
-	if (isCritical)				speed *= kKnockbackCriticalRate;
-	if (!isFlinch)				speed *= kKnockbackArmorRate;
-	else if (IsStunned())		speed *= kKnockbackStunRate;
-	if (m_isBoss)				speed *= kKnockbackBossRate;
-	else if (m_isMidBoss)		speed *= kKnockbackMidBossRate;
+	float speed = EnemyTune().knockbackSpeed;
+	if (isCritical)				speed *= EnemyTune().knockbackCriticalRate;
+	if (!isFlinch)				speed *= EnemyTune().knockbackArmorRate;
+	else if (IsStunned())		speed *= EnemyTune().knockbackStunRate;
+	if (m_isBoss)				speed *= EnemyTune().knockbackBossRate;
+	else if (m_isMidBoss)		speed *= EnemyTune().knockbackMidBossRate;
 
 	// 足すのではなく置きかえる（連続で当たっても、どんどん遠くへ飛んでいかないように）
 	m_knockbackVel = dir * speed;
@@ -332,7 +304,7 @@ void Enemy::UpdateHitReaction()
 	step = std::min(step, std::max(wallDist - m_bumpRadius, 0.0f));
 
 	m_pos += dir * step;
-	m_knockbackVel *= std::pow(kKnockbackDecay, timeScale);
+	m_knockbackVel *= std::pow(EnemyTune().knockbackDecay, timeScale);
 }
 
 Math::Matrix Enemy::GetShakenWorld() const
@@ -353,13 +325,24 @@ Math::Matrix Enemy::GetShakenWorld() const
 // ==========================================
 // HP の倍率・ブレイク
 // ==========================================
-void Enemy::ApplyHpRate()
+const StageSettings::EnemyType& Enemy::GetTypeParam() const
 {
-	const StageSettings::Battle& b = StageSettings::Instance().GetBattle();
-	float rate = m_isBoss ? b.bossHpRate : (m_isMidBoss ? b.midBossHpRate : b.normalHpRate);
-	int maxHp = std::max(1, static_cast<int>(std::round(m_baseHp * rate)));
+	const StageSettings::EnemyTuning& t = EnemyTune();
+	return m_isBoss ? t.boss : (m_isMidBoss ? t.midBoss : t.normal);
+}
 
-	// 倒れている敵は、そのまま（生き返らせない）
+void Enemy::ApplyTypeParam()
+{
+	const StageSettings::EnemyType& param = GetTypeParam();
+
+	m_scale = param.scale;
+	SetBumpRadius(m_scale * kBumpRadiusRate);	// 体の大きさに合わせて、柱にめり込まないようにする
+	m_searchRange = param.searchRange;
+	m_attackRange = param.attackRange;
+	m_jumpAttackCoolTime = param.jumpAttackCT;
+
+	// HP：倒れている敵は、そのまま（生き返らせない）
+	int maxHp = std::max(1, param.hp);
 	if (m_hp <= 0) return;
 
 	// 満タンの時（Init の時も）は、新しい最大 HP で満タンにする
@@ -373,6 +356,19 @@ void Enemy::ApplyHpRate()
 	float ratio = GetHpRatio();
 	m_maxHp = maxHp;
 	m_hp = std::max(1, static_cast<int>(std::round(maxHp * ratio)));
+}
+
+void Enemy::DebugSetHp(int hp)
+{
+	if (m_hp <= 0) return;	// 倒れている敵は、生き返らせない
+	m_hp = std::clamp(hp, 1, m_maxHp);
+}
+
+void Enemy::DebugSetBreak(float value)
+{
+	if (IsBroken()) return;
+	m_break = 0.0f;
+	AddBreak(value);		// 最大まで入れたら、そのままブレイクする
 }
 
 bool Enemy::CanBreak() const
@@ -476,7 +472,7 @@ void Enemy::AttackHit(const Math::Matrix& hitMatrix, const Math::Vector3& extent
 		m_pDebugWire->AddDebugBox(hitMatrix, extents, offset, true, { 1.0f, 0.0f, 0.0f, 1.0f });
 	}
 
-	int damage = isCritical ? kCriticalAttackDamage : kAttackDamage;
+	int damage = isCritical ? EnemyTune().criticalAttackDamage : EnemyTune().attackDamage;
 
 	std::list<KdCollider::CollisionResult> retList;
 	for (auto& obj : SceneManager::Instance().GetObjList())
@@ -700,7 +696,7 @@ void Enemy::AttackHitNear(bool isCritical)
 		if (dir.Dot(forward) < kNearHitBackDot) return;
 	}
 
-	player->OnDamage(isCritical ? kCriticalAttackDamage : kAttackDamage, isCritical);
+	player->OnDamage(isCritical ? EnemyTune().criticalAttackDamage : EnemyTune().attackDamage, isCritical);
 	PlayHitPlayerEffect(player->GetPos() + Math::Vector3(0.0f, 1.0f, 0.0f));
 }
 
@@ -732,6 +728,6 @@ void Enemy::GroundSmash()
 	diff.y = 0.0f;
 	if (diff.Length() > radius || height > kSmashHeight) return;
 
-	player->OnDamage(kSmashDamage, false);
+	player->OnDamage(EnemyTune().smashDamage, false);
 	PlayHitPlayerEffect(player->GetPos() + Math::Vector3(0.0f, 1.0f, 0.0f));
 }

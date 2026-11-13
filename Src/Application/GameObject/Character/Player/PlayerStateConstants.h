@@ -97,7 +97,7 @@ namespace PlayerStateConst
 
 	// アビリティ（ATBコマンドメニューで選ぶ攻撃04・05。使うゲージの量・CTは PlayerConstants.h の kAbilityInfos）
 	// アビリティの攻撃は、ボタンを押さなくても最後の段まで自動で出る
-	constexpr float kAbilityDamageRate		= 1.5f;		// 普通の攻撃（倍率1.0）の何倍のダメージか。モードの倍率はかからない
+	// ダメージの倍率は PlayerTune().abilityDamageRate（Object Editor の「Player」タブ）
 
 	// ガード（止まっている時に ガード・ダッシュのキー（Shift ／ RB）を押している間）
 	// アニメーション：Sequence2/08_Hit/14_Block の Block_Start / Loop / Hit / End

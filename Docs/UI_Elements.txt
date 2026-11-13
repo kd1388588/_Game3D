@@ -244,7 +244,7 @@ BRAVER　画面の要素（UI・HUD・画面の演出）の一覧
 ############################################################
 ファイル：Src/Framework/Utility/KdDebug/KdDebugGUI.cpp
   ・Object Editor（Src/Application/Utility/StageSettings.cpp）：
-      Player（回避・走る速さ・剣の持ち方）／Enemy（HP の倍率・ブレイク）／Stage（霧）／UI（HP が少ない時の画面・HP ゲージの色）
+      Player（今の HP・ATB、攻撃力・モード・ガード・ATB のたまり方、回避・走る速さ・剣の持ち方）／Enemy（今いる敵の HP、種類ごとの HP・大きさ、攻撃力・すき・ノックバック・ブレイク）／Stage（霧）／UI（HP が少ない時の画面・HP ゲージの色）
   ・Effect Editor（Src/Application/Utility/EffectSettings.cpp）：エフェクトごとの大きさ・速さ・色、試し撃ち、Effekseer との同期
   ・当たり判定のワイヤー表示
   ・デバッグキー（デバッグ表示中だけ）：F7 ボス以外を全員倒す／F9 ATB 満タン／F10 HP 満タン／F11 HP を 1／

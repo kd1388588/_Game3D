@@ -171,9 +171,9 @@ bool Player::AttackOBB(const Math::Matrix& swordMatrix, bool isCritical, HitEffe
 
 	bool isHit = false;
 	// ダメージ（モードで倍率を変える。ATBの技はモードに関係なく、技の倍率だけを使う）
-	float modeRate = (m_battleMode == BattleMode::Punisher) ? kPunisherDamageRate : kOperatorDamageRate;
+	float modeRate = (m_battleMode == BattleMode::Punisher) ? PlayerTune().punisherDamageRate : PlayerTune().operatorDamageRate;
 	if (m_isAbilityAttack) modeRate = 1.0f;
-	int baseDamage = isCritical ? kCriticalAttackDamage : kAttackDamage;
+	int baseDamage = isCritical ? PlayerTune().criticalAttackDamage : PlayerTune().attackDamage;
 	int damage = static_cast<int>(std::round(baseDamage * modeRate * damageRate));
 
 	std::list<KdCollider::CollisionResult> retList;
@@ -195,11 +195,11 @@ bool Player::AttackOBB(const Math::Matrix& swordMatrix, bool isCritical, HitEffe
 		// 同じ剣が同じ敵に当たってから、少しの間はもう当たらない（剣が触れている毎フレーム当たらないように）
 		// 右と左の剣は別々に数えるので、二刀流で1振りに2回当たる
 		auto& hitRecord = m_lastHitFrame[std::clamp(hand, 0, 1)];
-		if (auto it = hitRecord.find(enemy.get()); it != hitRecord.end() && m_attackFrame - it->second < kMultiHitInterval) continue;
+		if (auto it = hitRecord.find(enemy.get()); it != hitRecord.end() && m_attackFrame - it->second < PlayerTune().multiHitInterval) continue;
 		hitRecord[enemy.get()] = m_attackFrame;
 
 		// ATBコマンドの技を受けている敵は、のけぞり続ける（その間は攻撃してこない）
-		if (m_isAbilityAttack) enemy->AddStun(kAbilityStunFrame);
+		if (m_isAbilityAttack) enemy->AddStun(PlayerTune().abilityStunFrame);
 
 		enemy->OnDamage(damage, isCritical);
 		isHit = true;
@@ -218,8 +218,8 @@ bool Player::AttackOBB(const Math::Matrix& swordMatrix, bool isCritical, HitEffe
 		// 攻撃を当てるとATBゲージがたまる（オペレーターは多め、パニッシャーは少なめ。アビリティの攻撃ではたまらない）
 		if (!m_isAbilityAttack)
 		{
-			float gain = kAtbHitGain * ((m_battleMode == BattleMode::Operator) ? kOperatorAtbHitRate : kPunisherAtbHitRate);
-			if (isCritical) gain *= kAtbCriticalRate;
+			float gain = PlayerTune().atbHitGain * ((m_battleMode == BattleMode::Operator) ? PlayerTune().operatorAtbHitRate : PlayerTune().punisherAtbHitRate);
+			if (isCritical) gain *= PlayerTune().atbCriticalRate;
 			AddAtbGage(gain);
 		}
 

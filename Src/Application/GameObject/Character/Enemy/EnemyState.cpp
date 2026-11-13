@@ -6,7 +6,8 @@
 
 namespace
 {
-	constexpr float kChaseSpeed				= 0.1f;		// 走るスピード
+	// ※追いかける速さ・攻撃の後のすき・飛びかかりの確率と距離は、StageSettings::EnemyTuning に移した
+	//   （Object Editor の「Enemy」タブ。EnemyTune().chaseSpeed のように読む）
 	constexpr float kLoseSightMargin		= 2.0f;		// 索敵範囲からこれだけ離れたら追跡をやめる
 
 	// 攻撃判定を出すアニメーションフレームの範囲（Attack_Melee_A）
@@ -21,19 +22,10 @@ namespace
 	constexpr float kDeathEffectScaleRate	= 0.8f;		// 倒した時のエフェクトの大きさ（体の大きさに掛ける。ザコで約 1.0）
 	constexpr float kOldDeathEffectScaleRate = 0.15f;	// 前のエフェクト（_boss_death）を使う時の大きさ
 
-	// 飛びかかり攻撃（ボスもザコも。使った後の CT は Enemy.cpp の敵の種類ごとのパラメータ）
-	constexpr float kJumpAttackMinDist		= 4.0f;		// プレイヤーがこれより遠く、
-	constexpr float kJumpAttackMaxDist		= 14.0f;	// これより近い時に使う
-	constexpr int	kJumpAttackChance		= 3;		// 使える距離にいる時、1フレームに使う確率（％）
-
 	// 攻撃
 	constexpr float kAttackTurnEndFrame		= 12.0f;	// 攻撃のこのフレームまでは、プレイヤーの方へ向きを変える
 
-	// 攻撃の後のすき（この間は追いかけてくるが、次の攻撃はしてこない。プレイヤーが反撃できる時間）
-	constexpr int	kAttackRecoverFrame		= 50;		// ザコ（約0.9秒）
-	constexpr int	kBossAttackRecoverFrame	= 35;		// ボス（約0.7秒）
-	constexpr int	kAttackRecoverRandom	= 20;		// ばらつき（全員が同じリズムで攻撃してこないように）
-	constexpr int	kJumpAttackRecoverFrame	= 50;		// 飛びかかり攻撃の後
+	// 攻撃の後のすきの間（追いかけてくるが、次の攻撃はしてこない。プレイヤーが反撃できる時間）
 	constexpr float	kRecoverTurnSpeed		= 0.08f;	// すきの間、近くで待つ時にプレイヤーの方へ向きを変える速さ
 	constexpr int	kMaxLeapFrame			= 180;		// 空中にいる時間の上限（地面が無い所へ飛んだ時のため）
 	constexpr int	kMaxLandingPredictFrame	= 120;		// 着地予測を行う最大フレーム数
@@ -134,15 +126,15 @@ void EnemyStateChase::Update(Enemy* enemy)
 	enemy->ChangeAnimation("Run", true, false, 5.0f);
 
 	// ボス：少し離れている時は、ときどき飛びかかってくる
-	if (dist >= kJumpAttackMinDist && dist <= kJumpAttackMaxDist && enemy->CanJumpAttack()
-		&& KdRandom::GetInt(0, 99) < kJumpAttackChance)
+	if (dist >= EnemyTune().jumpAttackMinDist && dist <= EnemyTune().jumpAttackMaxDist && enemy->CanJumpAttack()
+		&& KdRandom::GetInt(0, 99) < EnemyTune().jumpAttackChance)
 	{
 		enemy->ChangeState(std::make_shared<EnemyStateJumpAttack>());
 		return;
 	}
 
 	vecToTarget.Normalize();
-	enemy->SetPos(enemy->GetPos() + vecToTarget * kChaseSpeed);
+	enemy->SetPos(enemy->GetPos() + vecToTarget * EnemyTune().chaseSpeed);
 
 	enemy->TurnToPlayer(); // プレイヤーの方を向く
 }
@@ -204,8 +196,8 @@ void EnemyStateAttack::Update(Enemy* enemy)
 	if (enemy->IsAnimEnd())
 	{
 		// 攻撃が終わったら、少しの間すきを作る（追いかけてはくるが、連続で殴ってこないように）
-		int recover = enemy->IsBoss() ? kBossAttackRecoverFrame : kAttackRecoverFrame;
-		recover += KdRandom::GetInt(0, kAttackRecoverRandom);
+		int recover = enemy->IsBoss() ? EnemyTune().bossAttackRecoverFrame : EnemyTune().attackRecoverFrame;
+		recover += KdRandom::GetInt(0, EnemyTune().attackRecoverRandom);
 		enemy->SetAttackCooldown(recover);
 		enemy->ChangeState(std::make_shared<EnemyStateChase>());
 	}
@@ -316,7 +308,7 @@ void EnemyStateJumpAttack::Update(Enemy* enemy)
 		if (enemy->IsAnimEnd())
 		{
 			if (!m_isSmashDone) enemy->GroundSmash();
-			enemy->SetAttackCooldown(kJumpAttackRecoverFrame);
+			enemy->SetAttackCooldown(EnemyTune().jumpAttackRecoverFrame);
 			enemy->ChangeState(std::make_shared<EnemyStateChase>());
 		}
 		break;

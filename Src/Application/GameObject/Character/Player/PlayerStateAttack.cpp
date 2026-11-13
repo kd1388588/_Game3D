@@ -3,6 +3,7 @@
 // ※ステートのクラスの宣言は PlayerState.h にまとめてある
 
 #include "PlayerState.h"
+#include "../../../Utility/StageSettings.h"
 #include "Player.h"
 #include "PlayerParamManager.h"
 
@@ -141,7 +142,7 @@ bool PlayerStateComboAttack::IsTrailFrame(const Player* player, float animTime) 
 
 void PlayerStateComboAttack::ChangeState(Player* player)
 {
-	m_isCritical = (KdRandom::GetInt(0, 99) < player->GetCritRate());
+	m_isCritical = (KdRandom::GetInt(0, 99) < PlayerTune().critRate);
 
 	if (IsSplitAttack() && m_subStep == SubStepNone) {
 		m_subStep = SubStepStart;
@@ -238,7 +239,7 @@ void PlayerStateComboAttack::Update(Player* player)
 		// 当たったら、攻撃の種類・段数ごとのエフェクトをその位置に出す
 		// （ヒットストップは AttackOBB の中で、すべての攻撃に同じルールでかかる）
 		// （右と左の剣は別々に当たりを数える。同じ剣は少し間をあければ、もう一度当たる＝多段ヒット）
-		float damageRate = m_isAbility ? kAbilityDamageRate : 1.0f;
+		float damageRate = m_isAbility ? PlayerTune().abilityDamageRate : 1.0f;
 		player->AttackOBB(player->GetSwordMatrixR(), m_isCritical, GetHitEffectType(), GetFinisherEffectName(), damageRate, 0);
 		player->AttackOBB(player->GetSwordMatrixL(), m_isCritical, GetHitEffectType(), GetFinisherEffectName(), damageRate, 1);
 	}

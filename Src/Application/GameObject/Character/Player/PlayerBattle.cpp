@@ -4,6 +4,7 @@
 
 // Player
 #include "Player.h"
+#include "../../../Utility/StageSettings.h"
 #include "PlayerState.h"
 #include "PlayerParamManager.h"
 #include "../../../Utility/EffectSettings.h"
@@ -175,12 +176,12 @@ void Player::SetBattleMode(BattleMode mode)
 
 float Player::GetModeMoveRate() const
 {
-	return (m_battleMode == BattleMode::Punisher) ? kPunisherMoveRate : 1.0f;
+	return (m_battleMode == BattleMode::Punisher) ? PlayerTune().punisherMoveRate : 1.0f;
 }
 
 float Player::GetModeAttackSpeedRate() const
 {
-	return (m_battleMode == BattleMode::Punisher) ? kPunisherAttackSpeedRate : kOperatorAttackSpeedRate;
+	return (m_battleMode == BattleMode::Punisher) ? PlayerTune().punisherAttackSpeedRate : PlayerTune().operatorAttackSpeedRate;
 }
 
 void Player::UpdateModeSwitch()
@@ -224,7 +225,7 @@ void Player::AddAtbGage(float val)
 
 void Player::GainAtbByEvade()
 {
-	AddAtbGage(kAtbEvadeGain);
+	AddAtbGage(PlayerTune().atbEvadeGain);
 }
 
 int Player::TryStartAbility(AbilitySlot slot)
@@ -279,7 +280,7 @@ void Player::UpdateAbilityTimers()
 		// 崩された後：ガードできない間も、耐久値は 0 から少しずつ回復する
 		// （一気に満タンに戻さず、ゲージがたまっていくのが見えるようにする）
 		m_guardBreakTimer--;
-		m_guardDurability = std::min(m_guardDurability + kGuardRegenSpeed, kGuardDurabilityMax);
+		m_guardDurability = std::min(m_guardDurability + PlayerTune().guardRegenSpeed, PlayerTune().guardDurabilityMax);
 	}
 	else if (m_guardRegenDelay > 0)
 	{
@@ -287,7 +288,7 @@ void Player::UpdateAbilityTimers()
 	}
 	else
 	{
-		m_guardDurability = std::min(m_guardDurability + kGuardRegenSpeed, kGuardDurabilityMax);
+		m_guardDurability = std::min(m_guardDurability + PlayerTune().guardRegenSpeed, PlayerTune().guardDurabilityMax);
 	}
 }
 
@@ -313,7 +314,7 @@ void Player::UpdateAtb()
 		float coolRatio = static_cast<float>(m_modeSwitchCT) / static_cast<float>(kModeSwitchCoolFrame);
 		atbGage->SetModeLockRatio(std::max(lockRatio, coolRatio));
 		atbGage->SetGuarding(m_isGuarding);
-		atbGage->SetGuardState(m_guardDurability / kGuardDurabilityMax, m_guardBreakTimer > 0);
+		atbGage->SetGuardState(m_guardDurability / PlayerTune().guardDurabilityMax, m_guardBreakTimer > 0);
 
 		// ATBコマンドメニュー
 		if (auto commandMenu = m_wpCommandMenu.lock())

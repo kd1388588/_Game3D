@@ -15,13 +15,9 @@ namespace PlayerConst
 	constexpr float kMinTurnAngle			= 0.1f;		// これ未満の角度差は旋回しない
 
 	// ステータス
-	constexpr int	kMaxHp = 100;
-	constexpr int	kDamageInvincibleFrame = 30;		// 被弾後の無敵時間
-	constexpr int	kHeavyDamage = 20;		// これ以上のダメージで仰け反る
+	// ※HP・攻撃力・モードの倍率・ATB のたまり方・ガードの耐久値などは、ゲームを動かしたまま変えられるように
+	//   StageSettings::PlayerTuning に移した（Object Editor の「Player」タブ。コードでは PlayerTune().attackDamage のように読む）
 	// 二刀流なので、1振りで左右の剣がそれぞれ当たる（多段ヒット）。そのぶん1回のダメージは低め
-	constexpr int	kAttackDamage = 3;
-	constexpr int	kCriticalAttackDamage = 5;
-	constexpr int	kMultiHitInterval = 10;	// 同じ剣が同じ敵にもう一度当たれるまでのフレーム数（回転する攻撃などで何度も当たる）
 	constexpr int	kAttackTypeNum = 5;		// 攻撃パターンの数
 
 	// 先行入力（ボタンを押してから、何フレームの間「押された」として受け付けるか。60フレーム = 1秒）
@@ -34,20 +30,9 @@ namespace PlayerConst
 	//   オペレーター：攻撃が速く、ゲージがよくたまる。そのかわり威力は低い
 	//   パニッシャー：攻撃が遅く、移動も遅い。ゲージはたまらない。そのかわり威力が高い
 	//   ATBの技（04・05）：モードに関係なく、普通の攻撃より少し強い（攻撃・回避でためて使う）
-	constexpr float kOperatorDamageRate		= 0.6f;		// オペレーターのダメージの倍率
-	constexpr float kPunisherDamageRate		= 1.6f;		// パニッシャーのダメージの倍率
-	constexpr float kOperatorAttackSpeedRate = 1.2f;	// オペレーターの攻撃の再生速度の倍率
-	constexpr float kPunisherAttackSpeedRate = 0.8f;	// パニッシャーの攻撃の再生速度の倍率（回避できるようにしたかわりに、0.9 から遅くした）
-	constexpr float kPunisherTakenDamageRate = 1.3f;	// パニッシャーの時に受けるダメージの倍率（回避できるようにしたかわりに、多く受ける）
-	constexpr float kPunisherMoveRate		= 0.6f;		// パニッシャーの移動の速さ（オペレーターを1.0とした倍率）
 
 	// ATBゲージのたまり方（1本 = 100）
 	// ※時間ではたまらない（攻撃を当てる・回避することでだけたまる）
-	constexpr float kAtbHitGain				= 2.5f;		// 攻撃を当てた時にたまる量（多段ヒットで何度も当たるので少なめ）
-	constexpr float kOperatorAtbHitRate		= 1.15f;		// オペレーターの時、当てた時にたまる量の倍率（よくたまる）
-	constexpr float kPunisherAtbHitRate		= 0.75f;	// パニッシャーの時の倍率（少なめ）
-	constexpr float kAtbCriticalRate		= 1.25f;		// クリティカルの時、当てた時にたまる量の倍率
-	constexpr float kAtbEvadeGain			= 5.0f;		// 回避した時にたまる量（20回で1本）
 
 	// ATBコマンドメニュー
 	constexpr float	kCommandTimeScale		= 0.1f;		// メニューを開いている間の時間の速さ（10分の1）
@@ -69,7 +54,6 @@ namespace PlayerConst
 	constexpr int	kModeLockAttackType		= 5;		// 使った後にオペレーターに固定する技（攻撃05）
 	constexpr int	kModeLockFrame			= 60 * 5;	// 攻撃05を使った後、オペレーターに固定する時間（5秒）
 	constexpr int	kModeSwitchCoolFrame	= 60 * 3;	// モードを切り替えた後、次に切り替えられるまでの時間（3秒）
-	constexpr int	kAbilityStunFrame		= 50;		// ATBコマンドの技が当たった敵が、のけぞり続けるフレーム数（当たるたびに延びる）
 
 	// ヒットストップ（攻撃が当たった瞬間に止めるフレーム数と、カメラの揺れの強さ）
 	// ※プレイヤーの攻撃はすべて AttackOBB で、敵の攻撃は OnDamage で、ここの値を使う
@@ -83,22 +67,12 @@ namespace PlayerConst
 	constexpr int	kGuardHitStopFrame		= 4;		// 敵の攻撃をガードした時
 	constexpr float	kGuardShakePower		= 0.05f;
 
-	// 回避中に攻撃を受けた時のダメージの倍率（半分）
-	constexpr float	kEvadeDamageRate		= 0.5f;
-
 	// ガード
-	constexpr float	kGuardDamageRate		= 0.2f;		// ガード中に受けるダメージの倍率
 	constexpr float	kGuardMoveRate			= 0.5f;		// ガードしながら歩く速さ（普段の走る速さの何倍か）
 	constexpr float	kGuardWalkMinAnimSpeed	= 0.6f;		// ガード歩きのアニメーションの再生速度の範囲
 	constexpr float	kGuardWalkMaxAnimSpeed	= 1.8f;		// （移動の速さに合わせて変え、足が滑って見えないようにする）
 
 	// ガードの耐久値（攻撃を受け止めるたびに減り、0 になるとガードを崩される）
-	constexpr float	kGuardDurabilityMax		= 100.0f;
-	constexpr float	kGuardCostPerDamage		= 3.0f;		// 受け止めたダメージ × これだけ減る（ダメージ10なら30。4回で崩される）
-	constexpr float	kGuardCriticalCostRate	= 1.5f;		// クリティカルの攻撃は多く減る
-	constexpr int	kGuardRegenDelay		= 120;		// 最後に受け止めてから回復し始めるまでのフレーム数（2秒）
-	constexpr float	kGuardRegenSpeed		= 0.15f;	// 1フレームに回復する量（0 から満タンまで約11秒）
-	constexpr int	kGuardBreakFrame		= 60 * 2;	// 崩された後、ガードできない時間（2秒。その間も耐久値は少しずつ回復する）
 	constexpr int	kGuardBreakHitStopFrame	= 10;		// 崩された時のヒットストップ
 	constexpr float	kGuardBreakShakePower	= 0.15f;
 
@@ -150,7 +124,6 @@ namespace PlayerConst
 	constexpr float	kPlayerBodyRadius		= 0.4f;		// プレイヤーの体の半径
 
 	// ロックオン
-	constexpr float	kLockOnRange			= 10.0f;	// この距離に近づいた敵に、自動でロックオンする（一番近い敵）
 	constexpr float	kLockOnLoseMargin		= 0.5f;		// ロックオンを外すのは 10m ＋ これだけ離れた時（境目で付いたり外れたりしないように）
 
 	// リムライト（バトルモードを切り替えた時に1回だけ光らせる）
