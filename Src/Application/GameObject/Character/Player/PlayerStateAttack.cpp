@@ -27,7 +27,6 @@ float PlayerStateComboAttack::GetCancelFrame() const
 	// 02シリーズ（空中の繋がり）
 	if (IsSpinLeapAttack()) return kSpinLeapCancelFrame;		// 回転し終わるまで次へ行かない
 	if (m_comboType == 2 && m_comboStep == 4) return 30.0f;		// 落ちる前（空中）のフレームを指定
-	if (m_comboType == 2 && m_comboStep == 5) return 999.0f;	// 5段目は最後まで再生
 
 	// 04の4段目：跳び上がって叩きつけるまで（空中で次へ行かないように）最後まで再生
 	if (IsJumpSlamAttack()) return 999.0f;
@@ -71,7 +70,7 @@ void PlayerStateComboAttack::ChangeToNextAttack(Player* player) const
 	}
 	else
 	{
-		// 5段目まで打ち終わった
+		// 最後の段（4 段目）まで打ち終わった
 		player->ChangeState(std::make_shared<PlayerStateIdle>());
 	}
 }
@@ -257,6 +256,14 @@ void PlayerStateComboAttack::Update(Player* player)
 		if (m_comboStep < kMaxComboStep)
 		{
 			ChangeToNextAttack(player);
+			return;
+		}
+
+		// 最後の段：少したったら、1 段目からつなげる（今のモードの攻撃。モードを切り替えていても、その攻撃で始める）
+		// （アビリティは最後まで見せる。空中で終わる攻撃は、着地してから）
+		if (!m_isAbility && !IsSplitAttack() && player->IsOnGround() && animTime >= GetCancelFrame() + kComboRestartFrame)
+		{
+			player->ChangeState(std::make_shared<PlayerStateComboAttack>(player->GetCurrentAttackType(), 1));
 			return;
 		}
 	}

@@ -154,6 +154,8 @@
     kAttack5_3AnimSpeed   ：攻撃05の3段目の再生速度（0.75）
     kAttackEvadeCancelFrame ：攻撃のこのフレーム以降なら、回避でキャンセルできる（10）
     kAttackRecoveryFrame  ：攻撃の後のすきを、移動でキャンセルできるまでのフレーム（3）
+    kMaxComboStep         ：コンボの段数（4。どの攻撃もアニメーションは 4 段目まで）
+    kComboRestartFrame    ：最後の段の後、攻撃で 1 段目からつなげられるまでのフレーム（次の段へ進めるフレーム ＋ 8）
     kEvadeReturnsToOperator ：回避でオペレーターに戻すか（false）
     kDashSpeedRate        ：ダッシュの速さ（1.6）
     kGuardStartAnimSpeed  ：ガードを構える速さ（1.5）
