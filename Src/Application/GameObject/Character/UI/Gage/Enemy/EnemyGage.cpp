@@ -21,6 +21,15 @@ namespace
 	constexpr float		kBreakTextScale		= 0.6f;
 	constexpr int		kBreakTextOffsetY	= 16;		// 「ブレイク」の文字（HP ゲージの上）
 
+	// 画面の外に出た時は、画面のふちの内側に止めて出す（大きいボスの頭の上が、画面の上にはみ出すため）
+	constexpr int		kEdgeMarginTop		= 30;		// 上のふちから、これだけ内側
+	constexpr int		kEdgeMarginSide		= 20;		// 左右のふちから（ゲージの幅の半分に足す）
+	constexpr int		kEdgeMarginBottom	= 200;		// 下のふちから（左下・右下の HUD と重ならないように）
+	constexpr float		kEdgeAlphaRate		= 0.8f;		// ふちに止めている時は、少し薄くする
+	constexpr int		kArrowGap			= 8;		// 矢印とゲージのすき間
+	constexpr int		kArrowLength		= 7;		// 矢印の長さ
+	constexpr int		kArrowHalfWidth		= 6;		// 矢印の幅の半分
+
 	// どの敵に出すか
 	constexpr int		kShowAfterHitFrame	= 60 * 5;	// 最後に当ててから、この間は出しておく
 	constexpr float		kBossEngageMargin	= 4.0f;		// ボスがこちらに気づく距離 ＋ これ以内なら出す
@@ -140,13 +149,24 @@ void EnemyGage::Update()
 bool EnemyGage::WorldToScreen(const Math::Vector3& pos, Math::Vector2& out)
 {
 	const auto& cam = KdShaderManager::Instance().GetCameraCB();
-	Math::Vector4 clip = Math::Vector4::Transform(Math::Vector4(pos.x, pos.y, pos.z, 1.0f), cam.mView * cam.mProj);
-	if (clip.w <= 0.01f) return false;		// カメラの後ろ
+	Math::Vector2 halfScreen = SpriteUtil::GetScreenSize() * 0.5f;
 
-	Math::Vector2 screen = SpriteUtil::GetScreenSize();
-	out.x = clip.x / clip.w * screen.x * 0.5f;
-	out.y = clip.y / clip.w * screen.y * 0.5f;
-	return true;
+	Math::Vector4 clip = Math::Vector4::Transform(Math::Vector4(pos.x, pos.y, pos.z, 1.0f), cam.mView * cam.mProj);
+	if (clip.w > 0.01f)
+	{
+		// カメラの前：x, y を w で割ると -1～1（画面の左下 ～ 右上）になる
+		out.x = clip.x / clip.w * halfScreen.x;
+		out.y = clip.y / clip.w * halfScreen.y;
+		return true;
+	}
+
+	// カメラの後ろ：そのまま割ると左右・上下が逆になるので、
+	// カメラから見て左右どちらにいるかだけを使い、画面の下のずっと外に置く（あとで下のふちに止める）
+	Math::Vector3 viewPos = Math::Vector3::Transform(pos, cam.mView);
+	out.x = (viewPos.x >= 0.0f) ? halfScreen.x * 2.0f : -halfScreen.x * 2.0f;
+	if (std::abs(viewPos.x) < 1.0f) out.x = 0.0f;		// ほぼ真後ろ：真ん中
+	out.y = -halfScreen.y * 4.0f;
+	return false;
 }
 
 void EnemyGage::DrawBar(int centerX, int centerY, int halfW, int halfH, float ratio, const Math::Color& color, float alpha)
@@ -165,25 +185,56 @@ void EnemyGage::DrawEntry(const Entry& e)
 {
 	if (e.alpha <= 0.0f) return;
 
-	// カメラから遠すぎる・カメラの後ろの敵には出さない
+	// カメラから遠すぎる敵には出さない（カメラの後ろの敵は、画面の下のふちに出す）
 	const auto& cam = KdShaderManager::Instance().GetCameraCB();
 	Math::Vector3 camPos = cam.mView.Invert().Translation();
 	if ((e.headPos - camPos).Length() > kMaxShowDistance) return;
 
 	Math::Vector2 screenPos;
-	if (!WorldToScreen(e.headPos, screenPos)) return;
-	int x = static_cast<int>(screenPos.x);
-	int y = static_cast<int>(screenPos.y);
+	WorldToScreen(e.headPos, screenPos);
+
+	// 画面のふちの内側に止める（ゲージの幅の分だけ、左右は内側にする）
+	int halfW = e.isBig ? kBigHalfW : kSmallHalfW;
+	Math::Vector2 halfScreen = SpriteUtil::GetScreenSize() * 0.5f;
+	Math::Vector2 clamped =
+	{
+		std::clamp(screenPos.x, -halfScreen.x + halfW + kEdgeMarginSide, halfScreen.x - halfW - kEdgeMarginSide),
+		std::clamp(screenPos.y, -halfScreen.y + kEdgeMarginBottom, halfScreen.y - kEdgeMarginTop),
+	};
+	Math::Vector2 outDir = screenPos - clamped;		// 止めた所から、本当の位置への向き
+	bool isOnEdge = outDir.LengthSquared() > 1.0f;
+
+	int x = static_cast<int>(clamped.x);
+	int y = static_cast<int>(clamped.y);
 
 	auto& spriteShader = KdShaderManager::Instance().m_spriteShader;
-	int halfW = e.isBig ? kBigHalfW : kSmallHalfW;
-	Math::Color back = kBackColor;		back.w *= e.alpha;
-	Math::Color frame = kFrameColor;	frame.w *= e.alpha;
+	float alpha = e.alpha * (isOnEdge ? kEdgeAlphaRate : 1.0f);
+	Math::Color back = kBackColor;		back.w *= alpha;
+	Math::Color frame = kFrameColor;	frame.w *= alpha;
+
+	// ふちに止めている時は、本当の位置の方へ向いた三角の矢印を出す（「画面の外にいる」と分かるように）
+	if (isOnEdge)
+	{
+		outDir.Normalize();
+		Math::Vector2 side = { -outDir.y, outDir.x };
+		// 上下に出ている時はゲージの上・下に、左右に出ている時はゲージの横に出す
+		float gap = (std::abs(outDir.y) >= std::abs(outDir.x)) ? (kHpHalfH + kArrowGap) : (halfW + kArrowGap);
+		Math::Vector2 base = clamped + outDir * gap;
+		Math::Vector2 tip = base + outDir * kArrowLength;
+		Math::Vector2 b1 = base + side * kArrowHalfWidth;
+		Math::Vector2 b2 = base - side * kArrowHalfWidth;
+		Math::Color arrow = kHpColor;
+		arrow.w *= alpha;
+		spriteShader.DrawTriangle(
+			static_cast<int>(tip.x), static_cast<int>(tip.y),
+			static_cast<int>(b1.x), static_cast<int>(b1.y),
+			static_cast<int>(b2.x), static_cast<int>(b2.y), &arrow, true);
+	}
 
 	// ---- HP ゲージ ----
 	spriteShader.DrawBox(x, y, halfW, kHpHalfH, &back, true);
-	DrawBar(x, y, halfW, kHpHalfH, e.delayRatio, kDelayColor, e.alpha);
-	DrawBar(x, y, halfW, kHpHalfH, e.hpRatio, kHpColor, e.alpha);
+	DrawBar(x, y, halfW, kHpHalfH, e.delayRatio, kDelayColor, alpha);
+	DrawBar(x, y, halfW, kHpHalfH, e.hpRatio, kHpColor, alpha);
 	spriteShader.DrawBox(x, y, halfW, kHpHalfH, &frame, false);
 
 	// ---- ブレイクゲージ（HP ゲージの下） ----
@@ -198,16 +249,19 @@ void EnemyGage::DrawEntry(const Entry& e)
 		float pulse = 0.5f + 0.5f * std::sin(m_frame * kBreakPulseSpeed);
 		breakColor = Math::Color::Lerp(kBrokenColorDark, kBrokenColorBright, pulse);
 	}
-	DrawBar(x, breakY, halfW, kBreakHalfH, e.breakRatio, breakColor, e.alpha);
+	DrawBar(x, breakY, halfW, kBreakHalfH, e.breakRatio, breakColor, alpha);
 	spriteShader.DrawBox(x, breakY, halfW, kBreakHalfH, &frame, false);
 
 	// ブレイク中は、ゲージの上に「ブレイク」と出す
 	if (e.isBroken && m_breakText)
 	{
 		Math::Color textColor = breakColor;
-		textColor.w *= e.alpha;
+		textColor.w *= alpha;
 		m_breakText->SetColor(textColor);
-		m_breakText->SetCenterPos({ static_cast<float>(x), static_cast<float>(y + kBreakTextOffsetY) });
+		// 画面の上のふちに止めている時は、上の矢印と重ならないように、ゲージの下に出す
+		bool isTopEdge = isOnEdge && outDir.y > 0.0f;
+		int textY = isTopEdge ? (breakY - kBreakHalfH - kBreakTextOffsetY + kHpHalfH) : (y + kBreakTextOffsetY);
+		m_breakText->SetCenterPos({ static_cast<float>(x), static_cast<float>(textY) });
 		m_breakText->DrawSprite();
 	}
 }
