@@ -1,6 +1,4 @@
 ﻿#include "../../../Application/main.h"
-#include "../../../Application/GameObject/Character/Player/Player.h"
-#include "../../../Application/GameObject/Character/Player/PlayerParamManager.h"
 #include "../../../Application/Utility/StageSettings.h"
 #include "../../../Application/Utility/EffectSettings.h"
 #include "KdDebugGUI.h"
@@ -73,98 +71,12 @@ void KdDebugGUI::GuiProcess()
 //	}
 // 
 	// =========================================================
-	// Playerパラメータエディタ
+	// 【BRAVER で変えた所】前はここに「Player Parameter Editor」のウィンドウがあった
+	//   使っていない項目（Attack Params）や、保存先が違うボタンがあったので消し、
+	//   残りの項目は Object Editor の「Player」タブに移した（StageSettings::DrawPlayerEditor）
 	// =========================================================
-	ImGui::SetNextWindowPos(ImVec2(850, 10), ImGuiCond_FirstUseEver);
-	ImGui::SetNextWindowSize(ImVec2(400, 600), ImGuiCond_FirstUseEver);
 
-	ImGui::Begin("Player Parameter Editor");
-
-	ImGui::Text("Current Attack Pattern : 0%d", Player::s_currentAttackType);
-	ImGui::Separator();
-
-	// 上部に共通のセーブ・ロードボタン
-	if (ImGui::Button("Save Params")) {
-		PlayerParamManager::Instance().Save("PlayerParams.txt");
-	}
-	ImGui::SameLine();
-	if (ImGui::Button("Load Params")) {
-		PlayerParamManager::Instance().Load("PlayerParams.txt");
-	}
-	ImGui::Separator();
-
-	// タブ機能の開始
-	if (ImGui::BeginTabBar("PlayerParamsTabBar"))
-	{
-		// ---------------------------------------------------
-		// 攻撃アニメーション（Attack Params）
-		// ---------------------------------------------------
-		if (ImGui::BeginTabItem("Attack Params"))
-		{
-			auto& attackMap = PlayerParamManager::Instance().GetAttackMap();
-			for (auto& pair : attackMap)
-			{
-				if (ImGui::TreeNode(pair.first.c_str()))
-				{
-					ImGui::DragFloat("Hit Start", &pair.second.hitStartFrame, 0.5f, 0.0f, 100.0f);
-					ImGui::DragFloat("Hit End", &pair.second.hitEndFrame, 0.5f, 0.0f, 100.0f);
-					ImGui::DragFloat("Cancel", &pair.second.cancelFrame, 0.5f, 0.0f, 999.0f);
-					ImGui::TreePop();
-				}
-			}
-			ImGui::EndTabItem();
-		}
-
-		if (ImGui::BeginTabItem("Animation Move"))
-		{
-			ImGui::SliderFloat("Evade Speed", &PlayerParamManager::Instance().m_evadeSpeed, 0.01f, 0.5f);
-
-			// 見た目の確認用の切り替え
-			ImGui::Checkbox("Root Motion", &Player::s_useRootMotion);
-			ImGui::Checkbox("Hitbox/Trail Along Blade", &Player::s_bladeShapeHitbox);
-			ImGui::SliderFloat("Throw Angle Offset", &Player::s_throwAngleOffset, -90.0f, 90.0f);
-			ImGui::SliderFloat("Run Speed", &Player::s_runSpeedRate, 1.0f, 2.5f);
-
-			if (ImGui::Button("Save Params"))
-			{
-				PlayerParamManager::Instance().Save("Asset/Data/PlayerParams.txt");
-			}
-
-			ImGui::EndTabItem();
-		}
-
-		// ---------------------------------------------------
-		// 【タブ3】武器位置調整エディタ（Weapon Adjust）
-		// ---------------------------------------------------
-		if (ImGui::BeginTabItem("Weapon Adjust"))
-		{
-			// ▼ JSON セーブ・ロードボタン ▼
-			if (ImGui::Button("Save JSON (.json)"))
-			{
-				PlayerParamManager::Instance().SaveWeaponParams("Asset/Data/WeaponParams.json");
-			}
-			ImGui::SameLine();
-			if (ImGui::Button("Load JSON (.json)"))
-			{
-				PlayerParamManager::Instance().LoadWeaponParams("Asset/Data/WeaponParams.json");
-			}
-			ImGui::Separator();
-
-			// Posの微調整は「0.005f」、Rot（角度）は「0.5f」単位で動かすとやりやすいです
-			ImGui::DragFloat3("Rotation (Right)", &Player::s_weaponRotR.x, 0.1f);
-			ImGui::DragFloat3("Position (Right)", &Player::s_weaponPosR.x, 0.001f);
-			ImGui::DragFloat3("Rotation (Left)", &Player::s_weaponRotL.x, 0.1f);
-			ImGui::DragFloat3("Position (Left)", &Player::s_weaponPosL.x, 0.001f);
-
-			ImGui::EndTabItem();
-		}
-
-		ImGui::EndTabBar();
-	}
-
-	ImGui::End();
-
-	// ステージエディタ（霧などのステージの見た目を、ゲームを動かしたまま調整する）
+	// オブジェクトエディタ（Player / Enemy / Stage / UI のタブ。ゲームを動かしたまま調整する）
 	StageSettings::Instance().DrawEditor();
 
 	// エフェクトエディタ（エフェクトの大きさ・速さ・色（モードの色）・Effekseer エディタとの同期）

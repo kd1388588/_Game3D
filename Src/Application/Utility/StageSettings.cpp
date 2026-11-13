@@ -3,9 +3,13 @@
 // JSON の読み書き（nlohmann/json。tinygltf と一緒に Library/tinygltf に入っている）
 #include "json.hpp"
 
-// 「戦闘」タブの「今いる敵に反映」「ボスをブレイクさせる」で、今いる敵を探すため
+// 「Enemy」タブの「今いる敵に反映」「ボスをブレイクさせる」で、今いる敵を探すため
 #include "../Scene/SceneManager.h"
 #include "../GameObject/Character/Enemy/Enemy.h"
+
+// 「Player」タブ：プレイヤーの調整用の値（Player の static 変数・PlayerParamManager）
+#include "../GameObject/Character/Player/Player.h"
+#include "../GameObject/Character/Player/PlayerParamManager.h"
 
 namespace
 {
@@ -114,6 +118,15 @@ bool StageSettings::Save(const std::string& path) const
 		{ "DeathFadeSec",	l.deathFadeSec },
 	};
 
+	// プレイヤーの調整用の値（回避の速さ・剣の持ち方は、PlayerParamManager が別のファイルに保存する）
+	j["Player"] =
+	{
+		{ "RunSpeedRate",		Player::s_runSpeedRate },
+		{ "UseRootMotion",		Player::s_useRootMotion },
+		{ "BladeShapeHitbox",	Player::s_bladeShapeHitbox },
+		{ "ThrowAngleOffset",	Player::s_throwAngleOffset },
+	};
+
 	const Battle& b = m_battle;
 	j["Battle"] =
 	{
@@ -204,6 +217,14 @@ bool StageSettings::Load(const std::string& path)
 		Read(h, "FastBlinkSpeed",	l.fastBlinkSpeed);
 		Read(h, "DeathFadeSec",		l.deathFadeSec);
 	}
+	if (j.contains("Player"))
+	{
+		const json& p = j["Player"];
+		Read(p, "RunSpeedRate",		Player::s_runSpeedRate);
+		Read(p, "UseRootMotion",	Player::s_useRootMotion);
+		Read(p, "BladeShapeHitbox",	Player::s_bladeShapeHitbox);
+		Read(p, "ThrowAngleOffset",	Player::s_throwAngleOffset);
+	}
 	if (j.contains("Battle"))
 	{
 		const json& t = j["Battle"];
@@ -229,32 +250,46 @@ bool StageSettings::Load(const std::string& path)
 }
 
 // ============================================================
-// ステージエディタ
+// オブジェクトエディタ（Player / Enemy / Stage / UI のタブ）
+// 【なぜ 1 つのウィンドウにまとめたか】前は「Player Parameter Editor」「Stage Editor」に分かれていて、
+//   敵の HP が Stage Editor にあるなど、どこに何があるか分かりにくかったため
+//   ※エフェクトは大きく、保存の仕方も違うので、Effect Editor のまま別のウィンドウにしている
 // ============================================================
 void StageSettings::DrawEditor()
 {
 	ImGui::SetNextWindowPos(ImVec2(10, 10), ImGuiCond_FirstUseEver);
 	ImGui::SetNextWindowSize(ImVec2(420, 640), ImGuiCond_FirstUseEver);
-	if (!ImGui::Begin("Stage Editor"))
+	if (!ImGui::Begin("Object Editor"))
 	{
 		ImGui::End();
 		return;
 	}
 
+	// 保存・読み込みは、全部のタブをまとめて行う
+	//   StageSettings.json：Player（走る速さなど）・Enemy・Stage・UI
+	//   PlayerParams.txt  ：回避の速さ（PlayerParamManager）
+	//   WeaponParams.json ：剣の持ち方（PlayerParamManager）
 	if (ImGui::Button(U8("保存")))
 	{
-		m_message = Save() ? U8("保存しました：") + kDefaultPath : U8("保存できませんでした：") + kDefaultPath;
+		bool isOk = Save();
+		PlayerParamManager::Instance().Save(kPlayerParamPath);
+		PlayerParamManager::Instance().SaveWeaponParams(kWeaponParamPath);
+		m_message = isOk ? U8("保存しました（Asset/Data/ の StageSettings.json・PlayerParams.txt・WeaponParams.json）")
+						 : U8("保存できませんでした：") + kDefaultPath;
 	}
 	ImGui::SameLine();
 	if (ImGui::Button(U8("読み込み")))
 	{
-		m_message = Load() ? U8("読み込みました：") + kDefaultPath : U8("読み込めませんでした（ファイルが無い・書き方が違う）");
+		bool isOk = Load();
+		PlayerParamManager::Instance().Load(kPlayerParamPath);
+		PlayerParamManager::Instance().LoadWeaponParams(kWeaponParamPath);
+		m_message = isOk ? U8("読み込みました") : U8("読み込めませんでした（ファイルが無い・書き方が違う）");
 	}
 	ImGui::SameLine();
-	if (ImGui::Button(U8("すべて初期値に戻す")))
+	if (ImGui::Button(U8("Enemy・Stage・UI を初期値に戻す")))
 	{
 		ResetAll();
-		m_message = U8("初期値に戻しました（保存するまでファイルは変わりません）");
+		m_message = U8("初期値に戻しました（Player タブは戻さない。保存するまでファイルは変わりません）");
 	}
 	if (!m_message.empty()) ImGui::TextWrapped("%s", m_message.c_str());
 
@@ -262,22 +297,27 @@ void StageSettings::DrawEditor()
 	ImGui::TextDisabled(U8("Ctrl＋クリック（またはダブルクリック）で数値を直接入力"));
 	ImGui::Separator();
 
-	if (ImGui::BeginTabBar("StageEditorTabs"))
+	if (ImGui::BeginTabBar("ObjectEditorTabs"))
 	{
-		if (ImGui::BeginTabItem(U8("霧")))
+		if (ImGui::BeginTabItem("Player"))
+		{
+			DrawPlayerEditor();
+			ImGui::EndTabItem();
+		}
+		if (ImGui::BeginTabItem("Enemy"))
+		{
+			DrawBattleEditor();
+			ImGui::EndTabItem();
+		}
+		if (ImGui::BeginTabItem("Stage"))
 		{
 			DrawFogEditor();
 			DrawGroundMistEditor();
 			ImGui::EndTabItem();
 		}
-		if (ImGui::BeginTabItem(U8("画面")))
+		if (ImGui::BeginTabItem("UI"))
 		{
 			DrawLowHpEditor();
-			ImGui::EndTabItem();
-		}
-		if (ImGui::BeginTabItem(U8("戦闘")))
-		{
-			DrawBattleEditor();
 			ImGui::EndTabItem();
 		}
 		ImGui::EndTabBar();
@@ -452,5 +492,33 @@ void StageSettings::DrawBattleEditor()
 	}
 
 	if (ImGui::Button(U8("戦闘の設定を初期値に戻す"))) b = Battle();
+	ImGui::PopID();
+}
+
+void StageSettings::DrawPlayerEditor()
+{
+	ImGui::PushID("Player");
+	ImGui::Text(U8("今の攻撃の種類：0%d"), Player::s_currentAttackType);
+
+	if (ImGui::CollapsingHeader(U8("動き"), ImGuiTreeNodeFlags_DefaultOpen))
+	{
+		Drag(U8("回避の速さ"), PlayerParamManager::Instance().m_evadeSpeed, 0.002f, 0.01f, 0.5f, "%.3f", U8("回避の 1 フレームに進む距離（だんだん遅くなる）。PlayerParams.txt に保存する"));
+		Drag(U8("走る速さの倍率"), Player::s_runSpeedRate, 0.01f, 1.0f, 2.5f, "%.2f", U8("1.0 でアニメーションの足の動きと同じ速さ"));
+		ImGui::Checkbox(U8("ルートモーション"), &Player::s_useRootMotion);
+		Help(U8("オン：アニメーションの体の動きどおりに進む（攻撃の踏み込みなど）"));
+	}
+
+	if (ImGui::CollapsingHeader(U8("剣"), ImGuiTreeNodeFlags_DefaultOpen))
+	{
+		ImGui::Checkbox(U8("攻撃判定・軌跡を剣の形に合わせる"), &Player::s_bladeShapeHitbox);
+		Help(U8("オン：剣のモデルから刃の根元・先を求めて、攻撃判定の箱と軌跡を合わせる"));
+		Drag(U8("投げる向きの微調整"), Player::s_throwAngleOffset, 0.5f, -90.0f, 90.0f, "%.1f deg", U8("剣を投げる攻撃（05 の 2 段目）で、剣の向きを足す角度"));
+
+		ImGui::SeparatorText(U8("剣の持ち方（WeaponParams.json に保存する）"));
+		ImGui::DragFloat3(U8("右の角度"), &Player::s_weaponRotR.x, 0.1f);
+		ImGui::DragFloat3(U8("右の位置"), &Player::s_weaponPosR.x, 0.001f);
+		ImGui::DragFloat3(U8("左の角度"), &Player::s_weaponRotL.x, 0.1f);
+		ImGui::DragFloat3(U8("左の位置"), &Player::s_weaponPosL.x, 0.001f);
+	}
 	ImGui::PopID();
 }

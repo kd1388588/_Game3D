@@ -31,7 +31,7 @@ BRAVER　画面の要素（UI・HUD・画面の演出）の一覧
   HP の数字は出していない
 
 ■ HP が少ない時の点滅
-  HP の割合がステージエディタ「画面」タブの「HP が点滅し始める HP」（初期値 0.3）以下で始まる
+  HP の割合がオブジェクトエディタ「UI」タブの「HP が点滅し始める HP」（初期値 0.3）以下で始まる
   中身の画像の代わりに、暗い赤 { 0.85, 0.18, 0.12 } ⇔ 明るいオレンジ { 1.0, 0.55, 0.3 } の四角を描く
   速さ：「点滅の速さ」（初期値 0.12）
   まわりに 3px 大きい、うっすら赤い光 { 1.0, 0.3, 0.15, 0.35 }
@@ -145,7 +145,7 @@ BRAVER　画面の要素（UI・HUD・画面の演出）の一覧
 ファイル：Src/Framework/Shader/PostProcessShader/KdPostProcessShader_PS_DoF.hlsl（色の処理）
           Src/Framework/Shader/PostProcessShader/KdPostProcessShader.h（SetScreenColor）
           Src/Application/GameObject/Character/Player/Player.cpp（UpdateHpGage で強さを決める）
-調整：ステージエディタ（F8）の「画面」タブ（Asset/Data/StageSettings.json に保存）
+調整：オブジェクトエディタ（F8）の「UI」タブ（Asset/Data/StageSettings.json に保存）
 
   始まる HP：10%（startRate 0.1）。0 で一番強くなる
   HP 0 の時の強さ：白黒 0.85（少しだけ色が残る）、暗さ 0.35、周辺減光 0.97
@@ -166,7 +166,7 @@ BRAVER　画面の要素（UI・HUD・画面の演出）の一覧
 2-3. 霧（世界の見え方）
 ------------------------------------------------------------
 ファイル：Src/Application/Utility/StageSettings.cpp / .h
-調整：ステージエディタ（F8）の「霧」タブ
+調整：オブジェクトエディタ（F8）の「霧」タブ
   距離の霧：色 { 0.10, 0.11, 0.16 }、濃さ 0.007
   高さの霧：色 { 0.12, 0.13, 0.18 }、上 1.0m・下 -1.0m、45m で一番濃い
   地面の霧（板の霧）：Src/Application/GameObject/Stage/Object/GroundMist/
@@ -243,8 +243,8 @@ BRAVER　画面の要素（UI・HUD・画面の演出）の一覧
 7. デバッグ用の画面（F8 で出す）
 ############################################################
 ファイル：Src/Framework/Utility/KdDebug/KdDebugGUI.cpp
-  ・Player Parameter Editor：攻撃の当たり判定のフレーム・回避の速さ・武器の位置など
-  ・Stage Editor（Src/Application/Utility/StageSettings.cpp）：「霧」「画面」タブ
+  ・Object Editor（Src/Application/Utility/StageSettings.cpp）：
+      Player（回避・走る速さ・剣の持ち方）／Enemy（HP の倍率・ブレイク）／Stage（霧）／UI（HP が少ない時の画面・HP ゲージの色）
   ・Effect Editor（Src/Application/Utility/EffectSettings.cpp）：エフェクトごとの大きさ・速さ・色、試し撃ち、Effekseer との同期
   ・当たり判定のワイヤー表示
   ・デバッグキー（デバッグ表示中だけ）：F7 ボス以外を全員倒す／F9 ATB 満タン／F10 HP 満タン／F11 HP を 1／

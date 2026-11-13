@@ -48,7 +48,7 @@ BRAVER　オブジェクトごとの技術のファイル（目次と書き方�
       Sky.txt                   Sky（夜空と月）
       StageEnvironment.txt      StageEnvironment（光と霧の初期設定）
       StageLights.txt           StageLights（松明・かがり火・燭台の光）
-      StageSettings.txt         StageSettings（ステージエディタ）
+      StageSettings.txt         StageSettings（オブジェクトエディタ）
   [Effect] エフェクト
       Effect.txt                Effect（エフェクトのオブジェクト）
       EffectPlayer.txt          EffectPlayer（Effekseer のエフェクトを出す補助）

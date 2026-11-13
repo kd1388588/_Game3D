@@ -107,7 +107,7 @@ namespace
 	constexpr int	kHitShakeFrame			= 8;
 	constexpr float	kHitShakePower			= 0.03f;	// 揺れる幅（体の大きさに掛ける）
 
-	// ---- ブレイク（数値はステージエディタの「戦闘」タブ） ----
+	// ---- ブレイク（数値はオブジェクトエディタの「Enemy」タブ） ----
 	constexpr float	kFramePerSec			= 60.0f;	// 秒をフレーム数に直す
 	const Math::Vector3 kBreakLimColor		= { 1.0f, 0.75f, 0.2f };	// ブレイク中のふちの色（金色。ゆっくり明るく・暗くする）
 	constexpr float	kBreakLimPow			= 1.2f;

@@ -35,10 +35,10 @@ public:
 	int GetMaxHp() const { return m_maxHp; }
 	float GetHpRatio() const { return (m_maxHp > 0) ? static_cast<float>(std::max(m_hp, 0)) / m_maxHp : 0.0f; }
 
-	// HP の倍率（ステージエディタの「戦闘」タブ）を、今いる敵に掛け直す（残りの HP の割合はそのまま）
+	// HP の倍率（オブジェクトエディタの「Enemy」タブ）を、今いる敵に掛け直す（残りの HP の割合はそのまま）
 	void ApplyHpRate();
 
-	// ---- ブレイク（設定はステージエディタの「戦闘」タブ。ザコ・中ボスもブレイクさせるかを選べる） ----
+	// ---- ブレイク（設定はオブジェクトエディタの「Enemy」タブ。ザコ・中ボスもブレイクさせるかを選べる） ----
 	// 攻撃を当てるとたまり、満タンになるとブレイクして、しばらく攻撃が通りやすくなる
 	bool CanBreak() const;							// この敵はブレイクゲージがたまるか
 	void AddBreak(float amount);					// ゲージをためる（ブレイク中は、たまらない）

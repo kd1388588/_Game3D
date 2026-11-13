@@ -476,7 +476,7 @@ void Player::UpdateHpGage()
 	float ratio = std::max(static_cast<float>(m_hp) / static_cast<float>(m_maxHp), 0.0f);
 
 	// HP が少ない時の画面：HP が「始まる HP」より少ないほど、白黒・暗く・周辺減光を強くする（HP 0 で一番強い）
-	// 急に変わらないように、毎フレーム少しずつ近づける（設定はステージエディタの「画面」タブ）
+	// 急に変わらないように、毎フレーム少しずつ近づける（設定はオブジェクトエディタの「UI」タブ）
 	const StageSettings::LowHpScreen& low = StageSettings::Instance().GetLowHpScreen();
 	float target = 0.0f;
 	if (low.enable && low.startRate > 0.0f)

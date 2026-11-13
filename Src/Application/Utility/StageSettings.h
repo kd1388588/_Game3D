@@ -1,12 +1,13 @@
 ﻿#pragma once
 
 // ============================================================
-// ステージの見た目の設定（ステージエディタで調整する値）
-// ・F8 のデバッグ表示を出すと「Stage Editor」のウィンドウが出て、ゲームを動かしたまま調整できる
+// ゲームの調整用の設定（オブジェクトエディタで調整する値）
+// ・F8 のデバッグ表示を出すと「Object Editor」のウィンドウが出て、ゲームを動かしたまま調整できる
+// ・タブ：Player（動き・剣）／Enemy（HP の倍率・ブレイク）／Stage（霧）／UI（HP が少ない時の画面・HP ゲージの色）
 // ・「保存」で Asset/Data/StageSettings.json に書き出し、次にゲームを始めた時に読み込む
 // ・今は「霧」の項目だけ（距離の霧・高さの霧・地面の霧）。項目はここに足していく
-// ・「画面」タブには、HP が少ない時の画面（白黒・暗さ・周辺減光）の設定もある
-// ・「戦闘」タブには、敵の HP の倍率と、ボスのブレイクの設定がある
+// ・「UI」タブには、HP が少ない時の画面（白黒・暗さ・周辺減光）の設定もある
+// ・「Enemy」タブには、敵の HP の倍率と、ボスのブレイクの設定がある
 //
 // 【役割】見た目の数値を 1 か所に持ち、ゲームを動かしたまま imgui で調整し、JSON に保存・読み込みする
 // 【構成】・Fog / GroundMist / LowHpScreen：設定のまとまり（struct。初期値もここに書く）
@@ -78,7 +79,7 @@ public:
 		float	deathFadeSec	= 1.5f;		// 倒れてから、画面が真っ黒になるまでの時間（秒）。真っ黒になったらゲームオーバーへ
 	};
 
-	// 戦闘の数値（敵の HP の倍率・ボスのブレイク）。「戦闘」タブで調整する
+	// 戦闘の数値（敵の HP の倍率・ボスのブレイク）。「Enemy」タブで調整する
 	// 【ブレイク】攻撃を当てるとゲージがたまり、満タンになると「ブレイク」して、しばらく攻撃が通りやすくなる
 	//   ・普通の攻撃では少しずつしかたまらない（回避の直後・パリィの攻撃で大きくたまる予定。bonusGain）
 	//   ・しばらく攻撃を当てないと、速めに減っていく
@@ -120,7 +121,7 @@ public:
 	// 霧の設定を、シェーダー（KdAmbientController）に渡す（ゲームの画面で毎フレーム呼ぶ）
 	void ApplyFog() const;
 
-	// ステージエディタのウィンドウ（KdDebugGUI がデバッグ表示中に呼ぶ）
+	// オブジェクトエディタのウィンドウ（KdDebugGUI がデバッグ表示中に呼ぶ）
 	void DrawEditor();
 
 	// 保存・読み込み（ファイルが無い時は、今の値のまま）
@@ -131,6 +132,8 @@ public:
 	void ResetAll() { m_fog = Fog(); m_groundMist = GroundMist(); m_lowHp = LowHpScreen(); m_battle = Battle(); }
 
 	static inline const std::string kDefaultPath = "Asset/Data/StageSettings.json";
+	static inline const std::string kPlayerParamPath = "Asset/Data/PlayerParams.txt";	// 回避の速さ（PlayerParamManager）
+	static inline const std::string kWeaponParamPath = "Asset/Data/WeaponParams.json";	// 剣の持ち方（PlayerParamManager）
 
 private:
 
@@ -138,6 +141,7 @@ private:
 	void DrawGroundMistEditor();
 	void DrawLowHpEditor();
 	void DrawBattleEditor();
+	void DrawPlayerEditor();
 
 	Fog			m_fog;
 	GroundMist	m_groundMist;

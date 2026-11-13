@@ -138,7 +138,7 @@ namespace
 // ============================================================
 void GameScene::Event()
 {
-	// 霧（ステージエディタで変えた値を、毎フレームすぐに反映する）
+	// 霧（オブジェクトエディタで変えた値を、毎フレームすぐに反映する）
 	StageSettings::Instance().ApplyFog();
 
 	// 影はプレイヤーのまわりに作る（カメラのまわりだと、カメラを引いた時にプレイヤーの影が範囲から外れる）
@@ -411,7 +411,7 @@ void GameScene::UpdateDebugKeys()
 void GameScene::CheckGameEnd()
 {
 	// ゲームオーバー：プレイヤーが倒れて、画面が真っ黒になってから少し待つ
-	// （真っ黒にするのは Player。かかる時間はステージエディタの「画面」タブの「倒れて真っ黒になるまで」）
+	// （真っ黒にするのは Player。かかる時間はオブジェクトエディタの「UI」タブの「倒れて真っ黒になるまで」）
 	auto player = m_wpPlayer.lock();
 	if (player && player->IsDead())
 	{
@@ -462,7 +462,7 @@ void GameScene::Init()
 
 	// 光・フォグ・影
 	StageEnvironment::Apply(true);	// ゲームはタイトルより明るくする
-	StageSettings::Instance().Load();	// ステージエディタで保存した値（霧など）があれば読み込む
+	StageSettings::Instance().Load();	// オブジェクトエディタで保存した値（霧など）があれば読み込む
 	EffectSettings::Instance().OnGameStart();	// エフェクトエディタで保存した値を読み込む（設定によっては Effekseer との同期も始める）
 
 	// ステージ
@@ -474,7 +474,7 @@ void GameScene::Init()
 	CreateObject<RuinedRoad>();
 	// 松明・かがり火・燭台の光（点光源と炎の光）
 	CreateObject<StageLights>();
-	// 地面の霧（濃さなどはステージエディタで調整する）
+	// 地面の霧（濃さなどはオブジェクトエディタで調整する）
 	CreateObject<GroundMist>();
 
 	// 部屋の入口のバリア（向き：0 度は奥へ進む通路、90 度は横へ進む通路をふさぐ）

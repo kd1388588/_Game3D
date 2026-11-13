@@ -40,7 +40,7 @@ void HPGage::DrawSprite()
 	spriteShader.SetMatrix(m_mWorld);
 	spriteShader.DrawTex(&m_gageBase, 0, 0, kGageWidth, kGageHeight, nullptr, &color, pivot);
 
-	// HP の残りで色を変える（設定はステージエディタの「画面」タブ）
+	// HP の残りで色を変える（設定はオブジェクトエディタの「UI」タブ）
 	//   半分より下：黄色 → 4 分の 1 より下：赤くゆっくり点滅 → 画面が暗くなり始める HP より下：赤く速く点滅
 	const StageSettings::LowHpScreen& low = StageSettings::Instance().GetLowHpScreen();
 	int halfW = m_gageWidth / 2;

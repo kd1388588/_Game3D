@@ -85,7 +85,7 @@ Player（プレイヤー。役割ごとに 7 つのファイルに分けてい�
 ■ パラメータの読み書き（PlayerParamManager）
   ファイル：PlayerParamManager.cpp / .h
   ・攻撃ごとの値（ダメージ・速さなど）を名前で管理し、ファイルに保存・読み込み
-  ・imgui の Player Parameter Editor から変えられる
+  ・imgui の Object Editor の「Player」タブから変えられる
 
 ■ 追加・変更の記録
   （このオブジェクトに技術を足した・変えた時は、ここに「日付：内容」を書き足す）
