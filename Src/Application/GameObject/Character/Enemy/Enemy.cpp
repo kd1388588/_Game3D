@@ -149,11 +149,22 @@ void Enemy::Init()
 	// 初期ステートをIdleに設定
 	ChangeState(std::make_shared<EnemyStateIdle>());
 
+	// 当たり判定（プレイヤーの攻撃を受ける所）：足元～腰と、胸～頭の 2 つの球で体全体を覆う
+	// （球の位置と半径は、体の大きさ m_scale の分だけ大きくなる）
+	// 【なぜ 2 つか】前は足元～腰の 1 つだけだったので、ザコ（体が小さい）の上半身には当たらなかった
+	//   例：パニッシャーの 3 段目（回りながら跳ぶ）は剣が高い所を通るので、ボスにしか当たらなかった
 	m_pCollider->RegisterCollisionShape
 	(
 		"Enemy",
 		{ 0.0f, 0.5f, 0.0f },
 		0.6f,
+		KdCollider::Type::TypeDamage
+	);
+	m_pCollider->RegisterCollisionShape
+	(
+		"EnemyUpper",
+		{ 0.0f, 1.35f, 0.0f },
+		0.55f,
 		KdCollider::Type::TypeDamage
 	);
 
