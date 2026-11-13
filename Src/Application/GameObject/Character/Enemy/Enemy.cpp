@@ -6,6 +6,7 @@
 #include "../../../Scene/SceneManager.h"
 #include "EnemyState.h"
 #include "../../Effect/EffectPlayer.h"
+#include "../../../Utility/StageSettings.h"
 
 namespace
 {
@@ -105,6 +106,13 @@ namespace
 	// 小さく揺れる（スーパーアーマー中でも、当たったことが分かるように）
 	constexpr int	kHitShakeFrame			= 8;
 	constexpr float	kHitShakePower			= 0.03f;	// 揺れる幅（体の大きさに掛ける）
+
+	// ---- ブレイク（数値はステージエディタの「戦闘」タブ） ----
+	constexpr float	kFramePerSec			= 60.0f;	// 秒をフレーム数に直す
+	const Math::Vector3 kBreakLimColor		= { 1.0f, 0.75f, 0.2f };	// ブレイク中のふちの色（金色。ゆっくり明るく・暗くする）
+	constexpr float	kBreakLimPow			= 1.2f;
+	constexpr float	kBreakPulseSpeed		= 0.15f;	// 金色の明るさが変わる速さ
+	constexpr int	kBreakStunFrame			= 40;		// ブレイクした瞬間に、のけぞらせる長さ（攻撃の途中でも止める）
 }
 
 void Enemy::Init()
@@ -131,7 +139,8 @@ void Enemy::Init()
 
 	// 種類ごとのパラメータ
 	const EnemyParam& param = m_isBoss ? kBossParam : (m_isMidBoss ? kMidBossParam : kNormalParam);
-	SetHp(param.hp);
+	m_baseHp = param.hp;
+	ApplyHpRate();
 	m_jumpAttackCoolTime = param.jumpAttackCT;
 	m_jumpAttackCT = KdRandom::GetInt(kFirstJumpAttackMinFrame, kFirstJumpAttackMaxFrame);
 
@@ -203,6 +212,8 @@ void Enemy::Update()
 	if (m_jumpAttackCT > 0) m_jumpAttackCT--;
 	if (m_attackCT > 0) m_attackCT--;
 	if (m_stunTimer > 0) m_stunTimer--;
+	if (m_framesSinceHit < 99999) m_framesSinceHit++;
+	UpdateBreak();
 
 	if (m_state)
 	{
@@ -242,9 +253,18 @@ void Enemy::DrawLit()
 		shader.SetLimLightEnable(true);
 
 		// 殴られた直後は白く光らせる（光り始めが一番明るく、だんだん元の赤いふちに戻る）
+		// ブレイク中は、ふちを金色にゆっくり光らせる（攻撃が通りやすい時だと分かるように）
+		Math::Vector3 baseColor = kLimColor;
+		float basePow = kLimPow;
+		if (IsBroken())
+		{
+			float pulse = 0.6f + 0.4f * std::sin(m_breakTimer * kBreakPulseSpeed);
+			baseColor = kBreakLimColor * pulse;
+			basePow = kBreakLimPow;
+		}
 		float flash = static_cast<float>(m_hitFlashTimer) / kHitFlashFrame;	// 1 → 0
-		Math::Vector3 limColor = Math::Vector3::Lerp(kLimColor, kHitFlashColor, flash);
-		float limPow = kLimPow + (kHitFlashPow - kLimPow) * flash;
+		Math::Vector3 limColor = Math::Vector3::Lerp(baseColor, kHitFlashColor, flash);
+		float limPow = basePow + (kHitFlashPow - basePow) * flash;
 		shader.SetLimLight(limColor, limPow);
 
 		shader.DrawModel(*m_model, GetShakenWorld());
@@ -328,6 +348,82 @@ Math::Matrix Enemy::GetShakenWorld() const
 		KdRandom::GetFloat(-power, power),
 	};
 	return m_mWorld * Math::Matrix::CreateTranslation(offset);
+}
+
+// ==========================================
+// HP の倍率・ブレイク
+// ==========================================
+void Enemy::ApplyHpRate()
+{
+	const StageSettings::Battle& b = StageSettings::Instance().GetBattle();
+	float rate = m_isBoss ? b.bossHpRate : (m_isMidBoss ? b.midBossHpRate : b.normalHpRate);
+	int maxHp = std::max(1, static_cast<int>(std::round(m_baseHp * rate)));
+
+	// 倒れている敵は、そのまま（生き返らせない）
+	if (m_hp <= 0) return;
+
+	// 満タンの時（Init の時も）は、新しい最大 HP で満タンにする
+	if (m_hp >= m_maxHp)
+	{
+		SetHp(maxHp);
+		return;
+	}
+
+	// 減っている時は、残りの割合をそのままにする
+	float ratio = GetHpRatio();
+	m_maxHp = maxHp;
+	m_hp = std::max(1, static_cast<int>(std::round(maxHp * ratio)));
+}
+
+bool Enemy::CanBreak() const
+{
+	const StageSettings::Battle& b = StageSettings::Instance().GetBattle();
+	if (!b.breakEnable || m_hp <= 0) return false;
+	return m_isBoss || (m_isMidBoss && b.midBossBreak);
+}
+
+void Enemy::AddBreak(float amount)
+{
+	if (!CanBreak() || IsBroken() || amount <= 0.0f) return;
+
+	const StageSettings::Battle& b = StageSettings::Instance().GetBattle();
+	m_break = std::min(m_break + amount, b.breakMax);
+	m_breakDecayDelay = static_cast<int>(b.decayDelaySec * kFramePerSec);
+
+	// 満タンになったらブレイク：攻撃の途中でも止めて、のけぞらせる
+	if (m_break >= b.breakMax)
+	{
+		m_breakTotalFrame = std::max(1, static_cast<int>(b.breakSec * kFramePerSec));
+		m_breakTimer = m_breakTotalFrame;
+		m_hitFlashTimer = kHitFlashFrame;
+		AddStun(kBreakStunFrame);
+		if (m_hp > 0) ChangeState(std::make_shared<EnemyStateDamage>());
+		HitStop::Request(6, 0.25f);
+		SoundPlayer::PlaySE(SoundName::HeavyHit, 1.0f, 0.3f);
+		KdDebugGUI::Instance().AddLog("[BREAK] ボスがブレイクした\n");
+	}
+}
+
+float Enemy::GetBreakRatio() const
+{
+	if (IsBroken()) return static_cast<float>(m_breakTimer) / m_breakTotalFrame;
+	float max = StageSettings::Instance().GetBattle().breakMax;
+	return (max > 0.0f) ? std::clamp(m_break / max, 0.0f, 1.0f) : 0.0f;
+}
+
+void Enemy::UpdateBreak()
+{
+	// ブレイク中：時間が終わったら、ゲージを空にして元に戻る
+	if (m_breakTimer > 0)
+	{
+		if (--m_breakTimer <= 0) m_break = 0.0f;
+		return;
+	}
+
+	// しばらく当てていないと、速めに減っていく
+	if (m_breakDecayDelay > 0) { m_breakDecayDelay--; return; }
+	float decay = StageSettings::Instance().GetBattle().decayPerSec / kFramePerSec;
+	m_break = std::max(m_break - decay, 0.0f);
 }
 
 void Enemy::PushAwayFromOtherEnemies()
@@ -428,11 +524,18 @@ void Enemy::OnDamage(int damage, bool isCritical)
 	if (m_invincibleTimer > 0) return;
 	if (m_hp <= 0) return;
 
+	// ブレイク中は、ダメージが大きくなる
+	if (IsBroken())
+	{
+		damage = static_cast<int>(std::round(damage * StageSettings::Instance().GetBattle().breakDamageRate));
+	}
+
 	m_hp -= damage;
 	m_invincibleTimer = kDamageInvincibleFrame;
+	m_framesSinceHit = 0;
 
-	// のけぞるか（攻撃中のスーパーアーマーは、ATB の技を受けている時だけ破れる）
-	bool isFlinch = !m_isSuperArmor || m_stunTimer > 0;
+	// のけぞるか（攻撃中のスーパーアーマーは、ATB の技を受けている時・ブレイク中だけ破れる）
+	bool isFlinch = !m_isSuperArmor || m_stunTimer > 0 || IsBroken();
 
 	// 光る・揺れる・ノックバック（倒した一撃でも出す。倒れながら少し後ろへすべる）
 	StartHitReaction(isCritical, isFlinch || m_hp <= 0);

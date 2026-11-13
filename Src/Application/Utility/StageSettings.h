@@ -6,6 +6,7 @@
 // ・「保存」で Asset/Data/StageSettings.json に書き出し、次にゲームを始めた時に読み込む
 // ・今は「霧」の項目だけ（距離の霧・高さの霧・地面の霧）。項目はここに足していく
 // ・「画面」タブには、HP が少ない時の画面（白黒・暗さ・周辺減光）の設定もある
+// ・「戦闘」タブには、敵の HP の倍率と、ボスのブレイクの設定がある
 //
 // 【役割】見た目の数値を 1 か所に持ち、ゲームを動かしたまま imgui で調整し、JSON に保存・読み込みする
 // 【構成】・Fog / GroundMist / LowHpScreen：設定のまとまり（struct。初期値もここに書く）
@@ -74,6 +75,32 @@ public:
 		float	deathFadeSec	= 1.5f;		// 倒れてから、画面が真っ黒になるまでの時間（秒）。真っ黒になったらゲームオーバーへ
 	};
 
+	// 戦闘の数値（敵の HP の倍率・ボスのブレイク）。「戦闘」タブで調整する
+	// 【ブレイク】攻撃を当てるとゲージがたまり、満タンになると「ブレイク」して、しばらく攻撃が通りやすくなる
+	//   ・普通の攻撃では少しずつしかたまらない（回避の直後・パリィの攻撃で大きくたまる予定。bonusGain）
+	//   ・しばらく攻撃を当てないと、速めに減っていく
+	//   ・ボス（と、設定すれば中ボス）だけがたまる
+	struct Battle
+	{
+		// 敵の HP の倍率（敵を作った時に掛ける。「今いる敵に反映」ボタンで、今いる敵にも掛け直せる）
+		float	normalHpRate		= 1.3f;		// ザコ（元の HP 100）
+		float	midBossHpRate		= 1.5f;		// 中ボス（元の HP 220）
+		float	bossHpRate			= 1.6f;		// ボス（元の HP 350）
+
+		bool	breakEnable			= true;
+		bool	midBossBreak		= false;	// 中ボスもブレイクするか
+		float	breakMax			= 100.0f;	// ゲージの最大
+		float	hitGain				= 1.2f;		// 普通の攻撃 1 回で、たまる量
+		float	criticalRate		= 1.5f;		// クリティカルの時、たまる量に掛ける
+		float	punisherRate		= 1.5f;		// パニッシャーの攻撃の時、たまる量に掛ける
+		float	abilityRate			= 2.0f;		// ATB の技の時、たまる量に掛ける
+		float	bonusGain			= 12.0f;	// 回避の直後・パリィの攻撃でたまる量（あとで作る）
+		float	decayDelaySec		= 1.0f;		// 最後に当ててから、減り始めるまでの時間（秒）
+		float	decayPerSec			= 15.0f;	// 1 秒に減る量
+		float	breakSec			= 6.0f;		// ブレイクしている時間（秒）
+		float	breakDamageRate		= 1.8f;		// ブレイク中に受けるダメージの倍率
+	};
+
 	static StageSettings& Instance()
 	{
 		static StageSettings instance;
@@ -84,6 +111,7 @@ public:
 	const Fog&			GetFog() const		{ return m_fog; }
 	const GroundMist&	GetGroundMist() const { return m_groundMist; }
 	const LowHpScreen&	GetLowHpScreen() const { return m_lowHp; }
+	const Battle&		GetBattle() const	{ return m_battle; }
 
 	// 霧の設定を、シェーダー（KdAmbientController）に渡す（ゲームの画面で毎フレーム呼ぶ）
 	void ApplyFog() const;
@@ -96,7 +124,7 @@ public:
 	bool Load(const std::string& path = kDefaultPath);
 
 	// すべて初期値に戻す
-	void ResetAll() { m_fog = Fog(); m_groundMist = GroundMist(); m_lowHp = LowHpScreen(); }
+	void ResetAll() { m_fog = Fog(); m_groundMist = GroundMist(); m_lowHp = LowHpScreen(); m_battle = Battle(); }
 
 	static inline const std::string kDefaultPath = "Asset/Data/StageSettings.json";
 
@@ -105,10 +133,12 @@ private:
 	void DrawFogEditor();
 	void DrawGroundMistEditor();
 	void DrawLowHpEditor();
+	void DrawBattleEditor();
 
 	Fog			m_fog;
 	GroundMist	m_groundMist;
 	LowHpScreen	m_lowHp;
+	Battle		m_battle;
 	std::string	m_message;		// 保存・読み込みの結果（エディタに表示する）
 
 	StageSettings() {}

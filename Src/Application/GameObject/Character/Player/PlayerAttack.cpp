@@ -28,6 +28,7 @@
 #include "../../../Utility/HitStop.h"
 #include "../../../Utility/SoundPlayer.h"
 #include "../../../Utility/GameTime.h"
+#include "../../../Utility/StageSettings.h"
 
 // Scene
 #include "../../../Scene/SceneManager.h"
@@ -202,6 +203,17 @@ bool Player::AttackOBB(const Math::Matrix& swordMatrix, bool isCritical, HitEffe
 
 		enemy->OnDamage(damage, isCritical);
 		isHit = true;
+
+		// ブレイクゲージ（ボスだけたまる。普通の攻撃では少しずつ。数値はステージエディタの「戦闘」タブ）
+		// ※回避の直後・パリィの攻撃で多くためる（bonusGain）のは、あとで足す
+		{
+			const StageSettings::Battle& battle = StageSettings::Instance().GetBattle();
+			float breakGain = battle.hitGain;
+			if (isCritical)									breakGain *= battle.criticalRate;
+			if (m_isAbilityAttack)							breakGain *= battle.abilityRate;
+			else if (m_battleMode == BattleMode::Punisher)	breakGain *= battle.punisherRate;
+			enemy->AddBreak(breakGain);
+		}
 
 		// 攻撃を当てるとATBゲージがたまる（オペレーターは多め、パニッシャーは少なめ。アビリティの攻撃ではたまらない）
 		if (!m_isAbilityAttack)

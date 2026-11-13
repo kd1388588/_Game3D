@@ -3,6 +3,10 @@
 // JSON の読み書き（nlohmann/json。tinygltf と一緒に Library/tinygltf に入っている）
 #include "json.hpp"
 
+// 「戦闘」タブの「今いる敵に反映」「ボスをブレイクさせる」で、今いる敵を探すため
+#include "../Scene/SceneManager.h"
+#include "../GameObject/Character/Enemy/Enemy.h"
+
 namespace
 {
 	using json = nlohmann::json;
@@ -108,6 +112,26 @@ bool StageSettings::Save(const std::string& path) const
 		{ "DeathFadeSec",	l.deathFadeSec },
 	};
 
+	const Battle& b = m_battle;
+	j["Battle"] =
+	{
+		{ "NormalHpRate",		b.normalHpRate },
+		{ "MidBossHpRate",		b.midBossHpRate },
+		{ "BossHpRate",			b.bossHpRate },
+		{ "BreakEnable",		b.breakEnable },
+		{ "MidBossBreak",		b.midBossBreak },
+		{ "BreakMax",			b.breakMax },
+		{ "HitGain",			b.hitGain },
+		{ "CriticalRate",		b.criticalRate },
+		{ "PunisherRate",		b.punisherRate },
+		{ "AbilityRate",		b.abilityRate },
+		{ "BonusGain",			b.bonusGain },
+		{ "DecayDelaySec",		b.decayDelaySec },
+		{ "DecayPerSec",		b.decayPerSec },
+		{ "BreakSec",			b.breakSec },
+		{ "BreakDamageRate",	b.breakDamageRate },
+	};
+
 	std::ofstream file(path);
 	if (!file) return false;
 	file << j.dump(4);
@@ -175,6 +199,26 @@ bool StageSettings::Load(const std::string& path)
 		Read(h, "BlinkSpeed",		l.blinkSpeed);
 		Read(h, "DeathFadeSec",		l.deathFadeSec);
 	}
+	if (j.contains("Battle"))
+	{
+		const json& t = j["Battle"];
+		Battle& b = m_battle;
+		Read(t, "NormalHpRate",		b.normalHpRate);
+		Read(t, "MidBossHpRate",	b.midBossHpRate);
+		Read(t, "BossHpRate",		b.bossHpRate);
+		Read(t, "BreakEnable",		b.breakEnable);
+		Read(t, "MidBossBreak",		b.midBossBreak);
+		Read(t, "BreakMax",			b.breakMax);
+		Read(t, "HitGain",			b.hitGain);
+		Read(t, "CriticalRate",		b.criticalRate);
+		Read(t, "PunisherRate",		b.punisherRate);
+		Read(t, "AbilityRate",		b.abilityRate);
+		Read(t, "BonusGain",		b.bonusGain);
+		Read(t, "DecayDelaySec",	b.decayDelaySec);
+		Read(t, "DecayPerSec",		b.decayPerSec);
+		Read(t, "BreakSec",			b.breakSec);
+		Read(t, "BreakDamageRate",	b.breakDamageRate);
+	}
 	return true;
 }
 
@@ -223,6 +267,11 @@ void StageSettings::DrawEditor()
 		if (ImGui::BeginTabItem(U8("画面")))
 		{
 			DrawLowHpEditor();
+			ImGui::EndTabItem();
+		}
+		if (ImGui::BeginTabItem(U8("戦闘")))
+		{
+			DrawBattleEditor();
 			ImGui::EndTabItem();
 		}
 		ImGui::EndTabBar();
@@ -337,5 +386,60 @@ void StageSettings::DrawLowHpEditor()
 	Drag(U8("倒れて真っ黒になるまで"), l.deathFadeSec, 0.01f, 0.1f, 10.0f, "%.2f s", U8("HP 0 で倒れてから、画面が真っ黒になるまでの時間。真っ黒になったらゲームオーバー画面へ移る"));
 
 	if (ImGui::Button(U8("HP が少ない時の画面を初期値に戻す"))) l = LowHpScreen();
+	ImGui::PopID();
+}
+
+void StageSettings::DrawBattleEditor()
+{
+	Battle& b = m_battle;
+	ImGui::PushID("Battle");
+
+	if (ImGui::CollapsingHeader(U8("敵の HP"), ImGuiTreeNodeFlags_DefaultOpen))
+	{
+		Drag(U8("ザコの HP の倍率"), b.normalHpRate, 0.01f, 0.1f, 10.0f, "%.2f", U8("元の HP（100）に掛ける。敵を作った時に使う"));
+		Drag(U8("中ボスの HP の倍率"), b.midBossHpRate, 0.01f, 0.1f, 10.0f, "%.2f", U8("元の HP（220）に掛ける"));
+		Drag(U8("ボスの HP の倍率"), b.bossHpRate, 0.01f, 0.1f, 10.0f, "%.2f", U8("元の HP（350）に掛ける"));
+		if (ImGui::Button(U8("今いる敵に反映")))
+		{
+			// HP の残りの割合はそのままで、最大 HP だけを今の倍率に直す
+			for (auto& obj : SceneManager::Instance().GetObjList())
+			{
+				if (auto enemy = std::dynamic_pointer_cast<Enemy>(obj)) enemy->ApplyHpRate();
+			}
+		}
+		Help(U8("倍率を変えただけでは、もういる敵の HP は変わらない。押すと、残りの割合はそのままで、最大 HP を直す"));
+	}
+
+	if (ImGui::CollapsingHeader(U8("ブレイク（ボス）"), ImGuiTreeNodeFlags_DefaultOpen))
+	{
+		ImGui::Checkbox(U8("使う"), &b.breakEnable);
+		ImGui::Checkbox(U8("中ボスもブレイクする"), &b.midBossBreak);
+		Drag(U8("ゲージの最大"), b.breakMax, 1.0f, 1.0f, 1000.0f, "%.0f", U8("ここまでたまるとブレイクする"));
+
+		ImGui::SeparatorText(U8("たまり方"));
+		Drag(U8("普通の攻撃"), b.hitGain, 0.05f, 0.0f, 100.0f, "%.2f", U8("攻撃が 1 回当たるごとに、たまる量（二刀流は 1 振りで 2 回当たることがある）"));
+		Drag(U8("クリティカルの倍率"), b.criticalRate, 0.05f, 0.0f, 10.0f, "%.2f", U8("クリティカルの時、たまる量に掛ける"));
+		Drag(U8("パニッシャーの倍率"), b.punisherRate, 0.05f, 0.0f, 10.0f, "%.2f", U8("パニッシャーの攻撃の時、たまる量に掛ける"));
+		Drag(U8("ATB の技の倍率"), b.abilityRate, 0.05f, 0.0f, 10.0f, "%.2f", U8("ATB コマンドの技の時、たまる量に掛ける"));
+		Drag(U8("回避の直後・パリィ"), b.bonusGain, 0.1f, 0.0f, 100.0f, "%.1f", U8("回避の直後・パリィの攻撃でたまる量（この機能はあとで作る。今は使っていない）"));
+
+		ImGui::SeparatorText(U8("減り方"));
+		Drag(U8("減り始めるまで"), b.decayDelaySec, 0.01f, 0.0f, 10.0f, "%.2f s", U8("最後に攻撃を当ててから、ゲージが減り始めるまでの時間"));
+		Drag(U8("1 秒に減る量"), b.decayPerSec, 0.1f, 0.0f, 200.0f, "%.1f", U8("大きいほど速く減る。続けて当て続けないとたまらなくなる"));
+
+		ImGui::SeparatorText(U8("ブレイク中"));
+		Drag(U8("ブレイクの時間"), b.breakSec, 0.05f, 0.1f, 30.0f, "%.2f s", U8("ブレイクしている時間。この間にゲージが空になっていく"));
+		Drag(U8("ダメージの倍率"), b.breakDamageRate, 0.05f, 1.0f, 10.0f, "%.2f", U8("ブレイク中に受けるダメージに掛ける"));
+
+		if (ImGui::Button(U8("ボスをすぐブレイクさせる（テスト）")))
+		{
+			for (auto& obj : SceneManager::Instance().GetObjList())
+			{
+				if (auto enemy = std::dynamic_pointer_cast<Enemy>(obj)) if (enemy->CanBreak()) enemy->AddBreak(b.breakMax);
+			}
+		}
+	}
+
+	if (ImGui::Button(U8("戦闘の設定を初期値に戻す"))) b = Battle();
 	ImGui::PopID();
 }

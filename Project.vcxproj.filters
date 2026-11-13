@@ -163,6 +163,9 @@
     <Filter Include="Src\Application\GameObject\Stage\Object\HealFountain">
       <UniqueIdentifier>{7d2e9f41-6a3c-4b58-8e17-2f9c0b4a6d73}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Src\Application\GameObject\Character\UI\Gage\Enemy">
+      <UniqueIdentifier>{b50045c1-0fde-4f23-9c0c-4465af71cc86}</UniqueIdentifier>
+    </Filter>
     <Filter Include="Src\Application\GameObject\UI\StageMessage">
       <UniqueIdentifier>{c84e1a52-2b7f-4d6e-a093-5f1d8e7c3a96}</UniqueIdentifier>
     </Filter>
@@ -483,6 +486,9 @@
     <ClInclude Include="Src\Application\GameObject\Stage\Object\HealFountain\HealFountain.h">
       <Filter>Src\Application\GameObject\Stage\Object\HealFountain</Filter>
     </ClInclude>
+    <ClInclude Include="Src\Application\GameObject\Character\UI\Gage\Enemy\EnemyGage.h">
+      <Filter>Src\Application\GameObject\Character\UI\Gage\Enemy</Filter>
+    </ClInclude>
     <ClInclude Include="Src\Application\GameObject\UI\StageMessage\StageMessage.h">
       <Filter>Src\Application\GameObject\UI\StageMessage</Filter>
     </ClInclude>
@@ -775,6 +781,9 @@
     </ClCompile>
     <ClCompile Include="Src\Application\GameObject\Stage\Object\HealFountain\HealFountain.cpp">
       <Filter>Src\Application\GameObject\Stage\Object\HealFountain</Filter>
+    </ClCompile>
+    <ClCompile Include="Src\Application\GameObject\Character\UI\Gage\Enemy\EnemyGage.cpp">
+      <Filter>Src\Application\GameObject\Character\UI\Gage\Enemy</Filter>
     </ClCompile>
     <ClCompile Include="Src\Application\GameObject\UI\StageMessage\StageMessage.cpp">
       <Filter>Src\Application\GameObject\UI\StageMessage</Filter>

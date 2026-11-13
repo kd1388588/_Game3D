@@ -28,6 +28,25 @@ public:
 
 	// 中ボス（Init の前に呼ぶ。ザコとボスの間の強さ・大きさになる。IsBoss() は false のまま）
 	void SetMidBoss(bool isMidBoss) { m_isMidBoss = isMidBoss; }
+	bool IsMidBoss() const { return m_isMidBoss; }
+
+	// HP（ゲージの表示に使う）
+	int GetHp() const { return m_hp; }
+	int GetMaxHp() const { return m_maxHp; }
+	float GetHpRatio() const { return (m_maxHp > 0) ? static_cast<float>(std::max(m_hp, 0)) / m_maxHp : 0.0f; }
+
+	// HP の倍率（ステージエディタの「戦闘」タブ）を、今いる敵に掛け直す（残りの HP の割合はそのまま）
+	void ApplyHpRate();
+
+	// ---- ブレイク（ボスだけ。設定はステージエディタの「戦闘」タブ） ----
+	// 攻撃を当てるとたまり、満タンになるとブレイクして、しばらく攻撃が通りやすくなる
+	bool CanBreak() const;							// この敵はブレイクゲージがたまるか
+	void AddBreak(float amount);					// ゲージをためる（ブレイク中は、たまらない）
+	bool IsBroken() const { return m_breakTimer > 0; }
+	float GetBreakRatio() const;					// ゲージの割合（0～1。ブレイク中は、残りの時間の割合）
+
+	// 最後に攻撃を受けてからのフレーム数（敵の HP ゲージを、どの敵のものにするかを決めるのに使う）
+	int GetFramesSinceHit() const { return m_framesSinceHit; }
 
 	void ChangeState(const std::shared_ptr<EnemyState>& newState);
 	void AttackHit(const Math::Matrix& hitMatrix, const Math::Vector3& extents, bool isCritical);
@@ -131,6 +150,19 @@ private:
 	bool							m_isLeapFalling = false;	// 飛び上がった後、落ち始めたか
 	bool							m_isSuperArmor = false;		// のけぞらない
 	int								m_stunTimer = 0;			// のけぞりを続ける残りフレーム
+
+	// HP の元の値（敵の種類ごとの表の値。倍率を掛ける前）
+	int								m_baseHp = 100;
+
+	// ブレイク
+	float							m_break = 0.0f;				// ゲージの量（0 ～ 設定の最大）
+	int								m_breakTimer = 0;			// ブレイクの残りフレーム（0：ブレイクしていない）
+	int								m_breakTotalFrame = 1;		// ブレイクした時の長さ（ゲージを減らして見せるのに使う）
+	int								m_breakDecayDelay = 0;		// ゲージが減り始めるまでの残りフレーム
+	int								m_framesSinceHit = 99999;	// 最後に攻撃を受けてからのフレーム数
+
+	// 毎フレーム：ブレイクのゲージを減らす・ブレイクを終わらせる
+	void UpdateBreak();
 
 	// 殴られた時の反応
 	Math::Vector3					m_knockbackVel = Math::Vector3::Zero;	// ノックバックの 1 フレームの移動量（だんだん小さくなる）

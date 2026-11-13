@@ -57,6 +57,7 @@ BRAVER　オブジェクトごとの技術のファイル（目次と書き方�
       ATBCommandMenu.txt        ATBCommandMenu（右下の ATB コマンド）
       ATBGage.txt               ATBGage（左下のモード・ガード・ATB ゲージ・技の枠）
       BaseGage.txt              BaseGage（ゲージの共通部分）
+      EnemyGage.txt             EnemyGage（画面の上の、敵の HP ゲージとブレイクゲージ）
       ControlsGuide.txt         ControlsGuide（右下の操作の一覧）
       HPGage.txt                HPGage（左下の HP ゲージ）
       StageMessage.txt          StageMessage（進み具合のメッセージと、鍵の表示）

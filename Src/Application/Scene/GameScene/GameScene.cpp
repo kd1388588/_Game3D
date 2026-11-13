@@ -14,6 +14,7 @@
 // UI関連
 #include "../../GameObject/UI/ControlsGuide/ControlsGuide.h"
 #include "../../GameObject/UI/StageMessage/StageMessage.h"
+#include "../../GameObject/Character/UI/Gage/Enemy/EnemyGage.h"
 
 // Stage関連
 #include "../../GameObject/Stage/Ground/Ground.h"
@@ -540,6 +541,10 @@ void GameScene::Init()
 	// 右下の操作キーの一覧
 	std::shared_ptr<ControlsGuide> controlsGuide = CreateObject<ControlsGuide>();
 	controlsGuide->SetPlayer(player);
+
+	// 敵の HP ゲージとブレイクゲージ（画面の上の真ん中。ロックオン中の敵・戦っているボスなど）
+	std::shared_ptr<EnemyGage> enemyGage = CreateObject<EnemyGage>();
+	enemyGage->SetPlayer(player);
 
 	// 画面のメッセージ（「鍵を手に入れた」など）と、鍵を持っている表示
 	std::shared_ptr<StageMessage> message = CreateObject<StageMessage>();
