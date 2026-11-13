@@ -73,6 +73,10 @@ public:
 	// エフェクトを出すかどうか（false の間は Play しても何も出ない。タイトル画面で使う）
 	static void SetEnabled(bool isEnabled) { s_isEnabled = isEnabled; }
 
+	// エフェクトファイルが存在するか（無い場合は1度だけログを出す）
+	// （外からも使う：新しいエフェクトがまだ無い時に、前のエフェクトに切り替えるため。EnemyState.cpp）
+	static bool Exists(const std::string& fileName);
+
 private:
 
 	static inline bool s_isEnabled = true;
@@ -80,7 +84,4 @@ private:
 	// エフェクトエディタの大きさ・速さ・高さはかけずに出す（色だけかける）。Play の中で使う
 	static std::shared_ptr<KdEffekseerObject> PlayRaw(const std::string& fileName, const Math::Vector3& pos,
 		float scale, float speed);
-
-	// エフェクトファイルが存在するか（無い場合は1度だけログを出す）
-	static bool Exists(const std::string& fileName);
 };
