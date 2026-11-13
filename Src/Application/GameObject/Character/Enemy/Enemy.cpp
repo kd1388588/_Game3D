@@ -379,7 +379,9 @@ bool Enemy::CanBreak() const
 {
 	const StageSettings::Battle& b = StageSettings::Instance().GetBattle();
 	if (!b.breakEnable || m_hp <= 0) return false;
-	return m_isBoss || (m_isMidBoss && b.midBossBreak);
+	if (m_isBoss)		return true;
+	if (m_isMidBoss)	return b.midBossBreak;
+	return b.normalBreak;
 }
 
 void Enemy::AddBreak(float amount)
@@ -400,7 +402,7 @@ void Enemy::AddBreak(float amount)
 		if (m_hp > 0) ChangeState(std::make_shared<EnemyStateDamage>());
 		HitStop::Request(6, 0.25f);
 		SoundPlayer::PlaySE(SoundName::HeavyHit, 1.0f, 0.3f);
-		KdDebugGUI::Instance().AddLog("[BREAK] ボスがブレイクした\n");
+		KdDebugGUI::Instance().AddLog("[BREAK] 敵がブレイクした\n");
 	}
 }
 

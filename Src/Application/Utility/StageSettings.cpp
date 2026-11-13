@@ -107,8 +107,10 @@ bool StageSettings::Save(const std::string& path) const
 		{ "Vignette",		l.vignette },
 		{ "VignetteStart",	l.vignetteStart },
 		{ "FollowRate",		l.followRate },
+		{ "YellowRate",		l.yellowRate },
 		{ "BlinkRate",		l.blinkRate },
 		{ "BlinkSpeed",		l.blinkSpeed },
+		{ "FastBlinkSpeed",	l.fastBlinkSpeed },
 		{ "DeathFadeSec",	l.deathFadeSec },
 	};
 
@@ -119,6 +121,7 @@ bool StageSettings::Save(const std::string& path) const
 		{ "MidBossHpRate",		b.midBossHpRate },
 		{ "BossHpRate",			b.bossHpRate },
 		{ "BreakEnable",		b.breakEnable },
+		{ "NormalBreak",		b.normalBreak },
 		{ "MidBossBreak",		b.midBossBreak },
 		{ "BreakMax",			b.breakMax },
 		{ "HitGain",			b.hitGain },
@@ -195,8 +198,10 @@ bool StageSettings::Load(const std::string& path)
 		Read(h, "Vignette",			l.vignette);
 		Read(h, "VignetteStart",	l.vignetteStart);
 		Read(h, "FollowRate",		l.followRate);
+		Read(h, "YellowRate",		l.yellowRate);
 		Read(h, "BlinkRate",		l.blinkRate);
 		Read(h, "BlinkSpeed",		l.blinkSpeed);
+		Read(h, "FastBlinkSpeed",	l.fastBlinkSpeed);
 		Read(h, "DeathFadeSec",		l.deathFadeSec);
 	}
 	if (j.contains("Battle"))
@@ -207,6 +212,7 @@ bool StageSettings::Load(const std::string& path)
 		Read(t, "MidBossHpRate",	b.midBossHpRate);
 		Read(t, "BossHpRate",		b.bossHpRate);
 		Read(t, "BreakEnable",		b.breakEnable);
+		Read(t, "NormalBreak",		b.normalBreak);
 		Read(t, "MidBossBreak",		b.midBossBreak);
 		Read(t, "BreakMax",			b.breakMax);
 		Read(t, "HitGain",			b.hitGain);
@@ -381,8 +387,12 @@ void StageSettings::DrawLowHpEditor()
 
 	ImGui::SeparatorText(U8("動き"));
 	Drag(U8("変わる速さ"), l.followRate, 0.001f, 0.001f, 1.0f, "%.3f", U8("HP が変わった時に、画面がその強さに近づく速さ（1 ですぐ変わる。0.05 で約1秒）"));
-	Drag(U8("HP が点滅し始める HP"), l.blinkRate, 0.005f, 0.0f, 1.0f, "%.3f", U8("HP ゲージが赤く点滅し始める HP の割合"));
-	Drag(U8("点滅の速さ"), l.blinkSpeed, 0.001f, 0.0f, 1.0f, "%.3f", U8("大きいほど速く点滅する"));
+
+	ImGui::SeparatorText(U8("HP ゲージの色"));
+	Drag(U8("黄色になる HP"), l.yellowRate, 0.005f, 0.0f, 1.0f, "%.3f", U8("HP の割合がこれより少なくなると、HP ゲージが黄色になる"));
+	Drag(U8("赤く点滅する HP"), l.blinkRate, 0.005f, 0.0f, 1.0f, "%.3f", U8("HP の割合がこれより少なくなると、HP ゲージが赤くゆっくり点滅する"));
+	Drag(U8("ゆっくりの点滅の速さ"), l.blinkSpeed, 0.001f, 0.0f, 1.0f, "%.3f", U8("大きいほど速く点滅する"));
+	Drag(U8("速い点滅の速さ"), l.fastBlinkSpeed, 0.001f, 0.0f, 1.0f, "%.3f", U8("「始まる HP」（画面が暗くなり始める HP）より少ない時の点滅の速さ"));
 	Drag(U8("倒れて真っ黒になるまで"), l.deathFadeSec, 0.01f, 0.1f, 10.0f, "%.2f s", U8("HP 0 で倒れてから、画面が真っ黒になるまでの時間。真っ黒になったらゲームオーバー画面へ移る"));
 
 	if (ImGui::Button(U8("HP が少ない時の画面を初期値に戻す"))) l = LowHpScreen();
@@ -410,9 +420,10 @@ void StageSettings::DrawBattleEditor()
 		Help(U8("倍率を変えただけでは、もういる敵の HP は変わらない。押すと、残りの割合はそのままで、最大 HP を直す"));
 	}
 
-	if (ImGui::CollapsingHeader(U8("ブレイク（ボス）"), ImGuiTreeNodeFlags_DefaultOpen))
+	if (ImGui::CollapsingHeader(U8("ブレイク"), ImGuiTreeNodeFlags_DefaultOpen))
 	{
 		ImGui::Checkbox(U8("使う"), &b.breakEnable);
+		ImGui::Checkbox(U8("ザコもブレイクする"), &b.normalBreak);
 		ImGui::Checkbox(U8("中ボスもブレイクする"), &b.midBossBreak);
 		Drag(U8("ゲージの最大"), b.breakMax, 1.0f, 1.0f, 1000.0f, "%.0f", U8("ここまでたまるとブレイクする"));
 
@@ -431,7 +442,7 @@ void StageSettings::DrawBattleEditor()
 		Drag(U8("ブレイクの時間"), b.breakSec, 0.05f, 0.1f, 30.0f, "%.2f s", U8("ブレイクしている時間。この間にゲージが空になっていく"));
 		Drag(U8("ダメージの倍率"), b.breakDamageRate, 0.05f, 1.0f, 10.0f, "%.2f", U8("ブレイク中に受けるダメージに掛ける"));
 
-		if (ImGui::Button(U8("ボスをすぐブレイクさせる（テスト）")))
+		if (ImGui::Button(U8("すべての敵をすぐブレイクさせる（テスト）")))
 		{
 			for (auto& obj : SceneManager::Instance().GetObjList())
 			{

@@ -70,8 +70,11 @@ public:
 		float	vignette		= 0.97f;	// HP 0 の時の周辺減光の強さ（1 でふちが真っ黒）
 		float	vignetteStart	= 0.25f;	// 周辺減光が始まる位置（0：真ん中、1：上下左右のふち）
 		float	followRate		= 0.05f;	// HP が変わった時に、画面がその強さに近づく速さ（1フレームに近づく割合。小さいほどゆっくり）
-		float	blinkRate		= 0.3f;		// HP ゲージが赤く点滅し始める HP の割合
-		float	blinkSpeed		= 0.12f;	// 点滅の速さ
+		// HP ゲージの色：半分より下で黄色 → 4 分の 1 より下でゆっくり赤く点滅 → startRate より下（画面が暗くなり始める）で速く点滅
+		float	yellowRate		= 0.5f;		// HP ゲージが黄色になる HP の割合
+		float	blinkRate		= 0.25f;	// HP ゲージが赤く点滅し始める HP の割合
+		float	blinkSpeed		= 0.08f;	// ゆっくりの点滅の速さ
+		float	fastBlinkSpeed	= 0.2f;		// 速い点滅の速さ（startRate より下）
 		float	deathFadeSec	= 1.5f;		// 倒れてから、画面が真っ黒になるまでの時間（秒）。真っ黒になったらゲームオーバーへ
 	};
 
@@ -79,7 +82,7 @@ public:
 	// 【ブレイク】攻撃を当てるとゲージがたまり、満タンになると「ブレイク」して、しばらく攻撃が通りやすくなる
 	//   ・普通の攻撃では少しずつしかたまらない（回避の直後・パリィの攻撃で大きくたまる予定。bonusGain）
 	//   ・しばらく攻撃を当てないと、速めに減っていく
-	//   ・ボス（と、設定すれば中ボス）だけがたまる
+	//   ・ザコ・中ボス・ボスのどれをブレイクさせるかは、チェックボックスで選ぶ
 	struct Battle
 	{
 		// 敵の HP の倍率（敵を作った時に掛ける。「今いる敵に反映」ボタンで、今いる敵にも掛け直せる）
@@ -88,7 +91,8 @@ public:
 		float	bossHpRate			= 1.6f;		// ボス（元の HP 350）
 
 		bool	breakEnable			= true;
-		bool	midBossBreak		= false;	// 中ボスもブレイクするか
+		bool	normalBreak			= true;		// ザコもブレイクするか
+		bool	midBossBreak		= true;		// 中ボスもブレイクするか
 		float	breakMax			= 100.0f;	// ゲージの最大
 		float	hitGain				= 1.2f;		// 普通の攻撃 1 回で、たまる量
 		float	criticalRate		= 1.5f;		// クリティカルの時、たまる量に掛ける

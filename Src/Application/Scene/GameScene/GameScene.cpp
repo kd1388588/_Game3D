@@ -542,7 +542,7 @@ void GameScene::Init()
 	std::shared_ptr<ControlsGuide> controlsGuide = CreateObject<ControlsGuide>();
 	controlsGuide->SetPlayer(player);
 
-	// 敵の HP ゲージとブレイクゲージ（画面の上の真ん中。ロックオン中の敵・戦っているボスなど）
+	// 敵の HP ゲージとブレイクゲージ（敵の頭の上。ロックオン中の敵・最後に殴った敵・戦っているボスなど）
 	std::shared_ptr<EnemyGage> enemyGage = CreateObject<EnemyGage>();
 	enemyGage->SetPlayer(player);
 

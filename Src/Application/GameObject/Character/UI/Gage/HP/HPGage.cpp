@@ -12,6 +12,9 @@ namespace
 	const Math::Color	kLowColorDark	= { 0.85f, 0.18f, 0.12f, 1.0f };	// 暗い赤
 	const Math::Color	kLowColorBright	= { 1.0f, 0.55f, 0.3f, 1.0f };		// 明るいオレンジ
 	const Math::Color	kLowGlowColor	= { 1.0f, 0.3f, 0.15f, 0.35f };		// まわりにうっすら出す光
+
+	// HP が半分より少ない時の色（黄色）
+	const Math::Color	kYellowColor	= { 1.0f, 0.82f, 0.2f, 1.0f };
 }
 
 void HPGage::Init()
@@ -37,22 +40,36 @@ void HPGage::DrawSprite()
 	spriteShader.SetMatrix(m_mWorld);
 	spriteShader.DrawTex(&m_gageBase, 0, 0, kGageWidth, kGageHeight, nullptr, &color, pivot);
 
-	// HP が少ない時は、ゲージを赤～オレンジでゆっくり点滅させる（設定はステージエディタの「画面」タブ）
+	// HP の残りで色を変える（設定はステージエディタの「画面」タブ）
+	//   半分より下：黄色 → 4 分の 1 より下：赤くゆっくり点滅 → 画面が暗くなり始める HP より下：赤く速く点滅
 	const StageSettings::LowHpScreen& low = StageSettings::Instance().GetLowHpScreen();
+	int halfW = m_gageWidth / 2;
+	int halfH = (kGageHeight - kFrameWidth * 2) / 2;
+	int centerX = static_cast<int>(kGagePos.x) + kFrameWidth + halfW;
+	int centerY = static_cast<int>(kGagePos.y);
+
 	if (m_hpRatio <= low.blinkRate && m_gageWidth > 0)
 	{
-		float pulse = 0.5f + 0.5f * std::sin(m_frame * low.blinkSpeed);
+		// 点滅の速さ：画面が暗くなり始めたら速くする
+		// （速さが変わった時に明るさが飛ばないよう、点滅の進み具合を少しずつ足していく）
+		float speed = (m_hpRatio <= low.startRate) ? low.fastBlinkSpeed : low.blinkSpeed;
+		m_blinkPhase += speed;
+		float pulse = 0.5f + 0.5f * std::sin(m_blinkPhase);
 		Math::Color barColor = Math::Color::Lerp(kLowColorDark, kLowColorBright, pulse);
 		Math::Color glowColor = kLowGlowColor;
 		glowColor.w *= pulse;
 
 		spriteShader.SetMatrix(Math::Matrix::Identity);
-		int halfW = m_gageWidth / 2;
-		int halfH = (kGageHeight - kFrameWidth * 2) / 2;
-		int centerX = static_cast<int>(kGagePos.x) + kFrameWidth + halfW;
-		int centerY = static_cast<int>(kGagePos.y);
 		spriteShader.DrawBox(centerX, centerY, halfW + 3, halfH + 3, &glowColor, true);	// まわりの光
 		spriteShader.DrawBox(centerX, centerY, halfW, halfH, &barColor, true);
+		return;
+	}
+
+	// 半分より下：黄色
+	if (m_hpRatio <= low.yellowRate && m_gageWidth > 0)
+	{
+		spriteShader.SetMatrix(Math::Matrix::Identity);
+		spriteShader.DrawBox(centerX, centerY, halfW, halfH, &kYellowColor, true);
 		return;
 	}
 

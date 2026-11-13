@@ -204,7 +204,7 @@ bool Player::AttackOBB(const Math::Matrix& swordMatrix, bool isCritical, HitEffe
 		enemy->OnDamage(damage, isCritical);
 		isHit = true;
 
-		// ブレイクゲージ（ボスだけたまる。普通の攻撃では少しずつ。数値はステージエディタの「戦闘」タブ）
+		// ブレイクゲージ（普通の攻撃では少しずつ。数値はステージエディタの「戦闘」タブ）
 		// ※回避の直後・パリィの攻撃で多くためる（bonusGain）のは、あとで足す
 		{
 			const StageSettings::Battle& battle = StageSettings::Instance().GetBattle();
