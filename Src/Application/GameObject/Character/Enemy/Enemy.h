@@ -103,6 +103,15 @@ private:
 	// 他の敵と重ならないように押し出す
 	void PushAwayFromOtherEnemies();
 
+	// ---- 殴られた時の反応（ノックバック・白く光る・小さく揺れる） ----
+	// 【なぜ】反応が無いと、攻撃が当たっているのか分かりにくく、手ごたえが無い
+	// 殴られた瞬間に呼ぶ（isFlinch：のけぞるか。スーパーアーマー中は false）
+	void StartHitReaction(bool isCritical, bool isFlinch);
+	// 毎フレーム：ノックバックで後ろへすべらせ、光・揺れのタイマーを減らす
+	void UpdateHitReaction();
+	// 描画に使う行列（揺れている間は、少しずらす。m_mWorld そのものは変えない）
+	Math::Matrix GetShakenWorld() const;
+
 	std::shared_ptr<EnemyState>		m_state = nullptr;
 	std::weak_ptr<Player>			m_wpTarget;
 
@@ -122,4 +131,9 @@ private:
 	bool							m_isLeapFalling = false;	// 飛び上がった後、落ち始めたか
 	bool							m_isSuperArmor = false;		// のけぞらない
 	int								m_stunTimer = 0;			// のけぞりを続ける残りフレーム
+
+	// 殴られた時の反応
+	Math::Vector3					m_knockbackVel = Math::Vector3::Zero;	// ノックバックの 1 フレームの移動量（だんだん小さくなる）
+	int								m_hitFlashTimer = 0;		// 白く光る残りフレーム
+	int								m_hitShakeTimer = 0;		// 小さく揺れる残りフレーム（見た目だけ。当たり判定は動かさない）
 };

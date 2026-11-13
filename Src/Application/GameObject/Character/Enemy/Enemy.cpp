@@ -80,6 +80,31 @@ namespace
 	constexpr float	kNearHitRadius			= 0.9f;		// 体の中心からこの距離以内（ボスなら約2.3m、ザコなら約1.1m）
 	constexpr float	kNearHitHeight			= 2.0f;		// 上下にこれ以上離れていたら当たらない
 	constexpr float	kNearHitBackDot			= -0.3f;	// 体の向きとの内積がこれより小さい（真後ろ）なら当たらない
+
+	// ---- 殴られた時の反応 ----
+	// ノックバック：殴られた瞬間に後ろへの速さを与え、毎フレーム kKnockbackDecay 倍にして止める
+	//   進む距離の合計 ＝ 速さ ÷ (1 − 減り方)（例：0.12 ÷ 0.22 ≒ 0.55m）
+	//   （遠くへ飛ばしすぎると、二刀流の連続攻撃が届かなくなるので短め）
+	constexpr float	kKnockbackSpeed			= 0.12f;	// 普通の攻撃
+	constexpr float	kKnockbackCriticalRate	= 1.6f;		// クリティカルはこれだけ強く飛ばす
+	constexpr float	kKnockbackDecay			= 0.78f;	// 1 フレームごとに掛ける（小さいほど早く止まる）
+	constexpr float	kKnockbackArmorRate		= 0.3f;		// スーパーアーマー中（攻撃中）は少しだけ押される
+	constexpr float	kKnockbackStunRate		= 0.5f;		// ATB の技を受けている間（技の途中で届かなくならないよう弱め）
+	constexpr float	kKnockbackMidBossRate	= 0.5f;		// 中ボスは重いので飛びにくい
+	constexpr float	kKnockbackBossRate		= 0.25f;	// ボスはもっと飛びにくい
+	constexpr float	kKnockbackStopSpeed		= 0.002f;	// これより遅くなったら止める
+	constexpr float	kKnockbackWallHeight	= 0.9f;		// 壁があるかを調べるレイの高さ
+
+	// 白く光る：リムライトを「体全体にかかる白い光」に一瞬だけ変える
+	//   リムライトの明るさ ＝ 色 × (1 − 面の向き・カメラの向き)^鋭さ
+	//   鋭さを小さくすると、ふちだけでなく体全体が光る
+	constexpr int	kHitFlashFrame			= 6;		// 光っている長さ（ヒットストップ中は減らないので、止まっている間はずっと光る）
+	const Math::Vector3 kHitFlashColor		= { 1.0f, 0.95f, 0.85f };	// 少し黄色っぽい白
+	constexpr float	kHitFlashPow			= 0.3f;		// 光っている時の鋭さ（小さいほど体全体が光る）
+
+	// 小さく揺れる（スーパーアーマー中でも、当たったことが分かるように）
+	constexpr int	kHitShakeFrame			= 8;
+	constexpr float	kHitShakePower			= 0.03f;	// 揺れる幅（体の大きさに掛ける）
 }
 
 void Enemy::Init()
@@ -157,6 +182,7 @@ void Enemy::Update()
 	if (GameTime::IsSlow())
 	{
 		ApplyRootMotion(m_rootScale, m_rotY);
+		UpdateHitReaction();	// 光・揺れが止まったままにならないように（ノックバックはゆっくり進む）
 		UpdateWorldMatrix();
 		return;
 	}
@@ -174,6 +200,8 @@ void Enemy::Update()
 
 	ApplyRootMotion(m_rootScale, m_rotY);
 
+	UpdateHitReaction();
+
 	PushAwayFromOtherEnemies();
 
 	UpdateWorldMatrix();
@@ -190,7 +218,7 @@ void Enemy::GenerateDepthMapFromLight()
 	// 影：DrawLit と同じモデルを、光から見た深度に描く
 	if (m_model)
 	{
-		KdShaderManager::Instance().m_StandardShader.DrawModel(*m_model, m_mWorld);
+		KdShaderManager::Instance().m_StandardShader.DrawModel(*m_model, GetShakenWorld());
 	}
 }
 
@@ -201,8 +229,14 @@ void Enemy::DrawLit()
 		// リムライトは DrawModel の後に自動で元に戻る（ほかの物には付かない）
 		auto& shader = KdShaderManager::Instance().m_StandardShader;
 		shader.SetLimLightEnable(true);
-		shader.SetLimLight(kLimColor, kLimPow);
-		shader.DrawModel(*m_model, m_mWorld);
+
+		// 殴られた直後は白く光らせる（光り始めが一番明るく、だんだん元の赤いふちに戻る）
+		float flash = static_cast<float>(m_hitFlashTimer) / kHitFlashFrame;	// 1 → 0
+		Math::Vector3 limColor = Math::Vector3::Lerp(kLimColor, kHitFlashColor, flash);
+		float limPow = kLimPow + (kHitFlashPow - kLimPow) * flash;
+		shader.SetLimLight(limColor, limPow);
+
+		shader.DrawModel(*m_model, GetShakenWorld());
 	}
 }
 
@@ -213,6 +247,76 @@ void Enemy::UpdateWorldMatrix()
 	Math::Matrix trans = Math::Matrix::CreateTranslation(m_pos);
 
 	m_mWorld = scale * rot * trans;
+}
+
+// ==========================================
+// 殴られた時の反応
+// ==========================================
+void Enemy::StartHitReaction(bool isCritical, bool isFlinch)
+{
+	// 光る・揺れるは、どの時でも必ず出す（スーパーアーマー中でも「当たった」と分かるように）
+	m_hitFlashTimer = kHitFlashFrame;
+	m_hitShakeTimer = kHitShakeFrame;
+
+	// ノックバックの向き：プレイヤーから敵へ向かう向き（横だけ。上へは飛ばさない）
+	auto target = m_wpTarget.lock();
+	if (!target) return;
+	Math::Vector3 dir = m_pos - target->GetPos();
+	dir.y = 0.0f;
+	if (dir.LengthSquared() < 0.0001f) return;
+	dir.Normalize();
+
+	// 強さ：重い敵ほど、攻撃中ほど、飛びにくくする
+	float speed = kKnockbackSpeed;
+	if (isCritical)				speed *= kKnockbackCriticalRate;
+	if (!isFlinch)				speed *= kKnockbackArmorRate;
+	else if (IsStunned())		speed *= kKnockbackStunRate;
+	if (m_isBoss)				speed *= kKnockbackBossRate;
+	else if (m_isMidBoss)		speed *= kKnockbackMidBossRate;
+
+	// 足すのではなく置きかえる（連続で当たっても、どんどん遠くへ飛んでいかないように）
+	m_knockbackVel = dir * speed;
+}
+
+void Enemy::UpdateHitReaction()
+{
+	if (m_hitFlashTimer > 0) m_hitFlashTimer--;
+	if (m_hitShakeTimer > 0) m_hitShakeTimer--;
+
+	float speed = m_knockbackVel.Length();
+	if (speed < kKnockbackStopSpeed)
+	{
+		m_knockbackVel = Math::Vector3::Zero;
+		return;
+	}
+
+	// スローモーション中は、動く量も減り方もゆっくりにする
+	float timeScale = GameTime::GetScale();
+	float step = speed * timeScale;
+
+	// 後ろに壁・柱があれば、その手前で止める（壁の中へ押しこまないように）
+	Math::Vector3 dir = m_knockbackVel / speed;
+	Math::Vector3 from = m_pos + Math::Vector3(0.0f, kKnockbackWallHeight, 0.0f);
+	float wallDist = FindWallDistance(from, dir, step + m_bumpRadius);
+	step = std::min(step, std::max(wallDist - m_bumpRadius, 0.0f));
+
+	m_pos += dir * step;
+	m_knockbackVel *= std::pow(kKnockbackDecay, timeScale);
+}
+
+Math::Matrix Enemy::GetShakenWorld() const
+{
+	if (m_hitShakeTimer <= 0) return m_mWorld;
+
+	// 揺れ始めが一番大きく、だんだん小さくする。毎回ランダムな向きにずらす
+	float power = kHitShakePower * m_scale * (static_cast<float>(m_hitShakeTimer) / kHitShakeFrame);
+	Math::Vector3 offset =
+	{
+		KdRandom::GetFloat(-power, power),
+		0.0f,
+		KdRandom::GetFloat(-power, power),
+	};
+	return m_mWorld * Math::Matrix::CreateTranslation(offset);
 }
 
 void Enemy::PushAwayFromOtherEnemies()
@@ -316,6 +420,12 @@ void Enemy::OnDamage(int damage, bool isCritical)
 	m_hp -= damage;
 	m_invincibleTimer = kDamageInvincibleFrame;
 
+	// のけぞるか（攻撃中のスーパーアーマーは、ATB の技を受けている時だけ破れる）
+	bool isFlinch = !m_isSuperArmor || m_stunTimer > 0;
+
+	// 光る・揺れる・ノックバック（倒した一撃でも出す。倒れながら少し後ろへすべる）
+	StartHitReaction(isCritical, isFlinch || m_hp <= 0);
+
 	if (m_hp <= 0)
 	{
 		ChangeState(std::make_shared<EnemyStateDead>());
@@ -330,7 +440,7 @@ void Enemy::OnDamage(int damage, bool isCritical)
 
 	// 攻撃のアニメーション中（普通の攻撃・飛びかかり攻撃）は、のけぞらない（ダメージだけ受ける）
 	// （ただし、プレイヤーのATBコマンドの技を受けている時は、のけぞる）
-	if (m_isSuperArmor && m_stunTimer <= 0) return;
+	if (!isFlinch) return;
 
 	ChangeState(std::make_shared<EnemyStateDamage>());
 }
