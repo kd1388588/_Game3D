@@ -122,6 +122,17 @@ private:
 	Phase m_phase = Phase::Start;
 };
 
+class PlayerStateParry : public PlayerState
+{
+public:
+	explicit PlayerStateParry(bool isRight) :m_isRight(isRight) {}
+	void ChangeState(Player* player) override;
+	void Update(Player* player) override;
+
+private:
+	bool m_isRight = true;
+};
+
 // ガードを崩された（よろけて、しばらくガードできない）
 class PlayerStateGuardBreak : public PlayerState
 {
@@ -136,10 +147,10 @@ public:
 	// 4-3（溜め攻撃）だけで使うサブステート
 	enum SubStep
 	{
-		SubStepNone		= 0,
-		SubStepStart	= 1,
-		SubStepLoop		= 2,
-		SubStepEnd		= 3,
+		SubStepNone = 0,
+		SubStepStart = 1,
+		SubStepLoop = 2,
+		SubStepEnd = 3,
 	};
 
 	// 引数なしコンストラクタ（念のため）
@@ -149,16 +160,16 @@ public:
 	// isAbility：アビリティ（ATBコマンドメニュー）で出した攻撃か（自動で最後の段まで出し、ダメージが上がる）
 	PlayerStateComboAttack
 	(
-		int comboType, 
-		int comboStep, 
-		int subStep = 0, 
+		int comboType,
+		int comboStep,
+		int subStep = 0,
 		bool reserved = false,
 		bool isAbility = false
 	)
-		: 
-		m_comboType(comboType), 
-		m_comboStep(comboStep), 
-		m_subStep(subStep), 
+		:
+		m_comboType(comboType),
+		m_comboStep(comboStep),
+		m_subStep(subStep),
 		m_nextAttackReserved(reserved),
 		m_isAbility(isAbility)
 	{}
@@ -208,7 +219,7 @@ private:
 };
 
 // 回避
-class PlayerStateEvade : public PlayerState 
+class PlayerStateEvade : public PlayerState
 {
 public:
 	void ChangeState(Player* player) override;
@@ -224,9 +235,9 @@ public:
 private:
 	enum JumpPhase
 	{
-		JumpPhaseNone		= 0,
-		JumpPhaseAir		= 1,	// 空中
-		JumpPhaseLanding	= 2,	// 着地硬直
+		JumpPhaseNone = 0,
+		JumpPhaseAir = 1,	// 空中
+		JumpPhaseLanding = 2,	// 着地硬直
 	};
 
 	// 着地予測を行い、間に合うなら着地アニメーションを前倒しで開始する

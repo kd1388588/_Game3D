@@ -197,6 +197,10 @@ namespace PlayerConst
 	constexpr float kSword5SpinScale		= 0.15f;	// 05の2段目のヒット（回転する斬撃）の大きさ
 	constexpr float kFinisherEffectScaleRate	= 1.4f;		// 決めの攻撃の専用エフェクトの大きさ（斬撃1本の大きさに掛ける。前と同じ 0.5 くらい）
 
+	// パリィ
+	constexpr int kParryFrame = 10; // パリィ受付時間
+
+
 	// カメラの注視点を腰の骨から下げる量
 	constexpr float kCameraTargetOffsetY	= -0.9f;
 	constexpr float kCameraFollowRateY		= 0.25f;	// ジャンプなどで高さが変わった時、カメラが付いていく速さ（0～1）

@@ -160,6 +160,18 @@ public:
 	// ガードしながら moveDir の方向へ歩く時のアニメーション名と、その再生速度を選ぶ
 	const std::string& SelectGuardWalkAnim(const Math::Vector3& moveDir, float moveSpeed, float& outAnimSpeed) const;
 
+	// パリィ受付開始
+	void ParryCountStart();
+
+	// パリィ受付時間処理
+	void ParryTick() { if (m_parryCount > 0) m_parryCount--; }
+
+	// パリィ受付解除
+	void ParryCountEnd();
+
+	// パリィ実行
+	bool Parry();
+
 	// カメラの向いている方へ向きを変える（ガード中は敵の方を向いたまま歩けるように）
 	void TurnTowardCameraForward(float maxAngle);
 
@@ -215,7 +227,6 @@ public:
 
 	// 決めの攻撃（1-4・4・5-4 など）の専用エフェクトを出す（1振りに1回だけ）
 	void PlayFinisherEffect(const std::string& effectName, const Math::Vector3& hitPos, bool isCritical);
-
 
 	// 被弾判定
 	int GetCritRate() const;	// クリティカルになる確率（％。Object Editor の「Player」タブ）

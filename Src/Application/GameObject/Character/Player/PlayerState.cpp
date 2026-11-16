@@ -132,3 +132,5 @@ void PlayerStateDead::Update(Player* player)
 	// 死亡モーションの後はゲームオーバー画面へ（GameScene側で判定）
 	// 倒れた後に動かないよう、ここでは何もしない
 }
+
+

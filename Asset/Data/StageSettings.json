@@ -1,0 +1,150 @@
+{
+    "Battle": {
+        "AbilityRate": 2.0,
+        "BonusGain": 12.0,
+        "BreakDamageRate": 1.7999999523162842,
+        "BreakEnable": true,
+        "BreakMax": 100.0,
+        "BreakSec": 6.0,
+        "CriticalRate": 1.5,
+        "DecayDelaySec": 1.0,
+        "DecayPerSec": 15.0,
+        "HitGain": 1.2000000476837158,
+        "MidBossBreak": true,
+        "NormalBreak": true,
+        "PunisherRate": 1.5
+    },
+    "EnemyTuning": {
+        "AttackDamage": 5,
+        "AttackRecoverFrame": 50,
+        "AttackRecoverRandom": 20,
+        "Boss": {
+            "AttackRange": 3.5,
+            "Hp": 252,
+            "JumpAttackCT": 360,
+            "Scale": 2.5999999046325684,
+            "SearchRange": 16.0
+        },
+        "BossAttackRecoverFrame": 35,
+        "ChaseSpeed": 0.10000000149011612,
+        "CriticalAttackDamage": 10,
+        "JumpAttackChance": 3,
+        "JumpAttackMaxDist": 14.0,
+        "JumpAttackMinDist": 4.0,
+        "JumpAttackRecoverFrame": 50,
+        "KnockbackArmorRate": 0.30000001192092896,
+        "KnockbackBossRate": 0.25,
+        "KnockbackCriticalRate": 1.600000023841858,
+        "KnockbackDecay": 0.7799999713897705,
+        "KnockbackMidBossRate": 0.5,
+        "KnockbackSpeed": 0.11999999731779099,
+        "KnockbackStunRate": 0.5,
+        "MidBoss": {
+            "AttackRange": 2.4000000953674316,
+            "Hp": 130,
+            "JumpAttackCT": 420,
+            "Scale": 1.899999976158142,
+            "SearchRange": 12.0
+        },
+        "Normal": {
+            "AttackRange": 1.2000000476837158,
+            "Hp": 80,
+            "JumpAttackCT": 600,
+            "Scale": 1.25,
+            "SearchRange": 8.0
+        },
+        "SmashDamage": 20
+    },
+    "Fog": {
+        "DistanceColor": [
+            0.10000000149011612,
+            0.10999999940395355,
+            0.1599999964237213
+        ],
+        "DistanceDensity": 0.007000000216066837,
+        "DistanceEnable": true,
+        "HeightBottom": -1.0,
+        "HeightColor": [
+            0.11999999731779099,
+            0.12999999523162842,
+            0.18000000715255737
+        ],
+        "HeightDistance": 45.0,
+        "HeightEnable": true,
+        "HeightTop": 1.0
+    },
+    "GroundMist": {
+        "BottomHeight": -0.10000000149011612,
+        "Brightness": 0.2199999988079071,
+        "BrightnessRandom": 0.07999999821186066,
+        "Color": [
+            0.6200000047683716,
+            0.6499999761581421,
+            0.7799999713897705
+        ],
+        "Count": 70,
+        "DriftAngle": 30.0,
+        "DriftSpeed": 0.6000000238418579,
+        "Enable": true,
+        "Flatten": 0.3499999940395355,
+        "HeightRandom": 0.25,
+        "NearFadeLength": 3.0,
+        "NearFadeStart": 3.0,
+        "Range": 36.0,
+        "SizeMax": 10.0,
+        "SizeMin": 5.0,
+        "SwayRange": 0.30000001192092896,
+        "SwaySpeed": 0.4000000059604645
+    },
+    "LowHpScreen": {
+        "BlinkRate": 0.25,
+        "BlinkSpeed": 0.07999999821186066,
+        "Darken": 0.3499999940395355,
+        "DeathFadeSec": 1.5,
+        "Enable": true,
+        "FastBlinkSpeed": 0.20000000298023224,
+        "FollowRate": 0.05000000074505806,
+        "Grayscale": 0.8500000238418579,
+        "StartRate": 0.10000000149011612,
+        "Vignette": 0.9700000286102295,
+        "VignetteStart": 0.25,
+        "YellowRate": 0.5
+    },
+    "Player": {
+        "BladeShapeHitbox": true,
+        "RunSpeedRate": 1.5,
+        "ThrowAngleOffset": 0.0,
+        "UseRootMotion": true
+    },
+    "PlayerTuning": {
+        "AbilityDamageRate": 1.5,
+        "AbilityStunFrame": 50,
+        "AtbCriticalRate": 1.25,
+        "AtbEvadeGain": 5.0,
+        "AtbHitGain": 2.5,
+        "AttackDamage": 3,
+        "CritRate": 10,
+        "CriticalAttackDamage": 5,
+        "DamageInvincibleFrame": 30,
+        "EvadeDamageRate": 0.5,
+        "GuardBreakFrame": 120,
+        "GuardCostPerDamage": 3.0,
+        "GuardCriticalCostRate": 1.5,
+        "GuardDamageRate": 0.20000000298023224,
+        "GuardDurabilityMax": 100.0,
+        "GuardRegenDelay": 120,
+        "GuardRegenSpeed": 0.15000000596046448,
+        "HeavyDamage": 20,
+        "LockOnRange": 10.0,
+        "MaxHp": 100,
+        "MultiHitInterval": 10,
+        "OperatorAtbHitRate": 1.149999976158142,
+        "OperatorAttackSpeedRate": 1.2000000476837158,
+        "OperatorDamageRate": 0.6000000238418579,
+        "PunisherAtbHitRate": 0.75,
+        "PunisherAttackSpeedRate": 0.800000011920929,
+        "PunisherDamageRate": 1.600000023841858,
+        "PunisherMoveRate": 0.6000000238418579,
+        "PunisherTakenDamageRate": 1.2999999523162842
+    }
+}

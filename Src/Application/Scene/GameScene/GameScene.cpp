@@ -280,7 +280,7 @@ void GameScene::UpdateKey()
 		lock->Init();
 		m_objList.push_back(lock);
 		m_isBossRoomLocked = true;
-		if (message) message->Show("もう逃げられない");
+		if (message) message->Show("");
 	}
 
 	// ④ ボスの部屋の扉：鍵を持って近づくと開く。持たずに近づくと「鍵がかかっている」
@@ -436,7 +436,7 @@ void GameScene::CheckGameEnd()
 			SceneManager::Instance().SetNextScene(SceneManager::SceneType::GameClear);
 		}
 	}
-}
+} 
 
 int GameScene::GetAliveEnemyCount() const
 {

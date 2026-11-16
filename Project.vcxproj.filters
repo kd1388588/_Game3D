@@ -199,9 +199,6 @@
     <Filter Include="Src\Application\GameObject\UI\Gage\ATB">
       <UniqueIdentifier>{4f48b3ab-4e7f-4d53-ae43-f5150dae29f2}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Src\Application\GameObject\Character\TestModel">
-      <UniqueIdentifier>{8cb89a84-5580-41ca-9215-2c12b6f555f4}</UniqueIdentifier>
-    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Pch.h">
@@ -510,9 +507,6 @@
     <ClInclude Include="Src\Application\GameObject\Character\UI\Gage\Base\BaseGage.h">
       <Filter>Src\Application\GameObject\UI\Gage\Base</Filter>
     </ClInclude>
-    <ClInclude Include="Src\Application\GameObject\Character\TestModel\TestModel.h">
-      <Filter>Src\Application\GameObject\Character\TestModel</Filter>
-    </ClInclude>
     <ClInclude Include="Src\Application\GameObject\Character\Player\PlayerParamManager.h">
       <Filter>Src\Application\GameObject\Character\Player</Filter>
     </ClInclude>
@@ -805,9 +799,6 @@
     </ClCompile>
     <ClCompile Include="Src\Application\GameObject\Character\UI\Gage\Base\BaseGage.cpp">
       <Filter>Src\Application\GameObject\UI\Gage\Base</Filter>
-    </ClCompile>
-    <ClCompile Include="Src\Application\GameObject\Character\TestModel\TestModel.cpp">
-      <Filter>Src\Application\GameObject\Character\TestModel</Filter>
     </ClCompile>
     <ClCompile Include="Src\Application\GameObject\Character\Player\PlayerParamManager.cpp">
       <Filter>Src\Application\GameObject\Character\Player</Filter>

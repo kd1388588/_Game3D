@@ -132,4 +132,8 @@ namespace PlayerStateConst
 
 	// 着地
 	constexpr float kLandingCancelFrame		= 4.0f;		// 着地してからこのフレーム数がたったら、攻撃・回避・ジャンプに移れる
+
+	// パリィ
+	const std::string kParryLAnimName = "Parry_L";
+	const std::string kParryRAnimName = "Parry_R";
 }

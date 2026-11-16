@@ -70,7 +70,11 @@ std::vector<AnimLoadInfo> Player::CreateAnimList()
 		{ "Combat_JumpLoop",	kAnimDir + "05_Jump/02_Jump_Combat/AS_Jump_Combat_Loop_0_Seq/AS_Jump_Combat_Loop_0_Seq.gltf" },
 		{ "Combat_JumpEnd",		kAnimDir + "05_Jump/02_Jump_Combat/AS_Jump_Combat_End_0_Seq/AS_Jump_Combat_End_0_Seq.gltf" },
 		{ "Damage",				kAnimDir + "08_Hit/01_Hit/AS_Hit_F_Seq/AS_Hit_F_Seq.gltf" },
-		{ "GuardStart",			kAnimDir + "08_Hit/14_Block/AS_Block_Start_Seq/AS_Block_Start_Seq.gltf" },
+		{ "Parry_L",			kAnimDir + "08_Hit/14_Block/AS_Parry_L_Seq/AS_Parry_L_Seq.gltf" },
+		{ "Parry_R",			kAnimDir + "08_Hit/14_Block/AS_Parry_R_Seq/AS_Parry_R_Seq.gltf" },
+		{ "Counter_L",			kAnimDir + "02_Hit/14_Parry_Counter_Attack/AS_Parry_Counter_Attack_L_Seq.gltf" },
+		{ "Counter_R",			kAnimDir + "02_Hit/14_Parry_Counter_Attack/AS_Parry_Counter_Attack_R_Seq.gltf" },
+		{ "GuardStart",			kAnimDir + "02_Hit/14_Block/AS_Block_Start_Seq/AS_Block_Start_Seq.gltf" },
 		{ "GuardLoop",			kAnimDir + "08_Hit/14_Block/AS_Block_Loop_Seq/AS_Block_Loop_Seq.gltf" },
 		{ "GuardHit",			kAnimDir + "08_Hit/14_Block/AS_Block_Hit_Seq/AS_Block_Hit_Seq.gltf" },
 		{ "GuardEnd",			kAnimDir + "08_Hit/14_Block/AS_Block_End_Seq/AS_Block_End_Seq.gltf" },
@@ -424,6 +428,12 @@ void Player::Update()
 		}
 	}
 
+	// パリィ受付時間管理
+	ParryTick();
+
+	// パリィ実行
+	Parry();
+	
 	// パニッシャーのオーラ：パニッシャーの間は出して、それ以外は消す
 	m_auraFrame++;
 	float auraTarget = (IsPunisherMode() && IsAlive()) ? 1.0f : 0.0f;

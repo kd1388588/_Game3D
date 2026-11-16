@@ -29,6 +29,7 @@ void PlayerStateGuard::ChangePhase(Player* player, Phase phase)
 	case Phase::Start:
 		player->ChangeAnimation(kGuardStartAnimName, false, true, kGuardBlendFrame);
 		player->SetAnimationSpeed(kGuardStartAnimSpeed);
+		player->ParryCountStart();
 		break;
 	case Phase::Loop:
 		player->ChangeAnimation(kGuardLoopAnimName, true, false, kGuardBlendFrame);
@@ -176,3 +177,22 @@ float PlayerStateGuard::GetFootstepVolume() const
 	// 構えたまま歩いている時だけ（受け止めた・構え始めなどの足の動きでは鳴らさない）
 	return (m_phase == Phase::Loop) ? kGuardFootstepVolume : 0.0f;
 }
+
+
+void PlayerStateParry::ChangeState(Player* player)
+{
+	if (m_isRight)
+	{
+		player->ChangeAnimation(kParryRAnimName);
+	}
+	else
+	{
+		player->ChangeAnimation(kParryLAnimName);
+	}
+}
+
+void PlayerStateParry::Update(Player* player)
+{
+
+}
+
