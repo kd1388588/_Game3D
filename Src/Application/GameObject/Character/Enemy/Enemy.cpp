@@ -557,7 +557,7 @@ void Enemy::OnDamage(int damage, bool isCritical)
 	m_framesSinceHit = 0;
 
 	// のけぞるか（攻撃中のスーパーアーマーは、ATB の技を受けている時・ブレイク中だけ破れる）
-	bool isFlinch = !m_isSuperArmor || m_stunTimer > 0 || IsBroken();
+	bool isFlinch = (!StageSettings::Instance().GetBattle().normalAttackStun)|| !m_isSuperArmor || m_stunTimer > 0 || IsBroken();
 
 	// 光る・揺れる・ノックバック（倒した一撃でも出す。倒れながら少し後ろへすべる）
 	StartHitReaction(isCritical, isFlinch || m_hp <= 0);

@@ -195,15 +195,17 @@ void PlayerStateParry::ChangeState(Player* player)
 
 void PlayerStateParry::Update(Player* player)
 {
-	player->SetInvincibleTimer(0.75);
+	player->SetInvincibleTimer(0.75f);
 	if (!player->IsAnimEnd())return;
 
 	if (player->IsGuardDashDown())
 	{
+		player->ParryCountStart();
 		player->ChangeState(std::make_shared<PlayerStateGuard>());
 	}
 	else
 	{
+		player->ParryCountEnd();
 		player->ChangeState(std::make_shared<PlayerStateIdle>());
 	}
 

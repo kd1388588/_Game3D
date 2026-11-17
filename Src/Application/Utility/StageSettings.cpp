@@ -200,6 +200,7 @@ bool StageSettings::Save(const std::string& path) const
 		{ "BreakEnable",		b.breakEnable },
 		{ "NormalBreak",		b.normalBreak },
 		{ "MidBossBreak",		b.midBossBreak },
+		{ "NormalAttackStun",	b.normalAttackStun },
 		{ "BreakMax",			b.breakMax },
 		{ "HitGain",			b.hitGain },
 		{ "CriticalRate",		b.criticalRate },
@@ -318,6 +319,7 @@ bool StageSettings::Load(const std::string& path)
 		Read(t, "BreakEnable",		b.breakEnable);
 		Read(t, "NormalBreak",		b.normalBreak);
 		Read(t, "MidBossBreak",		b.midBossBreak);
+		Read(t, "NormalAttackStun",		b.normalAttackStun);
 		Read(t, "BreakMax",			b.breakMax);
 		Read(t, "HitGain",			b.hitGain);
 		Read(t, "CriticalRate",		b.criticalRate);
@@ -543,9 +545,12 @@ void StageSettings::DrawBattleEditor()
 			DragI(U8("飛びかかりの CT"), e.jumpAttackCT, 1.0f, 0, 60 * 120, U8("飛びかかり攻撃を使った後、次に使えるまでのフレーム数（60 で 1 秒）"));
 			ImGui::PopID();
 		};
+
 		drawType(U8("ザコ"), t.normal);
 		drawType(U8("中ボス"), t.midBoss);
 		drawType(U8("ボス"), t.boss);
+
+		ImGui::Checkbox(U8("通常攻撃でも怯む"), &b.normalAttackStun);
 
 		if (ImGui::Button(U8("今いる敵に反映")))
 		{
