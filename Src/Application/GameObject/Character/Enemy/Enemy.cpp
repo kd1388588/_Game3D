@@ -14,23 +14,23 @@ namespace
 	// StageSettings::EnemyTuning に移した（Object Editor の「Enemy」タブ。EnemyTune().boss.hp のように読む）
 
 	// 最初の飛びかかり攻撃までの時間（全員が同時に飛びかかってこないよう、ばらつかせる）
-	constexpr int	kFirstJumpAttackMinFrame	= 60 * 1;
-	constexpr int	kFirstJumpAttackMaxFrame	= 60 * 4;
+	constexpr int	kFirstJumpAttackMinFrame = 60 * 1;
+	constexpr int	kFirstJumpAttackMaxFrame = 60 * 4;
 
 	// 攻撃の構えの間に、プレイヤーの方へ向きを変える速さ（ラジアン/フレーム）
-	constexpr float	kAttackTurnSpeed		= 0.12f;
+	constexpr float	kAttackTurnSpeed = 0.12f;
 
 	// 被弾後の無敵時間（0：無し）
 	// ※プレイヤーの攻撃は、剣ごとに「同じ敵には少し間をあけてしか当たらない」ようにしているので、
 	//   敵の側では無敵にしない（無敵があると、二刀流の2本目や多段ヒットが当たらなくなる）
-	constexpr int	kDamageInvincibleFrame	= 0;
+	constexpr int	kDamageInvincibleFrame = 0;
 	// リムライト（体のふちを薄く赤く光らせて、暗い背景に溶けないようにする）
-	const Math::Vector3 kLimColor			= { 0.55f, 0.12f, 0.08f };
-	constexpr float	kLimPow					= 2.5f;		// 鋭さ（大きいほどふちだけが光る）
-	constexpr float	kBumpRadiusRate			= 0.4f;		// 壁・柱に当たる体の半径（体の大きさに掛ける。ザコ 0.5m・ボス 1.0m くらい）
-	constexpr float	kLeapWallCheckHeight	= 0.9f;		// 飛びかかる前に、着地点までの間に柱が無いかを調べる高さ
-	constexpr float	kPushStrength			= 0.1f;		// 敵同士の押し出しの強さ（毎フレームの割合）
-	constexpr float	kHitEffectScale			= 0.22f;	// プレイヤーに攻撃が当たった時のエフェクトの大きさ（大きいと前が見えなくなる）
+	const Math::Vector3 kLimColor = { 0.55f, 0.12f, 0.08f };
+	constexpr float	kLimPow = 2.5f;		// 鋭さ（大きいほどふちだけが光る）
+	constexpr float	kBumpRadiusRate = 0.4f;		// 壁・柱に当たる体の半径（体の大きさに掛ける。ザコ 0.5m・ボス 1.0m くらい）
+	constexpr float	kLeapWallCheckHeight = 0.9f;		// 飛びかかる前に、着地点までの間に柱が無いかを調べる高さ
+	constexpr float	kPushStrength = 0.1f;		// 敵同士の押し出しの強さ（毎フレームの割合）
+	constexpr float	kHitEffectScale = 0.22f;	// プレイヤーに攻撃が当たった時のエフェクトの大きさ（大きいと前が見えなくなる）
 	// ※エフェクトの色（赤）は、エフェクトエディタ（EffectSettings）で _Claw2.efkefc に付けている
 
 	// プレイヤーに攻撃が当たった時のエフェクト（小さめ・赤っぽい色にして、プレイヤーの攻撃のエフェクトと見分けやすくする）
@@ -42,56 +42,60 @@ namespace
 	const std::string kModelDir = "Asset/Models/GameObject/Enemy/Monster2/";
 
 	// 飛びかかり攻撃（ボスだけ）
-	const std::string kJumpAttackStartAnim	= "JumpAttackStart";
-	constexpr float	kLeapJumpPower			= 0.3f;		// 飛び上がる強さ（上がるのに30フレーム、高さ約4.5）
-	constexpr float	kGravityPerFrame		= 0.01f;	// 重力（BaseChara と同じ値）
-	constexpr float	kLeapFallGravityRate	= 1.6f;		// 落ちる時の重力の倍率（勢いよく落ちて叩きつける）
-	constexpr float	kMaxLeapDistance		= 14.0f;	// 飛べる距離の上限
-	constexpr float	kLeapLandOffset			= 1.5f;		// プレイヤーの少し手前に着地する（真上に落ちてめり込まないように）
-	constexpr float	kFallingGravity			= 0.03f;	// これを超えたら「落ち始めた」とみなす
-	constexpr float	kOnGroundGravity		= 0.011f;	// これ以下なら地面にいるとみなす
+	const std::string kJumpAttackStartAnim = "JumpAttackStart";
+	constexpr float	kLeapJumpPower = 0.3f;		// 飛び上がる強さ（上がるのに30フレーム、高さ約4.5）
+	constexpr float	kGravityPerFrame = 0.01f;	// 重力（BaseChara と同じ値）
+	constexpr float	kLeapFallGravityRate = 1.6f;		// 落ちる時の重力の倍率（勢いよく落ちて叩きつける）
+	constexpr float	kMaxLeapDistance = 14.0f;	// 飛べる距離の上限
+	constexpr float	kLeapLandOffset = 1.5f;		// プレイヤーの少し手前に着地する（真上に落ちてめり込まないように）
+	constexpr float	kFallingGravity = 0.03f;	// これを超えたら「落ち始めた」とみなす
+	constexpr float	kOnGroundGravity = 0.011f;	// これ以下なら地面にいるとみなす
 
 	// 着地の衝撃
-	constexpr float	kSmashRadius			= 1.8f;		// 攻撃の範囲（体の大きさに掛ける）
-	constexpr float	kSmashHeight			= 2.0f;		// 上下にこれだけ離れていたら当たらない（ジャンプでかわせる）
-	constexpr int	kSmashHitStopFrame		= 4;		// 着地の時のヒットストップ（当たらなくても、地面が揺れる感じを出す）
-	constexpr float	kSmashShakePower		= 0.2f;
-	constexpr float	kSmashEffectScaleRate	= 1.0f;		// 着地のエフェクトの大きさ（体の大きさに掛ける。攻撃の範囲と同じくらいに広がる）
+	constexpr float	kSmashRadius = 1.8f;		// 攻撃の範囲（体の大きさに掛ける）
+	constexpr float	kSmashHeight = 2.0f;		// 上下にこれだけ離れていたら当たらない（ジャンプでかわせる）
+	constexpr int	kSmashHitStopFrame = 4;		// 着地の時のヒットストップ（当たらなくても、地面が揺れる感じを出す）
+	constexpr float	kSmashShakePower = 0.2f;
+	constexpr float	kSmashEffectScaleRate = 1.0f;		// 着地のエフェクトの大きさ（体の大きさに掛ける。攻撃の範囲と同じくらいに広がる）
 
 	// 普通の攻撃で、手を地面に叩きつけた時の爪のエフェクト（体の大きさに掛ける。ザコ約0.3、ボス約0.6）
-	constexpr float	kSlamEffectScaleRate	= 0.24f;
-	constexpr float	kSlamEffectHeightRate	= 0.4f;		// 地面からの高さ（体の大きさに掛ける。地面や腕に埋もれて見えなくならないように）
-	constexpr float	kSmashClawScaleRate		= 0.35f;	// 飛びかかりの着地で、_GroundSmash が無い時に代わりに出す爪のエフェクトの大きさ
+	constexpr float	kSlamEffectScaleRate = 0.24f;
+	constexpr float	kSlamEffectHeightRate = 0.4f;		// 地面からの高さ（体の大きさに掛ける。地面や腕に埋もれて見えなくならないように）
+	constexpr float	kSmashClawScaleRate = 0.35f;	// 飛びかかりの着地で、_GroundSmash が無い時に代わりに出す爪のエフェクトの大きさ
 
 	// 足元の近くへの攻撃判定（体の大きさに掛ける）
-	constexpr float	kNearHitRadius			= 0.9f;		// 体の中心からこの距離以内（ボスなら約2.3m、ザコなら約1.1m）
-	constexpr float	kNearHitHeight			= 2.0f;		// 上下にこれ以上離れていたら当たらない
-	constexpr float	kNearHitBackDot			= -0.3f;	// 体の向きとの内積がこれより小さい（真後ろ）なら当たらない
+	constexpr float	kNearHitRadius = 0.9f;		// 体の中心からこの距離以内（ボスなら約2.3m、ザコなら約1.1m）
+	constexpr float	kNearHitHeight = 2.0f;		// 上下にこれ以上離れていたら当たらない
+	constexpr float	kNearHitBackDot = -0.3f;	// 体の向きとの内積がこれより小さい（真後ろ）なら当たらない
 
 	// ---- 殴られた時の反応 ----
 	// ノックバック：殴られた瞬間に後ろへの速さを与え、毎フレーム EnemyTune().knockbackDecay 倍にして止める
 	//   進む距離の合計 ＝ 速さ ÷ (1 − 減り方)（例：0.12 ÷ 0.22 ≒ 0.55m）
 	//   （遠くへ飛ばしすぎると、二刀流の連続攻撃が届かなくなるので短め）
-	constexpr float	kKnockbackStopSpeed		= 0.002f;	// これより遅くなったら止める
-	constexpr float	kKnockbackWallHeight	= 0.9f;		// 壁があるかを調べるレイの高さ
+	constexpr float	kKnockbackStopSpeed = 0.002f;	// これより遅くなったら止める
+	constexpr float	kKnockbackWallHeight = 0.9f;		// 壁があるかを調べるレイの高さ
 
 	// 白く光る：リムライトを「体全体にかかる白い光」に一瞬だけ変える
 	//   リムライトの明るさ ＝ 色 × (1 − 面の向き・カメラの向き)^鋭さ
 	//   鋭さを小さくすると、ふちだけでなく体全体が光る
-	constexpr int	kHitFlashFrame			= 6;		// 光っている長さ（ヒットストップ中は減らないので、止まっている間はずっと光る）
-	const Math::Vector3 kHitFlashColor		= { 1.0f, 0.95f, 0.85f };	// 少し黄色っぽい白
-	constexpr float	kHitFlashPow			= 0.3f;		// 光っている時の鋭さ（小さいほど体全体が光る）
+	constexpr int	kHitFlashFrame = 6;		// 光っている長さ（ヒットストップ中は減らないので、止まっている間はずっと光る）
+	const Math::Vector3 kHitFlashColor = { 1.0f, 0.95f, 0.85f };	// 少し黄色っぽい白
+	constexpr float	kHitFlashPow = 0.3f;		// 光っている時の鋭さ（小さいほど体全体が光る）
 
 	// 小さく揺れる（スーパーアーマー中でも、当たったことが分かるように）
-	constexpr int	kHitShakeFrame			= 8;
-	constexpr float	kHitShakePower			= 0.03f;	// 揺れる幅（体の大きさに掛ける）
+	constexpr int	kHitShakeFrame = 8;
+	constexpr float	kHitShakePower = 0.03f;	// 揺れる幅（体の大きさに掛ける）
 
 	// ---- ブレイク（数値はオブジェクトエディタの「Enemy」タブ） ----
-	constexpr float	kFramePerSec			= 60.0f;	// 秒をフレーム数に直す
-	const Math::Vector3 kBreakLimColor		= { 1.0f, 0.75f, 0.2f };	// ブレイク中のふちの色（金色。ゆっくり明るく・暗くする）
-	constexpr float	kBreakLimPow			= 1.2f;
-	constexpr float	kBreakPulseSpeed		= 0.15f;	// 金色の明るさが変わる速さ
-	constexpr int	kBreakStunFrame			= 40;		// ブレイクした瞬間に、のけぞらせる長さ（攻撃の途中でも止める）
+	constexpr float	kFramePerSec = 60.0f;	// 秒をフレーム数に直す
+	const Math::Vector3 kBreakLimColor = { 1.0f, 0.75f, 0.2f };	// ブレイク中のふちの色（金色。ゆっくり明るく・暗くする）
+	constexpr float	kBreakLimPow = 1.2f;
+	constexpr float	kBreakPulseSpeed = 0.15f;	// 金色の明るさが変わる速さ
+	constexpr int	kBreakStunFrame = 40;		// ブレイクした瞬間に、のけぞらせる長さ（攻撃の途中でも止める）
+
+	// パリィ硬直時間
+	constexpr int	kParryStunFrame = 25;		// ブレイクした瞬間に、のけぞらせる長さ（攻撃の途中でも止める）
+	constexpr int	kParryAddGage = 15;		// ブレイクした瞬間に、のけぞらせる長さ（攻撃の途中でも止める）
 }
 
 void Enemy::Init()
@@ -114,7 +118,7 @@ void Enemy::Init()
 		{ "JumpAttackStart",	kModelDir + "Animation/Special/Ability_GroundSmash_Start/Ability_GroundSmash_Start.gltf" },
 		{ "JumpAttackLoop",		kModelDir + "Animation/Special/Ability_GroundSmash_Loop/Ability_GroundSmash_Loop.gltf" },
 		{ "JumpAttackEnd",		kModelDir + "Animation/Special/Ability_GroundSmash_End/Ability_GroundSmash_End.gltf" },
-	});
+		});
 
 	// 種類ごとの数値（HP・大きさ・気づく距離など。Object Editor の「Enemy」タブ）
 	ApplyTypeParam();
@@ -190,6 +194,13 @@ void Enemy::Update()
 	if (m_state)
 	{
 		m_state->Update(this);
+	}
+
+	if (m_isParried)
+	{
+		m_isParried = false;
+		AddStun(kParryStunFrame);
+		AddBreak(kParryAddGage);
 	}
 
 	ApplyRootMotion(m_rootScale, m_rotY);
@@ -485,6 +496,16 @@ void Enemy::AttackHit(const Math::Matrix& hitMatrix, const Math::Vector3& extent
 		auto player = std::dynamic_pointer_cast<Player>(obj);
 		if (!player || player->IsInvincible() || !player->IsAlive()) continue;
 
+		// パリィ呼び出し処理
+		Math::Vector3 playerRight = player->GetMatrix().Right();
+		Math::Vector3 charaDir = -playerRight;
+		float side = charaDir.Dot(m_pos - player->GetPos());
+		bool isRight = side > 0.0f;
+		if (player->Parry(isRight))
+		{
+			m_isParried = true;
+		}
+
 		player->OnDamage(damage, isCritical);
 
 		// 当たった位置にヒットエフェクト
@@ -694,6 +715,16 @@ void Enemy::AttackHitNear(bool isCritical)
 		Math::Vector3 dir = diff;
 		dir.Normalize();
 		if (dir.Dot(forward) < kNearHitBackDot) return;
+	}
+
+	// パリィ呼び出し処理
+	Math::Vector3 playerRight = player->GetMatrix().Right();
+	Math::Vector3 charaDir = -playerRight;
+	float side = charaDir.Dot(m_pos - player->GetPos());
+	bool isRight = side > 0.0f;
+	if (player->Parry(isRight))
+	{
+		m_isParried = true;
 	}
 
 	player->OnDamage(isCritical ? EnemyTune().criticalAttackDamage : EnemyTune().attackDamage, isCritical);

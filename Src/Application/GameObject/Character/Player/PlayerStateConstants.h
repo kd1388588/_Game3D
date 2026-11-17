@@ -136,4 +136,5 @@ namespace PlayerStateConst
 	// パリィ
 	const std::string kParryLAnimName = "Parry_L";
 	const std::string kParryRAnimName = "Parry_R";
+	
 }

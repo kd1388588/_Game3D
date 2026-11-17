@@ -91,7 +91,8 @@ public:
 		bool	midBossBreak		= true;		// 中ボスもブレイクするか
 		float	breakMax			= 100.0f;	// ゲージの最大
 		float	hitGain				= 1.2f;		// 普通の攻撃 1 回で、たまる量
-		float	criticalRate		= 1.5f;		// クリティカルの時、たまる量に掛ける
+		float	ParryGain			= 1.5f;		// パリィの攻撃 1 回で、たまる量
+		float	criticalRate		= 1.3f;		// クリティカルの時、たまる量に掛ける
 		float	punisherRate		= 1.5f;		// パニッシャーの攻撃の時、たまる量に掛ける
 		float	abilityRate			= 2.0f;		// ATB の技の時、たまる量に掛ける
 		float	bonusGain			= 12.0f;	// 回避の直後・パリィの攻撃でたまる量（あとで作る）

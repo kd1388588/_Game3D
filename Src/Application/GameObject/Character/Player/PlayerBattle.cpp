@@ -1,5 +1,5 @@
 ﻿// PlayerBattle.cpp
-// バトルモード・ATBゲージ・ATBコマンドメニュー・アビリティ
+// バトルモード・ATBゲージ・ATBコマンドメニュー・アビリティ・パリィ
 // ※Player クラスの関数を、役割ごとにファイルを分けて書いている（クラスの宣言は Player.h）
 
 // Player
@@ -329,4 +329,22 @@ void Player::UpdateAtb()
 			}
 		}
 	}
+}
+
+void Player::ParryCountStart()
+{
+	m_parryCount = kParryFrame;
+}
+
+void Player::ParryCountEnd()
+{
+	m_parryCount = 0;
+}
+
+bool Player::Parry(bool isRight)
+{
+	if (m_parryCount <= 0) return false;
+	m_parryCount = 0;
+	ChangeState(std::make_shared<PlayerStateParry>(isRight));  // パリィ処理実行
+	return true;
 }

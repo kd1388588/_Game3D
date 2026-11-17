@@ -13,7 +13,7 @@ namespace
 	constexpr float		kMaxShowDistance	= 30.0f;	// カメラからこれより遠い敵には出さない
 
 	// 大きさ（画面のピクセル。遠くても同じ大きさにして、読みやすくする）
-	constexpr int		kSmallHalfW			= 45;		// ザコ：幅 90
+	constexpr int		kSmallHalfW			= 50;		// ザコ：幅 90
 	constexpr int		kBigHalfW			= 90;		// ボス・中ボス：幅 180
 	constexpr int		kHpHalfH			= 4;		// HP ゲージの太さ 8
 	constexpr int		kBreakGap			= 3;		// HP ゲージとブレイクゲージのすき間

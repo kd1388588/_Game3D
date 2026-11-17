@@ -183,16 +183,26 @@ void PlayerStateParry::ChangeState(Player* player)
 {
 	if (m_isRight)
 	{
-		player->ChangeAnimation(kParryRAnimName);
+		player->ChangeAnimation(kParryRAnimName, false, 1.0f);
 	}
 	else
 	{
-		player->ChangeAnimation(kParryLAnimName);
+		player->ChangeAnimation(kParryLAnimName, false, 1.0f);
 	}
 }
 
 void PlayerStateParry::Update(Player* player)
 {
+	player->SetInvincibleTimer(2);
+	if (!player->IsAnimEnd())return;
+
+	if (player->IsGuardDashDown())
+	{
+		player->ChangeState(std::make_shared<PlayerStateGuard>());
+	}
+	else
+	{
+		player->ChangeState(std::make_shared<PlayerStateIdle>());
+	}
 
 }
-

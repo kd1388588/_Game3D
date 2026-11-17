@@ -295,22 +295,7 @@ const std::string& Player::SelectGuardWalkAnim(const Math::Vector3& moveDir, flo
 	return pBest->name;
 }
 
-void Player::ParryCountStart()
-{
-	m_parryCount = kParryFrame;
-}
 
-void Player::ParryCountEnd()
-{
-	m_parryCount = 0;
-}
-
-bool Player::Parry()
-{
-	if (m_parryCount <= 0) return false;
-	m_parryCount = 0;
-	return true;
-}
 
 void Player::TurnTowardCameraForward(float maxAngle)
 {

@@ -41,20 +41,6 @@ namespace
 	constexpr bool	kEnableDebugKeys	= true;
 	constexpr float	kDebugSpawnDistance	= 6.0f;		// Shift ＋ F9 で敵を出す、プレイヤーの前方の距離
 	constexpr float	kDebugWarpBossDistance	= 12.0f;	// Shift ＋ F11 でボスの手前のどこへ移動するか（ボスから入口の方へ）
-
-	// ============================================================
-	// ステージの部屋の並び（Tools/MakeCastleStage.py の図も見る。モデルの座標 × ステージの拡大率 1.25 ＝ ゲームの座標）
-	//
-	//                    B ボス ── 鍵の扉
-	//    K 鍵の部屋 ═══════ T ════════ R 右の部屋
-	//              H 真ん中 ═══ E ══╗     ║ V
-	//    S スタート ═══╝            ╚═════╡
-	//                                    M 中ボス（寄り道）║ F 泉の小部屋
-	//
-	//   S → H（敵なし）→ 分かれ道 → 上の R（全員倒すと左の出口が開く）
-	//   → K 鍵の部屋（全員倒すと鍵が出る）→ 鍵を持って B の扉に近づくと開く → ボス
-	//   寄り道：分かれ道の下の M 中ボス（全員倒すと、右の F の回復の泉が光る。倒さなくても先へ進める）
-	// ============================================================
 	constexpr float kStageScale = 1.25f;	// RuinedRoad.cpp の kScale と同じ
 
 	// モデルの座標（x, z）を、ゲームの座標にする（Tools/MakeCastleStage.py の数字をそのまま書けるように）
@@ -280,7 +266,7 @@ void GameScene::UpdateKey()
 		lock->Init();
 		m_objList.push_back(lock);
 		m_isBossRoomLocked = true;
-		if (message) message->Show("");
+		if (message) message->Show("部屋を閉ざされた...");
 	}
 
 	// ④ ボスの部屋の扉：鍵を持って近づくと開く。持たずに近づくと「鍵がかかっている」

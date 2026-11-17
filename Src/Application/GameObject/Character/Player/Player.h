@@ -170,7 +170,7 @@ public:
 	void ParryCountEnd();
 
 	// パリィ実行
-	bool Parry();
+	bool Parry(bool isRight);
 
 	// カメラの向いている方へ向きを変える（ガード中は敵の方を向いたまま歩けるように）
 	void TurnTowardCameraForward(float maxAngle);
@@ -498,6 +498,9 @@ private:
 	float							m_angle = 0;				// Y軸回転角度（度）
 	// （クリティカル率は PlayerTune().critRate に移した）
 	int								m_currentAttackType = 1;	// 攻撃アニメーションの番号
+
+	// パリィ
+	int								m_parryCount = 0;			// パリィカウントフレームの初期化
 
 	// バトルモード・ATB
 	BattleMode						m_battleMode = BattleMode::Operator;

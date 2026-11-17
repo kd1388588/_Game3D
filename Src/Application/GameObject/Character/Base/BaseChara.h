@@ -160,9 +160,6 @@ protected:
 	int								m_maxHp = 100;				// 最大HP
 	int								m_invincibleTimer = 0;		// 無敵時間（フレーム）
 
-	// パリィ関係
-	int								m_parryCount = 0;			// パリィカウントフレームの初期化
-
 private:
 
 	// 自分以外の全オブジェクトと当たり判定を行い、結果をまとめて返す

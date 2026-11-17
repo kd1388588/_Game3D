@@ -174,4 +174,7 @@ private:
 	Math::Vector3					m_knockbackVel = Math::Vector3::Zero;	// ノックバックの 1 フレームの移動量（だんだん小さくなる）
 	int								m_hitFlashTimer = 0;		// 白く光る残りフレーム
 	int								m_hitShakeTimer = 0;		// 小さく揺れる残りフレーム（見た目だけ。当たり判定は動かさない）
+
+	// パリィ関連
+	bool							m_isParried = false;
 };
