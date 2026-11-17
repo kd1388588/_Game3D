@@ -183,17 +183,19 @@ void PlayerStateParry::ChangeState(Player* player)
 {
 	if (m_isRight)
 	{
-		player->ChangeAnimation(kParryRAnimName, false, 1.0f);
+		player->ChangeAnimation(kParryRAnimName, false, true);
+		player->SetAnimationSpeed(1.8f);
 	}
 	else
 	{
-		player->ChangeAnimation(kParryLAnimName, false, 1.0f);
+		player->ChangeAnimation(kParryLAnimName, false, true);
+		player->SetAnimationSpeed(1.8f);
 	}
 }
 
 void PlayerStateParry::Update(Player* player)
 {
-	player->SetInvincibleTimer(2);
+	player->SetInvincibleTimer(0.75);
 	if (!player->IsAnimEnd())return;
 
 	if (player->IsGuardDashDown())

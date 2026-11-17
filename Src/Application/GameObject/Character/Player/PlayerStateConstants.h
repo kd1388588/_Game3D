@@ -106,8 +106,8 @@ namespace PlayerStateConst
 	const std::string kGuardHitAnimName		= "GuardHit";
 	const std::string kGuardEndAnimName		= "GuardEnd";
 	constexpr float kGuardBlendFrame		= 4.0f;		// ガードのアニメーションどうしのブレンドフレーム数
-	constexpr float kGuardStartAnimSpeed	= 1.5f;		// 構えるのは素早く（すぐ守れるように）
-	constexpr float kGuardEndCancelRate		= 0.3f;		// 構えを解くアニメーションがこの割合まで進んだら、次の行動に移れる
+	constexpr float kGuardStartAnimSpeed	= 2.5f;		// 構えるのは素早く（すぐ守れるように）
+	constexpr float kGuardEndCancelRate		= 0.5f;		// 構えを解くアニメーションがこの割合まで進んだら、次の行動に移れる
 	constexpr float kGuardWalkBlendFrame	= 6.0f;		// ガード歩きの向きが変わった時のブレンドフレーム数
 	constexpr float kGuardTurnAngle			= 12.0f;	// ガード中にカメラの方へ向きを変える速さ（度/フレーム）
 	const std::string kGuardBreakAnimName	= "GuardBreak";

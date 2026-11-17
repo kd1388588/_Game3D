@@ -94,7 +94,7 @@ namespace
 	constexpr int	kBreakStunFrame = 40;		// ブレイクした瞬間に、のけぞらせる長さ（攻撃の途中でも止める）
 
 	// パリィ硬直時間
-	constexpr int	kParryStunFrame = 25;		// ブレイクした瞬間に、のけぞらせる長さ（攻撃の途中でも止める）
+	constexpr int	kParryStunFrame = 50;		// ブレイクした瞬間に、のけぞらせる長さ（攻撃の途中でも止める）
 	constexpr int	kParryAddGage = 15;		// ブレイクした瞬間に、のけぞらせる長さ（攻撃の途中でも止める）
 }
 
@@ -200,7 +200,8 @@ void Enemy::Update()
 	{
 		m_isParried = false;
 		AddStun(kParryStunFrame);
-		AddBreak(kParryAddGage);
+		AddBreak(StageSettings::Instance().GetBattle().bonusGain);
+		ChangeState(std::make_shared<EnemyStateDamage>());
 	}
 
 	ApplyRootMotion(m_rootScale, m_rotY);
@@ -504,7 +505,9 @@ void Enemy::AttackHit(const Math::Matrix& hitMatrix, const Math::Vector3& extent
 		if (player->Parry(isRight))
 		{
 			m_isParried = true;
+			return;
 		}
+		
 
 		player->OnDamage(damage, isCritical);
 
@@ -725,6 +728,7 @@ void Enemy::AttackHitNear(bool isCritical)
 	if (player->Parry(isRight))
 	{
 		m_isParried = true;
+		return;
 	}
 
 	player->OnDamage(isCritical ? EnemyTune().criticalAttackDamage : EnemyTune().attackDamage, isCritical);
