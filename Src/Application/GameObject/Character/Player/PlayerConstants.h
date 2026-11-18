@@ -155,6 +155,8 @@ namespace PlayerConst
 	constexpr float	kAuraFadeSpeed			= 0.06f;	// モードを切り替えた時に出る・消える速さ
 	const Math::Vector3 kAuraColor			= { 1.6f, 0.6f, 0.15f };	// オレンジ
 
+	std::ranges::
+
 	// 接地判定に使う重力の上限（落下し始めの1フレーム分）
 	constexpr float kOnGroundGravityMax = 0.011f;
 

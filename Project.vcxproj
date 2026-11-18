@@ -301,6 +301,7 @@
     <ClInclude Include="Src\Application\GameObject\Character\UI\Gage\Enemy\EnemyGage.h" />
     <ClInclude Include="Src\Application\GameObject\Stage\Object\StageLights\StageLights.h" />
     <ClInclude Include="Src\Application\GameObject\Stage\Object\GroundMist\GroundMist.h" />
+    <ClInclude Include="Src\Application\Utility\Accumulator Pattern\Accumulator Pattern.h" />
     <ClInclude Include="Src\Application\Utility\StageSettings.h" />
     <ClInclude Include="Src\Application\Utility\EffectSettings.h" />
     <ClInclude Include="Src\Application\GameObject\Stage\Sky\Sky.h" />
@@ -408,6 +409,7 @@
     <ClCompile Include="Src\Application\GameObject\Character\UI\Gage\Enemy\EnemyGage.cpp" />
     <ClCompile Include="Src\Application\GameObject\Stage\Object\StageLights\StageLights.cpp" />
     <ClCompile Include="Src\Application\GameObject\Stage\Object\GroundMist\GroundMist.cpp" />
+    <ClCompile Include="Src\Application\Utility\Accumulator Pattern\AccumulatorP Pattern.cpp" />
     <ClCompile Include="Src\Application\Utility\StageSettings.cpp" />
     <ClCompile Include="Src\Application\Utility\EffectSettings.cpp" />
     <ClCompile Include="Src\Application\GameObject\Stage\Sky\Sky.cpp" />

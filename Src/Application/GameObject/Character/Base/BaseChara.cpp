@@ -2,6 +2,7 @@
 #include "../../../Scene/SceneManager.h"
 #include "../../../Utility/GameTime.h"
 
+
 namespace
 {
 	constexpr float kGravityAccel			= 0.01f;	// 1フレームあたりの重力加速度
