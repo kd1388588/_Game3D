@@ -348,3 +348,4 @@ bool Player::Parry(bool isRight)
 	ChangeState(std::make_shared<PlayerStateParry>(isRight));  // パリィ処理実行
 	return true;
 }
+

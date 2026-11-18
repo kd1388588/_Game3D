@@ -77,8 +77,8 @@ std::vector<AnimLoadInfo> Player::CreateAnimList()
 		{ "GuardBreak",			kAnimDir + "08_Hit/14_Block/AS_Block_Hit_Break_Seq/AS_Block_Hit_Break_Seq.gltf" },
 		{ "Parry_L",			kAnimDir + "08_Hit/14_Block/AS_Parry_L_Seq/AS_Parry_L_Seq.gltf" },
 		{ "Parry_R",			kAnimDir + "08_Hit/14_Block/AS_Parry_R_Seq/AS_Parry_R_Seq.gltf" },
-		{ "Counter_L",			kAnimDir + "02_Attack/14_Parry_Counter_Attack/AS_Parry_Counter_Attack_L_Seq.gltf" },
-		{ "Counter_R",			kAnimDir + "02_Attack/14_Parry_Counter_Attack/AS_Parry_Counter_Attack_R_Seq.gltf" },
+		{ "Counter_L",			kAnimDir + "02_Attack/14_Parry_Counter_Attack/AS_Parry_Counter_Attack_L_Seq/AS_Parry_Counter_Attack_L_Seq.gltf" },
+		{ "Counter_R",			kAnimDir + "02_Attack/14_Parry_Counter_Attack/AS_Parry_Counter_Attack_R_Seq/AS_Parry_Counter_Attack_R_Seq.gltf" },
 		{ "Death",				kAnimDir + "08_Hit/01_Hit/AS_Hit_Death_Seq/AS_Hit_Death_Seq.gltf" },
 	};
 

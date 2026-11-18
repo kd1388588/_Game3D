@@ -302,3 +302,39 @@ void PlayerStateComboAttack::Update(Player* player)
 		player->ChangeState(std::make_shared<PlayerStateIdle>());
 	}
 }
+
+
+void PlayerStateCounter::ChangeState(Player* player)
+{
+	player->ResetAttackHits();
+
+	if (m_isRight)
+	{
+		player->ChangeAnimation(kCounterRAnimName, false, true);
+		player->SetAnimationSpeed(1.25f);
+	}
+	else
+	{
+		player->ChangeAnimation(kParryLAnimName, false, true);
+		player->SetAnimationSpeed(1.27f);
+	}
+}
+
+void PlayerStateCounter::Update(Player* player)
+{
+	player->SetInvincibleTimer(1.0f);
+
+	float animTime = player->GetAnimTime();
+
+	if (IsTrailFrame(player, animTime))
+	{
+		player->AddSwordTrailPoints();
+	}
+
+
+
+	if (!player->IsAnimEnd())return;
+	{
+		player->ChangeState(std::make_shared<PlayerStateIdle>());
+	}
+}

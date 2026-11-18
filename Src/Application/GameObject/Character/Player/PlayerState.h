@@ -133,6 +133,19 @@ private:
 	bool m_isRight = true;
 };
 
+class PlayerStateCounter : public PlayerState
+{
+public:
+	explicit PlayerStateCounter(bool isRight) :m_isRight(isRight) {}
+	void ChangeState(Player* player) override;
+	void Update(Player* player) override;
+
+private:
+	bool m_isRight = true;
+	// カウンターかどうか
+	bool IsCounterAttack() const { return }
+};
+
 // ガードを崩された（よろけて、しばらくガードできない）
 class PlayerStateGuardBreak : public PlayerState
 {
