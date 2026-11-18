@@ -142,8 +142,7 @@ public:
 
 private:
 	bool m_isRight = true;
-	// カウンターかどうか
-	bool IsCounterAttack() const { return }
+	
 };
 
 // ガードを崩された（よろけて、しばらくガードできない）
@@ -191,7 +190,6 @@ public:
 	void Update(Player* player) override;
 
 private:
-
 
 	int m_comboType = 1;
 	int m_comboStep = 1;
