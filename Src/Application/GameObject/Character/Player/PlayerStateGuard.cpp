@@ -199,19 +199,9 @@ void PlayerStateParry::Update(Player* player)
 
 	// 少し進んだら、攻撃・回避・移動などに移れる
 	float animLength = player->GetAnimLength();
-	if (animLength <= 0.0f || player->GetAnimTime() >= animLength - kGuardEndCancelRate)
+	if (animLength <= 0.0f || player->GetAnimTime() >= animLength - kCounterEndCancelRate)
 	{
-		if (TryCommonTransition(player)) return;
-		if (player->IsGuardDashDown())
-		{
-			player->ChangeState(std::make_shared<PlayerStateCounter>());
-			return;
-		}
+		player->ChangeState(std::make_shared<PlayerStateCounter>(m_isRight));
+		return;
 	}
-	else
-	{
-		player->ParryCountEnd();
-		player->ChangeState(std::make_shared<PlayerStateIdle>());
-	}
-
 }

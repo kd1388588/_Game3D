@@ -126,9 +126,9 @@ namespace PlayerStateConst
 	constexpr float kAttackEvadeCancelFrame	= 10.0f;	// 攻撃のこのフレーム以降なら、回避でキャンセルできる
 	constexpr float kAttackRecoveryFrame	= 3.0f;		// 次の攻撃に移れるフレームから、さらにこれだけたったら、移動で攻撃の後のすきをキャンセルできる
 
-	// 回避した時に、パニッシャーからオペレーターに戻すか（true で FF7リメイクのクラウドと同じ動き）
+	// 回避した時に、パニッシャーからオペレーターに戻すか
 	// false にすると、回避してもモードはそのまま
-	constexpr bool	kEvadeReturnsToOperator	= false;	// パニッシャーのまま回避できるようにした（そのかわり、パニッシャーは攻撃が遅く、受けるダメージが多い）
+	constexpr bool	kEvadeReturnsToOperator	= true;	// パニッシャーのまま回避できるようにした（そのかわり、パニッシャーは攻撃が遅く、受けるダメージが多い）
 
 	// 着地
 	constexpr float kLandingCancelFrame		= 4.0f;		// 着地してからこのフレーム数がたったら、攻撃・回避・ジャンプに移れる
@@ -143,4 +143,6 @@ namespace PlayerStateConst
 	const std::string kCounterRAnimName = "Counter_R";
 	constexpr float kCounterStartFrame = 10.0f;
 	constexpr float kCounterEndFrame = 45.0f;
+
+	constexpr float kCounterEndCancelRate = 0.0f;		// 構えを解くアニメーションがこの割合まで進んだら、次の行動に移れる
 }

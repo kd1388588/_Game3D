@@ -311,12 +311,12 @@ void PlayerStateCounter::ChangeState(Player* player)
 	if (m_isRight)
 	{
 		player->ChangeAnimation(kCounterRAnimName, false, true);
-		player->SetAnimationSpeed(1.25f);
+		player->SetAnimationSpeed(1.45f);
 	}
 	else
 	{
-		player->ChangeAnimation(kParryLAnimName, false, true);
-		player->SetAnimationSpeed(1.27f);
+		player->ChangeAnimation(kCounterLAnimName, false, true);
+		player->SetAnimationSpeed(1.5f);
 	}
 }
 
