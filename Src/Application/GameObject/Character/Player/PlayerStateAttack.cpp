@@ -326,15 +326,28 @@ void PlayerStateCounter::Update(Player* player)
 
 	float animTime = player->GetAnimTime();
 
-	if (IsTrailFrame(player, animTime))
+	if (IsTrailFrame(animTime))
 	{
 		player->AddSwordTrailPoints();
 	}
 
+	float counterAttackStartFrame = kCounterStartFrame;
+	float counterAttackEndFrame = kCounterEndFrame;
+
+	if (animTime >= counterAttackStartFrame && animTime <= counterAttackEndFrame)
+	{
+		player->AttackOBB(player->GetSwordMatrixR(), false, HitEffectType::Slash, "", 1.25f, 0);
+		player->AttackOBB(player->GetSwordMatrixL(), false, HitEffectType::Slash, "", 1.25f, 1);
+	}
 
 
 	if (!player->IsAnimEnd())return;
 	{
 		player->ChangeState(std::make_shared<PlayerStateIdle>());
 	}
+}
+
+bool PlayerStateCounter::IsTrailFrame(float animTime) const
+{
+	return animTime >= kCounterStartFrame && animTime <= kCounterEndFrame;
 }

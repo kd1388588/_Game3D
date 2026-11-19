@@ -196,12 +196,17 @@ void PlayerStateParry::ChangeState(Player* player)
 void PlayerStateParry::Update(Player* player)
 {
 	player->SetInvincibleTimer(0.75f);
-	if (!player->IsAnimEnd())return;
 
-	if (player->IsGuardDashDown())
+	// 少し進んだら、攻撃・回避・移動などに移れる
+	float animLength = player->GetAnimLength();
+	if (animLength <= 0.0f || player->GetAnimTime() >= animLength - kGuardEndCancelRate)
 	{
-		player->ParryCountStart();
-		player->ChangeState(std::make_shared<PlayerStateGuard>());
+		if (TryCommonTransition(player)) return;
+		if (player->IsGuardDashDown())
+		{
+			player->ChangeState(std::make_shared<PlayerStateCounter>());
+			return;
+		}
 	}
 	else
 	{

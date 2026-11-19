@@ -136,6 +136,11 @@ namespace PlayerStateConst
 	// パリィ・カウンター
 	const std::string kParryLAnimName = "Parry_L";
 	const std::string kParryRAnimName = "Parry_R";
+	constexpr float kParryStartFrame = 10.0f;
+	constexpr float kParryEndFrame = 45.0f;
+
 	const std::string kCounterLAnimName = "Counter_L";
 	const std::string kCounterRAnimName = "Counter_R";
+	constexpr float kCounterStartFrame = 10.0f;
+	constexpr float kCounterEndFrame = 45.0f;
 }

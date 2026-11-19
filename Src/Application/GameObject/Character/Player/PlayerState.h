@@ -141,6 +141,9 @@ public:
 	void Update(Player* player) override;
 
 private:
+
+	bool IsTrailFrame(float animTime) const;
+
 	bool m_isRight = true;
 	
 };
