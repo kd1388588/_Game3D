@@ -502,12 +502,14 @@ void Enemy::AttackHit(const Math::Matrix& hitMatrix, const Math::Vector3& extent
 		Math::Vector3 charaDir = -playerRight;
 		float side = charaDir.Dot(m_pos - player->GetPos());
 		bool isRight = side > 0.0f;
-		if (player->Parry(isRight))
+
+		auto enemy = std::dynamic_pointer_cast<Enemy>(shared_from_this());
+
+		if (player->Parry(isRight, enemy))
 		{
 			m_isParried = true;
 			return;
 		}
-		
 
 		player->OnDamage(damage, isCritical);
 
@@ -725,7 +727,10 @@ void Enemy::AttackHitNear(bool isCritical)
 	Math::Vector3 charaDir = -playerRight;
 	float side = charaDir.Dot(m_pos - player->GetPos());
 	bool isRight = side > 0.0f;
-	if (player->Parry(isRight,))
+
+	auto enemy = std::dynamic_pointer_cast<Enemy>(shared_from_this());
+
+	if (player->Parry(isRight,enemy))
 	{
 		m_isParried = true;
 		return;
