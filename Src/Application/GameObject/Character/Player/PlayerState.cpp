@@ -6,6 +6,8 @@
 #include "Player.h"
 #include "PlayerParamManager.h"
 
+#include "../Enemy/Enemy.h"
+
 #include "../../Effect/EffectPlayer.h"
 #include "../../../Scene/SceneManager.h"
 
@@ -41,7 +43,7 @@ void PlayerState::UseRootMotion(Player* player)
 
 void PlayerState::StartEvade(Player* player)
 {
-	// パニッシャーの時は、オペレーターに戻ってから回避する（FF7リメイクのクラウドと同じ動き）
+	// 回避入力時、モードをオペレーターに戻す
 	if (kEvadeReturnsToOperator && player->IsPunisherMode())
 	{
 		player->SetBattleMode(BattleMode::Operator);

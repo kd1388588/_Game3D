@@ -4,6 +4,7 @@
 enum class HitEffectType;	// 攻撃が当たるたびに出すヒットエフェクトの種類（Player.h）
 
 class Player;
+class Enemy;
 
 // 基底クラス
 class PlayerState
@@ -125,18 +126,21 @@ private:
 class PlayerStateParry : public PlayerState
 {
 public:
-	explicit PlayerStateParry(bool isRight) :m_isRight(isRight) {}
+	explicit PlayerStateParry(bool isRight, const std::shared_ptr<Enemy>& enemy) :m_isRight(isRight),m_wpEnemy(enemy) {}
 	void ChangeState(Player* player) override;
 	void Update(Player* player) override;
 
 private:
+
 	bool m_isRight = true;
+	std::weak_ptr<Enemy> m_wpEnemy;
+
 };
 
 class PlayerStateCounter : public PlayerState
 {
 public:
-	explicit PlayerStateCounter(bool isRight) :m_isRight(isRight) {}
+	explicit PlayerStateCounter(bool isRight, const std::shared_ptr<Enemy>& enemy) :m_isRight(isRight) ,m_wpEnemy(enemy){}
 	void ChangeState(Player* player) override;
 	void Update(Player* player) override;
 
@@ -145,7 +149,7 @@ private:
 	bool IsTrailFrame(float animTime) const;
 
 	bool m_isRight = true;
-	
+	std::weak_ptr<Enemy> m_wpEnemy;
 };
 
 // ガードを崩された（よろけて、しばらくガードできない）
