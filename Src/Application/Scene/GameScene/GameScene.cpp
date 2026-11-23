@@ -562,4 +562,6 @@ std::shared_ptr<Enemy> GameScene::SpawnEnemy(const Math::Vector3& pos, bool isBo
 	enemy->SetTarget(target);
 	m_objList.push_back(enemy);
 	return enemy;
+
+	//return nullptr;
 }

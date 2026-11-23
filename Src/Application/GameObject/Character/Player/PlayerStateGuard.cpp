@@ -201,7 +201,7 @@ void PlayerStateParry::Update(Player* player)
 	float animLength = player->GetAnimLength();
 	if (animLength <= 0.0f || player->GetAnimTime() >= animLength - kCounterEndCancelRate)
 	{
-		player->ChangeState(std::make_shared<PlayerStateCounter>(m_isRight));
+		player->ChangeState(std::make_shared<PlayerStateCounter>(m_isRight,m_wpEnemy.lock()));
 		return;
 	}
 }

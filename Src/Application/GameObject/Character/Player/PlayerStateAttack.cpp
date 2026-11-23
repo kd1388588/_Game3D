@@ -7,6 +7,8 @@
 #include "Player.h"
 #include "PlayerParamManager.h"
 
+#include"../Enemy/Enemy.h"
+
 #include "../../Effect/EffectPlayer.h"
 #include "../../../Scene/SceneManager.h"
 
@@ -307,6 +309,17 @@ void PlayerStateComboAttack::Update(Player* player)
 void PlayerStateCounter::ChangeState(Player* player)
 {
 	player->ResetAttackHits();
+	auto enemy = m_wpEnemy.lock();
+	if (enemy)
+	{
+		Math::Vector3 toTarget = enemy->GetPos() - player->GetPos();
+		toTarget.y = 0.0f;
+		if (toTarget.LengthSquared() >= 0.0001f)
+		{
+			toTarget.Normalize();
+			player->TurnToward(toTarget, 180.0f);
+		}
+	}
 
 	if (m_isRight)
 	{
