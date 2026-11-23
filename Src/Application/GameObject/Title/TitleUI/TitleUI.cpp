@@ -130,7 +130,7 @@ void TitleUI::Init()
 	// 操作案内（画面の下）
 	m_selectGuide = CreateText("W / S : SELECT        ENTER : DECIDE", UIText::FontSize::Small);
 	m_selectGuide->SetCenterPos({ 0.0f, kGuideY });
-	m_controlsGuide = CreateText("Enter / BackSpace ／ A / B：戻る", UIText::FontSize::Small);
+	m_controlsGuide = CreateText("Enter / Space ／ A / B：戻る", UIText::FontSize::Small);
 	m_controlsGuide->SetCenterPos({ 0.0f, kGuideY });
 
 	// 操作説明

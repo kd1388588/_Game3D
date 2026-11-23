@@ -341,11 +341,11 @@ void Player::ParryCountEnd()
 	m_parryCount = 0;
 }
 
-bool Player::Parry(bool isRight)
+bool Player::Parry(bool isRight, const std::shared_ptr<Enemy>& enemy)
 {
 	if (m_parryCount <= 0) return false;
 	m_parryCount = 0;
-	ChangeState(std::make_shared<PlayerStateParry>(isRight));  // パリィ処理実行
+	ChangeState(std::make_shared<PlayerStateParry>(isRight,enemy));  // パリィ処理実行
 	return true;
 }
 

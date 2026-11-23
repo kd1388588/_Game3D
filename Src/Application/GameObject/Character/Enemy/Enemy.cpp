@@ -94,8 +94,8 @@ namespace
 	constexpr int	kBreakStunFrame = 40;		// ブレイクした瞬間に、のけぞらせる長さ（攻撃の途中でも止める）
 
 	// パリィ硬直時間
-	constexpr int	kParryStunFrame = 50;		// ブレイクした瞬間に、のけぞらせる長さ（攻撃の途中でも止める）
-	constexpr int	kParryAddGage = 15;		// ブレイクした瞬間に、のけぞらせる長さ（攻撃の途中でも止める）
+	constexpr int	kParryStunFrame = 50;		// パリィした瞬間に、のけぞらせる長さ（攻撃の途中でも止める）
+	constexpr int	kParryAddGage = 15;			// パリィした瞬間に、加算されるブレイクゲージ
 }
 
 void Enemy::Init()
@@ -725,7 +725,7 @@ void Enemy::AttackHitNear(bool isCritical)
 	Math::Vector3 charaDir = -playerRight;
 	float side = charaDir.Dot(m_pos - player->GetPos());
 	bool isRight = side > 0.0f;
-	if (player->Parry(isRight))
+	if (player->Parry(isRight,))
 	{
 		m_isParried = true;
 		return;

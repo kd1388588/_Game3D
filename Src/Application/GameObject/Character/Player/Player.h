@@ -170,7 +170,7 @@ public:
 	void ParryCountEnd();
 
 	// パリィ実行
-	bool Parry(bool isRight);
+	bool Parry(bool isRight,const std::shared_ptr<Enemy>& enemy);
 
 	// カメラの向いている方へ向きを変える（ガード中は敵の方を向いたまま歩けるように）
 	void TurnTowardCameraForward(float maxAngle);
