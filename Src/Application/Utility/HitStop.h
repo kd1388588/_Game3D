@@ -39,7 +39,6 @@ public:
 	static void Advance()
 	{
 		if (s_timer <= 0) return;
-
 		s_timer--;
 		if (s_timer <= 0) Reset();
 	}
