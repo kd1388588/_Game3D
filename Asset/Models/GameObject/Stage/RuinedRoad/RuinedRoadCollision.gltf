@@ -1,223 +1,160 @@
 {
- "asset": {
-  "version": "2.0",
-  "generator": "Tools/MakeStageModel.py"
- },
- "scene": 0,
- "scenes": [
-  {
-   "nodes": [
-    0
-   ]
-  }
- ],
- "nodes": [
-  {
-   "name": "RuinedRoadCollision",
-   "mesh": 0
-  }
- ],
- "meshes": [
-  {
-   "name": "RuinedRoadCollision",
-   "primitives": [
-    {
-     "attributes": {
-      "POSITION": 0,
-      "NORMAL": 1,
-      "TEXCOORD_0": 2,
-      "COLOR_0": 3
-     },
-     "indices": 4,
-     "material": 1
-    }
-   ]
-  }
- ],
- "materials": [
-  {
-   "name": "Pavement",
-   "pbrMetallicRoughness": {
-    "baseColorTexture": {
-     "index": 0
-    },
-    "baseColorFactor": [
-     1.0,
-     1.0,
-     1.0,
-     1.0
-    ],
-    "metallicFactor": 0.0,
-    "roughnessFactor": 1.0
-   }
-  },
-  {
-   "name": "StoneWall",
-   "pbrMetallicRoughness": {
-    "baseColorTexture": {
-     "index": 1
-    },
-    "baseColorFactor": [
-     1.0,
-     1.0,
-     1.0,
-     1.0
-    ],
-    "metallicFactor": 0.0,
-    "roughnessFactor": 1.0
-   }
-  },
-  {
-   "name": "DoorWood",
-   "pbrMetallicRoughness": {
-    "baseColorTexture": {
-     "index": 2
-    },
-    "baseColorFactor": [
-     1.0,
-     1.0,
-     1.0,
-     1.0
-    ],
-    "metallicFactor": 0.0,
-    "roughnessFactor": 1.0
-   }
-  },
-  {
-   "name": "Iron",
-   "pbrMetallicRoughness": {
-    "baseColorTexture": {
-     "index": 3
-    },
-    "baseColorFactor": [
-     1.0,
-     1.0,
-     1.0,
-     1.0
-    ],
-    "metallicFactor": 0.0,
-    "roughnessFactor": 1.0
-   }
-  }
- ],
- "textures": [
-  {
-   "source": 0,
-   "sampler": 0
-  },
-  {
-   "source": 1,
-   "sampler": 0
-  },
-  {
-   "source": 2,
-   "sampler": 0
-  },
-  {
-   "source": 3,
-   "sampler": 0
-  }
- ],
- "images": [
-  {
-   "uri": "Pavement.png"
-  },
-  {
-   "uri": "StoneWall.png"
-  },
-  {
-   "uri": "DoorWood.png"
-  },
-  {
-   "uri": "Iron.png"
-  }
- ],
- "samplers": [
-  {
-   "magFilter": 9729,
-   "minFilter": 9987,
-   "wrapS": 10497,
-   "wrapT": 10497
-  }
- ],
- "buffers": [
-  {
-   "uri": "RuinedRoadCollision.bin",
-   "byteLength": 69984
-  }
- ],
- "bufferViews": [
-  {
-   "buffer": 0,
-   "byteOffset": 0,
-   "byteLength": 15552,
-   "target": 34962
-  },
-  {
-   "buffer": 0,
-   "byteOffset": 15552,
-   "byteLength": 15552,
-   "target": 34962
-  },
-  {
-   "buffer": 0,
-   "byteOffset": 31104,
-   "byteLength": 10368,
-   "target": 34962
-  },
-  {
-   "buffer": 0,
-   "byteOffset": 41472,
-   "byteLength": 20736,
-   "target": 34962
-  },
-  {
-   "buffer": 0,
-   "byteOffset": 62208,
-   "byteLength": 7776,
-   "target": 34963
-  }
- ],
- "accessors": [
-  {
-   "bufferView": 0,
-   "componentType": 5126,
-   "count": 1296,
-   "type": "VEC3",
-   "min": [
-    -42.099998474121094,
-    0.0,
-    -105.9000015258789
-   ],
-   "max": [
-    56.099998474121094,
-    4.0,
-    12.380000114440918
-   ]
-  },
-  {
-   "bufferView": 1,
-   "componentType": 5126,
-   "count": 1296,
-   "type": "VEC3"
-  },
-  {
-   "bufferView": 2,
-   "componentType": 5126,
-   "count": 1296,
-   "type": "VEC2"
-  },
-  {
-   "bufferView": 3,
-   "componentType": 5126,
-   "count": 1296,
-   "type": "VEC4"
-  },
-  {
-   "bufferView": 4,
-   "componentType": 5125,
-   "count": 1944,
-   "type": "SCALAR"
-  }
- ]
+	"asset":{
+		"generator":"Khronos glTF Blender I/O v5.2.39",
+		"version":"2.0"
+	},
+	"scene":0,
+	"scenes":[
+		{
+			"name":"Scene",
+			"nodes":[
+				0
+			]
+		}
+	],
+	"nodes":[
+		{
+			"mesh":0,
+			"name":"RuinedRoadCollision"
+		}
+	],
+	"materials":[
+		{
+			"name":"StoneWall.001",
+			"normalTexture":{
+				"index":0
+			},
+			"pbrMetallicRoughness":{
+				"baseColorTexture":{
+					"index":1
+				},
+				"metallicFactor":0
+			}
+		}
+	],
+	"meshes":[
+		{
+			"name":"RuinedRoadCollision",
+			"primitives":[
+				{
+					"attributes":{
+						"POSITION":0,
+						"NORMAL":1,
+						"TEXCOORD_0":2,
+						"COLOR_0":3
+					},
+					"indices":4,
+					"material":0
+				}
+			]
+		}
+	],
+	"textures":[
+		{
+			"sampler":0,
+			"source":0
+		},
+		{
+			"sampler":0,
+			"source":1
+		}
+	],
+	"images":[
+		{
+			"mimeType":"image/png",
+			"name":"N_StoneWall",
+			"uri":"N_StoneWall.png"
+		},
+		{
+			"mimeType":"image/png",
+			"name":"StoneWall",
+			"uri":"StoneWall.png"
+		}
+	],
+	"accessors":[
+		{
+			"bufferView":0,
+			"componentType":5126,
+			"count":1296,
+			"max":[
+				56.099998474121094,
+				4,
+				12.380000114440918
+			],
+			"min":[
+				-42.099998474121094,
+				0,
+				-105.9000015258789
+			],
+			"type":"VEC3"
+		},
+		{
+			"bufferView":1,
+			"componentType":5126,
+			"count":1296,
+			"type":"VEC3"
+		},
+		{
+			"bufferView":2,
+			"componentType":5126,
+			"count":1296,
+			"type":"VEC2"
+		},
+		{
+			"bufferView":3,
+			"componentType":5126,
+			"count":1296,
+			"type":"VEC3"
+		},
+		{
+			"bufferView":4,
+			"componentType":5123,
+			"count":1944,
+			"type":"SCALAR"
+		}
+	],
+	"bufferViews":[
+		{
+			"buffer":0,
+			"byteLength":15552,
+			"byteOffset":0,
+			"target":34962
+		},
+		{
+			"buffer":0,
+			"byteLength":15552,
+			"byteOffset":15552,
+			"target":34962
+		},
+		{
+			"buffer":0,
+			"byteLength":10368,
+			"byteOffset":31104,
+			"target":34962
+		},
+		{
+			"buffer":0,
+			"byteLength":15552,
+			"byteOffset":41472,
+			"target":34962
+		},
+		{
+			"buffer":0,
+			"byteLength":3888,
+			"byteOffset":57024,
+			"target":34963
+		}
+	],
+	"samplers":[
+		{
+			"magFilter":9729,
+			"minFilter":9987
+		}
+	],
+	"buffers":[
+		{
+			"byteLength":60912,
+			"uri":"RuinedRoadCollision.bin"
+		}
+	]
 }

@@ -1,383 +1,368 @@
 {
- "asset": {
-  "version": "2.0",
-  "generator": "Tools/MakeStageModel.py"
- },
- "scene": 0,
- "scenes": [
-  {
-   "nodes": [
-    0
-   ]
-  }
- ],
- "nodes": [
-  {
-   "name": "RuinedRoad",
-   "mesh": 0
-  }
- ],
- "meshes": [
-  {
-   "name": "RuinedRoad",
-   "primitives": [
-    {
-     "attributes": {
-      "POSITION": 0,
-      "NORMAL": 1,
-      "TEXCOORD_0": 2,
-      "COLOR_0": 3
-     },
-     "indices": 4,
-     "material": 0
-    },
-    {
-     "attributes": {
-      "POSITION": 5,
-      "NORMAL": 6,
-      "TEXCOORD_0": 7,
-      "COLOR_0": 8
-     },
-     "indices": 9,
-     "material": 1
-    },
-    {
-     "attributes": {
-      "POSITION": 10,
-      "NORMAL": 11,
-      "TEXCOORD_0": 12,
-      "COLOR_0": 13
-     },
-     "indices": 14,
-     "material": 3
-    }
-   ]
-  }
- ],
- "materials": [
-  {
-   "name": "Pavement",
-   "pbrMetallicRoughness": {
-    "baseColorTexture": {
-     "index": 0
-    },
-    "baseColorFactor": [
-     1.0,
-     1.0,
-     1.0,
-     1.0
-    ],
-    "metallicFactor": 0.0,
-    "roughnessFactor": 1.0
-   }
-  },
-  {
-   "name": "StoneWall",
-   "pbrMetallicRoughness": {
-    "baseColorTexture": {
-     "index": 1
-    },
-    "baseColorFactor": [
-     1.0,
-     1.0,
-     1.0,
-     1.0
-    ],
-    "metallicFactor": 0.0,
-    "roughnessFactor": 1.0
-   }
-  },
-  {
-   "name": "DoorWood",
-   "pbrMetallicRoughness": {
-    "baseColorTexture": {
-     "index": 2
-    },
-    "baseColorFactor": [
-     1.0,
-     1.0,
-     1.0,
-     1.0
-    ],
-    "metallicFactor": 0.0,
-    "roughnessFactor": 1.0
-   }
-  },
-  {
-   "name": "Iron",
-   "pbrMetallicRoughness": {
-    "baseColorTexture": {
-     "index": 3
-    },
-    "baseColorFactor": [
-     1.0,
-     1.0,
-     1.0,
-     1.0
-    ],
-    "metallicFactor": 0.0,
-    "roughnessFactor": 1.0
-   }
-  }
- ],
- "textures": [
-  {
-   "source": 0,
-   "sampler": 0
-  },
-  {
-   "source": 1,
-   "sampler": 0
-  },
-  {
-   "source": 2,
-   "sampler": 0
-  },
-  {
-   "source": 3,
-   "sampler": 0
-  }
- ],
- "images": [
-  {
-   "uri": "Pavement.png"
-  },
-  {
-   "uri": "StoneWall.png"
-  },
-  {
-   "uri": "DoorWood.png"
-  },
-  {
-   "uri": "Iron.png"
-  }
- ],
- "samplers": [
-  {
-   "magFilter": 9729,
-   "minFilter": 9987,
-   "wrapS": 10497,
-   "wrapT": 10497
-  }
- ],
- "buffers": [
-  {
-   "uri": "RuinedRoad.bin",
-   "byteLength": 3706536
-  }
- ],
- "bufferViews": [
-  {
-   "buffer": 0,
-   "byteOffset": 0,
-   "byteLength": 362112,
-   "target": 34962
-  },
-  {
-   "buffer": 0,
-   "byteOffset": 362112,
-   "byteLength": 362112,
-   "target": 34962
-  },
-  {
-   "buffer": 0,
-   "byteOffset": 724224,
-   "byteLength": 241408,
-   "target": 34962
-  },
-  {
-   "buffer": 0,
-   "byteOffset": 965632,
-   "byteLength": 482816,
-   "target": 34962
-  },
-  {
-   "buffer": 0,
-   "byteOffset": 1448448,
-   "byteLength": 180864,
-   "target": 34963
-  },
-  {
-   "buffer": 0,
-   "byteOffset": 1629312,
-   "byteLength": 331560,
-   "target": 34962
-  },
-  {
-   "buffer": 0,
-   "byteOffset": 1960872,
-   "byteLength": 331560,
-   "target": 34962
-  },
-  {
-   "buffer": 0,
-   "byteOffset": 2292432,
-   "byteLength": 221040,
-   "target": 34962
-  },
-  {
-   "buffer": 0,
-   "byteOffset": 2513472,
-   "byteLength": 442080,
-   "target": 34962
-  },
-  {
-   "buffer": 0,
-   "byteOffset": 2955552,
-   "byteLength": 162936,
-   "target": 34963
-  },
-  {
-   "buffer": 0,
-   "byteOffset": 3118488,
-   "byteLength": 131856,
-   "target": 34962
-  },
-  {
-   "buffer": 0,
-   "byteOffset": 3250344,
-   "byteLength": 131856,
-   "target": 34962
-  },
-  {
-   "buffer": 0,
-   "byteOffset": 3382200,
-   "byteLength": 87904,
-   "target": 34962
-  },
-  {
-   "buffer": 0,
-   "byteOffset": 3470104,
-   "byteLength": 175808,
-   "target": 34962
-  },
-  {
-   "buffer": 0,
-   "byteOffset": 3645912,
-   "byteLength": 60624,
-   "target": 34963
-  }
- ],
- "accessors": [
-  {
-   "bufferView": 0,
-   "componentType": 5126,
-   "count": 30176,
-   "type": "VEC3",
-   "min": [
-    -44.0,
-    -0.17996977269649506,
-    -108.0
-   ],
-   "max": [
-    58.0,
-    0.4000000059604645,
-    14.0
-   ]
-  },
-  {
-   "bufferView": 1,
-   "componentType": 5126,
-   "count": 30176,
-   "type": "VEC3"
-  },
-  {
-   "bufferView": 2,
-   "componentType": 5126,
-   "count": 30176,
-   "type": "VEC2"
-  },
-  {
-   "bufferView": 3,
-   "componentType": 5126,
-   "count": 30176,
-   "type": "VEC4"
-  },
-  {
-   "bufferView": 4,
-   "componentType": 5125,
-   "count": 45216,
-   "type": "SCALAR"
-  },
-  {
-   "bufferView": 5,
-   "componentType": 5126,
-   "count": 27630,
-   "type": "VEC3",
-   "min": [
-    -46.0,
-    0.0,
-    -110.01000213623047
-   ],
-   "max": [
-    60.0,
-    13.800000190734863,
-    16.010000228881836
-   ]
-  },
-  {
-   "bufferView": 6,
-   "componentType": 5126,
-   "count": 27630,
-   "type": "VEC3"
-  },
-  {
-   "bufferView": 7,
-   "componentType": 5126,
-   "count": 27630,
-   "type": "VEC2"
-  },
-  {
-   "bufferView": 8,
-   "componentType": 5126,
-   "count": 27630,
-   "type": "VEC4"
-  },
-  {
-   "bufferView": 9,
-   "componentType": 5125,
-   "count": 40734,
-   "type": "SCALAR"
-  },
-  {
-   "bufferView": 10,
-   "componentType": 5126,
-   "count": 10988,
-   "type": "VEC3",
-   "min": [
-    -44.0,
-    0.0,
-    -108.0
-   ],
-   "max": [
-    58.0,
-    3.8299999237060547,
-    14.0
-   ]
-  },
-  {
-   "bufferView": 11,
-   "componentType": 5126,
-   "count": 10988,
-   "type": "VEC3"
-  },
-  {
-   "bufferView": 12,
-   "componentType": 5126,
-   "count": 10988,
-   "type": "VEC2"
-  },
-  {
-   "bufferView": 13,
-   "componentType": 5126,
-   "count": 10988,
-   "type": "VEC4"
-  },
-  {
-   "bufferView": 14,
-   "componentType": 5125,
-   "count": 15156,
-   "type": "SCALAR"
-  }
- ]
+	"asset":{
+		"generator":"Khronos glTF Blender I/O v5.2.39",
+		"version":"2.0"
+	},
+	"scene":0,
+	"scenes":[
+		{
+			"name":"Scene",
+			"nodes":[
+				0
+			]
+		}
+	],
+	"nodes":[
+		{
+			"mesh":0,
+			"name":"RuinedRoad"
+		}
+	],
+	"materials":[
+		{
+			"name":"Pavement",
+			"normalTexture":{
+				"index":0
+			},
+			"pbrMetallicRoughness":{
+				"baseColorTexture":{
+					"index":1
+				},
+				"metallicFactor":0
+			}
+		},
+		{
+			"name":"StoneWall",
+			"normalTexture":{
+				"index":2
+			},
+			"pbrMetallicRoughness":{
+				"baseColorTexture":{
+					"index":3
+				},
+				"metallicFactor":0
+			}
+		},
+		{
+			"name":"Iron",
+			"pbrMetallicRoughness":{
+				"baseColorTexture":{
+					"index":4
+				},
+				"metallicFactor":0
+			}
+		}
+	],
+	"meshes":[
+		{
+			"name":"RuinedRoad",
+			"primitives":[
+				{
+					"attributes":{
+						"POSITION":0,
+						"NORMAL":1,
+						"TEXCOORD_0":2,
+						"COLOR_0":3
+					},
+					"indices":4,
+					"material":0
+				},
+				{
+					"attributes":{
+						"POSITION":5,
+						"NORMAL":6,
+						"TEXCOORD_0":7,
+						"COLOR_0":8
+					},
+					"indices":9,
+					"material":1
+				},
+				{
+					"attributes":{
+						"POSITION":10,
+						"NORMAL":11,
+						"TEXCOORD_0":12,
+						"COLOR_0":13
+					},
+					"indices":14,
+					"material":2
+				}
+			]
+		}
+	],
+	"textures":[
+		{
+			"sampler":0,
+			"source":0
+		},
+		{
+			"sampler":0,
+			"source":1
+		},
+		{
+			"sampler":0,
+			"source":2
+		},
+		{
+			"sampler":0,
+			"source":3
+		},
+		{
+			"sampler":0,
+			"source":4
+		}
+	],
+	"images":[
+		{
+			"mimeType":"image/png",
+			"name":"N_Pavement",
+			"uri":"N_Pavement.png"
+		},
+		{
+			"mimeType":"image/png",
+			"name":"Pavement",
+			"uri":"Pavement.png"
+		},
+		{
+			"mimeType":"image/png",
+			"name":"N_StoneWall",
+			"uri":"N_StoneWall.png"
+		},
+		{
+			"mimeType":"image/png",
+			"name":"StoneWall",
+			"uri":"StoneWall.png"
+		},
+		{
+			"mimeType":"image/png",
+			"name":"Iron",
+			"uri":"Iron.png"
+		}
+	],
+	"accessors":[
+		{
+			"bufferView":0,
+			"componentType":5126,
+			"count":30176,
+			"max":[
+				58,
+				0.4000000059604645,
+				14
+			],
+			"min":[
+				-44,
+				-0.17996977269649506,
+				-108
+			],
+			"type":"VEC3"
+		},
+		{
+			"bufferView":1,
+			"componentType":5126,
+			"count":30176,
+			"type":"VEC3"
+		},
+		{
+			"bufferView":2,
+			"componentType":5126,
+			"count":30176,
+			"type":"VEC2"
+		},
+		{
+			"bufferView":3,
+			"componentType":5126,
+			"count":30176,
+			"type":"VEC3"
+		},
+		{
+			"bufferView":4,
+			"componentType":5123,
+			"count":45216,
+			"type":"SCALAR"
+		},
+		{
+			"bufferView":5,
+			"componentType":5126,
+			"count":27840,
+			"max":[
+				60,
+				13.800000190734863,
+				16.010000228881836
+			],
+			"min":[
+				-46,
+				0,
+				-110.01000213623047
+			],
+			"type":"VEC3"
+		},
+		{
+			"bufferView":6,
+			"componentType":5126,
+			"count":27840,
+			"type":"VEC3"
+		},
+		{
+			"bufferView":7,
+			"componentType":5126,
+			"count":27840,
+			"type":"VEC2"
+		},
+		{
+			"bufferView":8,
+			"componentType":5126,
+			"count":27840,
+			"type":"VEC3"
+		},
+		{
+			"bufferView":9,
+			"componentType":5123,
+			"count":40734,
+			"type":"SCALAR"
+		},
+		{
+			"bufferView":10,
+			"componentType":5126,
+			"count":11208,
+			"max":[
+				58,
+				3.8299999237060547,
+				14
+			],
+			"min":[
+				-44,
+				0,
+				-108
+			],
+			"type":"VEC3"
+		},
+		{
+			"bufferView":11,
+			"componentType":5126,
+			"count":11208,
+			"type":"VEC3"
+		},
+		{
+			"bufferView":12,
+			"componentType":5126,
+			"count":11208,
+			"type":"VEC2"
+		},
+		{
+			"bufferView":13,
+			"componentType":5126,
+			"count":11208,
+			"type":"VEC3"
+		},
+		{
+			"bufferView":14,
+			"componentType":5123,
+			"count":15156,
+			"type":"SCALAR"
+		}
+	],
+	"bufferViews":[
+		{
+			"buffer":0,
+			"byteLength":362112,
+			"byteOffset":0,
+			"target":34962
+		},
+		{
+			"buffer":0,
+			"byteLength":362112,
+			"byteOffset":362112,
+			"target":34962
+		},
+		{
+			"buffer":0,
+			"byteLength":241408,
+			"byteOffset":724224,
+			"target":34962
+		},
+		{
+			"buffer":0,
+			"byteLength":362112,
+			"byteOffset":965632,
+			"target":34962
+		},
+		{
+			"buffer":0,
+			"byteLength":90432,
+			"byteOffset":1327744,
+			"target":34963
+		},
+		{
+			"buffer":0,
+			"byteLength":334080,
+			"byteOffset":1418176,
+			"target":34962
+		},
+		{
+			"buffer":0,
+			"byteLength":334080,
+			"byteOffset":1752256,
+			"target":34962
+		},
+		{
+			"buffer":0,
+			"byteLength":222720,
+			"byteOffset":2086336,
+			"target":34962
+		},
+		{
+			"buffer":0,
+			"byteLength":334080,
+			"byteOffset":2309056,
+			"target":34962
+		},
+		{
+			"buffer":0,
+			"byteLength":81468,
+			"byteOffset":2643136,
+			"target":34963
+		},
+		{
+			"buffer":0,
+			"byteLength":134496,
+			"byteOffset":2724604,
+			"target":34962
+		},
+		{
+			"buffer":0,
+			"byteLength":134496,
+			"byteOffset":2859100,
+			"target":34962
+		},
+		{
+			"buffer":0,
+			"byteLength":89664,
+			"byteOffset":2993596,
+			"target":34962
+		},
+		{
+			"buffer":0,
+			"byteLength":134496,
+			"byteOffset":3083260,
+			"target":34962
+		},
+		{
+			"buffer":0,
+			"byteLength":30312,
+			"byteOffset":3217756,
+			"target":34963
+		}
+	],
+	"samplers":[
+		{
+			"magFilter":9729,
+			"minFilter":9987
+		}
+	],
+	"buffers":[
+		{
+			"byteLength":3248068,
+			"uri":"RuinedRoad.bin"
+		}
+	]
 }

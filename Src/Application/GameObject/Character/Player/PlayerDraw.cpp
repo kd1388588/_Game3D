@@ -167,7 +167,6 @@ void Player::DrawPunisherAura()
 		Math::Vector3 color = kAuraColor * (m_auraRate * flicker / (layer + 1.0f));
 		shaderManager.m_StandardShader.DrawModel(*m_model, auraMat, Math::Color(0.0f, 0.0f, 0.0f, 1.0f), color);
 	}
-
 	shaderManager.UndoDepthStencilState();
 	shaderManager.UndoBlendState();
 	shaderManager.UndoRasterizerState();
