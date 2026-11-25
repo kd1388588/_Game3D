@@ -5,15 +5,15 @@ namespace
 {
 	// メッセージ（画面の真ん中より少し上）
 	const Math::Vector2	kMessagePos		= { 0.0f, 150.0f };
-	constexpr float		kMessageScale	= 0.8f;		// Medium（40px）× 0.8
+	constexpr float		kMessageScale	= 0.8f;					// Medium（40px）× 0.8
 	const Math::Color	kMessageColor	= { 1.0f, 0.9f, 0.65f, 1.0f };	// 少し金色がかった白
-	constexpr int		kFadeInFrame	= 12;		// 出てくる時間
-	constexpr int		kFadeOutFrame	= 40;		// 消える時間
+	constexpr int		kFadeInFrame	= 12;					// 出てくる時間
+	constexpr int		kFadeOutFrame	= 40;					// 消える時間
 
 	// 鍵を持っている表示（左下の HUD の、モードの文字の上）
 	const std::string	kKeyTexPath = "Asset/Textures/Stage/Key.png";
-	const Math::Vector2	kKeyPos = { -480.0f, -235.0f };	// 画面の真ん中が (0, 0)
-	constexpr float		kKeySize = 48;					// 描く大きさ（元の画像の大きさとは別）
+	const Math::Vector2	kKeyPos = { -480.0f, -235.0f };			// 画面の真ん中が (0, 0)
+	constexpr int		kKeySize = 48;							// 描く大きさ（元の画像の大きさとは別）
 	const Math::Color	kKeyColor = { 1.0f, 1.0f, 1.0f, 1.0f };	// 白：画像の色のまま
 }
 

@@ -11,6 +11,7 @@
         "DecayPerSec": 15.0,
         "HitGain": 1.2000000476837158,
         "MidBossBreak": true,
+        "NormalAttackStun": true,
         "NormalBreak": true,
         "PunisherRate": 1.5
     },
@@ -70,7 +71,7 @@
             0.18000000715255737
         ],
         "HeightDistance": 45.0,
-        "HeightEnable": true,
+        "HeightEnable": false,
         "HeightTop": 1.0
     },
     "GroundMist": {
@@ -85,7 +86,7 @@
         "Count": 70,
         "DriftAngle": 30.0,
         "DriftSpeed": 0.6000000238418579,
-        "Enable": true,
+        "Enable": false,
         "Flatten": 0.3499999940395355,
         "HeightRandom": 0.25,
         "NearFadeLength": 3.0,
