@@ -13,7 +13,7 @@ namespace
 	// 鍵を持っている表示（左下の HUD の、モードの文字の上）
 	const std::string	kKeyTexPath = "Asset/Textures/Stage/Key.png";
 	const Math::Vector2	kKeyPos = { -480.0f, -235.0f };	// 画面の真ん中が (0, 0)
-	constexpr int		kKeySize = 0.5f;					// 描く大きさ（元の画像の大きさとは別）
+	constexpr float		kKeySize = 48;					// 描く大きさ（元の画像の大きさとは別）
 	const Math::Color	kKeyColor = { 1.0f, 1.0f, 1.0f, 1.0f };	// 白：画像の色のまま
 }
 
@@ -27,7 +27,7 @@ void StageMessage::Init()
 	if (!m_KeyTex->Load(kKeyTexPath))
 	{
 		// 読めなかった時は空にしておく（描く時に、空なら何もしない）
-		OutputDebugStringA(("【宝石の画像が読み込めませんでした】" + kKeyTexPath + "\n").c_str());
+		OutputDebugStringA(("【鍵の画像が読み込めませんでした】" + kKeyTexPath + "\n").c_str());
 		m_KeyTex = nullptr;
 	}
 }
@@ -62,7 +62,7 @@ void StageMessage::DrawSprite()
 	}
 
 	// 鍵を持っている間の表示
-	if (m_keyText && m_hasKey)
+	if (m_KeyTex && m_hasKey)
 	{
 		KdShaderManager::Instance().m_spriteShader.DrawTex(m_KeyTex.get(),
 			static_cast<int>(kKeyPos.x), static_cast<int>(kKeyPos.y),
