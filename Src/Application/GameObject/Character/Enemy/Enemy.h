@@ -136,6 +136,9 @@ private:
 	// 描画に使う行列（揺れている間は、少しずらす。m_mWorld そのものは変えない）
 	Math::Matrix GetShakenWorld() const;
 
+	// 描画範囲内なら描画するフラグ
+	bool ShouldDraw()const;
+
 	std::shared_ptr<EnemyState>		m_state = nullptr;
 	std::weak_ptr<Player>			m_wpTarget;
 

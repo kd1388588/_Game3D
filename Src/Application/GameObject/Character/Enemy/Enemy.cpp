@@ -13,6 +13,9 @@ namespace
 	// 敵の種類ごとの数値（HP・大きさ・気づく距離・攻撃の距離・飛びかかりの CT）は、
 	// StageSettings::EnemyTuning に移した（Object Editor の「Enemy」タブ。EnemyTune().boss.hp のように読む）
 
+	// 描画距離範囲
+	constexpr float kCullDistance = 40.0f;
+
 	// 最初の飛びかかり攻撃までの時間（全員が同時に飛びかかってこないよう、ばらつかせる）
 	constexpr int	kFirstJumpAttackMinFrame = 60 * 1;
 	constexpr int	kFirstJumpAttackMaxFrame = 60 * 4;
@@ -221,6 +224,7 @@ void Enemy::Update()
 
 void Enemy::GenerateDepthMapFromLight()
 {
+	if (!ShouldDraw())return;
 	// 影：DrawLit と同じモデルを、光から見た深度に描く
 	if (m_model)
 	{
@@ -230,6 +234,8 @@ void Enemy::GenerateDepthMapFromLight()
 
 void Enemy::DrawLit()
 {
+	if (!ShouldDraw())return;
+
 	if (m_model)
 	{
 		// リムライトは DrawModel の後に自動で元に戻る（ほかの物には付かない）
@@ -332,6 +338,15 @@ Math::Matrix Enemy::GetShakenWorld() const
 		KdRandom::GetFloat(-power, power),
 	};
 	return m_mWorld * Math::Matrix::CreateTranslation(offset);
+}
+
+bool Enemy::ShouldDraw() const
+{
+	if (m_isBoss)return true;
+	auto player = m_wpTarget.lock();
+	if (!player)return true;
+	Math::Vector3 dir = m_pos - player->GetPos();
+	return dir.LengthSquared() <= kCullDistance * kCullDistance;
 }
 
 // ==========================================
