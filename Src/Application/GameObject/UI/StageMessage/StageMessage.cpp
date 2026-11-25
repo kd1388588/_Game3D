@@ -11,8 +11,10 @@ namespace
 	constexpr int		kFadeOutFrame	= 40;		// 消える時間
 
 	// 鍵を持っている表示（左下の HUD の、モードの文字の上）
-	const Math::Vector2	kKeyPos			= { -470.0f, -235.0f };
-	const Math::Color	kKeyColor		= { 1.0f, 0.8f, 0.35f, 1.0f };	// 金色
+	const std::string	kKeyTexPath = "Asset/Textures/Stage/Key.png";
+	const Math::Vector2	kKeyPos = { -480.0f, -235.0f };	// 画面の真ん中が (0, 0)
+	constexpr int		kKeySize = 0.5f;					// 描く大きさ（元の画像の大きさとは別）
+	const Math::Color	kKeyColor = { 1.0f, 1.0f, 1.0f, 1.0f };	// 白：画像の色のまま
 }
 
 void StageMessage::Init()
@@ -21,10 +23,13 @@ void StageMessage::Init()
 	m_text->SetCenterPos(kMessagePos);
 	m_text->SetScale(kMessageScale);
 
-	m_keyText = std::make_shared<UIText>();
-	m_keyText->SetText("鍵", UIText::FontSize::Small);
-	m_keyText->SetCenterPos(kKeyPos);
-	m_keyText->SetColor(kKeyColor);
+	m_KeyTex = std::make_shared<KdTexture>();
+	if (!m_KeyTex->Load(kKeyTexPath))
+	{
+		// 読めなかった時は空にしておく（描く時に、空なら何もしない）
+		OutputDebugStringA(("【宝石の画像が読み込めませんでした】" + kKeyTexPath + "\n").c_str());
+		m_KeyTex = nullptr;
+	}
 }
 
 void StageMessage::Show(const std::string& text, int frames)
@@ -59,6 +64,8 @@ void StageMessage::DrawSprite()
 	// 鍵を持っている間の表示
 	if (m_keyText && m_hasKey)
 	{
-		m_keyText->DrawSprite();
+		KdShaderManager::Instance().m_spriteShader.DrawTex(m_KeyTex.get(),
+			static_cast<int>(kKeyPos.x), static_cast<int>(kKeyPos.y),
+			kKeySize, kKeySize, nullptr, &kKeyColor);
 	}
 }

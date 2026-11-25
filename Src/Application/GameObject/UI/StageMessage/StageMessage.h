@@ -28,6 +28,7 @@ public:
 
 private:
 
+	std::shared_ptr<KdTexture>m_KeyTex = nullptr;
 	std::shared_ptr<UIText>	m_text = nullptr;
 	std::shared_ptr<UIText>	m_keyText = nullptr;
 	int						m_timer = 0;
