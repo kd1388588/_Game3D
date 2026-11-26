@@ -21,7 +21,7 @@
         "AttackRecoverRandom": 20,
         "Boss": {
             "AttackRange": 3.5,
-            "Hp": 252,
+            "Hp": 560,
             "JumpAttackCT": 360,
             "Scale": 2.5999999046325684,
             "SearchRange": 16.0
@@ -42,14 +42,14 @@
         "KnockbackStunRate": 0.5,
         "MidBoss": {
             "AttackRange": 2.4000000953674316,
-            "Hp": 130,
+            "Hp": 330,
             "JumpAttackCT": 420,
             "Scale": 1.899999976158142,
             "SearchRange": 12.0
         },
         "Normal": {
             "AttackRange": 1.2000000476837158,
-            "Hp": 80,
+            "Hp": 130,
             "JumpAttackCT": 600,
             "Scale": 1.25,
             "SearchRange": 8.0
@@ -64,15 +64,15 @@
         ],
         "DistanceDensity": 0.007000000216066837,
         "DistanceEnable": true,
-        "HeightBottom": -1.0,
+        "HeightBottom": 5.010000228881836,
         "HeightColor": [
-            0.11999999731779099,
-            0.12999999523162842,
-            0.18000000715255737
+            0.43627452850341797,
+            0.43627452850341797,
+            0.43627452850341797
         ],
-        "HeightDistance": 45.0,
-        "HeightEnable": false,
-        "HeightTop": 1.0
+        "HeightDistance": 40.099998474121094,
+        "HeightEnable": true,
+        "HeightTop": 15.0
     },
     "GroundMist": {
         "BottomHeight": -0.10000000149011612,
