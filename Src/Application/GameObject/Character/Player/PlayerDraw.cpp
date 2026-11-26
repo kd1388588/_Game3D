@@ -146,6 +146,9 @@ void Player::DrawPunisherAura()
 	shaderManager.ChangeDepthStencilState(KdDepthStencilState::ZWriteDisable);
 
 	float frame = static_cast<float>(m_auraFrame);
+
+	shaderManager.WriteCBFogEnable(false, false);
+
 	for (int i = 0; i < kAuraLayerNum; ++i)
 	{
 		float layer = static_cast<float>(i);
@@ -170,4 +173,6 @@ void Player::DrawPunisherAura()
 	shaderManager.UndoDepthStencilState();
 	shaderManager.UndoBlendState();
 	shaderManager.UndoRasterizerState();
+
+	shaderManager.WriteCBFogEnable(true, true);
 }
