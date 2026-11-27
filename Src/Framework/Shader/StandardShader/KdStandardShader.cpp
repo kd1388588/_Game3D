@@ -1,6 +1,7 @@
 ﻿#include "Framework/KdFramework.h"
 
 #include "KdStandardShader.h"
+#include "../../../Application/Utility/LOD/Kd/KdLOD.h"
 
 
 //================================================
@@ -136,12 +137,16 @@ void KdStandardShader::EndGenerateDepthMapFromLight()
 // サブセットごとに描画命令を呼び出す：サブセットの個数分処理が重くなる
 // ///// ///// ///// ///// ///// ///// ///// ///// ///// ///// ///// ///// ///// ///// /////
 void KdStandardShader::DrawMesh(const KdMesh* mesh, const Math::Matrix& mWorld,
-	const std::vector<KdMaterial>& materials, const Math::Vector4& colRate, const Math::Vector3& emissive)
+	const std::vector<KdMaterial>& materials, const Math::Vector4& colRate, const Math::Vector3& emissive,
+	const lod::kd::MeshLevel* lodMesh)
 {
 	if (mesh == nullptr) { return; }
 
 	// メッシュの頂点情報転送
 	mesh->SetToDevice();
+	// 元の頂点バッファを共有し、対象メッシュだけ簡略版のインデックスを使う。
+	auto* context = KdDirect3D::Instance().WorkDevContext();
+	if (lodMesh) lodMesh->Bind(context);
 
 	// 3Dワールド行列転送
 	m_cb1_Mesh.Work().mW = mWorld;
@@ -177,7 +182,8 @@ void KdStandardShader::DrawMesh(const KdMesh* mesh, const Math::Matrix& mWorld,
 		//-----------------------
 		// サブセット描画
 		//-----------------------
-		mesh->DrawSubset(subi);
+		if (lodMesh) lodMesh->DrawSubset(context, subi);
+		else mesh->DrawSubset(subi);
 	}
 
 	// 次のメッシュのために、全体のリムライトの設定に戻す
@@ -197,7 +203,7 @@ void KdStandardShader::DrawMesh(const KdMesh* mesh, const Math::Matrix& mWorld,
 // データに所属する全ての描画用メッシュを描画する
 // ///// ///// ///// ///// ///// ///// ///// ///// ///// ///// ///// ///// ///// ///// /////
 void KdStandardShader::DrawModel(const KdModelData& rModel, const Math::Matrix& mWorld,
-	const Math::Color& colRate, const Math::Vector3& emissive)
+	const Math::Color& colRate, const Math::Vector3& emissive, const lod::kd::Instance* lodInstance)
 {
 	// オブジェクト単位の情報転送
 	if (m_dirtyCBObj)
@@ -212,7 +218,7 @@ void KdStandardShader::DrawModel(const KdModelData& rModel, const Math::Matrix& 
 	{
 		// 描画
 		DrawMesh(dataNodes[nodeIdx].m_spMesh.get(), dataNodes[nodeIdx].m_worldTransform * mWorld, 
-			rModel.GetMaterials(), colRate, emissive);
+			rModel.GetMaterials(), colRate, emissive, lodInstance ? lodInstance->ForNode(nodeIdx) : nullptr);
 	}
 
 	// 定数に変更があった場合は自動的に初期状態に戻す
@@ -228,7 +234,7 @@ void KdStandardShader::DrawModel(const KdModelData& rModel, const Math::Matrix& 
 // データに所属する全ての描画用メッシュをワークの3D行列に従って描画する
 // ///// ///// ///// ///// ///// ///// ///// ///// ///// ///// ///// ///// ///// ///// /////
 void KdStandardShader::DrawModel(KdModelWork& rModel, const Math::Matrix& mWorld,
-	const Math::Color& colRate, const Math::Vector3& emissive)
+	const Math::Color& colRate, const Math::Vector3& emissive, const lod::kd::Instance* lodInstance)
 {
 	if (!rModel.IsEnable()) { return; }
 
@@ -285,7 +291,7 @@ void KdStandardShader::DrawModel(KdModelWork& rModel, const Math::Matrix& mWorld
 
 		// 描画
 		DrawMesh(dataNodes[nodeIdx].m_spMesh.get(), workNodes[nodeIdx].m_worldTransform * mWorld,
-			data->GetMaterials(), colRate, emissive);
+			data->GetMaterials(), colRate, emissive, lodInstance ? lodInstance->ForNode(nodeIdx) : nullptr);
 	}
 
 	// 定数に変更があった場合は自動的に初期状態に戻す

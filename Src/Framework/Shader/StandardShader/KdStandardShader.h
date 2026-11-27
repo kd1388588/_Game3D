@@ -4,6 +4,8 @@
 // 基本シェーダー
 //
 //============================================================
+namespace lod::kd { struct MeshLevel; class Instance; }
+
 class KdStandardShader
 {
 public:
@@ -190,15 +192,17 @@ public:
 	//================================================
 	// メッシュ描画
 	void DrawMesh(const KdMesh* mesh, const Math::Matrix& mWorld, const std::vector<KdMaterial>& materials,
-		const Math::Vector4& col, const Math::Vector3& emissive);
+		const Math::Vector4& col, const Math::Vector3& emissive, const lod::kd::MeshLevel* lodMesh = nullptr);
 
 	// モデルデータ描画：アニメーションに非対応
 	void DrawModel(const KdModelData& rModel, const Math::Matrix& mWorld = Math::Matrix::Identity,
-		const Math::Color& colRate = kWhiteColor, const Math::Vector3& emissive = Math::Vector3::Zero);
+		const Math::Color& colRate = kWhiteColor, const Math::Vector3& emissive = Math::Vector3::Zero,
+		const lod::kd::Instance* lodInstance = nullptr);
 
 	// モデルワーク描画：アニメーションに対応
 	void DrawModel(KdModelWork& rModel, const Math::Matrix& mWorld = Math::Matrix::Identity,
-		const Math::Color& colRate = kWhiteColor, const Math::Vector3& emissive = Math::Vector3::Zero);
+		const Math::Color& colRate = kWhiteColor, const Math::Vector3& emissive = Math::Vector3::Zero,
+		const lod::kd::Instance* lodInstance = nullptr);
 
 	// 任意の頂点群からなるポリゴン描画
 	void DrawPolygon(const KdPolygon& poly, const Math::Matrix& mWorld = Math::Matrix::Identity,
