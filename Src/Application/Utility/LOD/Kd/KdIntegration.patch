@@ -1,0 +1,186 @@
+diff --git a/Project.vcxproj b/Project.vcxproj
+index c149c68..7514b09 100644
+--- a/Project.vcxproj
++++ b/Project.vcxproj
+@@ -553,6 +553,8 @@
+       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Vertex</ShaderType>
+     </FxCompile>
+   </ItemGroup>
++  <PropertyGroup><MeshLodUseKd>true</MeshLodUseKd></PropertyGroup>
++  <Import Project="Src\Application\Utility\LOD\LOD.props" />
+   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+   <ImportGroup Label="ExtensionTargets" />
+ </Project>
+\ No newline at end of file
+diff --git a/Project.vcxproj.filters b/Project.vcxproj.filters
+index 4eff280..2df479f 100644
+--- a/Project.vcxproj.filters
++++ b/Project.vcxproj.filters
+@@ -864,4 +864,56 @@
+       <Filter>Src\Framework\Shader\StandardShader</Filter>
+     </FxCompile>
+   </ItemGroup>
++  <ItemGroup>
++    <Filter Include="Src\Application\Utility\LOD">
++      <UniqueIdentifier>{2e837000-2c60-48eb-93ad-f85abffadefc}</UniqueIdentifier>
++    </Filter>
++    <Filter Include="Src\Application\Utility\LOD\Kd">
++      <UniqueIdentifier>{2b8eda42-bcd1-42e6-bc0b-5d0e1a8171bd}</UniqueIdentifier>
++    </Filter>
++    <Filter Include="Src\Application\Utility\LOD\third_party">
++      <UniqueIdentifier>{85a1a567-ebcb-47f2-9102-eadc444787cc}</UniqueIdentifier>
++    </Filter>
++    <Filter Include="Src\Application\Utility\LOD\third_party\meshoptimizer">
++      <UniqueIdentifier>{34ce6bfb-c242-4905-a25d-7a99b9b676d0}</UniqueIdentifier>
++    </Filter>
++  </ItemGroup>
++  <ItemGroup>
++    <None Include="Src\Application\Utility\LOD\Kd\KdIntegration.patch">
++      <Filter>Src\Application\Utility\LOD\Kd</Filter>
++    </None>
++    <ClCompile Include="Src\Application\Utility\LOD\Kd\KdLOD.cpp">
++      <Filter>Src\Application\Utility\LOD\Kd</Filter>
++    </ClCompile>
++    <ClInclude Include="Src\Application\Utility\LOD\Kd\KdLOD.h">
++      <Filter>Src\Application\Utility\LOD\Kd</Filter>
++    </ClInclude>
++    <ClCompile Include="Src\Application\Utility\LOD\LOD.cpp">
++      <Filter>Src\Application\Utility\LOD</Filter>
++    </ClCompile>
++    <ClInclude Include="Src\Application\Utility\LOD\LOD.h">
++      <Filter>Src\Application\Utility\LOD</Filter>
++    </ClInclude>
++    <None Include="Src\Application\Utility\LOD\LOD.props">
++      <Filter>Src\Application\Utility\LOD</Filter>
++    </None>
++    <ClInclude Include="Src\Application\Utility\LOD\LODSettings.h">
++      <Filter>Src\Application\Utility\LOD</Filter>
++    </ClInclude>
++    <None Include="Src\Application\Utility\LOD\README.md">
++      <Filter>Src\Application\Utility\LOD</Filter>
++    </None>
++    <ClCompile Include="Src\Application\Utility\LOD\third_party\meshoptimizer\allocator.cpp">
++      <Filter>Src\Application\Utility\LOD\third_party\meshoptimizer</Filter>
++    </ClCompile>
++    <None Include="Src\Application\Utility\LOD\third_party\meshoptimizer\LICENSE.md">
++      <Filter>Src\Application\Utility\LOD\third_party\meshoptimizer</Filter>
++    </None>
++    <ClInclude Include="Src\Application\Utility\LOD\third_party\meshoptimizer\meshoptimizer.h">
++      <Filter>Src\Application\Utility\LOD\third_party\meshoptimizer</Filter>
++    </ClInclude>
++    <ClCompile Include="Src\Application\Utility\LOD\third_party\meshoptimizer\simplifier.cpp">
++      <Filter>Src\Application\Utility\LOD\third_party\meshoptimizer</Filter>
++    </ClCompile>
++  </ItemGroup>
+ </Project>
+\ No newline at end of file
+diff --git a/Src/Framework/Shader/StandardShader/KdStandardShader.cpp b/Src/Framework/Shader/StandardShader/KdStandardShader.cpp
+index 5b2e9c4..c0e3cc4 100644
+--- a/Src/Framework/Shader/StandardShader/KdStandardShader.cpp
++++ b/Src/Framework/Shader/StandardShader/KdStandardShader.cpp
+@@ -1,6 +1,7 @@
+ ﻿#include "Framework/KdFramework.h"
+ 
+ #include "KdStandardShader.h"
++#include "Kd/KdLOD.h"
+ 
+ 
+ //================================================
+@@ -136,12 +137,16 @@ void KdStandardShader::EndGenerateDepthMapFromLight()
+ // サブセットごとに描画命令を呼び出す：サブセットの個数分処理が重くなる
+ // ///// ///// ///// ///// ///// ///// ///// ///// ///// ///// ///// ///// ///// ///// /////
+ void KdStandardShader::DrawMesh(const KdMesh* mesh, const Math::Matrix& mWorld,
+-	const std::vector<KdMaterial>& materials, const Math::Vector4& colRate, const Math::Vector3& emissive)
++	const std::vector<KdMaterial>& materials, const Math::Vector4& colRate, const Math::Vector3& emissive,
++	const lod::kd::MeshLevel* lodMesh)
+ {
+ 	if (mesh == nullptr) { return; }
+ 
+ 	// メッシュの頂点情報転送
+ 	mesh->SetToDevice();
++	// 元の頂点バッファを共有し、対象メッシュだけ簡略版のインデックスを使う。
++	auto* context = KdDirect3D::Instance().WorkDevContext();
++	if (lodMesh) lodMesh->Bind(context);
+ 
+ 	// 3Dワールド行列転送
+ 	m_cb1_Mesh.Work().mW = mWorld;
+@@ -177,7 +182,8 @@ void KdStandardShader::DrawMesh(const KdMesh* mesh, const Math::Matrix& mWorld,
+ 		//-----------------------
+ 		// サブセット描画
+ 		//-----------------------
+-		mesh->DrawSubset(subi);
++		if (lodMesh) lodMesh->DrawSubset(context, subi);
++		else mesh->DrawSubset(subi);
+ 	}
+ 
+ 	// 次のメッシュのために、全体のリムライトの設定に戻す
+@@ -197,7 +203,7 @@ void KdStandardShader::DrawMesh(const KdMesh* mesh, const Math::Matrix& mWorld,
+ // データに所属する全ての描画用メッシュを描画する
+ // ///// ///// ///// ///// ///// ///// ///// ///// ///// ///// ///// ///// ///// ///// /////
+ void KdStandardShader::DrawModel(const KdModelData& rModel, const Math::Matrix& mWorld,
+-	const Math::Color& colRate, const Math::Vector3& emissive)
++	const Math::Color& colRate, const Math::Vector3& emissive, const lod::kd::Instance* lodInstance)
+ {
+ 	// オブジェクト単位の情報転送
+ 	if (m_dirtyCBObj)
+@@ -212,7 +218,7 @@ void KdStandardShader::DrawModel(const KdModelData& rModel, const Math::Matrix&
+ 	{
+ 		// 描画
+ 		DrawMesh(dataNodes[nodeIdx].m_spMesh.get(), dataNodes[nodeIdx].m_worldTransform * mWorld, 
+-			rModel.GetMaterials(), colRate, emissive);
++			rModel.GetMaterials(), colRate, emissive, lodInstance ? lodInstance->ForNode(nodeIdx) : nullptr);
+ 	}
+ 
+ 	// 定数に変更があった場合は自動的に初期状態に戻す
+@@ -228,7 +234,7 @@ void KdStandardShader::DrawModel(const KdModelData& rModel, const Math::Matrix&
+ // データに所属する全ての描画用メッシュをワークの3D行列に従って描画する
+ // ///// ///// ///// ///// ///// ///// ///// ///// ///// ///// ///// ///// ///// ///// /////
+ void KdStandardShader::DrawModel(KdModelWork& rModel, const Math::Matrix& mWorld,
+-	const Math::Color& colRate, const Math::Vector3& emissive)
++	const Math::Color& colRate, const Math::Vector3& emissive, const lod::kd::Instance* lodInstance)
+ {
+ 	if (!rModel.IsEnable()) { return; }
+ 
+@@ -285,7 +291,7 @@ void KdStandardShader::DrawModel(KdModelWork& rModel, const Math::Matrix& mWorld
+ 
+ 		// 描画
+ 		DrawMesh(dataNodes[nodeIdx].m_spMesh.get(), workNodes[nodeIdx].m_worldTransform * mWorld,
+-			data->GetMaterials(), colRate, emissive);
++			data->GetMaterials(), colRate, emissive, lodInstance ? lodInstance->ForNode(nodeIdx) : nullptr);
+ 	}
+ 
+ 	// 定数に変更があった場合は自動的に初期状態に戻す
+diff --git a/Src/Framework/Shader/StandardShader/KdStandardShader.h b/Src/Framework/Shader/StandardShader/KdStandardShader.h
+index f60a3f6..975a49b 100644
+--- a/Src/Framework/Shader/StandardShader/KdStandardShader.h
++++ b/Src/Framework/Shader/StandardShader/KdStandardShader.h
+@@ -4,6 +4,8 @@
+ // 基本シェーダー
+ //
+ //============================================================
++namespace lod::kd { struct MeshLevel; class Instance; }
++
+ class KdStandardShader
+ {
+ public:
+@@ -190,15 +192,17 @@ public:
+ 	//================================================
+ 	// メッシュ描画
+ 	void DrawMesh(const KdMesh* mesh, const Math::Matrix& mWorld, const std::vector<KdMaterial>& materials,
+-		const Math::Vector4& col, const Math::Vector3& emissive);
++		const Math::Vector4& col, const Math::Vector3& emissive, const lod::kd::MeshLevel* lodMesh = nullptr);
+ 
+ 	// モデルデータ描画：アニメーションに非対応
+ 	void DrawModel(const KdModelData& rModel, const Math::Matrix& mWorld = Math::Matrix::Identity,
+-		const Math::Color& colRate = kWhiteColor, const Math::Vector3& emissive = Math::Vector3::Zero);
++		const Math::Color& colRate = kWhiteColor, const Math::Vector3& emissive = Math::Vector3::Zero,
++		const lod::kd::Instance* lodInstance = nullptr);
+ 
+ 	// モデルワーク描画：アニメーションに対応
+ 	void DrawModel(KdModelWork& rModel, const Math::Matrix& mWorld = Math::Matrix::Identity,
+-		const Math::Color& colRate = kWhiteColor, const Math::Vector3& emissive = Math::Vector3::Zero);
++		const Math::Color& colRate = kWhiteColor, const Math::Vector3& emissive = Math::Vector3::Zero,
++		const lod::kd::Instance* lodInstance = nullptr);
+ 
+ 	// 任意の頂点群からなるポリゴン描画
+ 	void DrawPolygon(const KdPolygon& poly, const Math::Matrix& mWorld = Math::Matrix::Identity,

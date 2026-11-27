@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <!-- .vcxproj の Microsoft.Cpp.targets の直前に Import。Kd 用接続は利用側で明示的に有効化。 -->
+  <PropertyGroup>
+    <MeshLodRoot>$(MSBuildThisFileDirectory)</MeshLodRoot>
+  </PropertyGroup>
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <AdditionalIncludeDirectories>$(MeshLodRoot);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <None Include="$(MeshLodRoot)README.md;$(MeshLodRoot)LOD.props;$(MeshLodRoot)third_party\meshoptimizer\LICENSE.md" />
+    <None Condition="'$(MeshLodUseKd)'=='true'" Include="$(MeshLodRoot)Kd\KdIntegration.patch" />
+    <ClInclude Include="$(MeshLodRoot)LOD.h;$(MeshLodRoot)LODSettings.h;$(MeshLodRoot)third_party\meshoptimizer\meshoptimizer.h" />
+    <ClCompile Include="$(MeshLodRoot)LOD.cpp;$(MeshLodRoot)third_party\meshoptimizer\simplifier.cpp;$(MeshLodRoot)third_party\meshoptimizer\allocator.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <ForcedIncludeFiles></ForcedIncludeFiles>
+      <ObjectFileName>$(IntDir)MeshLod\</ObjectFileName>
+    </ClCompile>
+    <ClInclude Condition="'$(MeshLodUseKd)'=='true'" Include="$(MeshLodRoot)Kd\KdLOD.h" />
+    <ClCompile Condition="'$(MeshLodUseKd)'=='true'" Include="$(MeshLodRoot)Kd\KdLOD.cpp" />
+  </ItemGroup>
+</Project>

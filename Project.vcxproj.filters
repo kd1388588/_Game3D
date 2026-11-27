@@ -202,6 +202,12 @@
     <Filter Include="Src\Application\GameObject\UI\Gage\Enemy">
       <UniqueIdentifier>{feaebfd2-4a64-4661-af42-7e6ef145fabe}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Src\Application\Utility\LOD">
+      <UniqueIdentifier>{4d4aa7a1-cf47-40f8-a14d-dd28fef497dd}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Src\Application\Utility\LOD\Kd">
+      <UniqueIdentifier>{c2f7b1f9-ae29-4292-a377-083118977d89}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Pch.h">
@@ -522,6 +528,15 @@
     <ClInclude Include="Src\Application\GameObject\Character\UI\Gage\Enemy\EnemyGage.h">
       <Filter>Src\Application\GameObject\UI\Gage\Enemy</Filter>
     </ClInclude>
+    <ClInclude Include="Src\Application\Utility\LOD\LOD.h">
+      <Filter>Src\Application\Utility\LOD</Filter>
+    </ClInclude>
+    <ClInclude Include="Src\Application\Utility\LOD\LODSettings.h">
+      <Filter>Src\Application\Utility\LOD</Filter>
+    </ClInclude>
+    <ClInclude Include="Src\Application\Utility\LOD\Kd\KdLOD.h">
+      <Filter>Src\Application\Utility\LOD\Kd</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Pch.cpp">
@@ -818,6 +833,12 @@
     <ClCompile Include="Src\Application\GameObject\Character\UI\Gage\Enemy\EnemyGage.cpp">
       <Filter>Src\Application\GameObject\UI\Gage\Enemy</Filter>
     </ClCompile>
+    <ClCompile Include="Src\Application\Utility\LOD\LOD.cpp">
+      <Filter>Src\Application\Utility\LOD</Filter>
+    </ClCompile>
+    <ClCompile Include="Src\Application\Utility\LOD\Kd\KdLOD.cpp">
+      <Filter>Src\Application\Utility\LOD\Kd</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="Src\Framework\Shader\inc_KdCommon.hlsli">
@@ -831,6 +852,12 @@
     </None>
     <None Include="Src\Framework\Shader\StandardShader\inc_KdStandardShader.hlsli">
       <Filter>Src\Framework\Shader\StandardShader</Filter>
+    </None>
+    <None Include="Src\Application\Utility\LOD\LOD.props">
+      <Filter>Src\Application\Utility\LOD</Filter>
+    </None>
+    <None Include="Src\Application\Utility\LOD\Kd\KdIntegration.patch">
+      <Filter>Src\Application\Utility\LOD\Kd</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>

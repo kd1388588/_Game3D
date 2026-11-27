@@ -302,6 +302,9 @@
     <ClInclude Include="Src\Application\GameObject\Stage\Object\StageLights\StageLights.h" />
     <ClInclude Include="Src\Application\GameObject\Stage\Object\GroundMist\GroundMist.h" />
     <ClInclude Include="Src\Application\Utility\Accumulator Pattern\Accumulator Pattern.h" />
+    <ClInclude Include="Src\Application\Utility\LOD\Kd\KdLOD.h" />
+    <ClInclude Include="Src\Application\Utility\LOD\LOD.h" />
+    <ClInclude Include="Src\Application\Utility\LOD\LODSettings.h" />
     <ClInclude Include="Src\Application\Utility\StageSettings.h" />
     <ClInclude Include="Src\Application\Utility\EffectSettings.h" />
     <ClInclude Include="Src\Application\GameObject\Stage\Sky\Sky.h" />
@@ -410,6 +413,8 @@
     <ClCompile Include="Src\Application\GameObject\Stage\Object\StageLights\StageLights.cpp" />
     <ClCompile Include="Src\Application\GameObject\Stage\Object\GroundMist\GroundMist.cpp" />
     <ClCompile Include="Src\Application\Utility\Accumulator Pattern\AccumulatorP Pattern.cpp" />
+    <ClCompile Include="Src\Application\Utility\LOD\Kd\KdLOD.cpp" />
+    <ClCompile Include="Src\Application\Utility\LOD\LOD.cpp" />
     <ClCompile Include="Src\Application\Utility\StageSettings.cpp" />
     <ClCompile Include="Src\Application\Utility\EffectSettings.cpp" />
     <ClCompile Include="Src\Application\GameObject\Stage\Sky\Sky.cpp" />
@@ -474,6 +479,8 @@
     <ClCompile Include="src\Framework\Window\KdWindow.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="Src\Application\Utility\LOD\Kd\KdIntegration.patch" />
+    <None Include="Src\Application\Utility\LOD\LOD.props" />
     <None Include="Src\Framework\Shader\inc_KdCommon.hlsli" />
     <None Include="Src\Framework\Shader\PostProcessShader\inc_KdPostProcessShader.hlsli" />
     <None Include="Src\Framework\Shader\SpriteShader\inc_KdSpriteShader.hlsli" />
