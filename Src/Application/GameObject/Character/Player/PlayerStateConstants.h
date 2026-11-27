@@ -111,6 +111,7 @@ namespace PlayerStateConst
 	constexpr float kGuardWalkBlendFrame	= 6.0f;		// ガード歩きの向きが変わった時のブレンドフレーム数
 	constexpr float kGuardTurnAngle			= 12.0f;	// ガード中にカメラの方へ向きを変える速さ（度/フレーム）
 	const std::string kGuardBreakAnimName	= "GuardBreak";
+	constexpr float kSlashCancelGuardFrame	= 12.0f;
 
 	// ダッシュ（移動中に ガード・ダッシュのキー（Shift ／ RB）を押している間）
 	constexpr float kDashSpeedRate			= 1.6f;		// 走る速さの何倍か

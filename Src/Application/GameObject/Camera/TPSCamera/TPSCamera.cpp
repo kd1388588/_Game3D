@@ -71,7 +71,7 @@ void TPSCamera::PostUpdate()
 		_targetMat = Math::Matrix::CreateTranslation(targetPos);
 	}
 	// カメラの回転（Q を押している間は、マウスで回さない。デバッグ中にマウスを使う時のため）
-	if (!(GetAsyncKeyState('Q') & 0x8000))
+	if (!(GetAsyncKeyState(VK_TAB) & 0x8000))
 	{
 		UpdateRotateByMouse();
 	}

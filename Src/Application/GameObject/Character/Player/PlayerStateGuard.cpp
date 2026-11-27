@@ -184,12 +184,12 @@ void PlayerStateParry::ChangeState(Player* player)
 	if (m_isRight)
 	{
 		player->ChangeAnimation(kParryRAnimName, false, true, 0.5f);
-		player->SetAnimationSpeed(1.8f);
+		player->SetAnimationSpeed(2.0f);
 	}
 	else
 	{
 		player->ChangeAnimation(kParryLAnimName, false, true, 0.5f);
-		player->SetAnimationSpeed(1.8f);
+		player->SetAnimationSpeed(2.0f);
 	}
 }
 
@@ -197,7 +197,6 @@ void PlayerStateParry::Update(Player* player)
 {
 	player->SetInvincibleTimer(1);
 
-	// 少し進んだら、攻撃・回避・移動などに移れる
 	float animLength = player->GetAnimLength();
 	if (animLength <= 0.0f || player->GetAnimTime() >= animLength - kCounterEndCancelRate)
 	{

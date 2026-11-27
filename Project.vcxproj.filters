@@ -199,6 +199,9 @@
     <Filter Include="Src\Application\Utility\Accumulator Pattern">
       <UniqueIdentifier>{7c97e86b-ffbd-4a7d-8405-bca2db1d7857}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Src\Application\GameObject\UI\Gage\Enemy">
+      <UniqueIdentifier>{feaebfd2-4a64-4661-af42-7e6ef145fabe}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Pch.h">
@@ -513,9 +516,11 @@
     <ClInclude Include="Src\Application\GameObject\Effect\EffectPlayer.h">
       <Filter>Src\Application\GameObject\Effect</Filter>
     </ClInclude>
-    <ClInclude Include="Src\Application\GameObject\Character\UI\Gage\Enemy\EnemyGage.h" />
     <ClInclude Include="Src\Application\Utility\Accumulator Pattern\Accumulator Pattern.h">
       <Filter>Src\Application\Utility\Accumulator Pattern</Filter>
+    </ClInclude>
+    <ClInclude Include="Src\Application\GameObject\Character\UI\Gage\Enemy\EnemyGage.h">
+      <Filter>Src\Application\GameObject\UI\Gage\Enemy</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -807,9 +812,11 @@
     <ClCompile Include="Src\Application\GameObject\Effect\EffectPlayer.cpp">
       <Filter>Src\Application\GameObject\Effect</Filter>
     </ClCompile>
-    <ClCompile Include="Src\Application\GameObject\Character\UI\Gage\Enemy\EnemyGage.cpp" />
     <ClCompile Include="Src\Application\Utility\Accumulator Pattern\AccumulatorP Pattern.cpp">
       <Filter>Src\Application\Utility\Accumulator Pattern</Filter>
+    </ClCompile>
+    <ClCompile Include="Src\Application\GameObject\Character\UI\Gage\Enemy\EnemyGage.cpp">
+      <Filter>Src\Application\GameObject\UI\Gage\Enemy</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

@@ -41,6 +41,10 @@ public:
 	// 光らせて、使えるようにする（中ボスの部屋の敵を全員倒した時）
 	void Activate();
 	bool IsSleeping() const { return m_state == State::Sleep; }
+	bool IsUsed() const { return m_state == State::Used; }
+
+	// デバッグ用
+	void DebugHealGage();
 
 	// 使われた直後の 1 回だけ true を返す（メッセージを出すため）
 	bool ConsumeUsed()

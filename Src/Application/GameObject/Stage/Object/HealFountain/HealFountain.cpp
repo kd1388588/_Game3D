@@ -69,6 +69,12 @@ void HealFountain::Activate()
 	m_state = State::Active;
 }
 
+void HealFountain::DebugHealGage()
+{
+	if (m_state != State::Used) return;
+	m_state = State::Active;
+}
+
 void HealFountain::Update()
 {
 	m_frame++;
