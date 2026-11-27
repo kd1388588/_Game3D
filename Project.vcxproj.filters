@@ -208,6 +208,12 @@
     <Filter Include="Src\Application\Utility\LOD\Kd">
       <UniqueIdentifier>{c2f7b1f9-ae29-4292-a377-083118977d89}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Src\Application\Utility\LOD\third_party">
+      <UniqueIdentifier>{3fda65e5-705a-4946-898b-a6aad812a647}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Src\Application\Utility\LOD\third_party\meshoptimizer">
+      <UniqueIdentifier>{e70fdad3-12d8-47e3-ba0b-ed83997d06c3}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Pch.h">
@@ -537,6 +543,9 @@
     <ClInclude Include="Src\Application\Utility\LOD\Kd\KdLOD.h">
       <Filter>Src\Application\Utility\LOD\Kd</Filter>
     </ClInclude>
+    <ClInclude Include="Src\Application\Utility\LOD\third_party\meshoptimizer\meshoptimizer.h">
+      <Filter>Src\Application\Utility\LOD\third_party\meshoptimizer</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Pch.cpp">
@@ -839,6 +848,12 @@
     <ClCompile Include="Src\Application\Utility\LOD\Kd\KdLOD.cpp">
       <Filter>Src\Application\Utility\LOD\Kd</Filter>
     </ClCompile>
+    <ClCompile Include="Src\Application\Utility\LOD\third_party\meshoptimizer\simplifier.cpp">
+      <Filter>Src\Application\Utility\LOD\third_party\meshoptimizer</Filter>
+    </ClCompile>
+    <ClCompile Include="Src\Application\Utility\LOD\third_party\meshoptimizer\allocator.cpp">
+      <Filter>Src\Application\Utility\LOD\third_party\meshoptimizer</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="Src\Framework\Shader\inc_KdCommon.hlsli">
@@ -858,6 +873,9 @@
     </None>
     <None Include="Src\Application\Utility\LOD\Kd\KdIntegration.patch">
       <Filter>Src\Application\Utility\LOD\Kd</Filter>
+    </None>
+    <None Include="Src\Application\Utility\LOD\third_party\meshoptimizer\LICENSE.md">
+      <Filter>Src\Application\Utility\LOD\third_party\meshoptimizer</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>
